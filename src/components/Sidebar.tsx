@@ -1,0 +1,33 @@
+import React from 'react';
+import { SidebarProvider } from '../contexts/SidebarContext';
+
+export function Sidebar({ children, composeButton }: { children?: React.ReactNode; composeButton?: React.ReactNode }) {
+  const width = 100;
+  const isCollapsed = true;
+
+  return (
+    <SidebarProvider isCollapsed={isCollapsed} sidebarWidth={width}>
+      <aside 
+        style={{ width }}
+        className="flex-shrink-0 flex flex-col bg-transparent z-10 relative transition-[width] duration-200 ease-in-out"
+      >
+        {/* Logo Area */}
+        <div className="h-16 flex items-center justify-center px-2 overflow-hidden transition-all duration-200">
+          <span className="text-[14px] font-bold text-[var(--md-sys-color-primary)]">CSU</span>
+        </div>
+        
+        {/* Compose Button Area */}
+        {composeButton && (
+          <div className="px-2 flex justify-center mb-4">
+            {composeButton}
+          </div>
+        )}
+        
+        {/* Navigation Area */}
+        <div className="flex-1 overflow-y-auto pb-4 custom-scrollbar overflow-x-hidden">
+          {children}
+        </div>
+      </aside>
+    </SidebarProvider>
+  );
+}
