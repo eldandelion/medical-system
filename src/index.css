@@ -133,3 +133,20 @@
 .filled-icon {
   font-variation-settings: 'FILL' 1 !important;
 }
+
+button, 
+md-icon-button, 
+md-filled-button, 
+md-outlined-button, 
+md-text-button, 
+md-filled-tonal-button, 
+md-elevated-button,
+md-filter-chip,
+md-assist-chip,
+md-suggestion-chip,
+md-input-chip,
+md-outlined-segmented-button,
+md-outlined-segmented-button-set,
+.cursor-pointer {
+  cursor: pointer !important;
+}

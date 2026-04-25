@@ -73,8 +73,8 @@ export function RecordsView({ onRecordSelect, selectedRecordId }: RecordsViewPro
       width: 'w-[30%]',
       render: (item, isSelected) => (
         <div className="flex items-center gap-4">
-          <span 
-            className="material-symbols-outlined text-[12px] shrink-0" 
+          <span
+            className="material-symbols-outlined text-[12px] shrink-0"
             style={{ color: isSelected ? 'inherit' : item.iconColor, fontVariationSettings: "'FILL' 1" }}
           >
             {item.icon}
@@ -104,11 +104,10 @@ export function RecordsView({ onRecordSelect, selectedRecordId }: RecordsViewPro
         const isPending = item.status === 'Pending';
         return (
           <div className="flex items-center">
-            <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${
-              isPending 
-                ? 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]' 
+            <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${isPending
+                ? 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]'
                 : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]'
-            }`}>
+              }`}>
               {item.status === 'Pending' ? '处理中' : '已结案'}
             </span>
           </div>
@@ -134,8 +133,14 @@ export function RecordsView({ onRecordSelect, selectedRecordId }: RecordsViewPro
       <div className="px-6">
         <RecordHeader title="精神医学记录" />
       </div>
+      
       <div className="mt-2">
-        <DataTable columns={columns} data={records} onRowClick={onRecordSelect} selectedId={selectedRecordId} />
+        <DataTable 
+          columns={columns} 
+          data={records} 
+          onRowClick={onRecordSelect} 
+          selectedId={selectedRecordId} 
+        />
       </div>
     </div>
   );
