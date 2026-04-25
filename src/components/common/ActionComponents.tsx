@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useSidebar } from '../contexts/SidebarContext';
+import { useSidebar } from '../../contexts/SidebarContext';
 
 interface ButtonProps {
   icon?: string;

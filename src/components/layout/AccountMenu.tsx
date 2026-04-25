@@ -39,7 +39,7 @@ export function AccountMenu({ isOpen, onClose }: AccountMenuProps) {
                       <span className="material-symbols-outlined text-[14px]">photo_camera</span>
                   </div>
               </div>
-              <h2 className="text-[22px] font-normal mt-3">Hi, Daniil!</h2>
+              <h2 className="text-[22px] font-normal mt-3">你好, Daniil!</h2>
               <button 
                 className="mt-3 px-6 py-2 rounded-full border border-[var(--md-sys-color-outline)] text-sm font-medium text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-surface-variant)] transition-colors"
                 onClick={() => {
@@ -47,7 +47,7 @@ export function AccountMenu({ isOpen, onClose }: AccountMenuProps) {
                   (window as any).dispatchPageChange?.('ProfileDetails');
                 }}
               >
-                  Manage your Account
+                  管理您的账号
               </button>
           </div>
 
@@ -57,7 +57,7 @@ export function AccountMenu({ isOpen, onClose }: AccountMenuProps) {
               {/* Accounts List Card */}
               <div className="bg-[var(--md-sys-color-surface-container-lowest)] rounded-[24px] overflow-hidden flex flex-col shadow-sm">
                   <div className="px-5 py-3 flex justify-between items-center hover:bg-[var(--md-sys-color-surface-variant)] cursor-pointer transition-colors border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30">
-                      <span className="text-[14px] font-medium">Hide more accounts</span>
+                      <span className="text-[14px] font-medium">隐藏更多账号</span>
                       <div className="w-7 h-7 rounded-full bg-[var(--md-sys-color-surface-container-high)] flex items-center justify-center">
                           <span className="material-symbols-outlined text-[18px]">expand_less</span>
                       </div>
@@ -75,13 +75,13 @@ export function AccountMenu({ isOpen, onClose }: AccountMenuProps) {
                       <div className="w-5 h-5 flex items-center justify-center text-[var(--md-sys-color-on-surface)] ml-1">
                         <span className="material-symbols-outlined text-[20px]">add</span>
                       </div>
-                      <span className="text-[14px] font-medium">Add another account</span>
+                      <span className="text-[14px] font-medium">添加其他账号</span>
                   </div>
                   <div className="px-5 py-[14px] flex items-center gap-4 hover:bg-[var(--md-sys-color-surface-variant)] cursor-pointer transition-colors">
                       <div className="w-5 h-5 flex items-center justify-center text-[var(--md-sys-color-on-surface)] ml-1">
                         <span className="material-symbols-outlined text-[20px]">logout</span>
                       </div>
-                      <span className="text-[14px] font-medium">Sign out of all accounts</span>
+                      <span className="text-[14px] font-medium">退出所有账号</span>
                   </div>
               </div>
 
@@ -91,7 +91,7 @@ export function AccountMenu({ isOpen, onClose }: AccountMenuProps) {
                       <div className="w-5 h-5 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] ml-1">
                         <span className="material-symbols-outlined text-[20px]">cloud</span>
                       </div>
-                      <span className="text-[14px] font-medium">0% of 5 TB used</span>
+                      <span className="text-[14px] font-medium">已使用 5 TB 中的 0%</span>
                   </div>
               </div>
 
@@ -99,9 +99,9 @@ export function AccountMenu({ isOpen, onClose }: AccountMenuProps) {
 
           {/* Footer */}
           <div className="flex justify-center items-center gap-3 mt-4 text-[12px] text-[var(--md-sys-color-on-surface-variant)] pb-2">
-              <span className="cursor-pointer hover:underline">Privacy Policy</span>
+              <span className="cursor-pointer hover:underline">隐私政策</span>
               <span>•</span>
-              <span className="cursor-pointer hover:underline">Terms of Service</span>
+              <span className="cursor-pointer hover:underline">服务条款</span>
           </div>
       </div>
     </>

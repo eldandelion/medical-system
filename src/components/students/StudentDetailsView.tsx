@@ -1,8 +1,8 @@
-import * as React from 'react';
+import * as React from 'react'; // Re-indexing trigger
 import { motion, AnimatePresence } from 'motion/react';
-import { DetailsSection, DetailItem } from './DetailsPanel';
-import { ActionFooter, PrimaryButton, SecondaryButton } from './ActionComponents';
-import { useCreationOverlay } from '../contexts/CreationContext';
+import { DetailsSection, DetailItem } from '../common/DetailsPanel';
+import { ActionFooter, PrimaryButton, SecondaryButton } from '../common/ActionComponents';
+import { useCreationOverlay } from '../../contexts/CreationContext';
 import { 
   LineChart, 
   Line, 
@@ -188,7 +188,7 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
                     <span className="text-[12px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-70 ml-1">Severe Risk Flags</span>
                     <div className="grid grid-cols-1 gap-2.5">
                       {mockExtendedData.riskFlags.map((flag: any, idx: number) => (
-                        <div key={idx} className="flex items-center justify-between px-4 py-3 rounded-xl bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)] border-opacity-50 transition-all hover:bg-[var(--md-sys-color-surface-container-low)]">
+                        <div key={idx} className="flex items-center justify-between px-4 py-3 rounded-xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)] border-opacity-50 transition-all hover:bg-[var(--md-sys-color-surface-container-low)]">
                           <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">{flag.label}</span>
                           <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold ${
                             flag.value 
@@ -336,7 +336,7 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
               className="flex flex-col gap-6"
             >
               <div className="relative pl-8 flex flex-col gap-8 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-[var(--md-sys-color-outline-variant)]">
-                {mockExtendedData.history?.map((entry, idx) => (
+                {mockExtendedData.history?.map((entry: { date: string; type: string; description: string }, idx: number) => (
                   <div key={idx} className="relative flex flex-col gap-2">
                     <div className="absolute left-[-25px] top-1 w-4 h-4 rounded-full border-2 border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-surface-container-lowest)] z-10" />
                     <div className="flex items-center justify-between">

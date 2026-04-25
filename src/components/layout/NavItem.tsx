@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { useSidebar } from '../contexts/SidebarContext';
+import { useSidebar } from '../../contexts/SidebarContext';
 
 interface NavItemProps {
   icon: string;

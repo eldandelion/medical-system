@@ -1,22 +1,22 @@
 import * as React from 'react';
-import { Sidebar } from '../components/Sidebar';
-import { Header } from '../components/Header';
-import { MainContent } from '../components/MainContent';
-import { NavItem } from '../components/NavItem';
-import { CanvasHeader } from '../components/CanvasHeader';
-import { NotificationsView } from '../components/NotificationsView';
-import { ProfileView } from '../components/ProfileView';
-import { MyStudentsView } from '../components/MyStudentsView';
-import { ReferralManagementView } from '../components/ReferralManagementView';
-import { SecurityConsentView } from '../components/SecurityConsentView';
-import { DetailsPanel, DetailsSection, DetailItem } from '../components/DetailsPanel';
-import { ProfileSummaryCard, ActionMetricWidget, InteractiveStatusList } from '../components/DashboardComponents';
-import { ProfileDetailsView } from '../components/ProfileDetailsView';
-import { StudentDetailsView } from '../components/StudentDetailsView';
-import { ReferralDetailsView } from '../components/ReferralDetailsView';
+import { Sidebar } from '../components/layout/Sidebar';
+import { Header } from '../components/layout/Header';
+import { MainContent } from '../components/layout/MainContent';
+import { NavItem } from '../components/layout/NavItem';
+import { CanvasHeader } from '../components/layout/CanvasHeader';
+import { NotificationsView } from '../components/notifications/NotificationsView';
+import { ProfileView } from '../components/profile/ProfileView';
+import { MyStudentsView } from '../components/students/MyStudentsView';
+import { ReferralManagementView } from '../components/records/ReferralManagementView';
+import { SecurityConsentView } from '../components/security/SecurityConsentView';
+import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
+import { ProfileSummaryCard, ActionMetricWidget, InteractiveStatusList } from '../components/dashboard/DashboardComponents';
+import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
+import { StudentDetailsView } from '../components/students/StudentDetailsView';
+import { ReferralDetailsView } from '../components/records/ReferralDetailsView';
 import { useCreationOverlay } from '../contexts/CreationContext';
-import { ReferralCreationForm } from '../components/ReferralCreationForm';
-import { TertiaryFab } from '../components/ActionComponents';
+import { ReferralCreationForm } from '../components/records/ReferralCreationForm';
+import { TertiaryFab } from '../components/common/ActionComponents';
 
 export function TeacherPage() {
   const [activePage, setActivePage] = React.useState('Dashboard');
@@ -30,7 +30,7 @@ export function TeacherPage() {
         setShowProfileDetails(true);
       }
     };
-    return () => delete (window as any).dispatchPageChange;
+    return () => void delete (window as any).dispatchPageChange;
   }, []);
 
   const handlePageChange = (page: string) => {
@@ -40,7 +40,7 @@ export function TeacherPage() {
 
   const handleCompose = () => {
     openCreation(
-      'New Referral',
+      '发起转诊',
       <ReferralCreationForm onClose={closeCreation} />
     );
     // Expand to fullscreen immediately after opening to accommodate dense structure per request
@@ -50,7 +50,7 @@ export function TeacherPage() {
   const composeButton = (
     <TertiaryFab 
       icon="edit" 
-      label="Compose" 
+      label="发起转诊" 
       onClick={handleCompose} 
     />
   );
@@ -65,16 +65,16 @@ export function TeacherPage() {
       }}
     >
       <Sidebar composeButton={composeButton}>
-        <NavItem icon="dashboard" label="Dashboard" active={activePage === 'Dashboard'} onClick={() => handlePageChange('Dashboard')} />
-        <NavItem icon="notifications" label="Notifications" active={activePage === 'Notifications'} onClick={() => handlePageChange('Notifications')} />
+        <NavItem icon="dashboard" label="控制面板" active={activePage === 'Dashboard'} onClick={() => handlePageChange('Dashboard')} />
+        <NavItem icon="notifications" label="通知中心" active={activePage === 'Notifications'} onClick={() => handlePageChange('Notifications')} />
 
-        <NavItem icon="group" label="Students" active={activePage === 'Students'} onClick={() => handlePageChange('Students')} />
-        <NavItem icon="assignment_turned_in" label="Referral Management" active={activePage === 'Referral Management'} onClick={() => handlePageChange('Referral Management')} />
-        <NavItem icon="security" label="Security & Consent" active={activePage === 'Security & Consent'} onClick={() => handlePageChange('Security & Consent')} />
+        <NavItem icon="group" label="学生管理" active={activePage === 'Students'} onClick={() => handlePageChange('Students')} />
+        <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === 'Referral Management'} onClick={() => handlePageChange('Referral Management')} />
+        <NavItem icon="security" label="安全与知情同意" active={activePage === 'Security & Consent'} onClick={() => handlePageChange('Security & Consent')} />
       </Sidebar>
 
       <div className="flex-1 flex flex-col min-w-0 bg-transparent">
-        <Header searchPlaceholder="Search students and referrals" />
+        <Header searchPlaceholder="搜索学生与转诊" />
         <MainContent 
           isSidePanelOpen={!!selectedItem}
           sidePanel={
@@ -107,26 +107,26 @@ export function TeacherPage() {
                       </div>
                     </div>
 
-                    <DetailsSection title="Who has access">
+                    <DetailsSection title="访问权限">
                        <div className="w-8 h-8 rounded-full bg-[#E47035] text-white flex items-center justify-center text-sm font-medium mt-1">
                          D
                        </div>
-                       <span className="text-[14px] text-[var(--md-sys-color-on-surface-variant)]">Restricted to Faculty</span>
+                       <span className="text-[14px] text-[var(--md-sys-color-on-surface-variant)]">仅限教职工访问</span>
                     </DetailsSection>
 
                     {selectedItem.name ? (
-                      <DetailsSection title="Student Details">
-                        <DetailItem label="Full Name" value={selectedItem.name} />
-                        <DetailItem label="Major" value={selectedItem.major} />
-                        <DetailItem label="Year" value={selectedItem.year} />
-                        <DetailItem label="Status" value={selectedItem.status} />
+                      <DetailsSection title="学生详情">
+                        <DetailItem label="姓名" value={selectedItem.name} />
+                        <DetailItem label="专业" value={selectedItem.major} />
+                        <DetailItem label="年级" value={selectedItem.year} />
+                        <DetailItem label="状态" value={selectedItem.status} />
                       </DetailsSection>
                     ) : (
-                      <DetailsSection title="Referral Details">
-                        <DetailItem label="Student" value={selectedItem.studentName} />
-                        <DetailItem label="Type" value={selectedItem.type} />
-                        <DetailItem label="Date" value={selectedItem.date} />
-                        <DetailItem label="Status" value={selectedItem.status} />
+                      <DetailsSection title="转诊详情">
+                        <DetailItem label="学生" value={selectedItem.studentName} />
+                        <DetailItem label="类型" value={selectedItem.type} />
+                        <DetailItem label="日期" value={selectedItem.date} />
+                        <DetailItem label="状态" value={selectedItem.status} />
                       </DetailsSection>
                     )}
                   </>
@@ -135,7 +135,14 @@ export function TeacherPage() {
             )}
           </DetailsPanel>
         }>
-          <CanvasHeader title={activePage} />
+          <CanvasHeader title={
+            activePage === 'Dashboard' ? '控制面板' :
+            activePage === 'Notifications' ? '通知中心' :
+            activePage === 'Students' ? '学生管理' :
+            activePage === 'Referral Management' ? '转诊管理' :
+            activePage === 'Security & Consent' ? '安全与知情同意' :
+            activePage
+          } />
           
           {activePage === 'Notifications' ? (
             <NotificationsView />
@@ -153,10 +160,10 @@ export function TeacherPage() {
                   <ProfileSummaryCard 
                     avatarText="E"
                     title="Dr. Emily Watson"
-                    subtitle="Faculty"
+                    subtitle="教研人员"
                     metadata={[
                       { icon: "badge", value: "T-88291" },
-                      { icon: "account_balance", value: "Psychology" }
+                      { icon: "account_balance", value: "心理学系" }
                     ]}
                     onClick={() => setShowProfileDetails(true)}
                   />
@@ -165,7 +172,7 @@ export function TeacherPage() {
                   <ActionMetricWidget
                     icon="group"
                     numericValue={42}
-                    label="Students Assigned"
+                    label="分配学生"
                     containerColorClass="bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]"
                     onClick={() => handlePageChange('Students')}
                   />
@@ -174,7 +181,7 @@ export function TeacherPage() {
                   <ActionMetricWidget
                     icon="assignment_late"
                     numericValue={5}
-                    label="Pending Referrals"
+                    label="待处理转诊"
                     containerColorClass="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]"
                     onClick={() => handlePageChange('Referral Management')}
                   />
@@ -182,21 +189,21 @@ export function TeacherPage() {
 
                 {/* Bottom Section */}
                 <div className="md:col-span-12 flex flex-col gap-4 mt-4">
-                  <h3 className="text-[16px] leading-[24px] font-medium text-[var(--md-sys-color-on-surface)] tracking-[0.15px]">Recent Activity</h3>
+                  <h3 className="text-[16px] leading-[24px] font-medium text-[var(--md-sys-color-on-surface)] tracking-[0.15px]">最近活动</h3>
                   <InteractiveStatusList
                      items={[
                        {
                          id: '1',
-                         title: 'New Student Assigned: Daniil Petrov',
-                         timestamp: '2 hours ago',
-                         statusText: 'High Risk Flag',
+                         title: '新分配学生：Daniil Petrov',
+                         timestamp: '2小时前',
+                         statusText: '高风险标识',
                          statusChipColor: 'error-container'
                        },
                        {
                          id: '2',
-                         title: 'Referral Update: Alice Smith',
-                         timestamp: 'Yesterday',
-                         statusText: 'Pending Review',
+                         title: '转诊更新：Alice Smith',
+                         timestamp: '昨天',
+                         statusText: '审核中',
                          statusChipColor: 'secondary-container'
                        }
                      ]}
@@ -207,7 +214,7 @@ export function TeacherPage() {
             </div>
           ) : (
             <div className="flex-1 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
-              Select an item from the sidebar
+              请从侧边栏选择一项
             </div>
           )}
         </MainContent>

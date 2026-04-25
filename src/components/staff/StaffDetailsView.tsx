@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { DetailsSection, DetailItem } from './DetailsPanel';
-import { ActionFooter, PrimaryButton, SecondaryButton } from './ActionComponents';
-import { useCreationOverlay } from '../contexts/CreationContext';
+import { DetailsSection, DetailItem } from '../common/DetailsPanel';
+import { ActionFooter, PrimaryButton, SecondaryButton } from '../common/ActionComponents';
+import { useCreationOverlay } from '../../contexts/CreationContext';
 
 interface Counselor {
   id: string;

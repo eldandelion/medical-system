@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DataTable, ColumnDefinition } from './DataTable';
+import { DataTable, ColumnDefinition } from '../common/DataTable';
 
 interface Counselor {
   id: string;

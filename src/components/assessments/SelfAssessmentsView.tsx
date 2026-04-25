@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { MaterialChipSet, MaterialFilterChip } from './MaterialChips';
+import { MaterialChipSet, MaterialFilterChip } from '../common/MaterialChips';
 import { AssessmentCard } from './AssessmentCard';
 
 interface Assessment {

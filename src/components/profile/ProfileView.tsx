@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ProfileListItem } from './ProfileListItem';
-import { MaterialAssistChip, MaterialChipSet } from './MaterialChips';
+import { MaterialAssistChip, MaterialChipSet } from '../common/MaterialChips';
 
 export function ProfileView() {
   const profileData: Array<{

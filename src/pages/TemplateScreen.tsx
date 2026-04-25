@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Sidebar } from '../components/Sidebar';
-import { Header } from '../components/Header';
-import { MainContent } from '../components/MainContent';
-import { NavItem } from '../components/NavItem';
+import { Sidebar } from '../components/layout/Sidebar';
+import { Header } from '../components/layout/Header';
+import { MainContent } from '../components/layout/MainContent';
+import { NavItem } from '../components/layout/NavItem';
 
 export function TemplateScreen() {
   return (

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { DetailsSection, DetailItem } from './DetailsPanel';
-import { ActionFooter, PrimaryButton, SecondaryButton } from './ActionComponents';
+import { DetailsSection, DetailItem } from '../common/DetailsPanel';
+import { ActionFooter, PrimaryButton, SecondaryButton } from '../common/ActionComponents';
 
 interface Referral {
   id: string;

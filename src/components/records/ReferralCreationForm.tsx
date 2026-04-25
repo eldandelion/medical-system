@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { SecondaryButton, PrimaryButton } from './ActionComponents';
+import { SecondaryButton, PrimaryButton } from '../common/ActionComponents';
 
 export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
   return (

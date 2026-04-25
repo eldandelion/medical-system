@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { DataTable, ColumnDefinition } from './DataTable';
-import { FilterChipSet } from './FilterChip';
+import { DataTable, ColumnDefinition } from '../common/DataTable';
+import { FilterChipSet } from '../common/FilterChip';
 
 interface Student {
   id: string;

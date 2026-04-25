@@ -1,5 +1,5 @@
 import React from 'react';
-import { SidebarProvider } from '../contexts/SidebarContext';
+import { SidebarProvider } from '../../contexts/SidebarContext';
 
 export function Sidebar({ children, composeButton }: { children?: React.ReactNode; composeButton?: React.ReactNode }) {
   const width = 100;
