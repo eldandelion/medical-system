@@ -65,13 +65,10 @@ export function TertiaryFab({ icon, label, onClick }: ButtonProps) {
       variant="tertiary" 
       label={isCollapsed ? undefined : label} 
       onClick={onClick}
-      className={`transition-all duration-200 ${isCollapsed ? 'w-14 h-14' : 'w-full'}`}
+      className={`transition-all duration-200 ${isCollapsed ? '' : 'w-full'}`}
       style={{ 
         '--md-fab-container-shape': '16px',
-        '--md-fab-container-elevation': '0',
-        '--md-fab-hover-container-elevation': '0',
-        '--md-fab-focus-container-elevation': '0',
-        '--md-fab-pressed-container-elevation': '0'
+        display: isCollapsed ? 'inline-flex' : 'flex'
       } as React.CSSProperties}
     >
       {icon && <md-icon slot="icon">{icon}</md-icon>}

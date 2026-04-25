@@ -2,8 +2,8 @@ import React from 'react';
 import { SidebarProvider } from '../../contexts/SidebarContext';
 
 export function Sidebar({ children, composeButton }: { children?: React.ReactNode; composeButton?: React.ReactNode }) {
-  const width = 100;
   const isCollapsed = true;
+  const width = isCollapsed ? 80 : 256;
 
   return (
     <SidebarProvider isCollapsed={isCollapsed} sidebarWidth={width}>
