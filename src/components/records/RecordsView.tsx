@@ -21,47 +21,47 @@ export function RecordsView({ onRecordSelect, selectedRecordId }: RecordsViewPro
   const records: PsychiatricRecord[] = [
     {
       id: '1',
-      type: 'Initial Referral',
+      type: '初诊转诊',
       icon: 'clinical_notes',
       iconColor: 'var(--md-sys-color-on-surface-variant)',
-      reason: 'Anxiety and panic attacks evaluation',
-      date: 'Apr 12, 2026',
+      reason: '焦虑与惊恐发作评估',
+      date: '2026年4月12日',
       status: 'Closed'
     },
     {
       id: '2',
-      type: 'Follow-up',
+      type: '随访',
       icon: 'forum',
       iconColor: 'var(--md-sys-color-on-surface-variant)',
-      reason: 'Medication management (SSRI adjustment)',
-      date: 'Apr 20, 2026',
+      reason: '药物管理（SSRI 调整）',
+      date: '2026年4月20日',
       status: 'Pending'
     },
     {
       id: '3',
-      type: 'Initial Referral',
+      type: '初诊转诊',
       icon: 'clinical_notes',
       iconColor: 'var(--md-sys-color-on-surface-variant)',
-      reason: 'ADHD assessment and diagnostic interview',
-      date: 'May 05, 2026',
+      reason: 'ADHD 评估与诊断访谈',
+      date: '2026年5月05日',
       status: 'Pending'
     },
     {
       id: '4',
-      type: 'Follow-up',
+      type: '随访',
       icon: 'forum',
       iconColor: 'var(--md-sys-color-on-surface-variant)',
-      reason: 'Cognitive Behavioral Therapy session #4',
-      date: 'Mar 15, 2026',
+      reason: '认知行为疗法（CBT）第 4 次会谈',
+      date: '2026年3月15日',
       status: 'Closed'
     },
     {
       id: '5',
-      type: 'Follow-up',
+      type: '随访',
       icon: 'forum',
       iconColor: 'var(--md-sys-color-on-surface-variant)',
-      reason: 'Sleep disturbance and insomnia review',
-      date: 'Mar 01, 2026',
+      reason: '睡眠障碍与失眠复查',
+      date: '2026年3月01日',
       status: 'Closed'
     }
   ];
@@ -69,7 +69,7 @@ export function RecordsView({ onRecordSelect, selectedRecordId }: RecordsViewPro
   const columns: ColumnDefinition<PsychiatricRecord>[] = [
     {
       key: 'type',
-      label: 'Type',
+      label: '类型',
       width: 'w-[30%]',
       render: (item, isSelected) => (
         <div className="flex items-center gap-4">
@@ -85,7 +85,7 @@ export function RecordsView({ onRecordSelect, selectedRecordId }: RecordsViewPro
     },
     {
       key: 'details',
-      label: 'Details',
+      label: '详情',
       width: 'flex-1',
       render: (item, isSelected) => (
         <div className="flex flex-col justify-center">
@@ -98,7 +98,7 @@ export function RecordsView({ onRecordSelect, selectedRecordId }: RecordsViewPro
     },
     {
       key: 'status',
-      label: 'Status',
+      label: '状态',
       width: 'w-[20%]',
       render: (item, isSelected) => {
         const isPending = item.status === 'Pending';
@@ -109,7 +109,7 @@ export function RecordsView({ onRecordSelect, selectedRecordId }: RecordsViewPro
                 ? 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]' 
                 : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]'
             }`}>
-              {item.status}
+              {item.status === 'Pending' ? '处理中' : '已结案'}
             </span>
           </div>
         );
@@ -132,7 +132,7 @@ export function RecordsView({ onRecordSelect, selectedRecordId }: RecordsViewPro
   return (
     <div className="w-full flex flex-col pt-4">
       <div className="px-6">
-        <RecordHeader title="Psychiatric Records" />
+        <RecordHeader title="精神医学记录" />
       </div>
       <div className="mt-2">
         <DataTable columns={columns} data={records} onRowClick={onRecordSelect} selectedId={selectedRecordId} />
