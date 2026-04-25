@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 /* Light Theme Variables */
-:root, .light {
+:root,
+.light {
   --md-sys-color-primary: rgb(101 85 143);
   --md-sys-color-surface-tint: rgb(103 80 164);
   --md-sys-color-on-primary: rgb(255 255 255);
@@ -109,6 +110,7 @@
 :root {
   color-scheme: light;
 }
+
 .dark {
   color-scheme: dark;
 }
@@ -120,9 +122,12 @@
   height: 0;
   background: transparent;
 }
+
 .custom-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 .filled-icon {
