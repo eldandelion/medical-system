@@ -19,10 +19,10 @@ export function NavItem({ icon, label, active, onClick }: NavItemProps) {
         isCollapsed 
           ? 'flex-col items-center justify-center gap-1 py-1.5 mx-2' 
           : 'flex-row items-center gap-4 px-4 py-2.5 mx-2 rounded-full'
-      } ${
+      } font-medium ${
         active 
-          ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] font-medium' 
-          : 'hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)]'
+          ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]' 
+          : 'hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)] opacity-70 hover:opacity-100'
       }`}
     >
       <span 
