@@ -72,7 +72,7 @@ export function StudentPage() {
                       </h1>
                       <div className="flex">
                         <span className={`px-3 py-1 rounded-lg text-[12px] font-medium bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface-variant)] border border-[var(--md-sys-color-outline-variant)] border-opacity-20`}>
-                          {selectedRecord.status === 'Closed' ? 'Closed (已结案)' : 'Pending Review (审核中)'}
+                          {selectedRecord.status === 'Closed' ? '已结案' : '审核中'}
                         </span>
                       </div>
                     </div>
@@ -89,28 +89,28 @@ export function StudentPage() {
                   </div>
 
                   {/* Reason Section (Standardized Layout) */}
-                  <DetailsSection title="Reason (现有问题)" icon="psychology">
+                  <DetailsSection title="现有问题" icon="psychology">
                     <div className="border border-[var(--md-sys-color-outline)] rounded-xl p-4 bg-transparent outline-none">
                       <p className="text-[14px] leading-[20px] font-normal text-[var(--md-sys-color-on-surface)]">
-                        {selectedRecord.reason}. Patient reports sustained difficulty with concentration and emotional regulation in clinical settings. Recommendation for further screening for generalized symptoms.
+                        {selectedRecord.reason}。患者报告在临床环境中持续存在注意力集中和情绪调节困难。建议进一步进行广泛症状筛查。
                       </p>
                     </div>
                   </DetailsSection>
 
                   {/* Clinical Feedback Container (Conditional) */}
                   {selectedRecord.status === 'Closed' && (
-                    <DetailsSection title="Clinical Feedback (反馈与建议)" icon="clinical_notes">
+                    <DetailsSection title="反馈与建议" icon="clinical_notes">
                       <div className="bg-[var(--md-sys-color-surface-container)] rounded-xl p-4 flex flex-col gap-4">
                         <div className="flex flex-col gap-1">
-                          <span className="text-[12px] font-medium text-[var(--md-sys-color-on-surface-variant)] uppercase">Hospital Summary</span>
+                          <span className="text-[12px] font-medium text-[var(--md-sys-color-on-surface-variant)] uppercase">医院摘要</span>
                           <p className="text-[14px] text-[var(--md-sys-color-on-surface)]">
-                            The student has completed the initial evaluation. Psychometric results indicate moderate distress levels. No medication initiated at this stage.
+                            该学生已完成初步评估。心理测评结果显示中度困扰水平。目前阶段未启动药物治疗。
                           </p>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[12px] font-medium text-[var(--md-sys-color-on-surface-variant)] uppercase">Follow-up (随访)</span>
+                          <span className="text-[12px] font-medium text-[var(--md-sys-color-on-surface-variant)] uppercase">随访安排</span>
                           <p className="text-[14px] text-[var(--md-sys-color-on-surface)]">
-                            Scheduled for bi-weekly counseling sessions. Next review set for June 2026.
+                            已安排每两周一次的咨询环节。下次复核定于 2026年6月。
                           </p>
                         </div>
                       </div>
@@ -118,7 +118,7 @@ export function StudentPage() {
                   )}
 
                   {/* Attachments Section */}
-                  <DetailsSection title="Attachments" icon="attach_file">
+                  <DetailsSection title="附件" icon="attach_file">
                     <div className="flex flex-col gap-2">
                       {[1, 2].map(id => (
                         <div key={id} className="flex items-center gap-3 p-3 rounded-lg border border-[var(--md-sys-color-outline-variant)] border-opacity-30 hover:bg-[var(--md-sys-color-surface-container-low)] transition-colors cursor-pointer group">
@@ -134,19 +134,19 @@ export function StudentPage() {
                   </DetailsSection>
 
                   {/* Data Sharing & Consent Section */}
-                  <DetailsSection title="Data Sharing & Consent" icon="shield_lock">
+                  <DetailsSection title="数据共享与知情同意" icon="shield_lock">
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-[#E47035] text-white flex items-center justify-center text-sm font-medium shrink-0">
                           D
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">Private access</span>
-                          <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)]">Managed under PIPL compliance</span>
+                          <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">隐私访问</span>
+                          <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)]">受 PIPL 合规管理</span>
                         </div>
                       </div>
                       <button className="self-start px-5 py-1.5 rounded-full border border-[var(--md-sys-color-outline)] text-[14px] font-medium text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-surface-variant)] transition-colors mt-2">
-                        Manage access & consent
+                        管理访问与知情同意
                       </button>
                     </div>
                   </DetailsSection>

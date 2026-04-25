@@ -202,14 +202,14 @@ export function HeadCouncillorPage() {
                      items={[
                        {
                          id: '1',
-                         title: '新分配学生：Daniil Petrov',
+                         title: '新分配学生：达尼尔·彼得罗夫',
                          timestamp: '2小时前',
                          statusText: '高风险标识',
                          statusChipColor: 'error-container'
                        },
                        {
                          id: '2',
-                         title: '转诊更新：Alice Smith',
+                         title: '转诊更新：爱丽丝·史密斯',
                          timestamp: '昨天',
                          statusText: '审核中',
                          statusChipColor: 'secondary-container'
