@@ -27,6 +27,7 @@ export function NavItem({ icon, label, active, onClick }: NavItemProps) {
     >
       <span 
         className="material-symbols-outlined shrink-0" 
+        style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}
       >
         {icon}
       </span>
