@@ -74,7 +74,7 @@ export function SelfAssessmentsView() {
     }
   ];
 
-  const filteredAssessments = assessments.filter(a => 
+  const filteredAssessments = assessments.filter(a =>
     selectedFilter === '全部' || (selectedFilter === '进行中' && a.status === 'In progress') || (selectedFilter === '已完成' && a.status === 'Completed')
   );
 
@@ -84,7 +84,7 @@ export function SelfAssessmentsView() {
     <div className="flex-1 flex flex-col">
       {/* Connected Button Group Section - Sticky below CanvasHeader */}
       <div className="sticky top-[65px] z-10 px-6 py-4 bg-[var(--md-sys-color-surface)] flex justify-center md:justify-start">
-        <SegmentedButton 
+        <SegmentedButton
           items={filters.map(f => ({ label: f, value: f }))}
           selectedValue={selectedFilter}
           onChange={handleFilterChange}
@@ -103,10 +103,10 @@ export function SelfAssessmentsView() {
               completionPercentage={assessment.completionPercentage}
               duration={assessment.duration}
               actionLabel={
-                assessment.completionPercentage === 100 
-                  ? '查看结果' 
-                  : assessment.completionPercentage === 0 
-                    ? '开始' 
+                assessment.completionPercentage === 100
+                  ? '查看结果'
+                  : assessment.completionPercentage === 0
+                    ? '开始'
                     : '继续'
               }
               onAction={() => console.log(`Action for ${assessment.title}`)}

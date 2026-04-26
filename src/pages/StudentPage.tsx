@@ -156,11 +156,11 @@ export function StudentPage() {
           }>
           <CanvasHeader title={
             activePage === 'Dashboard' ? '控制面板' :
-            activePage === 'Notifications' ? '通知中心' :
-            activePage === 'Assessments' ? '自我测评' :
-            activePage === 'My Records' ? '我的记录' :
-            activePage === 'Security & Consent' ? '安全与知情同意' :
-            activePage
+              activePage === 'Notifications' ? '通知中心' :
+                activePage === 'Assessments' ? '自我测评' :
+                  activePage === 'My Records' ? '我的记录' :
+                    activePage === 'Security & Consent' ? '安全与知情同意' :
+                      activePage
           } />
 
           {activePage === 'Notifications' ? (

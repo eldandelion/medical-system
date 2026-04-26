@@ -25,10 +25,10 @@ export function MainContent({ children, sidePanel, isSidePanelOpen }: MainConten
 
     const containerRect = containerRef.current.getBoundingClientRect();
     const newWidth = containerRect.right - e.clientX;
-    
+
     // Constraints: min 200px, max 800px or 60% of container
     let minWidth = 200;
-    
+
     // Use the action footer as a dynamic stopping anchor to prevent squishing buttons
     const sidePanelContainer = document.getElementById('side-panel-wrapper');
     if (sidePanelContainer) {
@@ -40,9 +40,9 @@ export function MainContent({ children, sidePanel, isSidePanelOpen }: MainConten
         minWidth = Math.max(minWidth, Math.ceil(intrinsicWidth));
       }
     }
-    
+
     const maxWidth = Math.min(800, containerRect.width * 0.6);
-    
+
     if (newWidth >= minWidth && newWidth <= maxWidth) {
       setSideWidth(newWidth);
     } else if (newWidth < minWidth) {
@@ -84,7 +84,7 @@ export function MainContent({ children, sidePanel, isSidePanelOpen }: MainConten
           if (footerContent) {
             const intrinsicWidth = footerContent.scrollWidth + 32; // 32px for wrapper p-4 margins
             const minWidth = Math.max(200, Math.ceil(intrinsicWidth));
-            
+
             setSideWidth(prevWidth => {
               // Only override if the current width is too small to fit the buttons
               if (prevWidth < minWidth) {
@@ -110,7 +110,7 @@ export function MainContent({ children, sidePanel, isSidePanelOpen }: MainConten
       {showSide && (
         <>
           {/* Resize Handle Area */}
-          <div 
+          <div
             onMouseDown={startResizing}
             className="w-4 h-full group cursor-col-resize flex items-center justify-center z-50 relative shrink-0"
           >
@@ -120,8 +120,8 @@ export function MainContent({ children, sidePanel, isSidePanelOpen }: MainConten
 
           {/* Side Panel Container */}
           <div id="side-panel-wrapper" style={{ width: sideWidth }} className="h-full flex flex-col shrink-0">
-            {React.isValidElement(sidePanel) 
-              ? React.cloneElement(sidePanel as React.ReactElement<any>, { width: sideWidth }) 
+            {React.isValidElement(sidePanel)
+              ? React.cloneElement(sidePanel as React.ReactElement<any>, { width: sideWidth })
               : sidePanel}
           </div>
         </>

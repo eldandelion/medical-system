@@ -1,9 +1,11 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { FullscreenDetailsView } from './FullscreenDetailsView';
 
 interface DetailsPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  onExpand?: () => void;
   title: string;
   icon: string;
   iconColor?: string;
@@ -18,6 +20,7 @@ interface DetailsPanelProps {
 export function DetailsPanel({
   isOpen,
   onClose,
+  onExpand,
   title,
   icon,
   iconColor = 'var(--md-sys-color-primary)',
@@ -28,8 +31,18 @@ export function DetailsPanel({
   width = 360,
   disablePadding = false
 }: DetailsPanelProps) {
+  const [isExpanded, setIsExpanded] = React.useState(false);
+
+  // Reset expansion state when the panel is closed
+  React.useEffect(() => {
+    if (!isOpen) {
+      setIsExpanded(false);
+    }
+  }, [isOpen]);
+
   return (
-    <AnimatePresence>
+    <>
+      <AnimatePresence>
       {isOpen && (
         <motion.aside
           initial={{ x: '20%', opacity: 0 }}
@@ -48,12 +61,20 @@ export function DetailsPanel({
               </div>
               <span className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)] truncate">{title}</span>
             </div>
-            <button 
-              onClick={onClose} 
-              className="p-1.5 hover:bg-[var(--md-sys-color-surface-variant)] rounded-full transition-colors shrink-0 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)]"
-            >
-              <span className="material-symbols-outlined text-[20px]">close</span>
-            </button>
+            <div className="flex items-center gap-0.5 shrink-0">
+              <button
+                onClick={() => onExpand ? onExpand() : setIsExpanded(true)}
+                className="p-1.5 hover:bg-[var(--md-sys-color-surface-variant)] rounded-full transition-colors flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)]"
+              >
+                <span className="material-symbols-outlined text-[20px]">open_in_full</span>
+              </button>
+              <button
+                onClick={onClose}
+                className="p-1.5 hover:bg-[var(--md-sys-color-surface-variant)] rounded-full transition-colors flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)]"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
           </div>
 
           {/* Tabs */}
@@ -63,11 +84,10 @@ export function DetailsPanel({
                 <div
                   key={tab}
                   onClick={() => onTabChange?.(tab)}
-                  className={`flex-1 flex justify-center py-3 text-[14px] font-medium cursor-pointer transition-colors relative ${
-                    activeTab === tab
-                      ? 'text-[var(--md-sys-color-primary)]'
-                      : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]'
-                  }`}
+                  className={`flex-1 flex justify-center py-3 text-[14px] font-medium cursor-pointer transition-colors relative ${activeTab === tab
+                    ? 'text-[var(--md-sys-color-primary)]'
+                    : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]'
+                    }`}
                 >
                   {tab}
                   {activeTab === tab && (
@@ -85,6 +105,18 @@ export function DetailsPanel({
         </motion.aside>
       )}
     </AnimatePresence>
+      <FullscreenDetailsView 
+        isOpen={isExpanded} 
+        onClose={() => setIsExpanded(false)} 
+        title={title}
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
+        disablePadding={disablePadding}
+      >
+        {children}
+      </FullscreenDetailsView>
+    </>
   );
 }
 
