@@ -18,7 +18,15 @@ export function Sidebar({ children, composeButton }: { children?: React.ReactNod
         
         {/* Compose Button Area */}
         {composeButton && (
-          <div className="px-2 flex justify-center mb-4">
+          <div 
+            className="px-2 flex justify-center mb-4"
+            style={{
+              '--md-fab-container-elevation': '0',
+              '--md-fab-hover-container-elevation': '0',
+              '--md-fab-focus-container-elevation': '0',
+              '--md-fab-pressed-container-elevation': '0',
+            } as React.CSSProperties}
+          >
             {composeButton}
           </div>
         )}
