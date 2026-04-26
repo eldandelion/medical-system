@@ -25,44 +25,44 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
   // Hardcoded mock extended data for the referral
   const extendedData = {
     age: 21,
-    gender: 'Male',
+    gender: '男',
     studentId: 'CSU-987654',
-    school: 'School of Mathematics and Physics',
-    grade: 'Junior (Year 3)',
+    school: '数理学院',
+    grade: '大三',
     phone: '+86 138-xxxx-xxxx',
     triage: {
       isFirstVisit: true,
       isMedicated: false,
-      priorTherapy: 'None',
-      scidDiagnosis: 'F41.1 Generalized Anxiety Disorder',
-      fullDescription: referral.reason + '. Additional context: Student reports working 20+ hours a week in a lab while maintaining a full course load. Sleep latency exceeds 90 minutes. Initial clinical interview suggests moderate risk of academic burnout with secondary anxiety symptoms.'
+      priorTherapy: '无',
+      scidDiagnosis: 'F41.1 广泛性焦虑障碍',
+      fullDescription: referral.reason + '。补充背景：该学生在维持全额课程负荷的同时，每周在实验室工作20小时以上。入睡潜伏期超过90分钟。初步临床访谈显示存在继发性焦虑症状，且面临中度学业倦怠风险。'
     },
     destination: {
-      hospital: 'Central University Medical Center',
-      department: 'Psychiatry & Behavioral Sciences',
-      doctor: 'Dr. Zhang (Chief Resident)',
-      admin: 'Sys-Handler (Auto-Assigned)',
+      hospital: '中央大学医学中心',
+      department: '精神医学与行为科学科',
+      doctor: '张医生 (总住院医师)',
+      admin: '系统处理程序 (自动分配)',
       transferDate: referral.date
     },
     risk: {
       ideation: true,
       attempt: false,
       selfHarm: true,
-      notes: 'No active plan for suicide, but recurrent passive ideation during high-stress periods. History of minor self-scratching on forearms as a maladaptive coping mechanism.'
+      notes: '无主动自杀计划，但在高压期间反复出现被动自杀意念。有轻微的前臂自我抓挠史，作为一种适应不良的应对机制。'
     },
     scores: [
-      { name: 'PHQ-9 (Depression)', value: 14, max: 27, level: 'Moderate' },
-      { name: 'GAD-7 (Anxiety)', value: 16, max: 21, level: 'Severe' },
-      { name: 'ISI (Insomnia)', value: 19, max: 28, level: 'Moderate-Severe' },
-      { name: 'SAS (Self-Rating Anxiety)', value: 58, max: 80, level: 'Moderate' },
+      { name: 'PHQ-9 (抑郁)', value: 14, max: 27, level: '中度' },
+      { name: 'GAD-7 (焦虑)', value: 16, max: 21, level: '重度' },
+      { name: 'ISI (失眠)', value: 19, max: 28, level: '中重度' },
+      { name: 'SAS (焦虑自评)', value: 58, max: 80, level: '中度' },
     ],
     feedback: {
-      summary: 'Patient presented with clinical symptoms of GAD. Recommended pharmacological intervention (Lexapro 10mg) and 6 sessions of CBT-I for insomnia.',
-      followUp: 'Bi-weekly check-ins with counselor; resume psychiatric review in 1 month.',
+      summary: '患者呈现广泛性焦虑障碍（GAD）的临床症状。建议药物干预（来士普 10mg）并进行6次针对失眠的认知行为治疗（CBT-I）。',
+      followUp: '每两周与咨询师进行一次面谈；1个月后重新进行精神科评估。',
       attachments: [
-        { name: 'Clinical_Intake_Report.pdf', size: '1.2 MB' },
-        { name: 'Hospital_Discharge_Summary.pdf', size: '840 KB' },
-        { name: 'Prescription_Copy.jpg', size: '2.1 MB' }
+        { name: '临床接诊报告.pdf', size: '1.2 MB' },
+        { name: '医院出院摘要.pdf', size: '840 KB' },
+        { name: '处方复印件.jpg', size: '2.1 MB' }
       ]
     }
   };
@@ -159,15 +159,15 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface)]">
                     <span className="material-symbols-outlined text-[20px] font-variation-settings-fill-1">fingerprint</span>
-                    <span className="text-sm font-bold uppercase tracking-widest leading-none">Static Demographics</span>
+                    <span className="text-sm font-bold uppercase tracking-widest leading-none">静态统计数据</span>
                   </div>
                   <span className="material-symbols-outlined text-[var(--md-sys-color-on-surface-variant)] opacity-50 cursor-pointer hover:opacity-100 transition-opacity">chevron_right</span>
                 </div>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4 px-2">
-                  <DetailItem label="Age (岁)" value={extendedData.age.toString() || ''} />
-                  <DetailItem label="Gender (性别)" value={extendedData.gender || ''} />
-                  <DetailItem label="Year (年级)" value={extendedData.grade} />
-                  <DetailItem label="Major (专业)" value={extendedData.school} />
+                  <DetailItem label="年龄 (岁)" value={extendedData.age.toString() || ''} />
+                  <DetailItem label="性别" value={extendedData.gender || ''} />
+                  <DetailItem label="年级" value={extendedData.grade} />
+                  <DetailItem label="专业" value={extendedData.school} />
                 </div>
               </div>
 
@@ -175,35 +175,35 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
               <div className="p-5 rounded-2xl border border-[var(--md-sys-color-outline-variant)] flex flex-col gap-6">
                 <div className="flex items-center gap-2 text-[var(--md-sys-color-primary)]">
                   <span className="material-symbols-outlined text-[20px]">medical_information</span>
-                  <span className="text-sm font-bold uppercase tracking-widest">Triage Basics</span>
+                  <span className="text-sm font-bold uppercase tracking-widest">分诊基本信息</span>
                 </div>
                 <div className="grid grid-cols-2 gap-y-6">
                   <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-60">
-                      Is First Visit (是否初诊)
+                      是否初诊
                     </span>
-                    <span className="text-[14px] font-medium">{extendedData.triage.isFirstVisit ? 'Yes' : 'No'}</span>
+                    <span className="text-[14px] font-medium">{extendedData.triage.isFirstVisit ? '是' : '否'}</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-60">
-                      Is Medicated (是否服药)
+                      是否服药
                     </span>
-                    <span className="text-[14px] font-medium">{extendedData.triage.isMedicated ? 'Yes' : 'No'}</span>
+                    <span className="text-[14px] font-medium">{extendedData.triage.isMedicated ? '是' : '否'}</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-60">
-                      Prior Therapy (接受过心理治疗)
+                      接受过心理治疗
                     </span>
                     <span className="text-[14px] font-medium">{extendedData.triage.priorTherapy}</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-60">
-                      SCID Diagnosis (SCID诊断)
+                      SCID诊断
                     </span>
                     <span className="text-[14px] font-medium text-[var(--md-sys-color-primary)]">{extendedData.triage.scidDiagnosis}</span>
                   </div>
                   <div className="col-span-2 flex flex-col gap-2 p-4 bg-[var(--md-sys-color-surface-container-lowest)] rounded-xl border border-dashed border-[var(--md-sys-color-outline-variant)]">
-                    <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-60 uppercase">Full Referral Reason / 转诊详细说明</span>
+                    <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-60 uppercase">转诊详细说明</span>
                     <p className="text-[14px] leading-relaxed text-[var(--md-sys-color-on-surface)] italic font-light">
                       "{extendedData.triage.fullDescription}"
                     </p>
@@ -216,20 +216,20 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-[var(--md-sys-color-primary)]">
                     <span className="material-symbols-outlined text-xl">output_circle</span>
-                    <span className="text-sm font-bold uppercase tracking-widest">Referral Destination</span>
+                    <span className="text-sm font-bold uppercase tracking-widest">转诊去向</span>
                   </div>
                   <div className="px-3 py-1 bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] rounded-full text-[10px] font-bold uppercase tracking-tighter">
-                    Active Routing
+                    活跃路由
                   </div>
                 </div>
                 
                 <div className="flex flex-col gap-1">
                   {[
-                    { icon: 'local_hospital', label: 'Hospital Name (接收医院)', value: extendedData.destination.hospital, clickable: true },
-                    { icon: 'account_tree', label: 'Department (接收科室)', value: extendedData.destination.department, clickable: true },
-                    { icon: 'badge', label: 'Attending Doctor (接诊医生)', value: extendedData.destination.doctor, clickable: true },
-                    { icon: 'verified_user', label: 'Triage Admin (分诊管理员)', value: extendedData.destination.admin, clickable: true },
-                    { icon: 'calendar_today', label: 'Transfer Date (转诊日期)', value: extendedData.destination.transferDate, clickable: false },
+                    { icon: 'local_hospital', label: '接收医院', value: extendedData.destination.hospital, clickable: true },
+                    { icon: 'account_tree', label: '接收科室', value: extendedData.destination.department, clickable: true },
+                    { icon: 'badge', label: '接诊医生', value: extendedData.destination.doctor, clickable: true },
+                    { icon: 'verified_user', label: '分诊管理员', value: extendedData.destination.admin, clickable: true },
+                    { icon: 'calendar_today', label: '转诊日期', value: extendedData.destination.transferDate, clickable: false },
                   ].map((item, idx) => (
                     <div key={idx} className={`flex items-center gap-4 py-3 border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 last:border-0 group ${item.clickable ? 'cursor-pointer hover:bg-[var(--md-sys-color-surface-variant)] px-3 -mx-3 rounded-xl transition-colors' : 'px-3 -mx-3'}`}>
                       <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105">
@@ -259,20 +259,20 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
             >
               <div className="p-2 rounded-2xl border border-[var(--md-sys-color-outline-variant)] flex flex-col">
                 {[
-                  { label: '自杀意念终身 (Ideation)', value: extendedData.risk.ideation },
-                  { label: '自杀尝试终身 (Attempt)', value: extendedData.risk.attempt },
-                  { label: '自伤行为终身 (Self-Harm)', value: extendedData.risk.selfHarm },
+                  { label: '自杀意念终身', value: extendedData.risk.ideation },
+                  { label: '自杀尝试终身', value: extendedData.risk.attempt },
+                  { label: '自伤行为终身', value: extendedData.risk.selfHarm },
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-center justify-between p-4 border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 last:border-0 hover:bg-[var(--md-sys-color-surface-container-low)] transition-colors rounded-xl">
                     <span className="text-[15px] font-medium">{item.label}</span>
                     <div className="flex items-center gap-2">
                        {item.value ? (
-                         <div className="flex items-center gap-2 text-[var(--md-sys-color-error)]">
-                           <span className="material-symbols-outlined font-variation-settings-fill-1">warning</span>
-                           <span className="text-xs font-bold uppercase">阳性 Positive</span>
-                         </div>
+                          <div className="flex items-center gap-2 text-[var(--md-sys-color-error)]">
+                            <span className="material-symbols-outlined font-variation-settings-fill-1">warning</span>
+                            <span className="text-xs font-bold uppercase">阳性 Positive</span>
+                          </div>
                        ) : (
-                         <span className="text-[var(--md-sys-color-on-surface-variant)] opacity-40 text-xs font-bold uppercase">阴性 Negative</span>
+                          <span className="text-[var(--md-sys-color-on-surface-variant)] opacity-40 text-xs font-bold uppercase">阴性 Negative</span>
                        )}
                     </div>
                   </div>
@@ -282,7 +282,7 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
               <div className="p-5 rounded-2xl bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
                 <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)]">
                   <span className="material-symbols-outlined text-sm">sticky_note_2</span>
-                  <span className="text-xs font-bold uppercase tracking-widest">Supplementary Risk Notes</span>
+                  <span className="text-xs font-bold uppercase tracking-widest">补充风险笔记</span>
                 </div>
                 <p className="text-[14px] leading-relaxed text-[var(--md-sys-color-on-surface)]">
                   {extendedData.risk.notes}
@@ -303,9 +303,9 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
                 <table className="w-full text-left border-collapse">
                   <thead className="bg-[var(--md-sys-color-surface-container-low)] border-b border-[var(--md-sys-color-outline-variant)]">
                     <tr>
-                      <th className="px-5 py-4 text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase">Assessment / 量表</th>
-                      <th className="px-5 py-4 text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase w-24">Score</th>
-                      <th className="px-5 py-4 text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase">Severity / Bar</th>
+                      <th className="px-5 py-4 text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase">量表名称</th>
+                      <th className="px-5 py-4 text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase w-24">得分</th>
+                      <th className="px-5 py-4 text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase">严重程度</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -328,7 +328,7 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
                                 animate={{ width: `${(score.value / score.max) * 100}%` }}
                                 transition={{ duration: 0.8, ease: "easeOut" }}
                                 className={`h-full rounded-full ${
-                                  score.level === 'Severe' || score.level.includes('Severe')
+                                  score.level === '重度' || score.level.includes('重度')
                                     ? 'bg-[var(--md-sys-color-error)]' 
                                     : 'bg-[var(--md-sys-color-primary)]'
                                 }`}
@@ -354,7 +354,7 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
             >
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-2">
-                   <h4 className="text-sm font-bold text-[var(--md-sys-color-primary)] uppercase tracking-widest">Medical Summary / 医院诊断结果</h4>
+                   <h4 className="text-sm font-bold text-[var(--md-sys-color-primary)] uppercase tracking-widest">医院诊断结果</h4>
                    <p className="text-[15px] leading-relaxed text-[var(--md-sys-color-on-surface)] font-normal">
                      {extendedData.feedback.summary}
                    </p>
@@ -363,7 +363,7 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
                 <div className="p-5 rounded-2xl bg-[var(--md-sys-color-surface-container-lowest)] border-l-4 border-[var(--md-sys-color-tertiary)] flex flex-col gap-2">
                    <h4 className="text-[11px] font-bold text-[var(--md-sys-color-tertiary)] uppercase flex items-center gap-2">
                      <span className="material-symbols-outlined text-[16px]">repeat</span>
-                     Follow-up Plan / 随访计划
+                     随访计划
                    </h4>
                    <p className="text-[14px] text-[var(--md-sys-color-on-surface)] font-medium">
                      {extendedData.feedback.followUp}
@@ -372,7 +372,7 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
               </div>
 
               <div className="flex flex-col gap-3">
-                 <h4 className="text-xs font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest px-1">Attachments 附件 (3)</h4>
+                 <h4 className="text-xs font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest px-1">附件 (3)</h4>
                  <div className="grid grid-cols-1 gap-3">
                    {extendedData.feedback.attachments.map((file, idx) => (
                      <div key={idx} className="p-4 rounded-xl border border-[var(--md-sys-color-outline-variant)] hover:bg-[var(--md-sys-color-surface-container-low)] transition-all flex items-center justify-between group">
@@ -399,8 +399,8 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
 
       {/* Action Footer */}
       <ActionFooter>
-        <PrimaryButton icon="upload_file" label="Upload Documents" />
-        <SecondaryButton icon="check_circle" label="Acknowledge Feedback" />
+        <PrimaryButton icon="upload_file" label="上传文件" />
+        <SecondaryButton icon="check_circle" label="确认反馈" />
       </ActionFooter>
     </div>
   );

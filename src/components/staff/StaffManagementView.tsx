@@ -19,33 +19,33 @@ export function StaffManagementView({ onStaffSelect, selectedStaffId }: StaffMan
   const counselors: Counselor[] = [
     {
       id: 'c1',
-      name: 'Dr. Zhang Wei',
+      name: '张伟医生',
       employeeId: 'EMP-1102',
-      department: 'School of Medicine',
+      department: '医学院',
       activeCaseload: 15,
       status: 'Active'
     },
     {
       id: 'c2',
-      name: 'Li Na',
+      name: '李娜',
       employeeId: 'EMP-1105',
-      department: 'School of Engineering',
+      department: '工学院',
       activeCaseload: 8,
       status: 'Active'
     },
     {
       id: 'c3',
-      name: 'Wang Ming',
+      name: '王明',
       employeeId: 'EMP-1109',
-      department: 'School of Economics',
+      department: '经济学院',
       activeCaseload: 22,
       status: 'Suspended'
     },
     {
       id: 'c4',
-      name: 'Chen Jia',
+      name: '陈佳',
       employeeId: 'EMP-1112',
-      department: 'School of Arts',
+      department: '艺术学院',
       activeCaseload: 3,
       status: 'Inactive'
     }
@@ -54,23 +54,23 @@ export function StaffManagementView({ onStaffSelect, selectedStaffId }: StaffMan
   const columns: ColumnDefinition<Counselor>[] = [
     {
       key: 'name',
-      label: 'Counselor',
+      label: '咨询师',
       width: 'w-[35%]',
       render: (item) => (
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[13px] font-medium shrink-0 uppercase">
-            {item.name.replace('Dr. ', '').charAt(0)}
+            {item.name.charAt(0)}
           </div>
           <div className="flex flex-col">
             <span className="text-[14px] font-medium">{item.name}</span>
-            <span className="text-[12px] opacity-70">ID: {item.employeeId}</span>
+            <span className="text-[12px] opacity-70">工号: {item.employeeId}</span>
           </div>
         </div>
       )
     },
     {
       key: 'department',
-      label: 'Department',
+      label: '院系',
       width: 'w-[30%]',
       render: (item) => (
         <span className="text-[14px]">{item.department}</span>
@@ -78,11 +78,11 @@ export function StaffManagementView({ onStaffSelect, selectedStaffId }: StaffMan
     },
     {
       key: 'caseload',
-      label: 'Caseload',
+      label: '个案量',
       width: 'flex-1',
       render: (item) => (
         <div className="flex flex-col">
-          <span className="text-[14px] font-medium">{item.activeCaseload} Active Referrals</span>
+          <span className="text-[14px] font-medium">{item.activeCaseload} 个活跃转诊</span>
           <div className="w-24 h-1.5 bg-[var(--md-sys-color-surface-container-highest)] rounded-full mt-1.5 overflow-hidden">
              <div 
                className="h-full bg-[var(--md-sys-color-primary)] opacity-60" 
@@ -94,7 +94,7 @@ export function StaffManagementView({ onStaffSelect, selectedStaffId }: StaffMan
     },
     {
       key: 'status',
-      label: 'Status',
+      label: '状态',
       width: 'w-[120px]',
       render: (item) => {
         const isActive = item.status === 'Active';
@@ -104,7 +104,7 @@ export function StaffManagementView({ onStaffSelect, selectedStaffId }: StaffMan
               ? 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]' 
               : 'bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface-variant)]'
           }`}>
-            {item.status}
+            {item.status === 'Active' ? '活跃' : item.status === 'Inactive' ? '非活跃' : '暂停'}
           </span>
         );
       }
@@ -114,8 +114,8 @@ export function StaffManagementView({ onStaffSelect, selectedStaffId }: StaffMan
   return (
     <div className="w-full h-full flex flex-col pt-4 overflow-hidden">
       <div className="px-6 mb-2">
-        <h2 className="text-[22px] font-normal text-[var(--md-sys-color-on-surface)]">Counselor Registry</h2>
-        <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)]">Manage staff authorization and workload distribution</p>
+        <h2 className="text-[22px] font-normal text-[var(--md-sys-color-on-surface)]">咨询师登记表</h2>
+        <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)]">管理人员授权与工作负荷分配</p>
       </div>
       <div className="flex-1 overflow-hidden mt-4">
         <DataTable 

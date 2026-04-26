@@ -32,19 +32,19 @@ export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
 
   // Mock data for tabs
   const caseload = [
-    { id: 's1', name: 'Daniil Petrov', type: 'High Risk Referral', date: 'Apr 22, 2026' },
-    { id: 's2', name: 'Alice Smith', type: 'Maintenance', date: 'Apr 20, 2026' },
-    { id: 's3', name: 'James Wilson', type: 'Initial Intake', date: 'Apr 18, 2026' }
+    { id: 's1', name: 'Daniil Petrov', type: '高风险转诊', date: '2026年4月22日' },
+    { id: 's2', name: 'Alice Smith', type: '日常维护', date: '2026年4月20日' },
+    { id: 's3', name: 'James Wilson', type: '初诊接诊', date: '2026年4月18日' }
   ];
 
   const auditLogs = [
-    { id: 'l1', action: 'Exported Referral List', time: '2h ago', context: 'School of Medicine' },
-    { id: 'l2', action: 'Viewed Profile', time: '5h ago', context: 'ID: 987654321' },
-    { id: 'l3', action: 'Modified Consent Status', time: 'Yesterday', context: 'Student: Daniil Petrov' }
+    { id: 'l1', action: '导出了转诊列表', time: '2小时前', context: '医学院' },
+    { id: 'l2', action: '查看了个人资料', time: '5小时前', context: 'ID: 987654321' },
+    { id: 'l3', action: '修改了知情同意状态', time: '昨天', context: '学生：Daniil Petrov' }
   ];
 
-  const departments = ['Medicine', 'Engineering', 'Economics', 'Arts', 'Sciences', 'Law'];
-  const [authorizedDepartments, setAuthorizedDepartments] = React.useState(['Medicine', 'Engineering']);
+  const departments = ['医学', '工程', '经济', '艺术', '理学', '法学'];
+  const [authorizedDepartments, setAuthorizedDepartments] = React.useState(['医学', '工程']);
 
   const toggleCaseload = (id: string) => {
     setSelectedCaseloadIds(prev => 
@@ -54,11 +54,11 @@ export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
 
   const handleReassign = () => {
     openCreation(
-      'Reassign Workload',
+      '重新分配工作量',
       <div className="p-6">
-        <h3 className="text-[18px] font-medium mb-4">Select Destination Counselor</h3>
+        <h3 className="text-[18px] font-medium mb-4">选择目标咨询师</h3>
         <div className="flex flex-col gap-3">
-          {['Li Na', 'Wang Ming', 'Chen Jia'].map(name => (
+          {['李娜', '王明', '陈佳'].map(name => (
             <div 
               key={name}
               onClick={closeCreation}
@@ -79,7 +79,7 @@ export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
       <div className="p-6 pb-4 flex flex-col gap-4">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium shrink-0 uppercase">
-            {staff.name.replace('Dr. ', '').charAt(0)}
+            {staff.name.charAt(0)}
           </div>
           <div className="flex flex-col">
             <h1 className="text-[24px] leading-[32px] font-medium text-[var(--md-sys-color-on-surface)] tracking-tight">
@@ -132,14 +132,14 @@ export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
             >
               <div className="flex justify-between items-center mb-1 pr-1">
                 <span className="text-[12px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-70">
-                  {selectedCaseloadIds.length > 0 ? `${selectedCaseloadIds.length} Selected` : 'Active Workload'}
+                  {selectedCaseloadIds.length > 0 ? `已选择 ${selectedCaseloadIds.length} 项` : '活跃工作负荷'}
                 </span>
                 {selectedCaseloadIds.length > 0 && (
                   <button 
                     onClick={handleReassign}
                     className="text-[var(--md-sys-color-primary)] text-[12px] font-bold hover:underline uppercase tracking-widest"
                   >
-                    Reassign Selected
+                    重新分配所选
                   </button>
                 )}
               </div>
@@ -176,7 +176,7 @@ export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
               transition={{ duration: 0.2 }}
               className="flex flex-col gap-6"
             >
-              <h4 className="text-[12px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-70">Operational History</h4>
+              <h4 className="text-[12px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-70">操作历史记录</h4>
               <div className="relative pl-6 flex flex-col gap-8 before:content-[''] before:absolute before:left-[3px] before:top-2 before:bottom-2 before:w-[2px] before:bg-[var(--md-sys-color-outline-variant)] before:opacity-30">
                 {auditLogs.map(log => (
                   <div key={log.id} className="relative flex flex-col gap-1.5">
@@ -206,9 +206,9 @@ export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
               className="flex flex-col gap-6"
             >
               <div className="flex flex-col gap-1.5">
-                <span className="text-[12px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-70">Authorized Departments</span>
+                <span className="text-[12px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-70">授权院系</span>
                 <p className="text-[13px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
-                  Counselors are restricted to viewing student records and triage data within their designated academic scope.
+                  咨询师仅限于在其指定的学术范围内查看学生记录和分诊数据。
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-3 mt-2">
@@ -243,7 +243,7 @@ export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
       <ActionFooter>
         <PrimaryButton 
           icon="block" 
-          label="Suspend Access" 
+          label="暂停访问" 
           onClick={() => {}}
           style={{ 
             '--md-filled-button-container-color': 'var(--md-sys-color-error)',
@@ -256,7 +256,7 @@ export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
         />
         <SecondaryButton 
           icon="lock_reset" 
-          label="Reset Credentials" 
+          label="重置登录凭据" 
           onClick={() => {}}
         />
       </ActionFooter>

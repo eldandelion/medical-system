@@ -58,9 +58,9 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
   // Hardcoded mock data for visualization based on the student
   const mockExtendedData: any = {
     riskLevel: student.name === 'Daniil Petrov' ? 'Moderate' : 'Low',
-    riskReason: student.name === 'Daniil Petrov' ? 'Rising anxiety levels based on recent self-assessments.' : 'Stable baseline.',
-    referralReason: 'Self-referred for academic stress and persistent insomnia affecting concentration.',
-    scidDiagnosis: 'F41.1 Generalized Anxiety Disorder',
+    riskReason: student.name === 'Daniil Petrov' ? '根据最近的自评，焦虑水平有所上升。' : '状态稳定。',
+    referralReason: '因学业压力和持续性失眠自愿寻求帮助，失眠已影响其注意力集中。',
+    scidDiagnosis: 'F41.1 广泛性焦虑障碍',
     riskFlags: [
       { label: '自杀意念终身', value: true, severity: 'high' },
       { label: '自杀尝试终身', value: false, severity: 'none' },
@@ -68,29 +68,29 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
     ],
     demographics: {
       age: 21,
-      gender: 'Male',
+      gender: '男',
       studentId: student.id === '1' ? 'CSU-987654' : `CSU-${Math.floor(Math.random() * 900000) + 100000}`,
       emergencyContact: '+44 7700 900012'
     },
     psychometrics: {
       scores: [
-        { date: 'Jan', value: 45 },
-        { date: 'Feb', value: 52 },
-        { date: 'Mar', value: 48 },
-        { date: 'Apr', value: 65 },
+        { date: '1月', value: 45 },
+        { date: '2月', value: 52 },
+        { date: '3月', value: 48 },
+        { date: '4月', value: 65 },
       ],
       radarData: [
-        { subject: 'Anxiety', A: 120, fullMark: 150 },
-        { subject: 'Depression', A: 110, fullMark: 150 },
-        { subject: 'Stress', A: 135, fullMark: 150 },
-        { subject: 'Sleep', A: 80, fullMark: 150 },
-        { subject: 'Focus', A: 90, fullMark: 150 },
+        { subject: '焦虑', A: 120, fullMark: 150 },
+        { subject: '抑郁', A: 110, fullMark: 150 },
+        { subject: '压力', A: 135, fullMark: 150 },
+        { subject: '睡眠', A: 80, fullMark: 150 },
+        { subject: '专注度', A: 90, fullMark: 150 },
       ]
     },
     history: [
-      { date: '2025-11-20', type: 'Hospital Summary', description: 'Brief observation at City Hospital; discharged with recommendation for campus follow-up.' },
-      { date: '2026-02-15', type: 'Offline Communication', description: 'Met with course advisor regarding attendance irregularities.' },
-      { date: '2026-03-10', type: 'Previous Referral', description: 'Screened by department head; secondary review suggested.' },
+      { date: '2025-11-20', type: '医院摘要', description: '在市中心医院进行短期观察；出院时建议校内随访。' },
+      { date: '2026-02-15', type: '线下沟通', description: '因出勤不定期与课程顾问面谈。' },
+      { date: '2026-03-10', type: '前次转诊', description: '由院系负责人进行筛选；建议进行二次审查。' },
     ]
   };
 
@@ -180,19 +180,19 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface)]">
                     <span className="material-symbols-outlined text-[20px] font-variation-settings-fill-1">fingerprint</span>
-                    <span className="text-sm font-bold uppercase tracking-widest leading-none">Static Demographics</span>
+                    <span className="text-sm font-bold uppercase tracking-widest leading-none">静态统计数据</span>
                   </div>
                   <span className="material-symbols-outlined text-[var(--md-sys-color-on-surface-variant)] opacity-50 cursor-pointer hover:opacity-100 transition-opacity">chevron_right</span>
                 </div>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4 px-2">
-                  <DetailItem label="Age (岁)" value={mockExtendedData.demographics?.age.toString() || ''} />
-                  <DetailItem label="Gender (性别)" value={mockExtendedData.demographics?.gender || ''} />
-                  <DetailItem label="Year (年级)" value={student.year} />
-                  <DetailItem label="Major (专业)" value={student.major} />
+                  <DetailItem label="年龄 (岁)" value={mockExtendedData.demographics?.age.toString() || ''} />
+                  <DetailItem label="性别" value={mockExtendedData.demographics?.gender || ''} />
+                  <DetailItem label="年级" value={student.year} />
+                  <DetailItem label="专业" value={student.major} />
                 </div>
               </div>
 
-              <DetailsSection title="Current Referral Reason" icon="description" className="border-t-0 pt-0 mt-0">
+              <DetailsSection title="当前转诊原因" icon="description" className="border-t-0 pt-0 mt-0">
                 <div className="p-4 rounded-2xl bg-[var(--md-sys-color-primary-container)] bg-opacity-10 border-l-4 border-[var(--md-sys-color-primary)]">
                   <p className="text-[14px] text-[var(--md-sys-color-on-surface)] leading-relaxed italic">
                     "{mockExtendedData.referralReason}"
@@ -211,7 +211,7 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
               transition={{ duration: 0.2 }}
               className="flex flex-col gap-8"
             >
-              <DetailsSection title="Clinical Reality" icon="psychology">
+              <DetailsSection title="临床实际情况" icon="psychology">
                 <div className="flex flex-col gap-5">
                   <div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-[var(--md-sys-color-surface-container-low)]">
                     <span className="text-[12px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-70">SCID诊断</span>
@@ -219,7 +219,7 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
                   </div>
 
                   <div className="flex flex-col gap-3">
-                    <span className="text-[12px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-70 ml-1">Severe Risk Flags</span>
+                    <span className="text-[12px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-70 ml-1">严重风险标记</span>
                     <div className="grid grid-cols-1 gap-2.5">
                       {mockExtendedData.riskFlags.map((flag: any, idx: number) => (
                         <div key={idx} className="flex items-center justify-between px-4 py-3 rounded-xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)] border-opacity-50 transition-all hover:bg-[var(--md-sys-color-surface-container-low)]">
@@ -240,7 +240,7 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
               <div className="flex flex-col gap-2">
                 <h4 className="text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] flex items-center gap-2">
                   <span className="material-symbols-outlined text-sm">trending_up</span>
-                  Anxiety Score Progression
+                  焦虑分数趋势
                 </h4>
                 <div className="w-full h-48 bg-[var(--md-sys-color-surface-container-low)] rounded-2xl p-4 mt-2">
                   <ResponsiveContainer width="100%" height="100%">
@@ -285,7 +285,7 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
               <div className="flex flex-col gap-2">
                 <h4 className="text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] flex items-center gap-2">
                   <span className="material-symbols-outlined text-sm">hub</span>
-                  Symptom Distribution
+                  症状分布
                 </h4>
                 <div className="w-full h-64 flex justify-center mt-2 overflow-visible">
                   <ResponsiveContainer width="100%" height="100%">
@@ -308,11 +308,11 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
               </div>
 
               <div className="flex flex-col gap-3">
-                <h4 className="text-sm font-medium text-[var(--md-sys-color-on-surface-variant)]">Recent Assessments</h4>
+                <h4 className="text-sm font-medium text-[var(--md-sys-color-on-surface-variant)]">近期评估</h4>
                 {[
-                  { name: 'PHQ-9 (Depression)', score: '12/27', status: 'Moderate', date: '5 days ago' },
-                  { name: 'GAD-7 (Anxiety)', score: '15/21', status: 'Severe', date: '5 days ago' },
-                  { name: 'PSQI (Sleep)', score: '14/21', status: 'Poor', date: '2 weeks ago' }
+                  { name: 'PHQ-9 (抑郁)', score: '12/27', status: '中度', date: '5天前' },
+                  { name: 'GAD-7 (焦虑)', score: '15/21', status: '重度', date: '5天前' },
+                  { name: 'PSQI (睡眠)', score: '14/21', status: '较差', date: '2周前' }
                 ].map((item, idx) => (
                   <div key={idx} className="bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)] border-opacity-50 rounded-xl p-3 flex items-center justify-between">
                     <div>
@@ -321,7 +321,7 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
                     </div>
                     <div className="text-right">
                       <div className="text-[14px] font-bold text-[var(--md-sys-color-primary)]">{item.score}</div>
-                      <div className={`text-[10px] font-medium uppercase tracking-tighter ${item.status === 'Severe' ? 'text-[var(--md-sys-color-error)]' : 'text-[var(--md-sys-color-secondary)]'
+                      <div className={`text-[10px] font-medium uppercase tracking-tighter ${item.status === '重度' ? 'text-[var(--md-sys-color-error)]' : 'text-[var(--md-sys-color-secondary)]'
                         }`}>{item.status}</div>
                     </div>
                   </div>
@@ -362,7 +362,7 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
 
               <button className="flex items-center justify-center gap-2 py-3 border border-dashed border-[var(--md-sys-color-outline)] rounded-2xl text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] transition-colors mt-4">
                 <span className="material-symbols-outlined text-sm">add</span>
-                <span className="text-sm font-medium">Add Manual Log</span>
+                <span className="text-sm font-medium">添加手动日志</span>
               </button>
             </motion.div>
           )}
@@ -374,12 +374,12 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
         <PrimaryButton
           icon="send_time_extension"
           label="发起转诊"
-          onClick={() => openCreation('Drafting: New Referral', <div className="p-6">Referral Form Template goes here...</div>)}
+          onClick={() => openCreation('拟稿：新转诊', <div className="p-6">转诊表单模板将显示在此处...</div>)}
         />
         <SecondaryButton
           icon="history_edu"
           label="记录随访"
-          onClick={() => openCreation('Log Contact', <div className="p-6">Contact Log Template goes here...</div>)}
+          onClick={() => openCreation('记录联系', <div className="p-6">联系日志模板将显示在此处...</div>)}
         />
       </ActionFooter>
     </div>
