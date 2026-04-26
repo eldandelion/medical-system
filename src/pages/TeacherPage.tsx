@@ -220,9 +220,10 @@ export function TeacherPage() {
         </MainContent>
       </div>
 
-      {showProfileDetails && (
-        <ProfileDetailsView onBack={() => setShowProfileDetails(false)} />
-      )}
+      <ProfileDetailsView 
+        isOpen={showProfileDetails} 
+        onBack={() => setShowProfileDetails(false)} 
+      />
     </div>
   );
 }

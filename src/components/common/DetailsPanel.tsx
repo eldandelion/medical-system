@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FullscreenDetailsView } from './FullscreenDetailsView';
+import { FullScreenView } from './FullScreenView';
 
 interface DetailsPanelProps {
   isOpen: boolean;
@@ -105,7 +105,7 @@ export function DetailsPanel({
         </motion.aside>
       )}
     </AnimatePresence>
-      <FullscreenDetailsView 
+      <FullScreenView 
         isOpen={isExpanded} 
         onClose={() => setIsExpanded(false)} 
         title={title}
@@ -115,7 +115,7 @@ export function DetailsPanel({
         disablePadding={disablePadding}
       >
         {children}
-      </FullscreenDetailsView>
+      </FullScreenView>
     </>
   );
 }

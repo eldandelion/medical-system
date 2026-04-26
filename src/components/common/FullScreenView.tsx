@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
-interface FullscreenDetailsViewProps {
+interface FullScreenViewProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
@@ -12,7 +12,7 @@ interface FullscreenDetailsViewProps {
   disablePadding?: boolean;
 }
 
-export function FullscreenDetailsView({ 
+export function FullScreenView({ 
   isOpen, 
   onClose, 
   title,
@@ -21,7 +21,7 @@ export function FullscreenDetailsView({
   onTabChange,
   children,
   disablePadding = false
-}: FullscreenDetailsViewProps) {
+}: FullScreenViewProps) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -32,19 +32,15 @@ export function FullscreenDetailsView({
           transition={{ duration: 0.3, ease: 'easeOut' }}
           className="fixed inset-0 z-[150] bg-[var(--md-sys-color-surface)] flex flex-col overflow-hidden"
         >
-          {/* Header with back button */}
-          <header className="h-16 flex items-center border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 shrink-0 relative">
-            <div className="absolute left-4 inset-y-0 flex items-center">
-              <button 
-                onClick={onClose}
-                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--md-sys-color-surface-variant)] transition-colors text-[var(--md-sys-color-on-surface)] shrink-0"
-              >
-                <span className="material-symbols-outlined">arrow_back</span>
-              </button>
-            </div>
-            <div className="max-w-4xl w-full mx-auto px-6 flex items-center">
-              <h1 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] truncate">{title}</h1>
-            </div>
+          {/* Header with back button and title */}
+          <header className="h-16 flex items-center border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 shrink-0 px-4 gap-2">
+            <button 
+              onClick={onClose}
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--md-sys-color-surface-variant)] transition-colors text-[var(--md-sys-color-on-surface)] shrink-0"
+            >
+              <span className="material-symbols-outlined">arrow_back</span>
+            </button>
+            <h1 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] truncate">{title}</h1>
           </header>
 
           {/* Tabs - Centered in fullscreen */}
