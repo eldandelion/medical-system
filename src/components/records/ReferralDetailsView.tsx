@@ -211,14 +211,14 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
                 </div>
               </div>
 
-              {/* Referral Destination Card - Filled (SecondaryContainer) */}
-              <div className="p-5 rounded-2xl bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] flex flex-col gap-4">
+              {/* Referral Destination Card - Surface Container High with Tonal Icons */}
+              <div className="p-5 rounded-2xl bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] flex flex-col gap-4 border border-[var(--md-sys-color-outline-variant)] border-opacity-30">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 text-[var(--md-sys-color-primary)]">
                     <span className="material-symbols-outlined text-xl">output_circle</span>
                     <span className="text-sm font-bold uppercase tracking-widest">Referral Destination</span>
                   </div>
-                  <div className="px-3 py-1 bg-[var(--md-sys-color-secondary)] text-[var(--md-sys-color-on-secondary)] rounded-full text-[10px] font-bold uppercase tracking-tighter">
+                  <div className="px-3 py-1 bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] rounded-full text-[10px] font-bold uppercase tracking-tighter">
                     Active Routing
                   </div>
                 </div>
@@ -231,16 +231,16 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
                     { icon: 'verified_user', label: 'Triage Admin (分诊管理员)', value: extendedData.destination.admin, clickable: true },
                     { icon: 'calendar_today', label: 'Transfer Date (转诊日期)', value: extendedData.destination.transferDate, clickable: false },
                   ].map((item, idx) => (
-                    <div key={idx} className={`flex items-center gap-4 py-3 border-b border-[var(--md-sys-color-on-secondary-container)] border-opacity-10 last:border-0 group ${item.clickable ? 'cursor-pointer hover:bg-black hover:bg-opacity-5 px-3 -mx-3 rounded-xl transition-colors' : 'px-3 -mx-3'}`}>
-                      <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-on-secondary-container)] text-[var(--md-sys-color-secondary-container)] flex items-center justify-center shrink-0 shadow-sm">
+                    <div key={idx} className={`flex items-center gap-4 py-3 border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 last:border-0 group ${item.clickable ? 'cursor-pointer hover:bg-[var(--md-sys-color-surface-variant)] px-3 -mx-3 rounded-xl transition-colors' : 'px-3 -mx-3'}`}>
+                      <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105">
                         <span className="material-symbols-outlined text-xl">{item.icon}</span>
                       </div>
                       <div className="flex flex-col flex-1">
-                        <span className="text-[11px] font-bold opacity-60 uppercase tracking-tight">{item.label}</span>
+                        <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-70 uppercase tracking-tight">{item.label}</span>
                         <span className="text-[15px] font-medium leading-tight mt-0.5">{item.value}</span>
                       </div>
                       {item.clickable && (
-                        <span className="material-symbols-outlined opacity-40 group-hover:opacity-100 transition-opacity">chevron_right</span>
+                        <span className="material-symbols-outlined text-[var(--md-sys-color-on-surface-variant)] opacity-40 group-hover:opacity-100 transition-opacity">chevron_right</span>
                       )}
                     </div>
                   ))}
