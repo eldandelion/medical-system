@@ -3,13 +3,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import { DetailsSection, DetailItem } from '../common/DetailsPanel';
 import { ActionFooter, PrimaryButton, SecondaryButton } from '../common/ActionComponents';
 import { useCreationOverlay } from '../../contexts/CreationContext';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   Radar,
   RadarChart,
@@ -128,11 +128,10 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
           </div>
 
           {/* Critical Status: Risk Level Chip */}
-          <div className={`px-4 py-2 rounded-full flex items-center gap-2 font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${
-            mockExtendedData.riskLevel === 'High'
-              ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
-              : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-          }`}>
+          <div className={`px-4 py-2 rounded-full flex items-center gap-2 font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${mockExtendedData.riskLevel === 'High'
+            ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
+            : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+            }`}>
             <span className="material-symbols-outlined text-[18px]">
               {mockExtendedData.riskLevel === 'High' ? 'warning' : 'info'}
             </span>
@@ -147,16 +146,15 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as TabType)}
-            className={`flex-1 flex flex-col items-center py-4 px-1 gap-1 transition-all relative ${
-              activeTab === tab.id 
-                ? 'text-[var(--md-sys-color-primary)]' 
-                : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-40'
-            }`}
+            className={`flex-1 flex flex-col items-center py-4 px-1 gap-1 transition-all relative ${activeTab === tab.id
+              ? 'text-[var(--md-sys-color-primary)]'
+              : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-40'
+              }`}
           >
             <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
             <span className="text-[11px] font-bold whitespace-nowrap">{tab.label}</span>
             {activeTab === tab.id && (
-              <motion.div 
+              <motion.div
                 layoutId="activeTabUnderline"
                 className="absolute bottom-0 left-0 right-0 h-[3px] bg-[var(--md-sys-color-primary)] rounded-t-full"
               />
@@ -175,49 +173,30 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="flex flex-col gap-6"
+              className="flex flex-col gap-1"
             >
-              <DetailsSection title="Clinical Reality" icon="psychology">
-                <div className="flex flex-col gap-5">
-                  <div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-[var(--md-sys-color-surface-container-low)]">
-                    <span className="text-[12px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-70">SCID诊断</span>
-                    <span className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)]">{mockExtendedData.scidDiagnosis}</span>
+              {/* Static Demographics Section - Outlined Card with Navigation Arrow */}
+              <div className="p-5 rounded-2xl border border-[var(--md-sys-color-outline-variant)] flex flex-col gap-5 mb-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface)]">
+                    <span className="material-symbols-outlined text-[20px] font-variation-settings-fill-1">fingerprint</span>
+                    <span className="text-sm font-bold uppercase tracking-widest leading-none">Static Demographics</span>
                   </div>
-                  
-                  <div className="flex flex-col gap-3">
-                    <span className="text-[12px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-70 ml-1">Severe Risk Flags</span>
-                    <div className="grid grid-cols-1 gap-2.5">
-                      {mockExtendedData.riskFlags.map((flag: any, idx: number) => (
-                        <div key={idx} className="flex items-center justify-between px-4 py-3 rounded-xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)] border-opacity-50 transition-all hover:bg-[var(--md-sys-color-surface-container-low)]">
-                          <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">{flag.label}</span>
-                          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold ${
-                            flag.value 
-                             ? flag.severity === 'high' ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]' : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-                             : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)] opacity-40'
-                          }`}>
-                            {flag.value ? '阳性 (+)' : '阴性 (-)'}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <span className="material-symbols-outlined text-[var(--md-sys-color-on-surface-variant)] opacity-50 cursor-pointer hover:opacity-100 transition-opacity">chevron_right</span>
                 </div>
-              </DetailsSection>
-
-              <DetailsSection title="Current Referral Reason" icon="description">
-                <div className="p-4 rounded-2xl bg-[var(--md-sys-color-primary-container)] bg-opacity-10 border-l-4 border-[var(--md-sys-color-primary)]">
-                  <p className="text-[14px] text-[var(--md-sys-color-on-surface)] leading-relaxed italic">
-                    "{mockExtendedData.referralReason}"
-                  </p>
-                </div>
-              </DetailsSection>
-
-              <DetailsSection title="Static Demographics" icon="fingerprint">
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4 px-2">
                   <DetailItem label="Age (岁)" value={mockExtendedData.demographics?.age.toString() || ''} />
                   <DetailItem label="Gender (性别)" value={mockExtendedData.demographics?.gender || ''} />
                   <DetailItem label="Year (年级)" value={student.year} />
                   <DetailItem label="Major (专业)" value={student.major} />
+                </div>
+              </div>
+
+              <DetailsSection title="Current Referral Reason" icon="description" className="border-t-0 pt-0 mt-0">
+                <div className="p-4 rounded-2xl bg-[var(--md-sys-color-primary-container)] bg-opacity-10 border-l-4 border-[var(--md-sys-color-primary)]">
+                  <p className="text-[14px] text-[var(--md-sys-color-on-surface)] leading-relaxed italic">
+                    "{mockExtendedData.referralReason}"
+                  </p>
                 </div>
               </DetailsSection>
             </motion.div>
@@ -232,6 +211,32 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
               transition={{ duration: 0.2 }}
               className="flex flex-col gap-8"
             >
+              <DetailsSection title="Clinical Reality" icon="psychology">
+                <div className="flex flex-col gap-5">
+                  <div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-[var(--md-sys-color-surface-container-low)]">
+                    <span className="text-[12px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-70">SCID诊断</span>
+                    <span className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)]">{mockExtendedData.scidDiagnosis}</span>
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    <span className="text-[12px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-70 ml-1">Severe Risk Flags</span>
+                    <div className="grid grid-cols-1 gap-2.5">
+                      {mockExtendedData.riskFlags.map((flag: any, idx: number) => (
+                        <div key={idx} className="flex items-center justify-between px-4 py-3 rounded-xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)] border-opacity-50 transition-all hover:bg-[var(--md-sys-color-surface-container-low)]">
+                          <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">{flag.label}</span>
+                          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold ${flag.value
+                            ? flag.severity === 'high' ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]' : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                            : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)] opacity-40'
+                            }`}>
+                            {flag.value ? '阳性 (+)' : '阴性 (-)'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </DetailsSection>
+
               <div className="flex flex-col gap-2">
                 <h4 className="text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] flex items-center gap-2">
                   <span className="material-symbols-outlined text-sm">trending_up</span>
@@ -241,34 +246,34 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={mockExtendedData.psychometrics?.scores}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--md-sys-color-outline-variant)" vertical={false} />
-                      <XAxis 
-                        dataKey="date" 
-                        stroke="var(--md-sys-color-on-surface-variant)" 
-                        fontSize={10} 
-                        tickLine={false} 
+                      <XAxis
+                        dataKey="date"
+                        stroke="var(--md-sys-color-on-surface-variant)"
+                        fontSize={10}
+                        tickLine={false}
                         axisLine={false}
                       />
-                      <YAxis 
-                        stroke="var(--md-sys-color-on-surface-variant)" 
-                        fontSize={10} 
-                        tickLine={false} 
+                      <YAxis
+                        stroke="var(--md-sys-color-on-surface-variant)"
+                        fontSize={10}
+                        tickLine={false}
                         axisLine={false}
                         domain={[0, 100]}
                       />
-                      <Tooltip 
-                        contentStyle={{ 
+                      <Tooltip
+                        contentStyle={{
                           backgroundColor: 'var(--md-sys-color-surface-container-high)',
                           border: 'none',
                           borderRadius: '8px',
                           fontSize: '12px',
                           color: 'var(--md-sys-color-on-surface)'
-                        }} 
+                        }}
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="value" 
-                        stroke="var(--md-sys-color-primary)" 
-                        strokeWidth={2} 
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        stroke="var(--md-sys-color-primary)"
+                        strokeWidth={2}
                         dot={{ fill: 'var(--md-sys-color-primary)', r: 4 }}
                         activeDot={{ r: 6, stroke: 'var(--md-sys-color-surface)', strokeWidth: 2 }}
                       />
@@ -286,8 +291,8 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="50%" outerRadius="80%" data={mockExtendedData.psychometrics?.radarData}>
                       <PolarGrid stroke="var(--md-sys-color-outline-variant)" />
-                      <PolarAngleAxis 
-                        dataKey="subject" 
+                      <PolarAngleAxis
+                        dataKey="subject"
                         tick={{ fill: 'var(--md-sys-color-on-surface-variant)', fontSize: 10 }}
                       />
                       <Radar
@@ -316,9 +321,8 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
                     </div>
                     <div className="text-right">
                       <div className="text-[14px] font-bold text-[var(--md-sys-color-primary)]">{item.score}</div>
-                      <div className={`text-[10px] font-medium uppercase tracking-tighter ${
-                        item.status === 'Severe' ? 'text-[var(--md-sys-color-error)]' : 'text-[var(--md-sys-color-secondary)]'
-                      }`}>{item.status}</div>
+                      <div className={`text-[10px] font-medium uppercase tracking-tighter ${item.status === 'Severe' ? 'text-[var(--md-sys-color-error)]' : 'text-[var(--md-sys-color-secondary)]'
+                        }`}>{item.status}</div>
                     </div>
                   </div>
                 ))}
@@ -367,15 +371,15 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
 
       {/* Action Footer */}
       <ActionFooter>
-        <PrimaryButton 
-           icon="send_time_extension" 
-           label="发起转诊" 
-           onClick={() => openCreation('Drafting: New Referral', <div className="p-6">Referral Form Template goes here...</div>)} 
+        <PrimaryButton
+          icon="send_time_extension"
+          label="发起转诊"
+          onClick={() => openCreation('Drafting: New Referral', <div className="p-6">Referral Form Template goes here...</div>)}
         />
-        <SecondaryButton 
-           icon="history_edu" 
-           label="记录随访" 
-           onClick={() => openCreation('Log Contact', <div className="p-6">Contact Log Template goes here...</div>)}
+        <SecondaryButton
+          icon="history_edu"
+          label="记录随访"
+          onClick={() => openCreation('Log Contact', <div className="p-6">Contact Log Template goes here...</div>)}
         />
       </ActionFooter>
     </div>
