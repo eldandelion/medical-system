@@ -25,7 +25,7 @@
 - **Component Hierarchy**:
   - `pages/`: Orchestrate the overall layout and navigation for a specific user role.
   - `components/`: Domain-organized components (e.g., `records/`, `students/`, `layout/`).
-  - `components/common/`: Atomic and reusable UI elements (e.g., `DataTable.tsx`, `DetailsPanel.tsx`).
+  - `components/common/`: Atomic and reusable UI elements (e.g., `DataTable.tsx`, `DetailsPanel.tsx`, `GenericDialog.tsx`).
 - **Theming**: Dynamic theme switching (Light/Dark/System) managed via `ThemeContext` and applied through CSS variables.
 
 ## Directory Structure

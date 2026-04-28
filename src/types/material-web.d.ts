@@ -19,6 +19,25 @@ declare global {
         target?: string;
         ariaLabel?: string;
       }, HTMLElement>;
+      'md-dialog': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        open?: boolean;
+        type?: 'alert' | 'full-screen';
+        headline?: string;
+      }, HTMLElement>;
+      'md-filled-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        disabled?: boolean;
+      }, HTMLElement>;
+      'md-outlined-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        disabled?: boolean;
+      }, HTMLElement>;
+      'md-text-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        disabled?: boolean;
+      }, HTMLElement>;
+      'md-fab': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        variant?: 'primary' | 'secondary' | 'tertiary' | 'surface';
+        label?: string;
+        lowered?: boolean;
+      }, HTMLElement>;
     }
   }
 }

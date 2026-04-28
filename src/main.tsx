@@ -16,6 +16,7 @@ import '@material/web/button/outlined-button.js';
 import '@material/web/labs/segmentedbuttonset/outlined-segmented-button-set.js';
 import '@material/web/labs/segmentedbutton/outlined-segmented-button.js';
 import '@material/web/fab/fab.js';
+import '@material/web/dialog/dialog.js';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

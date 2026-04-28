@@ -58,11 +58,10 @@ export function MyStudentsView({ onStudentSelect, selectedStudentId }: MyStudent
       label: '状态',
       width: 'w-[15%]',
       render: (item) => (
-        <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${
-          item.status === 'Active' 
-            ? 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]' 
+        <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${item.status === 'Active'
+            ? 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]'
             : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]'
-        }`}>
+          }`}>
           {item.status === 'Active' ? '在籍' : '休学'}
         </span>
       )
@@ -71,13 +70,13 @@ export function MyStudentsView({ onStudentSelect, selectedStudentId }: MyStudent
 
   return (
     <div className="w-full flex flex-col pt-4">
-      <FilterChipSet 
+      <FilterChipSet
         chips={[
           { label: '专业', options: ['计算机科学', '心理学', '生物学', '艺术史'] },
           { label: '年级', options: ['大一', '大二', '大三', '大四'] },
           { label: '状态', options: ['在籍', '休学'] },
           { label: '导师', options: ['Dr. Watson', 'Dr. Smith', 'Prof. Miller'] }
-        ]} 
+        ]}
       />
       <DataTable columns={columns} data={students} onRowClick={onStudentSelect} selectedId={selectedStudentId} />
     </div>

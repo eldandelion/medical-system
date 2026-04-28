@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { AssessmentCard } from './AssessmentCard';
 import { SegmentedButton } from '../common/SegmentedButton';
+import { AssessmentDialogProvider, useAssessmentDialog } from '../../contexts/AssessmentDialogContext';
 
 interface Assessment {
   id: string;
@@ -18,11 +19,11 @@ interface Assessment {
 }
 
 // Module-level variable to persist filter state across component remounts (tab switches)
-// This will reset on a full page refresh as requested.
 let persistentFilter = '全部';
 
-export function SelfAssessmentsView() {
+function SelfAssessmentsContent() {
   const [selectedFilter, setSelectedFilter] = React.useState(persistentFilter);
+  const { openAssessment } = useAssessmentDialog();
 
   const handleFilterChange = (filter: string) => {
     persistentFilter = filter;
@@ -99,7 +100,7 @@ export function SelfAssessmentsView() {
               key={assessment.id}
               title={assessment.title}
               assignedBy={assessment.assignedBy}
-              type={assessment.type}
+              type={assessment.type}   
               completionPercentage={assessment.completionPercentage}
               duration={assessment.duration}
               actionLabel={
@@ -109,7 +110,7 @@ export function SelfAssessmentsView() {
                     ? '开始'
                     : '继续'
               }
-              onAction={() => console.log(`Action for ${assessment.title}`)}
+              onAction={() => openAssessment(assessment)}
               onMoreClick={() => console.log(`More options for ${assessment.title}`)}
             />
           ))
@@ -123,3 +124,12 @@ export function SelfAssessmentsView() {
     </div>
   );
 }
+
+export function SelfAssessmentsView() {
+  return (
+    <AssessmentDialogProvider>
+      <SelfAssessmentsContent />
+    </AssessmentDialogProvider>
+  );
+}
+
