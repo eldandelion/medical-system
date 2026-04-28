@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { DetailsSection, DetailItem } from '../common/DetailsPanel';
-import { ActionFooter, PrimaryButton, SecondaryButton } from '../common/ActionComponents';
+import { PrimaryButton, SecondaryButton } from '../common/Buttons';
+import { ActionFooter } from '../common/ActionFooter';
 
 interface Referral {
   id: string;
@@ -10,16 +11,17 @@ interface Referral {
   date: string;
   reason: string;
   riskLevel: 'High' | 'Medium' | 'Low';
-  status: 'Draft' | 'Closed' | 'Pending' | 'Approved';
+  status: 'Draft' | 'Closed' | 'Pending' | 'Approved' | 'AwaitingApproval';
 }
 
 interface ReferralDetailsViewProps {
   referral: Referral;
+  userRole?: 'student' | 'teacher' | 'head-councillor' | 'trial-admin';
 }
 
 type TabType = 'overview' | 'risk' | 'psychometrics' | 'feedback';
 
-export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
+export function ReferralDetailsView({ referral, userRole }: ReferralDetailsViewProps) {
   const [activeTab, setActiveTab] = React.useState<TabType>('overview');
 
   // Hardcoded mock extended data for the referral
@@ -102,11 +104,10 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
           </div>
 
           {/* Critical Status: Risk Level Chip */}
-          <div className={`px-4 py-2 rounded-full flex items-center gap-2 font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${
-            referral.riskLevel === 'High'
+          <div className={`px-4 py-2 rounded-full flex items-center gap-2 font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${referral.riskLevel === 'High'
               ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
               : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-          }`}>
+            }`}>
             <span className="material-symbols-outlined text-[18px]">
               {referral.riskLevel === 'High' ? 'warning' : 'info'}
             </span>
@@ -122,18 +123,17 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabType)}
-              className={`flex-1 min-w-[120px] flex flex-col items-center py-4 px-2 gap-1.5 transition-all relative ${
-                activeTab === tab.id 
-                  ? 'text-[var(--md-sys-color-primary)]' 
+              className={`flex-1 min-w-[120px] flex flex-col items-center py-4 px-2 gap-1.5 transition-all relative ${activeTab === tab.id
+                  ? 'text-[var(--md-sys-color-primary)]'
                   : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-30'
-              }`}
+                }`}
             >
               <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
               <span className="text-[11px] font-bold whitespace-nowrap text-center">
                 {tab.label}
               </span>
               {activeTab === tab.id && (
-                <motion.div 
+                <motion.div
                   layoutId="referralActiveTab"
                   className="absolute bottom-0 left-0 right-0 h-[3px] bg-[var(--md-sys-color-primary)] rounded-t-full"
                 />
@@ -222,7 +222,7 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
                     活跃路由
                   </div>
                 </div>
-                
+
                 <div className="flex flex-col gap-1">
                   {[
                     { icon: 'local_hospital', label: '接收医院', value: extendedData.destination.hospital, clickable: true },
@@ -266,14 +266,14 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
                   <div key={idx} className="flex items-center justify-between p-4 border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 last:border-0 hover:bg-[var(--md-sys-color-surface-container-low)] transition-colors rounded-xl">
                     <span className="text-[15px] font-medium">{item.label}</span>
                     <div className="flex items-center gap-2">
-                       {item.value ? (
-                          <div className="flex items-center gap-2 text-[var(--md-sys-color-error)]">
-                            <span className="material-symbols-outlined font-variation-settings-fill-1">warning</span>
-                            <span className="text-xs font-bold uppercase">阳性 Positive</span>
-                          </div>
-                       ) : (
-                          <span className="text-[var(--md-sys-color-on-surface-variant)] opacity-40 text-xs font-bold uppercase">阴性 Negative</span>
-                       )}
+                      {item.value ? (
+                        <div className="flex items-center gap-2 text-[var(--md-sys-color-error)]">
+                          <span className="material-symbols-outlined font-variation-settings-fill-1">warning</span>
+                          <span className="text-xs font-bold uppercase">阳性 Positive</span>
+                        </div>
+                      ) : (
+                        <span className="text-[var(--md-sys-color-on-surface-variant)] opacity-40 text-xs font-bold uppercase">阴性 Negative</span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -323,15 +323,14 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
                         <td className="px-5 py-5">
                           <div className="flex flex-col gap-2">
                             <div className="w-full h-1.5 bg-[var(--md-sys-color-surface-variant)] rounded-full overflow-hidden">
-                              <motion.div 
+                              <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${(score.value / score.max) * 100}%` }}
                                 transition={{ duration: 0.8, ease: "easeOut" }}
-                                className={`h-full rounded-full ${
-                                  score.level === '重度' || score.level.includes('重度')
-                                    ? 'bg-[var(--md-sys-color-error)]' 
+                                className={`h-full rounded-full ${score.level === '重度' || score.level.includes('重度')
+                                    ? 'bg-[var(--md-sys-color-error)]'
                                     : 'bg-[var(--md-sys-color-primary)]'
-                                }`}
+                                  }`}
                               />
                             </div>
                           </div>
@@ -354,43 +353,43 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
             >
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-2">
-                   <h4 className="text-sm font-bold text-[var(--md-sys-color-primary)] uppercase tracking-widest">医院诊断结果</h4>
-                   <p className="text-[15px] leading-relaxed text-[var(--md-sys-color-on-surface)] font-normal">
-                     {extendedData.feedback.summary}
-                   </p>
+                  <h4 className="text-sm font-bold text-[var(--md-sys-color-primary)] uppercase tracking-widest">医院诊断结果</h4>
+                  <p className="text-[15px] leading-relaxed text-[var(--md-sys-color-on-surface)] font-normal">
+                    {extendedData.feedback.summary}
+                  </p>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-[var(--md-sys-color-surface-container-lowest)] border-l-4 border-[var(--md-sys-color-tertiary)] flex flex-col gap-2">
-                   <h4 className="text-[11px] font-bold text-[var(--md-sys-color-tertiary)] uppercase flex items-center gap-2">
-                     <span className="material-symbols-outlined text-[16px]">repeat</span>
-                     随访计划
-                   </h4>
-                   <p className="text-[14px] text-[var(--md-sys-color-on-surface)] font-medium">
-                     {extendedData.feedback.followUp}
-                   </p>
+                  <h4 className="text-[11px] font-bold text-[var(--md-sys-color-tertiary)] uppercase flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[16px]">repeat</span>
+                    随访计划
+                  </h4>
+                  <p className="text-[14px] text-[var(--md-sys-color-on-surface)] font-medium">
+                    {extendedData.feedback.followUp}
+                  </p>
                 </div>
               </div>
 
               <div className="flex flex-col gap-3">
-                 <h4 className="text-xs font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest px-1">附件 (3)</h4>
-                 <div className="grid grid-cols-1 gap-3">
-                   {extendedData.feedback.attachments.map((file, idx) => (
-                     <div key={idx} className="p-4 rounded-xl border border-[var(--md-sys-color-outline-variant)] hover:bg-[var(--md-sys-color-surface-container-low)] transition-all flex items-center justify-between group">
-                       <div className="flex items-center gap-4">
-                         <div className="w-10 h-10 rounded-full bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] group-hover:bg-[var(--md-sys-color-primary-container)] group-hover:text-[var(--md-sys-color-on-primary-container)] transition-colors shrink-0">
-                            <span className="material-symbols-outlined">attach_file</span>
-                         </div>
-                         <div className="flex flex-col">
-                           <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">{file.name}</span>
-                           <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] opacity-60 uppercase">{file.size}</span>
-                         </div>
-                       </div>
-                       <md-icon-button>
-                         <md-icon>download</md-icon>
-                       </md-icon-button>
-                     </div>
-                   ))}
-                 </div>
+                <h4 className="text-xs font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest px-1">附件 (3)</h4>
+                <div className="grid grid-cols-1 gap-3">
+                  {extendedData.feedback.attachments.map((file, idx) => (
+                    <div key={idx} className="p-4 rounded-xl border border-[var(--md-sys-color-outline-variant)] hover:bg-[var(--md-sys-color-surface-container-low)] transition-all flex items-center justify-between group">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] group-hover:bg-[var(--md-sys-color-primary-container)] group-hover:text-[var(--md-sys-color-on-primary-container)] transition-colors shrink-0">
+                          <span className="material-symbols-outlined">attach_file</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">{file.name}</span>
+                          <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] opacity-60 uppercase">{file.size}</span>
+                        </div>
+                      </div>
+                      <md-icon-button>
+                        <md-icon>download</md-icon>
+                      </md-icon-button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </motion.div>
           )}
@@ -399,8 +398,42 @@ export function ReferralDetailsView({ referral }: ReferralDetailsViewProps) {
 
       {/* Action Footer */}
       <ActionFooter>
-        <PrimaryButton icon="upload_file" label="上传文件" />
-        <SecondaryButton icon="check_circle" label="确认反馈" />
+        {referral.status === 'AwaitingApproval' ? (
+          userRole === 'head-councillor' ? (
+            <>
+              <PrimaryButton icon="check_circle" label="批准转诊" />
+              <SecondaryButton
+                icon="cancel"
+                label="拒绝申请"
+                style={{
+                  color: 'var(--md-sys-color-error)',
+                  '--md-outlined-button-label-text-color': 'var(--md-sys-color-error)',
+                  '--md-outlined-button-with-icon-icon-color': 'var(--md-sys-color-error)',
+                  '--md-outlined-button-hover-label-text-color': 'var(--md-sys-color-error)',
+                  '--md-outlined-button-hover-state-layer-color': 'var(--md-sys-color-error)',
+                  '--md-outlined-button-with-icon-hover-icon-color': 'var(--md-sys-color-error)',
+                  '--md-outlined-button-pressed-label-text-color': 'var(--md-sys-color-error)',
+                  '--md-outlined-button-pressed-state-layer-color': 'var(--md-sys-color-error)',
+                  '--md-outlined-button-with-icon-pressed-icon-color': 'var(--md-sys-color-error)',
+                  '--md-outlined-button-focus-label-text-color': 'var(--md-sys-color-error)',
+                  '--md-outlined-button-with-icon-focus-icon-color': 'var(--md-sys-color-error)',
+                } as React.CSSProperties}
+              />
+            </>
+          ) : userRole === 'teacher' ? (
+            <SecondaryButton icon="undo" label="撤回申请" />
+          ) : (
+            <>
+              <PrimaryButton icon="upload_file" label="上传文件" />
+              <SecondaryButton icon="check_circle" label="确认反馈" />
+            </>
+          )
+        ) : (
+          <>
+            <PrimaryButton icon="upload_file" label="上传文件" />
+            <SecondaryButton icon="check_circle" label="确认反馈" />
+          </>
+        )}
       </ActionFooter>
     </div>
   );

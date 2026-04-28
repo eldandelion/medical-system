@@ -18,7 +18,7 @@ import { StaffManagementView } from '../components/staff/StaffManagementView';
 import { StaffDetailsView } from '../components/staff/StaffDetailsView';
 import { useCreationOverlay } from '../contexts/CreationContext';
 import { ReferralCreationForm } from '../components/records/ReferralCreationForm';
-import { TertiaryFab } from '../components/common/ActionComponents';
+import { TertiaryFab } from '../components/common/Buttons';
 
 export function HeadCouncillorPage() {
   const [activePage, setActivePage] = React.useState('Dashboard');
@@ -95,7 +95,7 @@ export function HeadCouncillorPage() {
                   ) : activePage === 'Staff' && selectedItem.employeeId ? (
                     <StaffDetailsView staff={selectedItem} />
                   ) : activePage === 'Referral Management' && selectedItem.studentName ? (
-                    <ReferralDetailsView referral={selectedItem} />
+                    <ReferralDetailsView referral={selectedItem} userRole="head-councillor" />
                   ) : (
                     <>
                       <div className="flex justify-center py-6 mb-2">
@@ -228,9 +228,9 @@ export function HeadCouncillorPage() {
         </MainContent>
       </div>
 
-      <ProfileDetailsView 
-        isOpen={showProfileDetails} 
-        onBack={() => setShowProfileDetails(false)} 
+      <ProfileDetailsView
+        isOpen={showProfileDetails}
+        onBack={() => setShowProfileDetails(false)}
       />
     </div>
   );

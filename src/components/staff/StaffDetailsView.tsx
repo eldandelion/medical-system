@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { DetailsSection, DetailItem } from '../common/DetailsPanel';
-import { ActionFooter, PrimaryButton, SecondaryButton } from '../common/ActionComponents';
+import { PrimaryButton, SecondaryButton } from '../common/Buttons';
+import { ActionFooter } from '../common/ActionFooter';
 import { useCreationOverlay } from '../../contexts/CreationContext';
 
 interface Counselor {
@@ -47,7 +48,7 @@ export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
   const [authorizedDepartments, setAuthorizedDepartments] = React.useState(['医学', '工程']);
 
   const toggleCaseload = (id: string) => {
-    setSelectedCaseloadIds(prev => 
+    setSelectedCaseloadIds(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
@@ -59,7 +60,7 @@ export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
         <h3 className="text-[18px] font-medium mb-4">选择目标咨询师</h3>
         <div className="flex flex-col gap-3">
           {['李娜', '王明', '陈佳'].map(name => (
-            <div 
+            <div
               key={name}
               onClick={closeCreation}
               className="p-4 rounded-xl border border-[var(--md-sys-color-outline-variant)] hover:bg-[var(--md-sys-color-surface-container-high)] cursor-pointer flex justify-between items-center"
@@ -100,16 +101,15 @@ export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as TabType)}
-            className={`flex-1 flex flex-col items-center py-4 px-1 gap-1 transition-all relative ${
-              activeTab === tab.id 
-                ? 'text-[var(--md-sys-color-primary)]' 
+            className={`flex-1 flex flex-col items-center py-4 px-1 gap-1 transition-all relative ${activeTab === tab.id
+                ? 'text-[var(--md-sys-color-primary)]'
                 : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-40'
-            }`}
+              }`}
           >
             <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
             <span className="text-[11px] font-bold whitespace-nowrap">{tab.label}</span>
             {activeTab === tab.id && (
-              <motion.div 
+              <motion.div
                 layoutId="activeStaffTabUnderline"
                 className="absolute bottom-0 left-0 right-0 h-[3px] bg-[var(--md-sys-color-primary)] rounded-t-full"
               />
@@ -135,7 +135,7 @@ export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
                   {selectedCaseloadIds.length > 0 ? `已选择 ${selectedCaseloadIds.length} 项` : '活跃工作负荷'}
                 </span>
                 {selectedCaseloadIds.length > 0 && (
-                  <button 
+                  <button
                     onClick={handleReassign}
                     className="text-[var(--md-sys-color-primary)] text-[12px] font-bold hover:underline uppercase tracking-widest"
                   >
@@ -145,7 +145,7 @@ export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
               </div>
               <div className="flex flex-col bg-[var(--md-sys-color-surface-container-lowest)] rounded-2xl overflow-hidden border border-[var(--md-sys-color-outline-variant)] border-opacity-30">
                 {caseload.map(item => (
-                  <div 
+                  <div
                     key={item.id}
                     onClick={() => toggleCaseload(item.id)}
                     className={`flex items-center gap-4 px-4 py-4 border-b border-[var(--md-sys-color-outline-variant)] border-opacity-20 last:border-0 hover:bg-[var(--md-sys-color-surface-container-low)] cursor-pointer transition-colors ${selectedCaseloadIds.includes(item.id) ? 'bg-[var(--md-sys-color-primary-container)] bg-opacity-30' : ''}`}
@@ -215,16 +215,15 @@ export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
                 {departments.map(dept => {
                   const isSelected = authorizedDepartments.includes(dept);
                   return (
-                    <div 
+                    <div
                       key={dept}
-                      onClick={() => setAuthorizedDepartments(prev => 
+                      onClick={() => setAuthorizedDepartments(prev =>
                         prev.includes(dept) ? prev.filter(d => d !== dept) : [...prev, dept]
                       )}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-[14px] font-medium transition-all cursor-pointer ${
-                        isSelected 
-                          ? 'bg-[var(--md-sys-color-primary-container)] border-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary-container)] shadow-sm' 
+                      className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-[14px] font-medium transition-all cursor-pointer ${isSelected
+                          ? 'bg-[var(--md-sys-color-primary-container)] border-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary-container)] shadow-sm'
                           : 'bg-transparent border-[var(--md-sys-color-outline-variant)] text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-low)]'
-                      }`}
+                        }`}
                     >
                       <span className="material-symbols-outlined text-[18px]">
                         {isSelected ? 'check_box' : 'check_box_outline_blank'}
@@ -241,11 +240,11 @@ export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
 
       {/* Action Footer */}
       <ActionFooter>
-        <PrimaryButton 
-          icon="block" 
-          label="暂停访问" 
-          onClick={() => {}}
-          style={{ 
+        <PrimaryButton
+          icon="block"
+          label="暂停访问"
+          onClick={() => { }}
+          style={{
             '--md-filled-button-container-color': 'var(--md-sys-color-error)',
             '--md-filled-button-label-text-color': 'var(--md-sys-color-on-error)',
             '--md-filled-button-icon-color': 'var(--md-sys-color-on-error)',
@@ -254,10 +253,10 @@ export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
             '--md-filled-button-focus-state-layer-color': 'var(--md-sys-color-on-error)',
           } as React.CSSProperties}
         />
-        <SecondaryButton 
-          icon="lock_reset" 
-          label="重置登录凭据" 
-          onClick={() => {}}
+        <SecondaryButton
+          icon="lock_reset"
+          label="重置登录凭据"
+          onClick={() => { }}
         />
       </ActionFooter>
     </div>

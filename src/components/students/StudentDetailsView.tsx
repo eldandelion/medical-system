@@ -1,7 +1,8 @@
 import * as React from 'react'; // Re-indexing trigger
 import { motion, AnimatePresence } from 'motion/react';
 import { DetailsSection, DetailItem } from '../common/DetailsPanel';
-import { ActionFooter, PrimaryButton, SecondaryButton } from '../common/ActionComponents';
+import { PrimaryButton, SecondaryButton } from '../common/Buttons';
+import { ActionFooter } from '../common/ActionFooter';
 import { useCreationOverlay } from '../../contexts/CreationContext';
 import {
   LineChart,

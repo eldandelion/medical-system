@@ -23,7 +23,7 @@ export function PrimaryButton({ icon, label, className = "h-10", onClick, style,
         ...style
       } as React.CSSProperties}
     >
-      {icon && <md-icon slot="icon" className={effectiveCollapsed ? "m-0" : "ml-4"}>{icon}</md-icon>}
+      {icon && <md-icon slot="icon" className={effectiveCollapsed ? "m-0" : "ml-4"} style={{ color: 'inherit' }}>{icon}</md-icon>}
       {!effectiveCollapsed && <span className={icon ? "mr-4" : "mx-4"}>{label}</span>}
     </md-filled-button>
   );
@@ -41,7 +41,7 @@ export function SecondaryButton({ icon, label, className = "h-10", onClick, styl
         ...style
       } as React.CSSProperties}
     >
-      {icon && <md-icon slot="icon" className={effectiveCollapsed ? "m-0" : "ml-4"}>{icon}</md-icon>}
+      {icon && <md-icon slot="icon" className={effectiveCollapsed ? "m-0" : "ml-4"} style={{ color: 'inherit' }}>{icon}</md-icon>}
       {!effectiveCollapsed && <span className={icon ? "mr-4" : "mx-4"}>{label}</span>}
     </md-outlined-button>
   );
@@ -56,7 +56,7 @@ export function TertiaryButton({ icon, label, className = "h-10", onClick, style
       onClick={onClick}
       style={style}
     >
-      {icon && <md-icon slot="icon" className={effectiveCollapsed ? "m-0" : "ml-4"}>{icon}</md-icon>}
+      {icon && <md-icon slot="icon" className={effectiveCollapsed ? "m-0" : "ml-4"} style={{ color: 'inherit' }}>{icon}</md-icon>}
       {!effectiveCollapsed && <span className={icon ? "mr-4" : "mx-4"}>{label}</span>}
     </md-text-button>
   );
@@ -80,12 +80,46 @@ export function TertiaryFab({ icon, label, onClick }: ButtonProps) {
   );
 }
 
-export function ActionFooter({ children }: { children: React.ReactNode }) {
+
+interface SegmentedButtonItem {
+  label: string;
+  value: string;
+}
+
+interface SegmentedButtonProps {
+  items: SegmentedButtonItem[];
+  selectedValue: string;
+  onChange: (value: string) => void;
+}
+
+export function SegmentedButton({ items, selectedValue, onChange }: SegmentedButtonProps) {
   return (
-    <div className="action-footer-anchor p-4 bg-[var(--md-sys-color-surface-container-high)] shrink-0 overflow-hidden">
-      <div className="action-footer-content-wrapper flex flex-row items-center justify-start gap-2 w-fit">
-        {children}
-      </div>
+    <div className="inline-flex h-10 border border-[var(--md-sys-color-outline)] rounded-full overflow-hidden bg-transparent">
+      {items.map((item, index) => {
+        const isSelected = item.value === selectedValue;
+        const isLast = index === items.length - 1;
+
+        return (
+          <button
+            key={item.value}
+            onClick={() => onChange(item.value)}
+            className={`flex items-center justify-center px-6 text-sm font-medium transition-all relative group cursor-pointer ${isSelected
+                ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                : 'text-[var(--md-sys-color-on-surface)]'
+              } ${!isLast ? 'border-r border-[var(--md-sys-color-outline)]' : ''}`}
+          >
+            {/* MD3 State Layer */}
+            <div className="absolute inset-0 bg-current opacity-0 group-hover:opacity-[0.08] transition-opacity pointer-events-none" />
+
+            <div className="relative flex items-center justify-center">
+              {isSelected && (
+                <span className="material-symbols-outlined text-[18px] mr-2">check</span>
+              )}
+              {item.label}
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }

@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { StudentPage } from './pages/StudentPage';
 import { TeacherPage } from './pages/TeacherPage';
 import { HeadCouncillorPage } from './pages/HeadCouncillorPage';
+import { TrialAdminPage } from './pages/TrialAdminPage';
 import { CreationOverlayProvider } from './contexts/CreationContext';
 import { CreationRoot } from './components/creation-overlay/CreationRoot';
 import { ThemeProvider } from './contexts/ThemeContext';
 
 export default function App() {
-  const [role, setRole] = useState<'student' | 'teacher' | 'head-councillor'>('student');
+  const [role, setRole] = useState<'student' | 'teacher' | 'head-councillor' | 'trial-admin'>('student');
 
   return (
     <ThemeProvider>
@@ -17,8 +18,10 @@ export default function App() {
           <StudentPage />
         ) : role === 'teacher' ? (
           <TeacherPage />
-        ) : (
+        ) : role === 'head-councillor' ? (
           <HeadCouncillorPage />
+        ) : (
+          <TrialAdminPage />
         )}
         
         {/* Role Switcher for Demo */}
@@ -40,6 +43,12 @@ export default function App() {
             className={`px-4 py-2 rounded-full text-xs font-medium transition-colors ${role === 'head-councillor' ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]' : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]'}`}
           >
             Head Councillor
+          </button>
+          <button 
+            onClick={() => setRole('trial-admin')}
+            className={`px-4 py-2 rounded-full text-xs font-medium transition-colors ${role === 'trial-admin' ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]' : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]'}`}
+          >
+            Trial Admin
           </button>
         </div>
 

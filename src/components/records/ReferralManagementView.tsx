@@ -9,7 +9,7 @@ interface Referral {
   date: string;
   reason: string;
   riskLevel: 'High' | 'Medium' | 'Low';
-  status: 'Draft' | 'Closed' | 'Pending' | 'Approved';
+  status: 'Draft' | 'Closed' | 'Pending' | 'Approved' | 'AwaitingApproval';
 }
 
 interface ReferralManagementViewProps {
@@ -82,6 +82,15 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
       riskLevel: 'High',
       status: 'Closed' 
     },
+    { 
+      id: '8', 
+      studentName: '王小明', 
+      type: '初次转诊', 
+      date: '2026年4月28日', 
+      reason: '由于学业压力导致严重的睡眠障碍和情绪波动',
+      riskLevel: 'Medium',
+      status: 'AwaitingApproval' 
+    },
   ];
 
   const columns: ColumnDefinition<Referral>[] = [
@@ -139,13 +148,20 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
         <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${
           item.status === 'Approved' 
             ? 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]' 
+            : item.status === 'AwaitingApproval'
+            ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
             : item.status === 'Pending'
             ? 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]'
             : item.status === 'Closed'
             ? 'bg-[#f0fdf4] text-[#166534]' // Green for Closed
             : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]'
         }`}>
-          {item.status === 'Approved' ? '已批准' : item.status === 'Pending' ? '进行中' : item.status === 'Closed' ? '已结案' : item.status === 'Draft' ? '草案' : item.status}
+          {item.status === 'Approved' ? '已批准' : 
+           item.status === 'AwaitingApproval' ? '待审批' : 
+           item.status === 'Pending' ? '进行中' : 
+           item.status === 'Closed' ? '已结案' : 
+           item.status === 'Draft' ? '草案' : 
+           item.status}
         </span>
       )
     }

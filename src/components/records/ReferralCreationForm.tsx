@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { SecondaryButton, PrimaryButton } from '../common/ActionComponents';
+import { SecondaryButton, PrimaryButton } from '../common/Buttons';
 
 export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
   return (
     <div className="flex flex-col h-full bg-[var(--md-sys-color-surface)] relative">
       <div className="flex-1 overflow-y-auto p-6 pb-32">
         <div className="max-w-3xl mx-auto flex flex-col gap-10">
-          
+
           {/* 1. Target Identification Block */}
           <section className="flex flex-col gap-6">
             <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
@@ -21,17 +21,17 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
                 {/* @ts-ignore */}
                 <md-select-option value="1">
                   <div slot="headline">Daniil Petrov</div>
-                {/* @ts-ignore */}
+                  {/* @ts-ignore */}
                 </md-select-option>
                 {/* @ts-ignore */}
                 <md-select-option value="2">
                   <div slot="headline">Alice Smith</div>
-                {/* @ts-ignore */}
+                  {/* @ts-ignore */}
                 </md-select-option>
-              {/* @ts-ignore */}
+                {/* @ts-ignore */}
               </md-outlined-select>
             </div>
-               
+
             <div className="border border-[var(--md-sys-color-outline-variant)] rounded-[12px] p-6 bg-[var(--md-sys-color-surface)]">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="flex flex-col">
@@ -64,7 +64,7 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
                 <button className="px-6 py-2.5 text-[14px] font-medium bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] transition-colors">High</button>
               </div>
             </div>
-               
+
             <div className="flex flex-col gap-3 mt-2">
               <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">Clinical Status</span>
               {/* @ts-ignore */}
@@ -75,7 +75,7 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
                 <md-filter-chip label="Current Medication" selected></md-filter-chip>
                 {/* @ts-ignore */}
                 <md-filter-chip label="Prior Therapy" selected></md-filter-chip>
-              {/* @ts-ignore */}
+                {/* @ts-ignore */}
               </md-chip-set>
             </div>
 
@@ -90,7 +90,7 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
                 <md-filter-chip label="Suicide Attempt"></md-filter-chip>
                 {/* @ts-ignore */}
                 <md-filter-chip label="Self-Harm"></md-filter-chip>
-              {/* @ts-ignore */}
+                {/* @ts-ignore */}
               </md-chip-set>
             </div>
           </section>
@@ -102,25 +102,25 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
               Clinical Context
             </h3>
             {/* @ts-ignore */}
-            <md-outlined-text-field 
-               type="textarea"
-               rows={4}
-               label="Referral Reason"
-               className="w-full"
-               supporting-text="* Character limit: 0/500"
-               maxLength={500}
+            <md-outlined-text-field
+              type="textarea"
+              rows={4}
+              label="Referral Reason"
+              className="w-full"
+              supporting-text="* Character limit: 0/500"
+              maxLength={500}
             >
-            {/* @ts-ignore */}
+              {/* @ts-ignore */}
             </md-outlined-text-field>
           </section>
-            
+
           {/* 4. Compliance and Attachments Block */}
           <section className="flex flex-col gap-6">
             <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
               <span className="material-symbols-outlined text-[20px]">verified_user</span>
               Compliance & Attachments
             </h3>
-            
+
             <div className="bg-transparent rounded-[12px] p-2 flex items-center border border-[var(--md-sys-color-outline-variant)]">
               {/* @ts-ignore */}
               <md-list className="bg-transparent w-full" style={{ '--md-list-container-color': 'transparent' }}>
@@ -131,9 +131,9 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
                   <div slot="headline" className="text-[14px] leading-[20px] font-normal text-[var(--md-sys-color-on-surface)] whitespace-normal">
                     Verified positive consent for PIPL compliance status in external communications.
                   </div>
-                {/* @ts-ignore */}
+                  {/* @ts-ignore */}
                 </md-list-item>
-              {/* @ts-ignore */}
+                {/* @ts-ignore */}
               </md-list>
             </div>
 
@@ -144,14 +144,14 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
                   {/* @ts-ignore */}
                   <md-icon slot="icon" className="ml-4">upload</md-icon>
                   <span className="mr-4">Attach Files</span>
-                {/* @ts-ignore */}
+                  {/* @ts-ignore */}
                 </md-filled-tonal-button>
               </div>
               <div className="grid grid-cols-1 gap-3">
                 <div className="p-4 rounded-[12px] border border-[var(--md-sys-color-outline-variant)] hover:bg-[var(--md-sys-color-surface-container-low)] transition-all flex items-center justify-between group">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] group-hover:bg-[var(--md-sys-color-primary-container)] group-hover:text-[var(--md-sys-color-on-primary-container)] transition-colors shrink-0">
-                       <span className="material-symbols-outlined">attach_file</span>
+                      <span className="material-symbols-outlined">attach_file</span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">Patient_Intake_Scan_v2.pdf</span>
@@ -162,14 +162,14 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
                   <md-icon-button>
                     {/* @ts-ignore */}
                     <md-icon>delete</md-icon>
-                  {/* @ts-ignore */}
+                    {/* @ts-ignore */}
                   </md-icon-button>
                 </div>
 
                 <div className="p-4 rounded-[12px] border border-[var(--md-sys-color-outline-variant)] hover:bg-[var(--md-sys-color-surface-container-low)] transition-all flex items-center justify-between group">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] group-hover:bg-[var(--md-sys-color-primary-container)] group-hover:text-[var(--md-sys-color-on-primary-container)] transition-colors shrink-0">
-                       <span className="material-symbols-outlined">attach_file</span>
+                      <span className="material-symbols-outlined">attach_file</span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">Hospital_Release_Form.png</span>
@@ -180,7 +180,7 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
                   <md-icon-button>
                     {/* @ts-ignore */}
                     <md-icon>delete</md-icon>
-                  {/* @ts-ignore */}
+                    {/* @ts-ignore */}
                   </md-icon-button>
                 </div>
               </div>
@@ -191,11 +191,11 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
 
       {/* 6. Persistent Action Footer */}
       <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] flex items-center justify-between z-10 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-         <SecondaryButton label="Cancel" onClick={onClose} />
-         <div className="flex items-center gap-4">
-           <SecondaryButton label="Save Draft" onClick={onClose} />
-           <PrimaryButton label="Submit" onClick={onClose} />
-         </div>
+        <SecondaryButton label="Cancel" onClick={onClose} />
+        <div className="flex items-center gap-4">
+          <SecondaryButton label="Save Draft" onClick={onClose} />
+          <PrimaryButton label="Submit" onClick={onClose} />
+        </div>
       </div>
     </div>
   );

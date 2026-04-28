@@ -5,20 +5,19 @@ import { MainContent } from '../components/layout/MainContent';
 import { NavItem } from '../components/layout/NavItem';
 import { CanvasHeader } from '../components/layout/CanvasHeader';
 import { NotificationsView } from '../components/notifications/NotificationsView';
-import { ProfileView } from '../components/profile/ProfileView';
-import { MyStudentsView } from '../components/students/MyStudentsView';
 import { ReferralManagementView } from '../components/records/ReferralManagementView';
 import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
 import { ProfileSummaryCard, ActionMetricWidget, InteractiveStatusList } from '../components/dashboard/DashboardComponents';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
-import { StudentDetailsView } from '../components/students/StudentDetailsView';
 import { ReferralDetailsView } from '../components/records/ReferralDetailsView';
+import { StaffManagementView } from '../components/staff/StaffManagementView';
+import { StaffDetailsView } from '../components/staff/StaffDetailsView';
 import { useCreationOverlay } from '../contexts/CreationContext';
 import { ReferralCreationForm } from '../components/records/ReferralCreationForm';
 import { TertiaryFab } from '../components/common/Buttons';
 
-export function TeacherPage() {
+export function TrialAdminPage() {
   const [activePage, setActivePage] = React.useState('Dashboard');
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
@@ -43,7 +42,6 @@ export function TeacherPage() {
       '发起转诊',
       <ReferralCreationForm onClose={closeCreation} />
     );
-    // Expand to fullscreen immediately after opening to accommodate dense structure per request
     setTimeout(expandToFullscreen, 10);
   };
 
@@ -68,42 +66,37 @@ export function TeacherPage() {
         <NavItem icon="dashboard" label="控制面板" active={activePage === 'Dashboard'} onClick={() => handlePageChange('Dashboard')} />
         <NavItem icon="notifications" label="通知中心" active={activePage === 'Notifications'} onClick={() => handlePageChange('Notifications')} />
 
-        <NavItem icon="group" label="学生管理" active={activePage === 'Students'} onClick={() => handlePageChange('Students')} />
+        {/* Note: Student Management is removed for Trial Admin */}
+        <NavItem icon="engineering" label="人员管理" active={activePage === 'Staff'} onClick={() => handlePageChange('Staff')} />
         <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === 'Referral Management'} onClick={() => handlePageChange('Referral Management')} />
         <NavItem icon="security" label="安全与知情同意" active={activePage === 'Security & Consent'} onClick={() => handlePageChange('Security & Consent')} />
       </Sidebar>
 
       <div className="flex-1 flex flex-col min-w-0 bg-transparent">
-        <Header searchPlaceholder="搜索学生与转诊" />
+        <Header searchPlaceholder="搜索转诊与人员" />
         <MainContent
           isSidePanelOpen={!!selectedItem}
           sidePanel={
             <DetailsPanel
               isOpen={!!selectedItem}
               onClose={() => setSelectedItem(null)}
-              title={(activePage === 'Students' && !!selectedItem?.name) || (activePage === 'Referral Management' && !!selectedItem?.studentName) ? '' : (selectedItem?.name || selectedItem?.studentName || '')}
+              title={(activePage === 'Referral Management' && !!selectedItem?.studentName) ? '' : (selectedItem?.name || selectedItem?.studentName || '')}
               icon={selectedItem?.name ? 'person' : 'description'}
-              disablePadding={(activePage === 'Students' && !!selectedItem?.name) || (activePage === 'Referral Management' && !!selectedItem?.studentName)}
+              disablePadding={(activePage === 'Referral Management' && !!selectedItem?.studentName) || (activePage === 'Staff' && !!selectedItem?.employeeId)}
             >
               {selectedItem && (
                 <>
-                  {activePage === 'Students' && selectedItem.name ? (
-                    <StudentDetailsView student={selectedItem} />
+                  {activePage === 'Staff' && selectedItem.employeeId ? (
+                    <StaffDetailsView staff={selectedItem} />
                   ) : activePage === 'Referral Management' && selectedItem.studentName ? (
-                    <ReferralDetailsView referral={selectedItem} userRole="teacher" />
+                    <ReferralDetailsView referral={selectedItem} />
                   ) : (
                     <>
                       <div className="flex justify-center py-6 mb-2">
                         <div className="text-[var(--md-sys-color-on-surface-variant)]">
-                          {selectedItem.name ? (
-                            <div className="w-24 h-24 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium">
-                              {selectedItem.name.charAt(0)}
-                            </div>
-                          ) : (
-                            <svg width="72" height="96" viewBox="0 0 24 32" fill="currentColor">
-                              <path d="M14 0H4C1.8 0 0 1.8 0 4V28C0 30.2 1.8 32 4 32H20C22.2 32 24 30.2 24 28V10L14 0ZM13 11.5V3L21 11.5H13Z" />
-                            </svg>
-                          )}
+                          <svg width="72" height="96" viewBox="0 0 24 32" fill="currentColor">
+                            <path d="M14 0H4C1.8 0 0 1.8 0 4V28C0 30.2 1.8 32 4 32H20C22.2 32 24 30.2 24 28V10L14 0ZM13 11.5V3L21 11.5H13Z" />
+                          </svg>
                         </div>
                       </div>
 
@@ -114,21 +107,12 @@ export function TeacherPage() {
                         <span className="text-[14px] text-[var(--md-sys-color-on-surface-variant)]">仅限教职工访问</span>
                       </DetailsSection>
 
-                      {selectedItem.name ? (
-                        <DetailsSection title="学生详情">
-                          <DetailItem label="姓名" value={selectedItem.name} />
-                          <DetailItem label="专业" value={selectedItem.major} />
-                          <DetailItem label="年级" value={selectedItem.year} />
-                          <DetailItem label="状态" value={selectedItem.status} />
-                        </DetailsSection>
-                      ) : (
-                        <DetailsSection title="转诊详情">
-                          <DetailItem label="学生" value={selectedItem.studentName} />
-                          <DetailItem label="类型" value={selectedItem.type} />
-                          <DetailItem label="日期" value={selectedItem.date} />
-                          <DetailItem label="状态" value={selectedItem.status} />
-                        </DetailsSection>
-                      )}
+                      <DetailsSection title="详情">
+                        <DetailItem label="标题" value={selectedItem.studentName || selectedItem.name} />
+                        <DetailItem label="类型" value={selectedItem.type} />
+                        <DetailItem label="日期" value={selectedItem.date} />
+                        <DetailItem label="状态" value={selectedItem.status} />
+                      </DetailsSection>
                     </>
                   )}
                 </>
@@ -138,7 +122,7 @@ export function TeacherPage() {
           <CanvasHeader title={
             activePage === 'Dashboard' ? '控制面板' :
               activePage === 'Notifications' ? '通知中心' :
-                activePage === 'Students' ? '学生管理' :
+                activePage === 'Staff' ? '人员管理' :
                   activePage === 'Referral Management' ? '转诊管理' :
                     activePage === 'Security & Consent' ? '安全与知情同意' :
                       activePage
@@ -146,8 +130,8 @@ export function TeacherPage() {
 
           {activePage === 'Notifications' ? (
             <NotificationsView />
-          ) : activePage === 'Students' ? (
-            <MyStudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} />
+          ) : activePage === 'Staff' ? (
+            <StaffManagementView onStaffSelect={setSelectedItem} selectedStaffId={selectedItem?.id} />
           ) : activePage === 'Referral Management' ? (
             <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} />
           ) : activePage === 'Security & Consent' ? (
@@ -158,30 +142,30 @@ export function TeacherPage() {
                 {/* Top Section */}
                 <div className="md:col-span-4 flex flex-col h-full">
                   <ProfileSummaryCard
-                    avatarText="E"
-                    title="艾米丽·沃森博士"
-                    subtitle="教研人员"
+                    avatarText="T"
+                    title="初试管理员"
+                    subtitle="试验权限"
                     metadata={[
-                      { icon: "badge", value: "T-88291" },
-                      { icon: "account_balance", value: "心理学系" }
+                      { icon: "badge", value: "TA-9009" },
+                      { icon: "verified_user", value: "限制访问" }
                     ]}
                     onClick={() => setShowProfileDetails(true)}
                   />
                 </div>
                 <div className="md:col-span-4 flex flex-col h-full">
                   <ActionMetricWidget
-                    icon="group"
+                    icon="engineering"
                     numericValue={42}
-                    label="分配学生"
-                    containerColorClass="bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]"
-                    onClick={() => handlePageChange('Students')}
+                    label="人员总数"
+                    containerColorClass="bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]"
+                    onClick={() => handlePageChange('Staff')}
                   />
                 </div>
                 <div className="md:col-span-4 flex flex-col h-full">
                   <ActionMetricWidget
                     icon="assignment_late"
-                    numericValue={5}
-                    label="待处理转诊"
+                    numericValue={8}
+                    label="待审核转诊"
                     containerColorClass="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]"
                     onClick={() => handlePageChange('Referral Management')}
                   />
@@ -189,22 +173,22 @@ export function TeacherPage() {
 
                 {/* Bottom Section */}
                 <div className="md:col-span-12 flex flex-col gap-4 mt-4">
-                  <h3 className="text-[16px] leading-[24px] font-medium text-[var(--md-sys-color-on-surface)] tracking-[0.15px]">最近活动</h3>
+                  <h3 className="text-[16px] leading-[24px] font-medium text-[var(--md-sys-color-on-surface)] tracking-[0.15px]">全局活动</h3>
                   <InteractiveStatusList
                     items={[
                       {
                         id: '1',
-                        title: '新分配学生：达尼尔·彼得罗夫',
-                        timestamp: '2小时前',
-                        statusText: '高风险标识',
-                        statusChipColor: 'error-container'
+                        title: '新转诊申请：转诊中心',
+                        timestamp: '1小时前',
+                        statusText: '待审核',
+                        statusChipColor: 'secondary-container'
                       },
                       {
                         id: '2',
-                        title: '转诊更新：爱丽丝·史密斯',
+                        title: '系统维护通知',
                         timestamp: '昨天',
-                        statusText: '审核中',
-                        statusChipColor: 'secondary-container'
+                        statusText: '已发布',
+                        statusChipColor: 'tertiary-container'
                       }
                     ]}
                     onRowClick={() => { }}

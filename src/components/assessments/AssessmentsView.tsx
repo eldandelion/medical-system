@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { AssessmentCard } from './AssessmentCard';
-import { SegmentedButton } from '../common/SegmentedButton';
+import { SegmentedButton } from '../common/Buttons';
 import { AssessmentDialogProvider, useAssessmentDialog } from '../../contexts/AssessmentDialogContext';
 
 interface Assessment {
@@ -100,7 +100,7 @@ function AssessmentsContent() {
               key={assessment.id}
               title={assessment.title}
               assignedBy={assessment.assignedBy}
-              type={assessment.type}   
+              type={assessment.type}
               completionPercentage={assessment.completionPercentage}
               duration={assessment.duration}
               actionLabel={
