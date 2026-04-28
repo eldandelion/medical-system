@@ -47,7 +47,7 @@ export function AssessmentDialog({
         onClick={onConfirm}
         className="h-10 px-8 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] font-medium rounded-full shadow-sm hover:shadow-md active:shadow-sm active:scale-95 transition-all"
       >
-        {isCompleted ? '确定' : '开始'}
+        {isCompleted ? '确定' : isStarted ? '继续' : '开始'}
       </button>
     </>
   );

@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { AssessmentDialog } from '../components/assessments/AssessmentDialog';
+import { FullScreenView } from '../components/common/FullScreenView';
+
 
 interface Assessment {
   id: string;
@@ -25,6 +27,7 @@ const AssessmentDialogContext = React.createContext<AssessmentDialogContextType 
 export function AssessmentDialogProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = React.useState(false);
   const [selectedAssessment, setSelectedAssessment] = React.useState<Assessment | null>(null);
+  const [isFullScreenOpen, setIsFullScreenOpen] = React.useState(false);
 
   const openAssessment = React.useCallback((assessment: Assessment) => {
     setSelectedAssessment(assessment);
@@ -38,9 +41,11 @@ export function AssessmentDialogProvider({ children }: { children: React.ReactNo
   const handleConfirm = React.useCallback(() => {
     if (selectedAssessment) {
       console.log(`Confirmed assessment: ${selectedAssessment.title}`);
+      setIsFullScreenOpen(true);
     }
     setOpen(false);
   }, [selectedAssessment]);
+
 
   return (
     <AssessmentDialogContext.Provider value={{ openAssessment, closeAssessment }}>
@@ -51,7 +56,17 @@ export function AssessmentDialogProvider({ children }: { children: React.ReactNo
         onClose={closeAssessment}
         onConfirm={handleConfirm}
       />
+      <FullScreenView
+        isOpen={isFullScreenOpen}
+        onClose={() => setIsFullScreenOpen(false)}
+        title={selectedAssessment?.title || ''}
+      >
+        <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
+          {/* Content will be added here later */}
+        </div>
+      </FullScreenView>
     </AssessmentDialogContext.Provider>
+
   );
 }
 
