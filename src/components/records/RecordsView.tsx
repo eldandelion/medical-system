@@ -74,8 +74,11 @@ export function RecordsView({ onRecordSelect, selectedRecordId }: RecordsViewPro
       render: (item, isSelected) => (
         <div className="flex items-center gap-4">
           <span
-            className="material-symbols-outlined text-[12px] shrink-0"
-            style={{ color: isSelected ? 'inherit' : item.iconColor, fontVariationSettings: "'FILL' 1" }}
+            className="material-symbols-outlined text-[18px] shrink-0"
+            style={{ 
+              color: isSelected ? 'inherit' : item.iconColor, 
+              fontVariationSettings: isSelected ? "'FILL' 1" : "'FILL' 0" 
+            }}
           >
             {item.icon}
           </span>
