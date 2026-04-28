@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { SearchItem } from './SearchItem';
 
 interface GlobalSearchProps {
   placeholder?: string;
@@ -49,7 +50,7 @@ export function GlobalSearch({ placeholder = "Search students and referrals" }: 
       </AnimatePresence>
 
       {/* Base Search Bar (Always visible) */}
-      <div 
+      <div
         className="w-full bg-[var(--md-sys-color-surface-container-low)] text-[var(--md-sys-color-on-surface)] rounded-full h-12 px-4 flex items-center gap-3 cursor-text hover:bg-[var(--md-sys-color-surface-container)] transition-colors group shadow-sm"
         onClick={() => setIsSearchFocused(true)}
       >
@@ -85,14 +86,11 @@ export function GlobalSearch({ placeholder = "Search students and referrals" }: 
             <div className="flex flex-col overflow-hidden">
               <div className="h-[1px] w-full bg-[var(--md-sys-color-outline-variant)] opacity-30 mx-0" />
               <div className="flex flex-col py-1">
-                <div className="px-4 py-3 flex items-center gap-4 hover:bg-[var(--md-sys-color-surface-variant)] cursor-pointer transition-colors group">
-                  <span className="material-symbols-outlined text-[20px] text-[var(--md-sys-color-on-surface-variant)] group-hover:text-[var(--md-sys-color-primary)]">star</span>
-                  <span className="text-sm text-[var(--md-sys-color-on-surface)]">Favorites</span>
-                </div>
-                <div className="px-4 py-3 flex items-center gap-4 hover:bg-[var(--md-sys-color-surface-variant)] cursor-pointer transition-colors group">
-                  <span className="material-symbols-outlined text-[20px] text-[var(--md-sys-color-on-surface-variant)] group-hover:text-[var(--md-sys-color-primary)]">history</span>
-                  <span className="text-sm text-[var(--md-sys-color-on-surface)]">Recent assessments</span>
-                </div>
+                <SearchItem icon="history" label="Recent assessments" />
+                <div className="h-[1px] w-full bg-[var(--md-sys-color-outline-variant)] opacity-20 my-1" />
+                <SearchItem icon="clinical_notes" label="焦虑与惊恐发作评估" />
+                <SearchItem icon="forum" label="药物管理（SSRI 调整）" />
+                <SearchItem icon="quiz" label="年度身心健康状况评估" />
               </div>
             </div>
           </motion.div>
