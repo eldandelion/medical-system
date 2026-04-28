@@ -38,6 +38,38 @@ export function TeacherPage() {
     setSelectedItem(null);
   };
 
+  const [activeTab, setActiveTab] = React.useState('overview');
+
+  // Define tabs configuration for different detail views
+  const getTabsForPage = () => {
+    switch (activePage) {
+      case 'Students':
+        return [
+          { id: 'overview', label: '临床概览', icon: 'clinical_notes' },
+          { id: 'psychometrics', label: '量表数据', icon: 'analytics' },
+          { id: 'history', label: '档案记录', icon: 'history_edu' },
+        ];
+      case 'Referral Management':
+        return [
+          { id: 'overview', label: '详情概览', icon: 'description' },
+          { id: 'risk', label: '风险评估', icon: 'warning' },
+          { id: 'psychometrics', label: '心理测量', icon: 'analytics' },
+          { id: 'feedback', label: '反馈记录', icon: 'chat_bubble' },
+        ];
+      default:
+        return [];
+    }
+  };
+
+  const tabs = getTabsForPage();
+
+  // Ensure activeTab is always valid for the current set of tabs
+  React.useEffect(() => {
+    if (tabs.length > 0 && !tabs.find(t => t.id === activeTab)) {
+      setActiveTab(tabs[0].id);
+    }
+  }, [tabs, activeTab]);
+
   const handleCompose = () => {
     openCreation(
       '发起转诊',
@@ -81,16 +113,27 @@ export function TeacherPage() {
             <DetailsPanel
               isOpen={!!selectedItem}
               onClose={() => setSelectedItem(null)}
-              title={(activePage === 'Students' && !!selectedItem?.name) || (activePage === 'Referral Management' && !!selectedItem?.studentName) ? '' : (selectedItem?.name || selectedItem?.studentName || '')}
+              title={selectedItem?.name || selectedItem?.studentName || ''}
+              subtitle={selectedItem?.major || selectedItem?.type || selectedItem?.department || ''}
+              headerAvatar={
+                (selectedItem?.name || selectedItem?.studentName) ? (
+                  <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[14px] font-medium">
+                    {(selectedItem?.name || selectedItem?.studentName || '?').charAt(0)}
+                  </div>
+                ) : null
+              }
               icon={selectedItem?.name ? 'person' : 'description'}
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
               disablePadding={(activePage === 'Students' && !!selectedItem?.name) || (activePage === 'Referral Management' && !!selectedItem?.studentName)}
             >
               {selectedItem && (
                 <>
                   {activePage === 'Students' && selectedItem.name ? (
-                    <StudentDetailsView student={selectedItem} />
+                    <StudentDetailsView student={selectedItem} activeTab={activeTab} onTabChange={setActiveTab} />
                   ) : activePage === 'Referral Management' && selectedItem.studentName ? (
-                    <ReferralDetailsView referral={selectedItem} userRole="teacher" />
+                    <ReferralDetailsView referral={selectedItem} userRole="teacher" activeTab={activeTab} onTabChange={setActiveTab} />
                   ) : (
                     <>
                       <div className="flex justify-center py-6 mb-2">
