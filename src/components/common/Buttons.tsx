@@ -104,8 +104,8 @@ export function SegmentedButton({ items, selectedValue, onChange }: SegmentedBut
             key={item.value}
             onClick={() => onChange(item.value)}
             className={`flex items-center justify-center px-6 text-sm font-medium transition-all relative group cursor-pointer ${isSelected
-                ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-                : 'text-[var(--md-sys-color-on-surface)]'
+              ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+              : 'text-[var(--md-sys-color-on-surface)]'
               } ${!isLast ? 'border-r border-[var(--md-sys-color-outline)]' : ''}`}
           >
             {/* MD3 State Layer */}

@@ -4,6 +4,8 @@ import { DetailsSection, DetailItem } from '../common/DetailsPanel';
 import { PrimaryButton, SecondaryButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
 
+import { useDetails } from '../../contexts/DetailsContext';
+
 interface Referral {
   id: string;
   studentName: string;
@@ -17,12 +19,21 @@ interface Referral {
 interface ReferralDetailsViewProps {
   referral: Referral;
   userRole?: 'student' | 'teacher' | 'head-councillor' | 'trial-admin';
+  hideHeader?: boolean;
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
 }
 
 type TabType = 'overview' | 'risk' | 'psychometrics' | 'feedback';
 
-export function ReferralDetailsView({ referral, userRole }: ReferralDetailsViewProps) {
-  const [activeTab, setActiveTab] = React.useState<TabType>('overview');
+export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab: propsActiveTab, onTabChange }: ReferralDetailsViewProps) {
+  const { isFullScreen } = useDetails();
+  const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
+  const activeTab = (propsActiveTab || internalActiveTab) as TabType;
+  const setActiveTab = (tab: TabType) => {
+    setInternalActiveTab(tab);
+    onTabChange?.(tab);
+  };
 
   // Hardcoded mock extended data for the referral
   const extendedData = {
@@ -79,69 +90,73 @@ export function ReferralDetailsView({ referral, userRole }: ReferralDetailsViewP
   return (
     <div className="flex flex-col h-full bg-[var(--md-sys-color-surface)]">
       {/* Primary Anchor Header Section (Persistent) */}
-      <div className="p-6 pb-4 flex flex-col gap-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {/* Primary Anchor: First Letter Avatar */}
-            <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium shrink-0 animate-in fade-in zoom-in duration-300">
-              {referral.studentName.charAt(0)}
-            </div>
-            <div className="flex flex-col gap-1">
-              <h1 className="text-[24px] font-medium leading-[32px] text-[var(--md-sys-color-on-surface)] tracking-tight">
-                {referral.studentName}
-              </h1>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80">
-                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>badge</span>
-                  <span>{extendedData.studentId}</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80">
-                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>school</span>
-                  <span>{extendedData.school}</span>
+      {!hideHeader && !isFullScreen && (
+        <div className="p-6 pb-4 flex flex-col gap-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {/* Primary Anchor: First Letter Avatar */}
+              <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium shrink-0 animate-in fade-in zoom-in duration-300">
+                {referral.studentName.charAt(0)}
+              </div>
+              <div className="flex flex-col gap-1">
+                <h1 className="text-[24px] font-medium leading-[32px] text-[var(--md-sys-color-on-surface)] tracking-tight">
+                  {referral.studentName}
+                </h1>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80">
+                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>badge</span>
+                    <span>{extendedData.studentId}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80">
+                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>school</span>
+                    <span>{extendedData.school}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Critical Status: Risk Level Chip */}
-          <div className={`px-4 py-2 rounded-full flex items-center gap-2 font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${referral.riskLevel === 'High'
-              ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
-              : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-            }`}>
-            <span className="material-symbols-outlined text-[18px]">
-              {referral.riskLevel === 'High' ? 'warning' : 'info'}
-            </span>
-            {referral.riskLevel === 'High' ? '高风险' : '中低风险'}
+            {/* Critical Status: Risk Level Chip */}
+            <div className={`px-4 py-2 rounded-full flex items-center gap-2 font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${referral.riskLevel === 'High'
+                ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
+                : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+              }`}>
+              <span className="material-symbols-outlined text-[18px]">
+                {referral.riskLevel === 'High' ? 'warning' : 'info'}
+              </span>
+              {referral.riskLevel === 'High' ? '高风险' : '中低风险'}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Primary Tabs */}
-      <div className="sticky top-0 z-20 bg-[var(--md-sys-color-surface)] border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 px-2 shrink-0">
-        <div className="flex overflow-x-auto custom-scrollbar">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as TabType)}
-              className={`flex-1 min-w-[120px] flex flex-col items-center py-4 px-2 gap-1.5 transition-all relative ${activeTab === tab.id
-                  ? 'text-[var(--md-sys-color-primary)]'
-                  : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-30'
-                }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
-              <span className="text-[11px] font-bold whitespace-nowrap text-center">
-                {tab.label}
-              </span>
-              {activeTab === tab.id && (
-                <motion.div
-                  layoutId="referralActiveTab"
-                  className="absolute bottom-0 left-0 right-0 h-[3px] bg-[var(--md-sys-color-primary)] rounded-t-full"
-                />
-              )}
-            </button>
-          ))}
+      {!isFullScreen && (
+        <div className="sticky top-0 z-20 bg-[var(--md-sys-color-surface)] border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 px-2 shrink-0">
+          <div className="flex overflow-x-auto custom-scrollbar">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as TabType)}
+                className={`flex-1 min-w-[120px] flex flex-col items-center py-4 px-2 gap-1.5 transition-all relative ${activeTab === tab.id
+                    ? 'text-[var(--md-sys-color-primary)]'
+                    : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-30'
+                  }`}
+              >
+                <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
+                <span className="text-[11px] font-bold whitespace-nowrap text-center">
+                  {tab.label}
+                </span>
+                {activeTab === tab.id && (
+                  <motion.div
+                    layoutId="referralActiveTab"
+                    className="absolute bottom-0 left-0 right-0 h-[3px] bg-[var(--md-sys-color-primary)] rounded-t-full"
+                  />
+                )}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto p-6 custom-scrollbar pb-32">

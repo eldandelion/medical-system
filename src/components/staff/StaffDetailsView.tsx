@@ -5,6 +5,8 @@ import { PrimaryButton, SecondaryButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
 import { useCreationOverlay } from '../../contexts/CreationContext';
 
+import { useDetails } from '../../contexts/DetailsContext';
+
 interface Counselor {
   id: string;
   name: string;
@@ -16,12 +18,21 @@ interface Counselor {
 
 interface StaffDetailsViewProps {
   staff: Counselor;
+  hideHeader?: boolean;
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
 }
 
 type TabType = 'caseload' | 'audit' | 'scopes';
 
-export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
-  const [activeTab, setActiveTab] = React.useState<TabType>('caseload');
+export function StaffDetailsView({ staff, hideHeader, activeTab: propsActiveTab, onTabChange }: StaffDetailsViewProps) {
+  const { isFullScreen } = useDetails();
+  const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('caseload');
+  const activeTab = (propsActiveTab || internalActiveTab) as TabType;
+  const setActiveTab = (tab: TabType) => {
+    setInternalActiveTab(tab);
+    onTabChange?.(tab);
+  };
   const [selectedCaseloadIds, setSelectedCaseloadIds] = React.useState<string[]>([]);
   const { openCreation, closeCreation } = useCreationOverlay();
 
@@ -77,46 +88,50 @@ export function StaffDetailsView({ staff }: StaffDetailsViewProps) {
   return (
     <div className="flex flex-col h-full bg-[var(--md-sys-color-surface)]">
       {/* Identity Block */}
-      <div className="p-6 pb-4 flex flex-col gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium shrink-0 uppercase">
-            {staff.name.charAt(0)}
-          </div>
-          <div className="flex flex-col">
-            <h1 className="text-[24px] leading-[32px] font-medium text-[var(--md-sys-color-on-surface)] tracking-tight">
-              {staff.name}
-            </h1>
-            <div className="flex items-center gap-2 text-[14px] text-[var(--md-sys-color-on-surface-variant)] mt-1">
-              <span className="font-mono text-[13px] tracking-tight text-[var(--md-sys-color-primary)] font-bold">{staff.employeeId}</span>
-              <span className="opacity-40">•</span>
-              <span className="font-medium">{staff.department}</span>
+      {!hideHeader && !isFullScreen && (
+        <div className="p-6 pb-4 flex flex-col gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium shrink-0 uppercase">
+              {staff.name.charAt(0)}
+            </div>
+            <div className="flex flex-col">
+              <h1 className="text-[24px] leading-[32px] font-medium text-[var(--md-sys-color-on-surface)] tracking-tight">
+                {staff.name}
+              </h1>
+              <div className="flex items-center gap-2 text-[14px] text-[var(--md-sys-color-on-surface-variant)] mt-1">
+                <span className="font-mono text-[13px] tracking-tight text-[var(--md-sys-color-primary)] font-bold">{staff.employeeId}</span>
+                <span className="opacity-40">•</span>
+                <span className="font-medium">{staff.department}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Tabs Header */}
-      <div className="flex border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 px-2 shrink-0 bg-[var(--md-sys-color-surface)] sticky top-0 z-10">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as TabType)}
-            className={`flex-1 flex flex-col items-center py-4 px-1 gap-1 transition-all relative ${activeTab === tab.id
+      {!isFullScreen && (
+        <div className="flex border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 px-2 shrink-0 bg-[var(--md-sys-color-surface)] sticky top-0 z-10">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as TabType)}
+              className={`flex-1 flex flex-col items-center py-4 px-1 gap-1 transition-all relative ${activeTab === tab.id
                 ? 'text-[var(--md-sys-color-primary)]'
                 : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-40'
-              }`}
-          >
-            <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
-            <span className="text-[11px] font-bold whitespace-nowrap">{tab.label}</span>
-            {activeTab === tab.id && (
-              <motion.div
-                layoutId="activeStaffTabUnderline"
-                className="absolute bottom-0 left-0 right-0 h-[3px] bg-[var(--md-sys-color-primary)] rounded-t-full"
-              />
-            )}
-          </button>
-        ))}
-      </div>
+                }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
+              <span className="text-[11px] font-bold whitespace-nowrap">{tab.label}</span>
+              {activeTab === tab.id && (
+                <motion.div
+                  layoutId="activeStaffTabUnderline"
+                  className="absolute bottom-0 left-0 right-0 h-[3px] bg-[var(--md-sys-color-primary)] rounded-t-full"
+                />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar pb-32">

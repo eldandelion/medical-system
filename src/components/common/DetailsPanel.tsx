@@ -1,17 +1,20 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FullScreenView } from './FullScreenView';
+import { DetailsContext } from '../../contexts/DetailsContext';
 
 interface DetailsPanelProps {
   isOpen: boolean;
   onClose: () => void;
   onExpand?: () => void;
   title: string;
+  subtitle?: string;
   icon: string;
+  headerAvatar?: React.ReactNode;
   iconColor?: string;
-  tabs?: string[];
+  tabs?: { id: string, label: string, icon: string }[];
   activeTab?: string;
-  onTabChange?: (tab: string) => void;
+  onTabChange?: (tabId: string) => void;
   children: React.ReactNode;
   width?: number;
   disablePadding?: boolean;
@@ -22,7 +25,9 @@ export function DetailsPanel({
   onClose,
   onExpand,
   title,
+  subtitle,
   icon,
+  headerAvatar,
   iconColor = 'var(--md-sys-color-primary)',
   tabs = [],
   activeTab = '',
@@ -77,30 +82,12 @@ export function DetailsPanel({
             </div>
           </div>
 
-          {/* Tabs */}
-          {tabs && tabs.length > 0 && (
-            <div className="flex border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 shrink-0">
-              {tabs.map((tab) => (
-                <div
-                  key={tab}
-                  onClick={() => onTabChange?.(tab)}
-                  className={`flex-1 flex justify-center py-3 text-[14px] font-medium cursor-pointer transition-colors relative ${activeTab === tab
-                    ? 'text-[var(--md-sys-color-primary)]'
-                    : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]'
-                    }`}
-                >
-                  {tab}
-                  {activeTab === tab && (
-                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--md-sys-color-primary)]" />
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
 
           {/* Panel Scrollable Content */}
           <div className={`flex-1 custom-scrollbar flex flex-col scroll-smooth ${disablePadding ? 'overflow-hidden' : 'overflow-y-auto p-5'}`}>
-            {children}
+            <DetailsContext.Provider value={{ isFullScreen: false }}>
+              {children}
+            </DetailsContext.Provider>
           </div>
         </motion.aside>
       )}
@@ -109,12 +96,16 @@ export function DetailsPanel({
         isOpen={isExpanded} 
         onClose={() => setIsExpanded(false)} 
         title={title}
+        subtitle={subtitle}
+        avatar={headerAvatar}
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={onTabChange}
         disablePadding={disablePadding}
       >
-        {children}
+        <DetailsContext.Provider value={{ isFullScreen: true }}>
+          {children}
+        </DetailsContext.Provider>
       </FullScreenView>
     </>
   );

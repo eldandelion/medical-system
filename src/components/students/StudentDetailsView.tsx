@@ -1,9 +1,10 @@
-import * as React from 'react'; // Re-indexing trigger
+import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { DetailsSection, DetailItem } from '../common/DetailsPanel';
 import { PrimaryButton, SecondaryButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
 import { useCreationOverlay } from '../../contexts/CreationContext';
+import { useDetails } from '../../contexts/DetailsContext';
 import {
   LineChart,
   Line,
@@ -48,13 +49,28 @@ interface StudentData {
 
 interface StudentDetailsViewProps {
   student: any; // Using any for now to facilitate integration
+  hideHeader?: boolean;
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
 }
 
 type TabType = 'overview' | 'psychometrics' | 'history';
 
-export function StudentDetailsView({ student }: StudentDetailsViewProps) {
-  const [activeTab, setActiveTab] = React.useState<TabType>('overview');
+export function StudentDetailsView({ student, hideHeader, activeTab: propsActiveTab, onTabChange }: StudentDetailsViewProps) {
+  const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
+  const activeTab = (propsActiveTab || internalActiveTab) as TabType;
+  const setActiveTab = (tab: TabType) => {
+    setInternalActiveTab(tab);
+    onTabChange?.(tab);
+  };
   const { openCreation } = useCreationOverlay();
+  const { isFullScreen } = useDetails();
+
+  const tabs = [
+    { id: 'overview', label: '临床概览', icon: 'clinical_notes' },
+    { id: 'psychometrics', label: '量表数据', icon: 'analytics' },
+    { id: 'history', label: '档案记录', icon: 'history_edu' },
+  ];
 
   // Hardcoded mock data for visualization based on the student
   const mockExtendedData: any = {
@@ -95,74 +111,72 @@ export function StudentDetailsView({ student }: StudentDetailsViewProps) {
     ]
   };
 
-  const tabs = [
-    { id: 'overview', label: '临床概览', icon: 'clinical_notes' },
-    { id: 'psychometrics', label: '量表数据', icon: 'analytics' },
-    { id: 'history', label: '档案记录', icon: 'history_edu' },
-  ];
-
   return (
     <div className="flex flex-col h-full bg-[var(--md-sys-color-surface)]">
       {/* Primary Anchor Header Section (Persistent) */}
-      <div className="p-6 pb-4 flex flex-col gap-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {/* Primary Anchor: First Letter Avatar */}
-            <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium shrink-0 animate-in fade-in zoom-in duration-300">
-              {student.name.charAt(0)}
-            </div>
-            <div className="flex flex-col gap-1">
-              <h1 className="text-[24px] font-medium leading-[32px] text-[var(--md-sys-color-on-surface)] tracking-tight">
-                {student.name}
-              </h1>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80">
-                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>badge</span>
-                  <span>{mockExtendedData.demographics.studentId}</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80">
-                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>school</span>
-                  <span>{student.major}</span>
+      {!hideHeader && !isFullScreen && (
+        <div className="p-6 pb-4 flex flex-col gap-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {/* Primary Anchor: First Letter Avatar */}
+              <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium shrink-0 animate-in fade-in zoom-in duration-300">
+                {student.name.charAt(0)}
+              </div>
+              <div className="flex flex-col gap-1">
+                <h1 className="text-[24px] font-medium leading-[32px] text-[var(--md-sys-color-on-surface)] tracking-tight">
+                  {student.name}
+                </h1>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80">
+                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>badge</span>
+                    <span>{mockExtendedData.demographics.studentId}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80">
+                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>school</span>
+                    <span>{student.major}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Critical Status: Risk Level Chip */}
-          <div className={`px-4 py-2 rounded-full flex items-center gap-2 font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${mockExtendedData.riskLevel === 'High'
-            ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
-            : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-            }`}>
-            <span className="material-symbols-outlined text-[18px]">
-              {mockExtendedData.riskLevel === 'High' ? 'warning' : 'info'}
-            </span>
-            {mockExtendedData.riskLevel === 'High' ? '高风险' : '中低风险'}
+            {/* Critical Status: Risk Level Chip */}
+            <div className={`px-4 py-2 rounded-full flex items-center gap-2 font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${mockExtendedData.riskLevel === 'High'
+              ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
+              : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+              }`}>
+              <span className="material-symbols-outlined text-[18px]">
+                {mockExtendedData.riskLevel === 'High' ? 'warning' : 'info'}
+              </span>
+              {mockExtendedData.riskLevel === 'High' ? '高风险' : '中低风险'}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Tabs Header */}
-      <div className="flex border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 px-2 shrink-0 bg-[var(--md-sys-color-surface)] sticky top-0 z-10">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as TabType)}
-            className={`flex-1 flex flex-col items-center py-4 px-1 gap-1 transition-all relative ${activeTab === tab.id
-              ? 'text-[var(--md-sys-color-primary)]'
-              : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-40'
-              }`}
-          >
-            <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
-            <span className="text-[11px] font-bold whitespace-nowrap">{tab.label}</span>
-            {activeTab === tab.id && (
-              <motion.div
-                layoutId="activeTabUnderline"
-                className="absolute bottom-0 left-0 right-0 h-[3px] bg-[var(--md-sys-color-primary)] rounded-t-full"
-              />
-            )}
-          </button>
-        ))}
-      </div>
+      {!isFullScreen && (
+        <div className="flex border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 px-2 shrink-0 bg-[var(--md-sys-color-surface)] sticky top-0 z-10">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as TabType)}
+              className={`flex-1 flex flex-col items-center py-4 px-1 gap-1 transition-all relative ${activeTab === tab.id
+                ? 'text-[var(--md-sys-color-primary)]'
+                : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-40'
+                }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
+              <span className="text-[11px] font-bold whitespace-nowrap">{tab.label}</span>
+              {activeTab === tab.id && (
+                <motion.div
+                  layoutId="activeTabUnderline"
+                  className="absolute bottom-0 left-0 right-0 h-[3px] bg-[var(--md-sys-color-primary)] rounded-t-full"
+                />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar pb-32">

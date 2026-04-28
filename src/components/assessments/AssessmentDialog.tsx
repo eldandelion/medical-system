@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { GenericDialog } from '../common/GenericDialog';
+import { PrimaryButton, TertiaryButton } from '../common/Buttons';
 
 interface Assessment {
   id: string;
@@ -37,18 +38,14 @@ export function AssessmentDialog({
 
   const actions = (
     <>
-      <button
+      <TertiaryButton
         onClick={onClose}
-        className="h-10 px-6 text-[var(--md-sys-color-primary)] font-medium rounded-full hover:bg-[var(--md-sys-color-primary)]/[0.08] active:bg-[var(--md-sys-color-primary)]/[0.12] transition-all"
-      >
-        取消
-      </button>
-      <button
+        label="取消"
+      />
+      <PrimaryButton
         onClick={onConfirm}
-        className="h-10 px-8 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] font-medium rounded-full shadow-sm hover:shadow-md active:shadow-sm active:scale-95 transition-all"
-      >
-        {isCompleted ? '确定' : isStarted ? '继续' : '开始'}
-      </button>
+        label={isCompleted ? '确定' : isStarted ? '继续' : '开始'}
+      />
     </>
   );
 
