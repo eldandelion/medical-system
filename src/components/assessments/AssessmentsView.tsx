@@ -21,7 +21,7 @@ interface Assessment {
 // Module-level variable to persist filter state across component remounts (tab switches)
 let persistentFilter = '全部';
 
-function SelfAssessmentsContent() {
+function AssessmentsContent() {
   const [selectedFilter, setSelectedFilter] = React.useState(persistentFilter);
   const { openAssessment } = useAssessmentDialog();
 
@@ -125,10 +125,10 @@ function SelfAssessmentsContent() {
   );
 }
 
-export function SelfAssessmentsView() {
+export function AssessmentsView() {
   return (
     <AssessmentDialogProvider>
-      <SelfAssessmentsContent />
+      <AssessmentsContent />
     </AssessmentDialogProvider>
   );
 }

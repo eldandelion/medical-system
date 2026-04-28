@@ -6,7 +6,7 @@ import { NavItem } from '../components/layout/NavItem';
 import { CanvasHeader } from '../components/layout/CanvasHeader';
 import { NotificationsView } from '../components/notifications/NotificationsView';
 import { ProfileView } from '../components/profile/ProfileView';
-import { SelfAssessmentsView } from '../components/assessments/SelfAssessmentsView';
+import { AssessmentsView } from '../components/assessments/AssessmentsView';
 import { RecordsView } from '../components/records/RecordsView';
 import { ProfileSummaryCard, ActionMetricWidget, InteractiveStatusList } from '../components/dashboard/DashboardComponents';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
@@ -166,7 +166,7 @@ export function StudentPage() {
           {activePage === 'Notifications' ? (
             <NotificationsView />
           ) : activePage === 'Assessments' ? (
-            <SelfAssessmentsView />
+            <AssessmentsView />
           ) : activePage === 'My Records' ? (
             <RecordsView onRecordSelect={setSelectedRecord} selectedRecordId={selectedRecord?.id} />
           ) : activePage === 'Dashboard' ? (
