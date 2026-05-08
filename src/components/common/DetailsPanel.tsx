@@ -33,7 +33,7 @@ export function DetailsPanel({
   activeTab = '',
   onTabChange,
   children,
-  width = 360,
+  width = 720,
   disablePadding = false
 }: DetailsPanelProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
@@ -48,53 +48,53 @@ export function DetailsPanel({
   return (
     <>
       <AnimatePresence>
-      {isOpen && (
-        <motion.aside
-          initial={{ x: '20%', opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: '20%', opacity: 0 }}
-          transition={{ duration: 0.25, ease: 'easeOut' }}
-          className="h-full bg-[var(--md-sys-color-surface)] rounded-3xl overflow-hidden flex flex-col shrink-0 border-none ring-0 relative"
-          style={{ width: width }}
-        >
-          {/* Panel Header */}
-          <div className="flex items-center justify-between px-4 py-3 shrink-0">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined shrink-0" style={{ color: iconColor, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
-                <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">Details</span>
+        {isOpen && (
+          <motion.aside
+            initial={{ x: '20%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '20%', opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="h-full bg-[var(--md-sys-color-surface)] rounded-3xl overflow-hidden flex flex-col shrink-0 border-none ring-0 relative"
+            style={{ width: width }}
+          >
+            {/* Panel Header */}
+            <div className="flex items-center justify-between px-4 py-3 shrink-0">
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined shrink-0" style={{ color: iconColor, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+                  <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">Details</span>
+                </div>
+                <span className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)] truncate">{title}</span>
               </div>
-              <span className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)] truncate">{title}</span>
+              <div className="flex items-center gap-0.5 shrink-0">
+                <button
+                  onClick={() => onExpand ? onExpand() : setIsExpanded(true)}
+                  className="p-1.5 hover:bg-[var(--md-sys-color-surface-variant)] rounded-full transition-colors flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)]"
+                >
+                  <span className="material-symbols-outlined text-[20px]">open_in_full</span>
+                </button>
+                <button
+                  onClick={onClose}
+                  className="p-1.5 hover:bg-[var(--md-sys-color-surface-variant)] rounded-full transition-colors flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)]"
+                >
+                  <span className="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-0.5 shrink-0">
-              <button
-                onClick={() => onExpand ? onExpand() : setIsExpanded(true)}
-                className="p-1.5 hover:bg-[var(--md-sys-color-surface-variant)] rounded-full transition-colors flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)]"
-              >
-                <span className="material-symbols-outlined text-[20px]">open_in_full</span>
-              </button>
-              <button
-                onClick={onClose}
-                className="p-1.5 hover:bg-[var(--md-sys-color-surface-variant)] rounded-full transition-colors flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)]"
-              >
-                <span className="material-symbols-outlined text-[20px]">close</span>
-              </button>
-            </div>
-          </div>
 
 
-          {/* Panel Scrollable Content */}
-          <div className={`flex-1 custom-scrollbar flex flex-col scroll-smooth ${disablePadding ? 'overflow-hidden' : 'overflow-y-auto p-5'}`}>
-            <DetailsContext.Provider value={{ isFullScreen: false }}>
-              {children}
-            </DetailsContext.Provider>
-          </div>
-        </motion.aside>
-      )}
-    </AnimatePresence>
-      <FullScreenView 
-        isOpen={isExpanded} 
-        onClose={() => setIsExpanded(false)} 
+            {/* Panel Scrollable Content */}
+            <div className={`flex-1 custom-scrollbar flex flex-col scroll-smooth ${disablePadding ? 'overflow-hidden' : 'overflow-y-auto p-5'}`}>
+              <DetailsContext.Provider value={{ isFullScreen: false }}>
+                {children}
+              </DetailsContext.Provider>
+            </div>
+          </motion.aside>
+        )}
+      </AnimatePresence>
+      <FullScreenView
+        isOpen={isExpanded}
+        onClose={() => setIsExpanded(false)}
         title={title}
         subtitle={subtitle}
         avatar={headerAvatar}

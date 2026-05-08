@@ -92,23 +92,23 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
       {/* Primary Anchor Header Section (Persistent) */}
       {!hideHeader && !isFullScreen && (
         <div className="p-6 pb-4 flex flex-col gap-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between gap-4 flex-nowrap overflow-hidden">
+            <div className="flex items-center gap-4 shrink-0">
               {/* Primary Anchor: First Letter Avatar */}
               <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium shrink-0 animate-in fade-in zoom-in duration-300">
                 {referral.studentName.charAt(0)}
               </div>
               <div className="flex flex-col gap-1">
-                <h1 className="text-[24px] font-medium leading-[32px] text-[var(--md-sys-color-on-surface)] tracking-tight">
+                <h1 className="text-[24px] font-medium leading-[32px] text-[var(--md-sys-color-on-surface)] tracking-tight whitespace-nowrap">
                   {referral.studentName}
                 </h1>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80">
-                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>badge</span>
+                <div className="flex items-center gap-3 overflow-hidden flex-nowrap">
+                  <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80 whitespace-nowrap">
+                    <span className="material-symbols-outlined text-[18px] shrink-0" style={{ fontVariationSettings: "'FILL' 0" }}>badge</span>
                     <span>{extendedData.studentId}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80">
-                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>school</span>
+                  <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80 whitespace-nowrap">
+                    <span className="material-symbols-outlined text-[18px] shrink-0" style={{ fontVariationSettings: "'FILL' 0" }}>school</span>
                     <span>{extendedData.school}</span>
                   </div>
                 </div>
@@ -117,13 +117,15 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
 
             {/* Critical Status: Risk Level Chip */}
             <div className={`px-4 py-2 rounded-full flex items-center gap-2 font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${referral.riskLevel === 'High'
-                ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
-                : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+              ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
+              : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
               }`}>
-              <span className="material-symbols-outlined text-[18px]">
+              <span className="material-symbols-outlined text-[18px] shrink-0">
                 {referral.riskLevel === 'High' ? 'warning' : 'info'}
               </span>
-              {referral.riskLevel === 'High' ? '高风险' : '中低风险'}
+              <span>
+                {referral.riskLevel === 'High' ? '高风险' : '中低风险'}
+              </span>
             </div>
           </div>
         </div>
@@ -132,14 +134,14 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
       {/* Primary Tabs */}
       {!isFullScreen && (
         <div className="sticky top-0 z-20 bg-[var(--md-sys-color-surface)] border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 px-2 shrink-0">
-          <div className="flex overflow-x-auto custom-scrollbar">
+          <div className="flex overflow-x-auto custom-scrollbar details-tabs-list">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as TabType)}
                 className={`flex-1 min-w-[120px] flex flex-col items-center py-4 px-2 gap-1.5 transition-all relative ${activeTab === tab.id
-                    ? 'text-[var(--md-sys-color-primary)]'
-                    : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-30'
+                  ? 'text-[var(--md-sys-color-primary)]'
+                  : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-30'
                   }`}
               >
                 <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
@@ -164,9 +166,10 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
           {activeTab === 'overview' && (
             <motion.div
               key="overview"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
+              initial={{ opacity: 0, x: isFullScreen ? 0 : 10, y: isFullScreen ? 10 : 0 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              exit={{ opacity: 0, x: isFullScreen ? 0 : -10, y: isFullScreen ? -10 : 0 }}
+              transition={{ duration: 0.2 }}
               className="flex flex-col gap-6"
             >
               {/* Static Demographics Section - Outlined Card with Navigation Arrow */}
@@ -267,9 +270,10 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
           {activeTab === 'risk' && (
             <motion.div
               key="risk"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
+              initial={{ opacity: 0, x: isFullScreen ? 0 : 10, y: isFullScreen ? 10 : 0 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              exit={{ opacity: 0, x: isFullScreen ? 0 : -10, y: isFullScreen ? -10 : 0 }}
+              transition={{ duration: 0.2 }}
               className="flex flex-col gap-6"
             >
               <div className="p-2 rounded-2xl border border-[var(--md-sys-color-outline-variant)] flex flex-col">
@@ -309,9 +313,10 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
           {activeTab === 'psychometrics' && (
             <motion.div
               key="psychometrics"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
+              initial={{ opacity: 0, x: isFullScreen ? 0 : 10, y: isFullScreen ? 10 : 0 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              exit={{ opacity: 0, x: isFullScreen ? 0 : -10, y: isFullScreen ? -10 : 0 }}
+              transition={{ duration: 0.2 }}
               className="flex flex-col gap-6"
             >
               <div className="overflow-hidden rounded-2xl border border-[var(--md-sys-color-outline-variant)]">
@@ -343,8 +348,8 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                                 animate={{ width: `${(score.value / score.max) * 100}%` }}
                                 transition={{ duration: 0.8, ease: "easeOut" }}
                                 className={`h-full rounded-full ${score.level === '重度' || score.level.includes('重度')
-                                    ? 'bg-[var(--md-sys-color-error)]'
-                                    : 'bg-[var(--md-sys-color-primary)]'
+                                  ? 'bg-[var(--md-sys-color-error)]'
+                                  : 'bg-[var(--md-sys-color-primary)]'
                                   }`}
                               />
                             </div>
@@ -361,9 +366,10 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
           {activeTab === 'feedback' && (
             <motion.div
               key="feedback"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
+              initial={{ opacity: 0, x: isFullScreen ? 0 : 10, y: isFullScreen ? 10 : 0 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              exit={{ opacity: 0, x: isFullScreen ? 0 : -10, y: isFullScreen ? -10 : 0 }}
+              transition={{ duration: 0.2 }}
               className="flex flex-col gap-8"
             >
               <div className="flex flex-col gap-6">

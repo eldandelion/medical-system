@@ -95,12 +95,12 @@ export function StaffDetailsView({ staff, hideHeader, activeTab: propsActiveTab,
               {staff.name.charAt(0)}
             </div>
             <div className="flex flex-col">
-              <h1 className="text-[24px] leading-[32px] font-medium text-[var(--md-sys-color-on-surface)] tracking-tight">
+              <h1 className="text-[24px] leading-[32px] font-medium text-[var(--md-sys-color-on-surface)] tracking-tight whitespace-nowrap">
                 {staff.name}
               </h1>
-              <div className="flex items-center gap-2 text-[14px] text-[var(--md-sys-color-on-surface-variant)] mt-1">
+              <div className="flex items-center gap-2 text-[14px] text-[var(--md-sys-color-on-surface-variant)] mt-1 overflow-hidden flex-nowrap">
                 <span className="font-mono text-[13px] tracking-tight text-[var(--md-sys-color-primary)] font-bold">{staff.employeeId}</span>
-                <span className="opacity-40">•</span>
+                <span className="opacity-40 shrink-0">•</span>
                 <span className="font-medium">{staff.department}</span>
               </div>
             </div>
@@ -110,12 +110,12 @@ export function StaffDetailsView({ staff, hideHeader, activeTab: propsActiveTab,
 
       {/* Tabs Header */}
       {!isFullScreen && (
-        <div className="flex border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 px-2 shrink-0 bg-[var(--md-sys-color-surface)] sticky top-0 z-10">
+        <div className="flex border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 px-2 shrink-0 bg-[var(--md-sys-color-surface)] sticky top-0 z-10 details-tabs-list">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabType)}
-              className={`flex-1 flex flex-col items-center py-4 px-1 gap-1 transition-all relative ${activeTab === tab.id
+              className={`flex-1 min-w-[90px] flex flex-col items-center py-4 px-1 gap-1 transition-all relative ${activeTab === tab.id
                 ? 'text-[var(--md-sys-color-primary)]'
                 : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-40'
                 }`}
@@ -139,9 +139,9 @@ export function StaffDetailsView({ staff, hideHeader, activeTab: propsActiveTab,
           {activeTab === 'caseload' && (
             <motion.div
               key="caseload"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, x: isFullScreen ? 0 : 10, y: isFullScreen ? 10 : 0 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              exit={{ opacity: 0, x: isFullScreen ? 0 : -10, y: isFullScreen ? -10 : 0 }}
               transition={{ duration: 0.2 }}
               className="flex flex-col gap-4"
             >
@@ -185,9 +185,9 @@ export function StaffDetailsView({ staff, hideHeader, activeTab: propsActiveTab,
           {activeTab === 'audit' && (
             <motion.div
               key="audit"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, x: isFullScreen ? 0 : 10, y: isFullScreen ? 10 : 0 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              exit={{ opacity: 0, x: isFullScreen ? 0 : -10, y: isFullScreen ? -10 : 0 }}
               transition={{ duration: 0.2 }}
               className="flex flex-col gap-6"
             >
@@ -214,9 +214,9 @@ export function StaffDetailsView({ staff, hideHeader, activeTab: propsActiveTab,
           {activeTab === 'scopes' && (
             <motion.div
               key="scopes"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, x: isFullScreen ? 0 : 10, y: isFullScreen ? 10 : 0 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              exit={{ opacity: 0, x: isFullScreen ? 0 : -10, y: isFullScreen ? -10 : 0 }}
               transition={{ duration: 0.2 }}
               className="flex flex-col gap-6"
             >
@@ -236,8 +236,8 @@ export function StaffDetailsView({ staff, hideHeader, activeTab: propsActiveTab,
                         prev.includes(dept) ? prev.filter(d => d !== dept) : [...prev, dept]
                       )}
                       className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-[14px] font-medium transition-all cursor-pointer ${isSelected
-                          ? 'bg-[var(--md-sys-color-primary-container)] border-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary-container)] shadow-sm'
-                          : 'bg-transparent border-[var(--md-sys-color-outline-variant)] text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-low)]'
+                        ? 'bg-[var(--md-sys-color-primary-container)] border-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary-container)] shadow-sm'
+                        : 'bg-transparent border-[var(--md-sys-color-outline-variant)] text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-low)]'
                         }`}
                     >
                       <span className="material-symbols-outlined text-[18px]">
