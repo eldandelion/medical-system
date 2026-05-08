@@ -46,7 +46,7 @@ export function DataTable<T extends { id?: string }>({ columns, data, onRowClick
               {columns.map((col, colIdx) => (
                 <div 
                   key={colIdx} 
-                  className={`${col.width || 'flex-1'} truncate pr-4 ${
+                  className={`${col.width || 'flex-1'} ${colIdx === 0 ? 'overflow-visible' : 'truncate'} pr-4 ${
                     isSelected ? 'text-[var(--md-sys-color-on-secondary-container)]' : ''
                   }`}
                 >

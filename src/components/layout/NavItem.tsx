@@ -6,10 +6,11 @@ interface NavItemProps {
   icon: string;
   label: string;
   active?: boolean;
+  badge?: boolean;
   onClick?: () => void;
 }
 
-export function NavItem({ icon, label, active, onClick }: NavItemProps) {
+export function NavItem({ icon, label, active, badge, onClick }: NavItemProps) {
   const { isCollapsed } = useSidebar();
   
   return (
@@ -25,11 +26,16 @@ export function NavItem({ icon, label, active, onClick }: NavItemProps) {
           : 'hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)] opacity-70 hover:opacity-100'
       }`}
     >
-      <span 
-        className={`material-symbols-outlined shrink-0 ${active ? 'filled-icon' : ''}`}
-      >
-        {icon}
-      </span>
+      <div className="relative shrink-0 flex items-center justify-center">
+        <span 
+          className={`material-symbols-outlined shrink-0 ${active ? 'filled-icon' : ''}`}
+        >
+          {icon}
+        </span>
+        {badge && (
+          <span className="absolute top-[-2px] right-[-2px] w-2.5 h-2.5 bg-[var(--md-sys-color-error)] rounded-full border-2 border-[var(--md-sys-color-surface)] ring-0" />
+        )}
+      </div>
       <span className={`tracking-wide ${
         isCollapsed 
           ? 'text-[10px] leading-[12px] text-center w-full' 

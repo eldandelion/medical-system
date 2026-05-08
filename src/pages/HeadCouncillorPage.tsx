@@ -106,7 +106,7 @@ export function HeadCouncillorPage() {
     >
       <Sidebar composeButton={composeButton}>
         <NavItem icon="dashboard" label="控制面板" active={activePage === 'Dashboard'} onClick={() => handlePageChange('Dashboard')} />
-        <NavItem icon="notifications" label="通知中心" active={activePage === 'Notifications'} onClick={() => handlePageChange('Notifications')} />
+        <NavItem icon="notifications" label="通知中心" active={activePage === 'Notifications'} onClick={() => handlePageChange('Notifications')} badge={true} />
 
         <NavItem icon="group" label="学生管理" active={activePage === 'Students'} onClick={() => handlePageChange('Students')} />
         <NavItem icon="engineering" label="人员管理" active={activePage === 'Staff'} onClick={() => handlePageChange('Staff')} />

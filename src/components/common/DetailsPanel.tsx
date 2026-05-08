@@ -60,9 +60,8 @@ export function DetailsPanel({
             {/* Panel Header */}
             <div className="flex items-center justify-between px-4 py-3 shrink-0">
               <div className="flex items-center gap-3 overflow-hidden">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <span className="material-symbols-outlined shrink-0" style={{ color: iconColor, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
-                  <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">Details</span>
                 </div>
                 <span className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)] truncate">{title}</span>
               </div>
