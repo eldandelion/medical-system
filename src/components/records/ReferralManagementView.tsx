@@ -10,6 +10,10 @@ interface Referral {
   reason: string;
   riskLevel: 'High' | 'Medium' | 'Low';
   status: 'Draft' | 'Closed' | 'Pending' | 'Approved' | 'AwaitingApproval';
+  referredBy: {
+    name: string;
+    avatar?: string;
+  };
 }
 
 interface ReferralManagementViewProps {
@@ -26,7 +30,8 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
       date: '2026年4月12日',
       reason: '期中考试后出现急性恐慌发作和睡眠剥夺',
       riskLevel: 'High',
-      status: 'Approved'
+      status: 'Approved',
+      referredBy: { name: '张教授' }
     },
     {
       id: '2',
@@ -35,7 +40,8 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
       date: '2026年4月20日',
       reason: '每周治疗随访；情绪持续低落',
       riskLevel: 'Medium',
-      status: 'Pending'
+      status: 'Pending',
+      referredBy: { name: '李医生' }
     },
     {
       id: '3',
@@ -44,7 +50,8 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
       date: '2026年5月5日',
       reason: '因注意力问题和学业压力自愿转诊',
       riskLevel: 'Low',
-      status: 'Draft'
+      status: 'Draft',
+      referredBy: { name: '王老师' }
     },
     {
       id: '4',
@@ -53,7 +60,8 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
       date: '2026年4月18日',
       reason: '宿舍事故报告；提到自杀意念',
       riskLevel: 'High',
-      status: 'Approved'
+      status: 'Approved',
+      referredBy: { name: '宿舍管理员' }
     },
     {
       id: '5',
@@ -62,7 +70,8 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
       date: '2026年4月15日',
       reason: '药物复核；报告注意力集中情况有所改善',
       riskLevel: 'Low',
-      status: 'Closed'
+      status: 'Closed',
+      referredBy: { name: '李医生' }
     },
     {
       id: '6',
@@ -71,7 +80,8 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
       date: '2026年4月22日',
       reason: '持续疲劳并退出社交活动',
       riskLevel: 'Medium',
-      status: 'Pending'
+      status: 'Pending',
+      referredBy: { name: '张教授' }
     },
     {
       id: '7',
@@ -80,7 +90,8 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
       date: '2026年4月10日',
       reason: '与工作相关的压力和创伤后症状',
       riskLevel: 'High',
-      status: 'Closed'
+      status: 'Closed',
+      referredBy: { name: '心理咨询中心' }
     },
     {
       id: '8',
@@ -89,7 +100,8 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
       date: '2026年4月28日',
       reason: '由于学业压力导致严重的睡眠障碍和情绪波动',
       riskLevel: 'Medium',
-      status: 'AwaitingApproval'
+      status: 'AwaitingApproval',
+      referredBy: { name: '陈老师' }
     },
   ].sort((a, b) => {
     if (a.status === 'AwaitingApproval' && b.status !== 'AwaitingApproval') return -1;
@@ -125,9 +137,17 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
           <span className={`text-[14px] font-medium truncate max-w-[400px] ${isSelected ? '' : 'text-[var(--md-sys-color-on-surface)]'}`}>
             {item.reason}
           </span>
-          <span className={`text-[12px] mt-0.5 ${isSelected ? 'opacity-90' : 'text-[var(--md-sys-color-on-surface-variant)] opacity-70'}`}>
-            {item.date} • {item.type}
-          </span>
+          <div className={`text-[12px] mt-0.5 flex items-center gap-2 ${isSelected ? 'opacity-90' : 'text-[var(--md-sys-color-on-surface-variant)] opacity-70'}`}>
+            <span className="shrink-0">{item.date} • {item.type}</span>
+            <div className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline-variant)] border-opacity-20 shrink-0">
+              <div className="w-4 h-4 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center text-[9px] font-bold">
+                {item.referredBy.name.charAt(0)}
+              </div>
+              <span className="text-[11px] font-medium text-[var(--md-sys-color-on-surface)] truncate max-w-[80px] leading-none">
+                {item.referredBy.name}
+              </span>
+            </div>
+          </div>
         </div>
       )
     },

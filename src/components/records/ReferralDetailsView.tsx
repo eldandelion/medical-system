@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { DetailsSection, DetailItem } from '../common/DetailsPanel';
 import { PrimaryButton, SecondaryButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
+import { PsychometricTable } from '../common/PsychometricTable';
 
 import { useDetails } from '../../contexts/DetailsContext';
 
@@ -310,6 +311,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
             </motion.div>
           )}
 
+
           {activeTab === 'psychometrics' && (
             <motion.div
               key="psychometrics"
@@ -319,47 +321,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
               transition={{ duration: 0.2 }}
               className="flex flex-col gap-6"
             >
-              <div className="overflow-hidden rounded-2xl border border-[var(--md-sys-color-outline-variant)]">
-                <table className="w-full text-left border-collapse">
-                  <thead className="bg-[var(--md-sys-color-surface-container-low)] border-b border-[var(--md-sys-color-outline-variant)]">
-                    <tr>
-                      <th className="px-5 py-4 text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase">量表名称</th>
-                      <th className="px-5 py-4 text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase w-24">得分</th>
-                      <th className="px-5 py-4 text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase">严重程度</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {extendedData.scores.map((score, idx) => (
-                      <tr key={idx} className="border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 last:border-0 hover:bg-[var(--md-sys-color-surface-container-lowest)] transition-colors">
-                        <td className="px-5 py-5">
-                          <div className="flex flex-col">
-                            <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">{score.name}</span>
-                            <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)]">{score.level}</span>
-                          </div>
-                        </td>
-                        <td className="px-5 py-5 text-[14px] font-bold text-[var(--md-sys-color-primary)]">
-                          {score.value} <span className="font-normal opacity-40 text-[10px]">/ {score.max}</span>
-                        </td>
-                        <td className="px-5 py-5">
-                          <div className="flex flex-col gap-2">
-                            <div className="w-full h-1.5 bg-[var(--md-sys-color-surface-variant)] rounded-full overflow-hidden">
-                              <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${(score.value / score.max) * 100}%` }}
-                                transition={{ duration: 0.8, ease: "easeOut" }}
-                                className={`h-full rounded-full ${score.level === '重度' || score.level.includes('重度')
-                                  ? 'bg-[var(--md-sys-color-error)]'
-                                  : 'bg-[var(--md-sys-color-primary)]'
-                                  }`}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <PsychometricTable scores={extendedData.scores} />
             </motion.div>
           )}
 

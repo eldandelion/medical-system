@@ -4,6 +4,7 @@ import { DetailsSection, DetailItem } from '../common/DetailsPanel';
 import { PrimaryButton, SecondaryButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
 import { useCreationOverlay } from '../../contexts/CreationContext';
+import { PsychometricTable } from '../common/PsychometricTable';
 import { useDetails } from '../../contexts/DetailsContext';
 import {
   LineChart,
@@ -324,26 +325,15 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3">
-                <h4 className="text-sm font-medium text-[var(--md-sys-color-on-surface-variant)]">近期评估</h4>
-                {[
-                  { name: 'PHQ-9 (抑郁)', score: '12/27', status: '中度', date: '5天前' },
-                  { name: 'GAD-7 (焦虑)', score: '15/21', status: '重度', date: '5天前' },
-                  { name: 'PSQI (睡眠)', score: '14/21', status: '较差', date: '2周前' }
-                ].map((item, idx) => (
-                  <div key={idx} className="bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)] border-opacity-50 rounded-xl p-3 flex items-center justify-between">
-                    <div>
-                      <div className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">{item.name}</div>
-                      <div className="text-[11px] text-[var(--md-sys-color-on-surface-variant)]">{item.date}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[14px] font-bold text-[var(--md-sys-color-primary)]">{item.score}</div>
-                      <div className={`text-[10px] font-medium uppercase tracking-tighter ${item.status === '重度' ? 'text-[var(--md-sys-color-error)]' : 'text-[var(--md-sys-color-secondary)]'
-                        }`}>{item.status}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <PsychometricTable scores={[
+                { name: 'PHQ-9 (抑郁)', value: 12, max: 27, level: '中度', date: '5天前' },
+                { name: 'GAD-7 (焦虑)', value: 15, max: 21, level: '重度', date: '5天前' },
+                { name: 'PCL-5 (PTSD症状)', value: 42, max: 80, level: '阳性', date: '1周前' },
+                { name: 'ASRS (ADHD自评)', value: 4, max: 6, level: '可能存在', date: '1周前' },
+                { name: 'PSQI (睡眠质量)', value: 14, max: 21, level: '较差', date: '2周前' },
+                { name: 'ISS (失眠严重程度)', value: 19, max: 28, level: '临床失眠', date: '2周前' },
+                { name: 'ESS (白天嗜睡情况)', value: 11, max: 24, level: '轻度', date: '2周前' }
+              ]} />
             </motion.div>
           )}
 
