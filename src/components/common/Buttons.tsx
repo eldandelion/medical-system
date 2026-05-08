@@ -33,8 +33,9 @@ export function SecondaryButton({ icon, label, className = "h-10", onClick, styl
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   return (
-    <md-outlined-button
-      className={`${className} shrink-0 whitespace-nowrap overflow-hidden transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0' : ''}`}
+
+    <md-outlined-button hasIcon={true}
+      // className={`${className} shrink-0 whitespace-nowrap overflow-hidden transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0' : ''}`}
       onClick={onClick}
       style={{
         '--md-outlined-button-container-elevation': '0',
@@ -42,6 +43,7 @@ export function SecondaryButton({ icon, label, className = "h-10", onClick, styl
       } as React.CSSProperties}
     >
       {icon && <md-icon slot="icon" className={effectiveCollapsed ? "m-0" : "ml-4"} style={{ color: 'inherit' }}>{icon}</md-icon>}
+
       {!effectiveCollapsed && <span className={icon ? "mr-4" : "mx-4"}>{label}</span>}
     </md-outlined-button>
   );

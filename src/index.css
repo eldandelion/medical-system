@@ -1,4 +1,104 @@
-@import "tailwindcss";
+/* Import Tailwind CSS v4 WITHOUT the preflight reset.
+   The preflight sets 'display: block' on all custom elements (md-*),
+   which overrides Material Web's required 'display: inline-flex' and
+   breaks internal layout, causing padding and sizing to collapse.
+   theme.css + utilities.css gives us all Tailwind features without preflight. */
+@import "tailwindcss/theme.css";
+@import "tailwindcss/utilities.css";
+
+/* Minimal hand-rolled reset that doesn't touch custom elements */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+  html, :host {
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+    font-family: 'Roboto', ui-sans-serif, system-ui, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    margin: 0;
+    line-height: inherit;
+    background-color: var(--md-sys-color-background);
+    color: var(--md-sys-color-on-background);
+  }
+  /* Headings: remove browser defaults */
+  h1, h2, h3, h4, h5, h6 {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+  /* Links: reset */
+  a {
+    color: inherit;
+    text-decoration: inherit;
+  }
+  /* Lists: remove bullets/numbers and spacing */
+  ol, ul, menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  /* Native form elements: normalize font and appearance.
+     NOTE: targets only native HTML elements, NOT md-* custom elements. */
+  button, input, select, optgroup, textarea, ::file-selector-button {
+    font: inherit;
+    font-feature-settings: inherit;
+    font-variation-settings: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    border-radius: 0;
+    background-color: transparent;
+    opacity: 1;
+    outline: none;
+  }
+  button:focus, input:focus, select:focus, textarea:focus {
+    outline: none;
+  }
+  button,
+  input:where([type='button'], [type='reset'], [type='submit']),
+  ::file-selector-button {
+    appearance: button;
+    cursor: pointer;
+  }
+  textarea {
+    resize: vertical;
+  }
+  /* Images / media */
+  img, svg, video, canvas, audio, iframe, embed, object {
+    display: block;
+    vertical-align: middle;
+  }
+  img, video {
+    max-width: 100%;
+    height: auto;
+  }
+  /* Tables */
+  table {
+    text-indent: 0;
+    border-color: inherit;
+    border-collapse: collapse;
+  }
+  /* Placeholder */
+  ::placeholder {
+    opacity: 1;
+  }
+  /* Hidden attribute */
+  [hidden]:where(:not([hidden='until-found'])) {
+    display: none !important;
+  }
+  /* Strong/bold */
+  b, strong {
+    font-weight: bolder;
+  }
+  /* HR */
+  hr {
+    height: 0;
+    color: inherit;
+    border-top-width: 1px;
+  }
+}
 
 /* Light Theme Variables */
 :root,
@@ -130,6 +230,23 @@
   /* Firefox */
 }
 
+md-icon,
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
 .filled-icon {
   font-variation-settings: 'FILL' 1 !important;
 }
@@ -151,3 +268,8 @@ md-outlined-segmented-button-set,
   cursor: pointer !important;
 }
 
+md-outlined-segmented-button,
+md-outlined-segmented-button-set,
+.cursor-pointer {
+  cursor: pointer !important;
+}

@@ -1,11 +1,12 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { DetailsSection, DetailItem } from '../common/DetailsPanel';
-import { PrimaryButton, SecondaryButton } from '../common/Buttons';
+import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
 import { PsychometricTable } from '../common/PsychometricTable';
 
 import { useDetails } from '../../contexts/DetailsContext';
+import { GenericDialog } from '../common/GenericDialog';
 
 interface Referral {
   id: string;
@@ -30,6 +31,8 @@ type TabType = 'overview' | 'risk' | 'psychometrics' | 'feedback';
 export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab: propsActiveTab, onTabChange }: ReferralDetailsViewProps) {
   const { isFullScreen } = useDetails();
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
+  const [isRejectionDialogOpen, setIsRejectionDialogOpen] = React.useState(false);
+  const [rejectionReason, setRejectionReason] = React.useState('');
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
   const setActiveTab = (tab: TabType) => {
     setInternalActiveTab(tab);
@@ -379,15 +382,57 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
         </AnimatePresence>
       </div>
 
+      {/* Rejection Reason Dialog */}
+      <GenericDialog
+        open={isRejectionDialogOpen}
+        onClose={() => setIsRejectionDialogOpen(false)}
+        title="拒绝申请"
+
+        actions={
+          <>
+            <TertiaryButton label="取消" onClick={() => setIsRejectionDialogOpen(false)} />
+            <TertiaryButton
+              label="确认拒绝"
+              onClick={() => {
+                console.log('Rejected with reason:', rejectionReason);
+                setIsRejectionDialogOpen(false);
+              }}
+              style={{
+                '--md-text-button-label-text-color': 'var(--md-sys-color-error)',
+                '--md-text-button-hover-label-text-color': 'var(--md-sys-color-error)',
+                '--md-text-button-focus-label-text-color': 'var(--md-sys-color-error)',
+                '--md-text-button-pressed-label-text-color': 'var(--md-sys-color-error)',
+                '--md-text-button-hover-state-layer-color': 'var(--md-sys-color-error)',
+                '--md-text-button-pressed-state-layer-color': 'var(--md-sys-color-error)',
+              } as React.CSSProperties}
+            />
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
+            请提供拒绝该转诊申请的具体原因。此信息将通过通知发送给发起人。
+          </p>
+          <textarea
+            autoFocus
+            className="w-full min-h-[120px] p-4 rounded-xl bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)] text-[15px] focus:outline-none focus:border-[var(--md-sys-color-primary)] transition-colors placeholder:opacity-50 resize-none"
+            placeholder="输入拒绝原因..."
+            value={rejectionReason}
+            onChange={(e) => setRejectionReason(e.target.value)}
+          />
+        </div>
+      </GenericDialog>
+
       {/* Action Footer */}
       <ActionFooter>
         {referral.status === 'AwaitingApproval' ? (
           userRole === 'head-councillor' ? (
             <>
-              <PrimaryButton icon="check_circle" label="批准转诊" />
+              <PrimaryButton icon="check" label="批准转诊" />
               <SecondaryButton
-                icon="cancel"
+                icon="close"
                 label="拒绝申请"
+                onClick={() => setIsRejectionDialogOpen(true)}
                 style={{
                   color: 'var(--md-sys-color-error)',
                   '--md-outlined-button-label-text-color': 'var(--md-sys-color-error)',
@@ -408,13 +453,13 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
           ) : (
             <>
               <PrimaryButton icon="upload_file" label="上传文件" />
-              <SecondaryButton icon="check_circle" label="确认反馈" />
+              <SecondaryButton icon="check" label="确认反馈" />
             </>
           )
         ) : (
           <>
             <PrimaryButton icon="upload_file" label="上传文件" />
-            <SecondaryButton icon="check_circle" label="确认反馈" />
+            <SecondaryButton icon="check" label="确认反馈" />
           </>
         )}
       </ActionFooter>
