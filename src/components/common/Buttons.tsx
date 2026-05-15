@@ -42,7 +42,8 @@ export function SecondaryButton({ icon, label, className = "h-10", onClick, styl
         ...style
       } as React.CSSProperties}
     >
-      {icon && <md-icon slot="icon" className={effectiveCollapsed ? "m-0" : "ml-4"} style={{ color: 'inherit' }}>{icon}</md-icon>}
+      {/* {icon && <md-icon slot="icon" className={effectiveCollapsed ? "m-0" : "ml-4"} style={{ color: 'inherit' }}>{icon}</md-icon>} */}
+      {icon && <md-icon slot="icon">{icon}</md-icon>}
 
       {!effectiveCollapsed && <span className={icon ? "mr-4" : "mx-4"}>{label}</span>}
     </md-outlined-button>
