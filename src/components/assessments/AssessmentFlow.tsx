@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { FullScreenView } from '../common/FullScreenView';
 import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
+import { GenericDialog } from '../common/GenericDialog';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface AssessmentSection {
@@ -70,7 +71,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
   const currentSection = ASSESSMENTS[currentSectionIdx];
   const currentQuestion = currentSection?.questions[currentQuestionIdx];
   const questionKey = `${currentSection?.id}_${currentQuestionIdx}`;
-  
+
   const totalQuestions = ASSESSMENTS.reduce((acc, section) => acc + section.questions.length, 0);
   const answeredCount = Object.keys(answers).length;
   const progress = (answeredCount / totalQuestions) * 100;
@@ -96,8 +97,6 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
     } else if (currentSectionIdx > 0) {
       setCurrentSectionIdx(prev => prev - 1);
       setCurrentQuestionIdx(ASSESSMENTS[currentSectionIdx - 1].questions.length - 1);
-    } else {
-      setAppState('intro');
     }
   };
 
@@ -122,7 +121,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
               const qKey = `${section.id}_${qIdx}`;
               const isAnswered = answers[qKey] !== undefined;
               const isActive = currentSectionIdx === sIdx && currentQuestionIdx === qIdx;
-              
+
               return (
                 <button
                   key={qIdx}
@@ -130,29 +129,26 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
                     setCurrentSectionIdx(sIdx);
                     setCurrentQuestionIdx(qIdx);
                   }}
-                  className={`w-full text-left px-4 py-3 rounded-xl transition-colors flex items-center justify-between group ${
-                    isActive 
-                      ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] font-medium' 
-                      : 'bg-transparent hover:bg-[var(--md-sys-color-surface-container-high)]'
-                  }`}
+                  className={`w-full text-left px-4 py-3 rounded-xl transition-colors flex items-center justify-between group ${isActive
+                    ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] font-medium'
+                    : 'bg-transparent hover:bg-[var(--md-sys-color-surface-container-high)]'
+                    }`}
                 >
-                  <span className={`truncate pr-4 flex-1 text-[13px] transition-opacity duration-200 ${
-                    isActive || isAnswered ? 'text-[var(--md-sys-color-on-surface)] opacity-100' : 'text-[var(--md-sys-color-on-surface-variant)] opacity-60 group-hover:opacity-100'
-                  }`}>
+                  <span className={`truncate pr-4 flex-1 text-[13px] transition-opacity duration-200 ${isActive || isAnswered ? 'text-[var(--md-sys-color-on-surface)] opacity-100' : 'text-[var(--md-sys-color-on-surface-variant)] opacity-60 group-hover:opacity-100'
+                    }`}>
                     {qIdx + 1}. {q}
                   </span>
-                  <div className={`w-2 h-2 rounded-full shrink-0 transition-all ${
-                    isActive ? 'bg-[var(--md-sys-color-primary)] ring-4 ring-[var(--md-sys-color-primary)] ring-opacity-20' :
+                  <div className={`w-2 h-2 rounded-full shrink-0 transition-all ${isActive ? 'bg-[var(--md-sys-color-primary)] ring-4 ring-[var(--md-sys-color-primary)] ring-opacity-20' :
                     isAnswered ? 'bg-[var(--md-sys-color-primary)]' :
-                    'border border-[var(--md-sys-color-outline)]'
-                  }`} />
+                      'border border-[var(--md-sys-color-outline)]'
+                    }`} />
                 </button>
               );
             })}
           </div>
         </div>
       ))}
-      
+
       {/* Submit bypass button if completed */}
       {answeredCount === totalQuestions && (
         <div className="px-6 mt-4">
@@ -178,165 +174,240 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
     </div>
   );
 
+  const [isUIVisible, setIsUIVisible] = React.useState(false);
+  const [showExitConfirm, setShowExitConfirm] = React.useState(false);
+
+  // Reset UI visibility when returning to intro
+  React.useEffect(() => {
+    if (appState === 'intro') {
+      setIsUIVisible(false);
+    }
+  }, [appState]);
+
+  const handleCloseAttempt = () => {
+    if (appState === 'assessment') {
+      setShowExitConfirm(true);
+    } else {
+      onClose();
+    }
+  };
+
   return (
-    <FullScreenView
-      isOpen={isOpen}
-      onClose={onClose}
-      title={appState === 'assessment' ? currentSection.title : assessmentTitle}
-      subtitle={appState === 'assessment' ? currentSection.description : undefined}
-      sidebar={appState === 'assessment' ? sidebar : undefined}
-      actions={appState === 'assessment' ? questionActions : undefined}
-      progress={appState === 'assessment' ? (answeredCount / totalQuestions) : undefined}
-      activeTab={currentSection?.id}
-      onTabChange={(id) => {
-        const idx = ASSESSMENTS.findIndex(s => s.id === id);
-        if (idx !== -1) {
-          setCurrentSectionIdx(idx);
-          setCurrentQuestionIdx(0);
-        }
-      }}
-    >
-      <div className="flex flex-col h-full relative">
-        <div className="flex-1 flex flex-col items-center justify-center py-8">
-          <AnimatePresence mode="wait">
-            {appState === 'intro' && (
-              <motion.div 
-                key="intro"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="w-full max-w-2xl text-center px-4"
-              >
-                <div className="p-8 sm:p-12">
-                  <div className="w-20 h-20 bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] rounded-full flex items-center justify-center mx-auto mb-8">
-                    <md-icon style={{ fontSize: '40px' }}>shield_with_heart</md-icon>
-                  </div>
-                  <h2 className="text-3xl font-semibold mb-6 text-[var(--md-sys-color-on-surface)]">{assessmentTitle}</h2>
-                  <p className="text-[var(--md-sys-color-on-surface-variant)] text-lg mb-10 leading-relaxed text-left sm:text-center">
-                    本问卷包括两部分（PHQ-9 与 GAD-7），旨在了解您近期的情绪与心理健康状况。
-                    <br/><br/>
-                    所有问题的答案没有对错之分，请按照您的实际感受放心填写。您的信息将被严格保密。
-                  </p>
-                  <PrimaryButton 
-                    onClick={startAssessment}
-                    label="开始评估"
-                    icon="arrow_forward"
-                    trailingIcon
-                    className="h-14 px-10 text-lg"
-                    noCollapse
-                  />
-                </div>
-              </motion.div>
-            )}
+    <>
+      <FullScreenView
+        isOpen={isOpen}
+        onClose={handleCloseAttempt}
+        title={appState === 'assessment' && isUIVisible ? currentSection.title : assessmentTitle}
+        subtitle={appState === 'assessment' && isUIVisible ? currentSection.description : undefined}
+        sidebar={appState === 'assessment' && isUIVisible ? sidebar : undefined}
+        actions={appState === 'assessment' && isUIVisible ? questionActions : undefined}
+        progress={appState === 'assessment' && isUIVisible ? (answeredCount / totalQuestions) : undefined}
+        activeTab={currentSection?.id}
+        onTabChange={(id) => {
+          const idx = ASSESSMENTS.findIndex(s => s.id === id);
+          if (idx !== -1) {
+            setCurrentSectionIdx(idx);
+            setCurrentQuestionIdx(0);
+          }
+        }}
+      >
+        <div className="flex flex-col h-full relative">
+          <div className="flex-1 flex flex-col items-center justify-center py-8">
+            <AnimatePresence
+              mode="wait"
+              onExitComplete={() => {
+                if (appState === 'assessment') {
+                  setIsUIVisible(true);
+                }
+              }}
+            >
+              {appState === 'intro' && (
+                <motion.div
+                  key="intro"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="w-full max-w-3xl text-center px-4"
+                >
+                  <div className="py-8">
+                    <div className="mb-10">
+                      <h2 className="text-3xl font-semibold text-[var(--md-sys-color-on-surface)] leading-tight">{assessmentTitle}</h2>
+                      <p className="text-[var(--md-sys-color-on-surface-variant)] mt-3 text-lg opacity-80">2025-2026 学年学生心理健康普查</p>
+                    </div>
 
-            {appState === 'assessment' && (
-              <motion.div 
-                key={`${questionKey}`}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-                className="w-full max-w-2xl px-4 flex flex-col h-full"
-              >
-                <div className="flex flex-col flex-1">
-                  <h3 className="text-2xl sm:text-3xl font-medium text-[var(--md-sys-color-on-surface)] mb-10 leading-snug">
-                    {currentQuestion}
-                  </h3>
-                  
-                  <div className="space-y-3 mb-12">
-                    {OPTIONS.map((option) => {
-                      const isSelected = answers[questionKey] === option.value;
-                      return (
-                        <button
-                          key={option.value}
-                          onClick={() => handleSelect(option.value)}
-                          className={`w-full flex items-center justify-between p-5 rounded-lg border text-left transition-all duration-200 group ${
-                            isSelected 
-                              ? 'bg-[var(--md-sys-color-secondary-container)] border-[var(--md-sys-color-secondary)] border-opacity-50 text-[var(--md-sys-color-on-secondary-container)] shadow-sm' 
-                              : 'bg-transparent border-[var(--md-sys-color-outline-variant)] hover:border-[var(--md-sys-color-outline)] hover:bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]'
-                          }`}
-                        >
-                          <span className={`text-lg font-medium ${isSelected ? 'text-[var(--md-sys-color-on-secondary-container)]' : ''}`}>{option.label}</span>
-                          
-                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                            isSelected ? 'border-[var(--md-sys-color-secondary)]' : 'border-[var(--md-sys-color-outline)] group-hover:border-[var(--md-sys-color-on-surface-variant)]'
-                          }`}>
-                            {isSelected && <div className="w-3 h-3 bg-[var(--md-sys-color-secondary)] rounded-full animate-in zoom-in duration-200" />}
+                    <div className="grid grid-cols-1 gap-2 mb-12 text-left">
+                      {[
+                        {
+                          icon: 'assignment',
+                          title: '评估内容',
+                          description: '本问卷包括两部分（PHQ-9 情绪状况与 GAD-7 焦虑状况），旨在全面了解您近期的情绪与心理健康状况'
+                        },
+                        {
+                          icon: 'volunteer_activism',
+                          title: '客观作答',
+                          description: '所有问题的答案没有对错之分，您的第一反应往往最准确，请按照您的实际感受放心填写'
+                        },
+                        {
+                          icon: 'lock',
+                          title: '隐私保密',
+                          description: '您的个人信息及答题数据将被严格保密，仅用于健康状况分析，请您安心作答'
+                        }
+                      ].map((info, idx) => (
+                        <div key={idx} className="bg-[var(--md-sys-color-surface-container-low)] p-6 rounded-[24px] flex items-start gap-4">
+                          <div className="text-[var(--md-sys-color-primary)] w-7 h-7 flex items-center justify-center shrink-0">
+                            <md-icon style={{ fontSize: '26px' }}>{info.icon}</md-icon>
                           </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+                          <div className="flex flex-col gap-1">
+                            <h3 className="text-xl font-medium text-[var(--md-sys-color-on-surface)] leading-7 tracking-[0.01em]">{info.title}</h3>
+                            <p className="text-[var(--md-sys-color-on-surface-variant)] leading-relaxed text-[15px]">{info.description}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
 
-                  <div className="flex items-center justify-between pt-6 mt-auto">
-                    <TertiaryButton
-                      onClick={handleBack}
-                      label="上一题"
-                      icon="chevron_left"
-                      className="h-12"
-                      noCollapse
-                    />
-                    
                     <PrimaryButton
-                      onClick={handleNext}
-                      label={currentSectionIdx === ASSESSMENTS.length - 1 && currentQuestionIdx === currentSection.questions.length - 1 ? '完成' : '下一题'}
-                      icon={currentSectionIdx === ASSESSMENTS.length - 1 && currentQuestionIdx === currentSection.questions.length - 1 ? 'check' : 'chevron_right'}
-                      trailingIcon={true}
-                      className="h-12 px-8"
+                      onClick={startAssessment}
+                      label="开始评估"
+                      className="h-16 px-12 text-xl rounded-full"
                       noCollapse
-                      style={!isCurrentQuestionAnswered ? { opacity: 0.5, pointerEvents: 'none' } : {}}
                     />
                   </div>
-                </div>
-              </motion.div>
-            )}
+                </motion.div>
+              )}
 
-            {appState === 'outro' && (
-              <motion.div 
-                key="outro"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-full max-w-2xl text-center px-4"
-              >
-                <div className="bg-[var(--md-sys-color-surface-container-low)] p-8 sm:p-12 rounded-[32px] border border-[var(--md-sys-color-outline-variant)] border-opacity-30 shadow-sm">
-                  <div className="w-24 h-24 bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] rounded-full flex items-center justify-center mx-auto mb-8">
-                    <md-icon style={{ fontSize: '48px' }}>celebration</md-icon>
-                  </div>
-                  <h2 className="text-3xl font-semibold mb-6 text-[var(--md-sys-color-on-surface)]">感谢您的参与</h2>
-                  <p className="text-[var(--md-sys-color-on-surface-variant)] text-lg mb-10 leading-relaxed">
-                    您的评估已完成。这些信息将帮助我们更好地了解您的健康状况。
-                  </p>
-                  
-                  <div className="bg-[var(--md-sys-color-surface-container-high)] p-5 rounded-2xl inline-flex items-center gap-3 text-sm text-[var(--md-sys-color-on-surface-variant)] mb-10">
-                    <md-icon style={{ fontSize: '20px' }}>task_alt</md-icon>
-                    已完成 {totalQuestions} 项问题的回答
-                  </div>
+              {appState === 'assessment' && (
+                <motion.div
+                  key={`${questionKey}`}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-full max-w-2xl px-4 flex flex-col h-full"
+                >
+                  <div className="flex flex-col flex-1">
+                    <h3 className="text-2xl sm:text-3xl font-medium text-[var(--md-sys-color-on-surface)] mb-10 leading-snug">
+                      {currentQuestion}
+                    </h3>
 
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <PrimaryButton 
-                      onClick={onClose}
-                      label="返回首页"
-                      icon="home"
-                      className="h-14 px-10 text-lg w-full sm:w-auto"
-                      noCollapse
-                    />
-                    <TertiaryButton 
-                      onClick={() => {
-                        setAnswers({});
-                        setAppState('intro');
-                      }}
-                      label="重新开始"
-                      icon="refresh"
-                      className="h-14 px-8 w-full sm:w-auto"
-                      noCollapse
-                    />
+                    <div className="space-y-3 mb-12">
+                      {OPTIONS.map((option) => {
+                        const isSelected = answers[questionKey] === option.value;
+                        return (
+                          <button
+                            key={option.value}
+                            onClick={() => handleSelect(option.value)}
+                            className={`w-full flex items-center justify-between p-5 rounded-lg border text-left transition-all duration-200 group ${isSelected
+                              ? 'bg-[var(--md-sys-color-secondary-container)] border-[var(--md-sys-color-secondary)] border-opacity-50 text-[var(--md-sys-color-on-secondary-container)] shadow-sm'
+                              : 'bg-transparent border-[var(--md-sys-color-outline-variant)] hover:border-[var(--md-sys-color-outline)] hover:bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]'
+                              }`}
+                          >
+                            <span className={`text-lg font-medium ${isSelected ? 'text-[var(--md-sys-color-on-secondary-container)]' : ''}`}>{option.label}</span>
+
+                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'border-[var(--md-sys-color-secondary)]' : 'border-[var(--md-sys-color-outline)] group-hover:border-[var(--md-sys-color-on-surface-variant)]'
+                              }`}>
+                              {isSelected && <div className="w-3 h-3 bg-[var(--md-sys-color-secondary)] rounded-full animate-in zoom-in duration-200" />}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-6 mt-auto">
+                      <TertiaryButton
+                        onClick={handleBack}
+                        label="上一题"
+                        icon="chevron_left"
+                        className="h-12"
+                        noCollapse
+                        style={currentSectionIdx === 0 && currentQuestionIdx === 0 ? { opacity: 0.3, pointerEvents: 'none' } : {}}
+                      />
+
+                      <PrimaryButton
+                        onClick={handleNext}
+                        label={currentSectionIdx === ASSESSMENTS.length - 1 && currentQuestionIdx === currentSection.questions.length - 1 ? '完成' : '下一题'}
+                        icon={currentSectionIdx === ASSESSMENTS.length - 1 && currentQuestionIdx === currentSection.questions.length - 1 ? 'check' : 'chevron_right'}
+                        trailingIcon={true}
+                        className="h-12 px-8"
+                        noCollapse
+                        style={!isCurrentQuestionAnswered ? { opacity: 0.5, pointerEvents: 'none' } : {}}
+                      />
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                </motion.div>
+              )}
+
+              {appState === 'outro' && (
+                <motion.div
+                  key="outro"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="w-full max-w-2xl text-center px-4"
+                >
+                  <div className="bg-[var(--md-sys-color-surface-container-low)] p-8 sm:p-12 rounded-[32px] border border-[var(--md-sys-color-outline-variant)] border-opacity-30 shadow-sm">
+                    <div className="w-24 h-24 bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] rounded-full flex items-center justify-center mx-auto mb-8">
+                      <md-icon style={{ fontSize: '48px' }}>celebration</md-icon>
+                    </div>
+                    <h2 className="text-3xl font-semibold mb-6 text-[var(--md-sys-color-on-surface)]">感谢您的参与</h2>
+                    <p className="text-[var(--md-sys-color-on-surface-variant)] text-lg mb-10 leading-relaxed">
+                      您的评估已完成。这些信息将帮助我们更好地了解您的健康状况。
+                    </p>
+
+                    <div className="bg-[var(--md-sys-color-surface-container-high)] p-5 rounded-2xl inline-flex items-center gap-3 text-sm text-[var(--md-sys-color-on-surface-variant)] mb-10">
+                      <md-icon style={{ fontSize: '20px' }}>task_alt</md-icon>
+                      已完成 {totalQuestions} 项问题的回答
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                      <PrimaryButton
+                        onClick={onClose}
+                        label="返回首页"
+                        icon="home"
+                        className="h-14 px-10 text-lg w-full sm:w-auto"
+                        noCollapse
+                      />
+                      <TertiaryButton
+                        onClick={() => {
+                          setAnswers({});
+                          setAppState('intro');
+                        }}
+                        label="重新开始"
+                        icon="refresh"
+                        className="h-14 px-8 w-full sm:w-auto"
+                        noCollapse
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
-    </FullScreenView>
+      </FullScreenView>
+
+      <GenericDialog
+        open={showExitConfirm}
+        onClose={() => setShowExitConfirm(false)}
+        title="暂停评估？"
+        actions={
+          <>
+            <TertiaryButton
+              label="继续评估"
+              onClick={() => setShowExitConfirm(false)}
+            />
+            <PrimaryButton
+              label="保存并退出"
+              onClick={() => {
+                setShowExitConfirm(false);
+                onClose();
+              }}
+            />
+          </>
+        }
+      >
+        <p className="text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
+          您的答题进度将被自动保存，您可以随时返回继续完成评估
+        </p>
+      </GenericDialog>
+    </>
   );
 }
