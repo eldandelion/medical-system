@@ -4,6 +4,7 @@ import { DetailsSection, DetailItem } from '../common/DetailsPanel';
 import { PrimaryButton, SecondaryButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
 import { useCreationOverlay } from '../../contexts/CreationContext';
+import { PrimaryTabs } from '../common/Tabs';
 
 import { useDetails } from '../../contexts/DetailsContext';
 
@@ -110,27 +111,11 @@ export function StaffDetailsView({ staff, hideHeader, activeTab: propsActiveTab,
 
       {/* Tabs Header */}
       {!isFullScreen && (
-        <div className="flex border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 px-2 shrink-0 bg-[var(--md-sys-color-surface)] sticky top-0 z-10 details-tabs-list">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as TabType)}
-              className={`flex-1 min-w-[90px] flex flex-col items-center py-4 px-1 gap-1 transition-all relative ${activeTab === tab.id
-                ? 'text-[var(--md-sys-color-primary)]'
-                : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-40'
-                }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
-              <span className="text-[11px] font-bold whitespace-nowrap">{tab.label}</span>
-              {activeTab === tab.id && (
-                <motion.div
-                  layoutId="activeStaffTabUnderline"
-                  className="absolute bottom-0 left-0 right-0 h-[3px] bg-[var(--md-sys-color-primary)] rounded-t-full"
-                />
-              )}
-            </button>
-          ))}
-        </div>
+        <PrimaryTabs 
+          tabs={tabs} 
+          activeTab={activeTab} 
+          onTabChange={(id) => setActiveTab(id as TabType)} 
+        />
       )}
 
       {/* Tab Content */}

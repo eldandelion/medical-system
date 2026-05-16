@@ -4,6 +4,7 @@ import { DetailsSection, DetailItem } from '../common/DetailsPanel';
 import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
 import { PsychometricTable } from '../common/PsychometricTable';
+import { PrimaryTabs } from '../common/Tabs';
 
 import { useDetails } from '../../contexts/DetailsContext';
 import { GenericDialog } from '../common/GenericDialog';
@@ -137,31 +138,11 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
 
       {/* Primary Tabs */}
       {!isFullScreen && (
-        <div className="sticky top-0 z-20 bg-[var(--md-sys-color-surface)] border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 px-2 shrink-0">
-          <div className="flex overflow-x-auto custom-scrollbar details-tabs-list">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as TabType)}
-                className={`flex-1 min-w-[120px] flex flex-col items-center py-4 px-2 gap-1.5 transition-all relative ${activeTab === tab.id
-                  ? 'text-[var(--md-sys-color-primary)]'
-                  : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-30'
-                  }`}
-              >
-                <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
-                <span className="text-[11px] font-bold whitespace-nowrap text-center">
-                  {tab.label}
-                </span>
-                {activeTab === tab.id && (
-                  <motion.div
-                    layoutId="referralActiveTab"
-                    className="absolute bottom-0 left-0 right-0 h-[3px] bg-[var(--md-sys-color-primary)] rounded-t-full"
-                  />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
+        <PrimaryTabs 
+          tabs={tabs} 
+          activeTab={activeTab} 
+          onTabChange={(id) => setActiveTab(id as TabType)} 
+        />
       )}
 
       {/* Content Area */}
