@@ -116,7 +116,11 @@ export function SelfAssessmentsView() {
               }
               onAction={() => {
                 setSelectedAssessment(assessment);
-                setDialogOpen(true);
+                if (assessment.completionPercentage < 100) {
+                  setIsFlowOpen(true);
+                } else {
+                  setDialogOpen(true);
+                }
               }}
               onMoreClick={() => console.log(`More options for ${assessment.title}`)}
             />
@@ -135,7 +139,7 @@ export function SelfAssessmentsView() {
         onClose={() => setDialogOpen(false)}
         onConfirm={() => {
           setDialogOpen(false);
-          setIsFlowOpen(true);
+          // For completed assessments, we might show a different view later
         }}
       />
 

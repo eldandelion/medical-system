@@ -31,7 +31,11 @@ export function AssessmentDialogProvider({ children }: { children: React.ReactNo
 
   const openAssessment = React.useCallback((assessment: Assessment) => {
     setSelectedAssessment(assessment);
-    setOpen(true);
+    if (assessment.completionPercentage < 100) {
+      setIsFullScreenOpen(true);
+    } else {
+      setOpen(true);
+    }
   }, []);
 
   const closeAssessment = React.useCallback(() => {
