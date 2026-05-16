@@ -343,18 +343,21 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
                   animate={{ opacity: 1, scale: 1 }}
                   className="w-full max-w-2xl text-center px-4"
                 >
-                  <div className="bg-[var(--md-sys-color-surface-container-low)] p-8 sm:p-12 rounded-[32px] border border-[var(--md-sys-color-outline-variant)] border-opacity-30 shadow-sm">
+                  <div className="bg-transparent p-8 sm:p-12 rounded-[32px]">
                     <div className="w-24 h-24 bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] rounded-full flex items-center justify-center mx-auto mb-8">
-                      <md-icon style={{ fontSize: '48px' }}>celebration</md-icon>
+                      <md-icon style={{ '--md-icon-size': '36px' } as React.CSSProperties}>celebration</md-icon>
                     </div>
                     <h2 className="text-3xl font-semibold mb-6 text-[var(--md-sys-color-on-surface)]">感谢您的参与</h2>
-                    <p className="text-[var(--md-sys-color-on-surface-variant)] text-lg mb-10 leading-relaxed">
-                      您的评估已完成。这些信息将帮助我们更好地了解您的健康状况。
-                    </p>
-
-                    <div className="bg-[var(--md-sys-color-surface-container-high)] p-5 rounded-2xl inline-flex items-center gap-3 text-sm text-[var(--md-sys-color-on-surface-variant)] mb-10">
-                      <md-icon style={{ fontSize: '20px' }}>task_alt</md-icon>
-                      已完成 {totalQuestions} 项问题的回答
+                    <div className="bg-[var(--md-sys-color-surface-container-low)] p-6 rounded-[24px] flex items-start gap-4 text-left max-w-xl mx-auto mb-10">
+                      <div className="text-[var(--md-sys-color-primary)] w-7 h-7 flex items-center justify-center shrink-0">
+                        <md-icon style={{ '--md-icon-size': '26px' } as React.CSSProperties}>task_alt</md-icon>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <h3 className="text-xl font-medium text-[var(--md-sys-color-on-surface)] leading-7 tracking-[0.01em]">评估已完成</h3>
+                        <p className="text-[var(--md-sys-color-on-surface-variant)] leading-relaxed text-[15px]">
+                          您的评估已完成。这些信息将帮助我们更好地了解您的健康状况。您已完成 {totalQuestions} 项问题的回答。
+                        </p>
+                      </div>
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -362,6 +365,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
                         onClick={onClose}
                         label="返回首页"
                         icon="home"
+                        iconSize="22px"
                         className="h-14 px-10 text-lg w-full sm:w-auto"
                         noCollapse
                       />
@@ -372,7 +376,8 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
                         }}
                         label="重新开始"
                         icon="refresh"
-                        className="h-14 px-8 w-full sm:w-auto"
+                        iconSize="22px"
+                        className="h-14 px-8 text-lg w-full sm:w-auto"
                         noCollapse
                       />
                     </div>
