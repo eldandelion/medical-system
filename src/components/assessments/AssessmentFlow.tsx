@@ -3,6 +3,8 @@ import { FullScreenView } from '../common/FullScreenView';
 import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
 import { GenericDialog } from '../common/GenericDialog';
 import { motion, AnimatePresence } from 'motion/react';
+import { Header } from '../layout/Header';
+import { useSnackbar } from '../../contexts/SnackbarContext';
 
 interface AssessmentSection {
   id: string;
@@ -63,6 +65,7 @@ interface AssessmentFlowProps {
 type AppState = 'intro' | 'assessment' | 'outro';
 
 export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentFlowProps) {
+  const { showSnackbar } = useSnackbar();
   const [appState, setAppState] = React.useState<AppState>('intro');
   const [currentSectionIdx, setCurrentSectionIdx] = React.useState(0);
   const [currentQuestionIdx, setCurrentQuestionIdx] = React.useState(0);
@@ -404,6 +407,11 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
               onClick={() => {
                 setShowExitConfirm(false);
                 onClose();
+                showSnackbar({
+                  message: '评估进度已保存，您可以稍后继续',
+                  actionLabel: '了解',
+                  duration: 4000
+                });
               }}
             />
           </>

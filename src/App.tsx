@@ -6,14 +6,16 @@ import { TrialAdminPage } from './pages/TrialAdminPage';
 import { CreationOverlayProvider } from './contexts/CreationContext';
 import { CreationRoot } from './components/creation-overlay/CreationRoot';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { SnackbarProvider } from './contexts/SnackbarContext';
 
 export default function App() {
   const [role, setRole] = useState<'student' | 'teacher' | 'head-councillor' | 'trial-admin'>('student');
 
   return (
     <ThemeProvider>
-      <CreationOverlayProvider>
-        <div className="relative w-full h-full">
+      <SnackbarProvider>
+        <CreationOverlayProvider>
+          <div className="relative w-full h-full">
         {role === 'student' ? (
           <StudentPage />
         ) : role === 'teacher' ? (
@@ -55,6 +57,7 @@ export default function App() {
         <CreationRoot />
       </div>
     </CreationOverlayProvider>
-   </ThemeProvider>
+   </SnackbarProvider>
+  </ThemeProvider>
   );
 }
