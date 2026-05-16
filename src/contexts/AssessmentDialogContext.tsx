@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { AssessmentDialog } from '../components/assessments/AssessmentDialog';
-import { FullScreenView } from '../components/common/FullScreenView';
+import { AssessmentFlow } from '../components/assessments/AssessmentFlow';
 
 
 interface Assessment {
@@ -56,15 +56,11 @@ export function AssessmentDialogProvider({ children }: { children: React.ReactNo
         onClose={closeAssessment}
         onConfirm={handleConfirm}
       />
-      <FullScreenView
+      <AssessmentFlow
         isOpen={isFullScreenOpen}
         onClose={() => setIsFullScreenOpen(false)}
-        title={selectedAssessment?.title || ''}
-      >
-        <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
-          {/* Content will be added here later */}
-        </div>
-      </FullScreenView>
+        assessmentTitle={selectedAssessment?.title || ''}
+      />
     </AssessmentDialogContext.Provider>
 
   );

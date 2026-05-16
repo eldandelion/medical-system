@@ -17,12 +17,15 @@ interface FullScreenViewProps {
   activeTab?: string;
   onTabChange?: (tabId: string) => void;
   children: React.ReactNode;
+  sidebar?: React.ReactNode;
+  actions?: React.ReactNode;
+  progress?: number;
   disablePadding?: boolean;
 }
 
-export function FullScreenView({ 
-  isOpen, 
-  onClose, 
+export function FullScreenView({
+  isOpen,
+  onClose,
   title,
   subtitle,
   avatar,
@@ -30,12 +33,15 @@ export function FullScreenView({
   activeTab = '',
   onTabChange,
   children,
+  sidebar,
+  actions,
+  progress,
   disablePadding = false
 }: FullScreenViewProps) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
@@ -43,14 +49,11 @@ export function FullScreenView({
           className="fixed inset-0 z-[150] bg-[var(--md-sys-color-surface)] flex flex-col overflow-hidden"
         >
           {/* Header with back button and title */}
-          <header className="h-16 flex items-center border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 shrink-0 px-4 gap-3">
-            <button 
-              onClick={onClose}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--md-sys-color-surface-variant)] transition-colors text-[var(--md-sys-color-on-surface)] shrink-0"
-            >
-              <span className="material-symbols-outlined">arrow_back</span>
-            </button>
-            
+          <header className="h-16 flex items-center border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 shrink-0 px-4 gap-3 relative">
+            <md-icon-button onClick={onClose}>
+              <md-icon>arrow_back</md-icon>
+            </md-icon-button>
+
             {avatar && (
               <div className="shrink-0">
                 {avatar}
@@ -62,24 +65,36 @@ export function FullScreenView({
               {subtitle && <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)] truncate leading-tight opacity-70">{subtitle}</span>}
             </div>
 
-            <div id="fullscreen-header-actions" className="flex items-center gap-2 ml-auto shrink-0">
-              {/* Actions will be portaled here */}
+            <div id="fullscreen-header-actions" className="flex items-center gap-2 ml-auto shrink-0 px-2">
+              {actions}
             </div>
+
+            {progress !== undefined && (
+              <div className="absolute bottom-0 left-0 right-0">
+                <md-linear-progress
+                  value={progress}
+                  style={{ width: '100%', '--md-linear-progress-track-height': '3px', '--md-linear-progress-active-indicator-height': '3px' } as React.CSSProperties}
+                />
+              </div>
+            )}
           </header>
 
           <div className="flex-1 flex overflow-hidden">
             {/* Sidebar Navigation */}
-            {tabs && tabs.length > 0 && (
+            {sidebar ? (
+              <aside className="w-80 flex flex-col shrink-0 overflow-y-auto border-r border-[var(--md-sys-color-outline-variant)] border-opacity-30 bg-[var(--md-sys-color-surface-container-low)] custom-scrollbar">
+                {sidebar}
+              </aside>
+            ) : tabs && tabs.length > 0 && (
               <aside className="w-72 flex flex-col gap-1 p-4 shrink-0 overflow-y-auto custom-scrollbar">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => onTabChange?.(tab.id)}
-                    className={`flex items-center gap-4 px-4 py-3 rounded-full transition-all relative group ${
-                      activeTab === tab.id
-                        ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-                        : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-30'
-                    }`}
+                    className={`flex items-center gap-4 px-4 py-3 rounded-full transition-all relative group ${activeTab === tab.id
+                      ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                      : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-30'
+                      }`}
                   >
                     <span className={`material-symbols-outlined text-[22px] transition-transform duration-200 group-hover:scale-110 ${activeTab === tab.id ? 'font-variation-settings-fill-1' : ''}`}>
                       {tab.icon}

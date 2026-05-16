@@ -10,8 +10,8 @@
  * these elements because utilities live in @layer utilities, not @layer base.
  */
 @layer base {
-  :is(
-    md-filled-button, md-outlined-button, md-text-button,
+
+  :is(md-filled-button, md-outlined-button, md-text-button,
     md-elevated-button, md-filled-tonal-button,
     md-icon-button, md-filled-icon-button, md-filled-tonal-icon-button,
     md-outlined-icon-button,
@@ -31,8 +31,7 @@
     md-circular-progress, md-linear-progress,
     md-outlined-segmented-button, md-outlined-segmented-button-set,
     md-ripple, md-focus-ring,
-    md-tooltip, md-snackbar
-  ) {
+    md-tooltip, md-snackbar) {
     all: revert-layer;
   }
 }
@@ -168,7 +167,11 @@
   /* Firefox */
 }
 
-md-icon,
+/* Apply icon font settings to standalone md-icon elements and material-symbols spans.
+   Exclude md-icon[slot="icon"] so Material Web button/chip/fab components can control
+   their own icon sizing via internal CSS custom-property tokens (e.g. --md-filled-button-icon-size).
+   The hard-coded font-size here would otherwise override the button library's 18px default. */
+/* md-icon:not([slot="icon"]),
 .material-symbols-outlined {
   font-family: 'Material Symbols Outlined';
   font-weight: normal;
@@ -183,8 +186,25 @@ md-icon,
   direction: ltr;
   -webkit-font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
-}
+} */
 
+/* /* Ensure slotted icons still render with the correct font family and ligature support,
+   but let size/display be dictated by the parent Material component. */
+/* md-icon[slot="icon"] {
+
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  --md-icon-size: 20px !important;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+} */
 .filled-icon {
   font-variation-settings: 'FILL' 1 !important;
 }

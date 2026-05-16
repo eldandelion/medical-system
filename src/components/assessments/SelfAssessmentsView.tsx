@@ -2,6 +2,7 @@ import * as React from 'react';
 import { AssessmentCard } from './AssessmentCard';
 import { SegmentedButton } from '../common/SegmentedButton';
 import { AssessmentDialog } from './AssessmentDialog';
+import { AssessmentFlow } from './AssessmentFlow';
 
 interface Assessment {
   id: string;
@@ -26,6 +27,7 @@ export function SelfAssessmentsView() {
   const [selectedFilter, setSelectedFilter] = React.useState(persistentFilter);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [selectedAssessment, setSelectedAssessment] = React.useState<Assessment | null>(null);
+  const [isFlowOpen, setIsFlowOpen] = React.useState(false);
 
   const handleFilterChange = (filter: string) => {
     persistentFilter = filter;
@@ -132,10 +134,18 @@ export function SelfAssessmentsView() {
         assessment={selectedAssessment}
         onClose={() => setDialogOpen(false)}
         onConfirm={() => {
-          console.log(`Starting/Continuing assessment: ${selectedAssessment?.title}`);
           setDialogOpen(false);
+          setIsFlowOpen(true);
         }}
       />
+
+      {selectedAssessment && (
+        <AssessmentFlow
+          isOpen={isFlowOpen}
+          onClose={() => setIsFlowOpen(false)}
+          assessmentTitle={selectedAssessment.title}
+        />
+      )}
     </div>
   );
 }

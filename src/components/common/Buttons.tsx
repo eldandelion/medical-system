@@ -8,59 +8,57 @@ interface ButtonProps {
   onClick?: () => void;
   style?: React.CSSProperties;
   noCollapse?: boolean;
+  trailingIcon?: boolean;
 }
 
-export function PrimaryButton({ icon, label, className = "h-10", onClick, style, noCollapse }: ButtonProps) {
+export function PrimaryButton({ icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon }: ButtonProps) {
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   return (
     <md-filled-button
       className={`${className} shrink-0 whitespace-nowrap overflow-hidden transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0' : ''}`}
       onClick={onClick}
+      trailing-icon={trailingIcon ? "" : undefined}
       style={{
         '--md-filled-button-container-elevation': '0',
         '--md-filled-button-hover-container-elevation': '0',
         ...style
       } as React.CSSProperties}
     >
-      {icon && <md-icon slot="icon" className={effectiveCollapsed ? "m-0" : "ml-4"} style={{ color: 'inherit' }}>{icon}</md-icon>}
-      {!effectiveCollapsed && <span className={icon ? "mr-4" : "mx-4"}>{label}</span>}
+      {icon && <md-icon slot="icon">{icon}</md-icon>}
+      {label}
     </md-filled-button>
   );
 }
 
-export function SecondaryButton({ icon, label, className = "h-10", onClick, style, noCollapse }: ButtonProps) {
+export function SecondaryButton({ icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon }: ButtonProps) {
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   return (
-
-    <md-outlined-button hasIcon={true}
-      // className={`${className} shrink-0 whitespace-nowrap overflow-hidden transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0' : ''}`}
+    <md-outlined-button
+      className={`${className} shrink-0 whitespace-nowrap overflow-hidden transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0' : ''}`}
       onClick={onClick}
-      style={{
-        '--md-outlined-button-container-elevation': '0',
-        ...style
-      } as React.CSSProperties}
+      trailing-icon={trailingIcon ? "" : undefined}
+      style={style}
     >
-      {/* {icon && <md-icon slot="icon" className={effectiveCollapsed ? "m-0" : "ml-4"} style={{ color: 'inherit' }}>{icon}</md-icon>} */}
-      {icon && <md-icon slot="icon">{icon}</md-icon>}
-
-      {!effectiveCollapsed && <span className={icon ? "mr-4" : "mx-4"}>{label}</span>}
+      {icon && <md-icon slot="icon" style={{ color: 'inherit' }}>{icon}</md-icon>}
+      {label}
     </md-outlined-button>
   );
 }
 
-export function TertiaryButton({ icon, label, className = "h-10", onClick, style, noCollapse }: ButtonProps) {
+export function TertiaryButton({ icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon }: ButtonProps) {
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   return (
     <md-text-button
       className={`${className} shrink-0 whitespace-nowrap overflow-hidden transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0' : ''}`}
       onClick={onClick}
+      trailing-icon={trailingIcon ? "" : undefined}
       style={style}
     >
-      {icon && <md-icon slot="icon" className={effectiveCollapsed ? "m-0" : "ml-4"} style={{ color: 'inherit' }}>{icon}</md-icon>}
-      {!effectiveCollapsed && <span className={icon ? "mr-4" : "mx-4"}>{label}</span>}
+      {icon && <md-icon slot="icon" style={{ color: 'inherit' }}>{icon}</md-icon>}
+      {label}
     </md-text-button>
   );
 }

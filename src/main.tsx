@@ -28,6 +28,7 @@ import '@material/web/select/select-option.js';
 import '@material/web/textfield/outlined-text-field.js';
 import '@material/web/chips/input-chip.js';
 import '@material/web/chips/suggestion-chip.js';
+import '@material/web/progress/linear-progress.js';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
