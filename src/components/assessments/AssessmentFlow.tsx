@@ -130,15 +130,15 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
                     setCurrentSectionIdx(sIdx);
                     setCurrentQuestionIdx(qIdx);
                   }}
-                  className={`w-full text-left px-4 py-3 rounded-xl transition-all flex items-center justify-between group ${
+                  className={`w-full text-left px-4 py-3 rounded-xl transition-colors flex items-center justify-between group ${
                     isActive 
                       ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] font-medium' 
-                      : isAnswered 
-                        ? 'bg-transparent text-[var(--md-sys-color-on-surface)] hover:bg-[var(--md-sys-color-surface-container-high)]' 
-                        : 'bg-transparent text-[var(--md-sys-color-on-surface-variant)] opacity-60 hover:opacity-100 hover:bg-[var(--md-sys-color-surface-container-high)]'
+                      : 'bg-transparent hover:bg-[var(--md-sys-color-surface-container-high)]'
                   }`}
                 >
-                  <span className="truncate pr-4 flex-1 text-[13px]">
+                  <span className={`truncate pr-4 flex-1 text-[13px] transition-opacity duration-200 ${
+                    isActive || isAnswered ? 'text-[var(--md-sys-color-on-surface)] opacity-100' : 'text-[var(--md-sys-color-on-surface-variant)] opacity-60 group-hover:opacity-100'
+                  }`}>
                     {qIdx + 1}. {q}
                   </span>
                   <div className={`w-2 h-2 rounded-full shrink-0 transition-all ${
