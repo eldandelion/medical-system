@@ -761,3 +761,114 @@ export const CLINICAL_SCREENING_NEURODIVERGENCE_ASSESSMENT: AssessmentSection[] 
     ]
   }
 ];
+
+export const AGGRESSION_OPTIONS = [
+  { value: 1, label: '完全不符合' },
+  { value: 2, label: '较少不符合' },
+  { value: 3, label: '一般符合' },
+  { value: 4, label: '比较符合' },
+  { value: 5, label: '完全符合' }
+];
+
+export const COPING_OPTIONS = [
+  { value: 1, label: '不采取' },
+  { value: 2, label: '偶尔采取' },
+  { value: 3, label: '有时采取' },
+  { value: 4, label: '经常采取' }
+];
+
+export const SWLS_OPTIONS = [
+  { value: 1, label: '完全不同意' },
+  { value: 2, label: '大多不同意' },
+  { value: 3, label: '少许不同意' },
+  { value: 4, label: '中立' },
+  { value: 5, label: '少许同意' },
+  { value: 6, label: '大多同意' },
+  { value: 7, label: '完全同意' }
+];
+
+export const BIG_FIVE_OPTIONS = [
+  { value: 1, label: '完全不符合' },
+  { value: 2, label: '较不符合' },
+  { value: 3, label: '有点不符合' },
+  { value: 4, label: '有点符合' },
+  { value: 5, label: '比较符合' },
+  { value: 6, label: '完全符合' }
+];
+
+export const PERSONALITY_COPING_OUTLOOK_ASSESSMENT: AssessmentSection[] = [
+  {
+    id: 'aggression',
+    title: '人格倾向评估 (情绪宣泄方式)',
+    subtitle: '攻击量表',
+    description: '下列是一些日常行为表现的描述，请仔细阅读每一条，然后尽可能根据自己的真实情况回答下列问题与你的符合程度。',
+    questions: [
+      { text: '当人们与我意见不和时，我会忍不住与他们争论', options: AGGRESSION_OPTIONS },
+      { text: '不知道为什么有时我会对一些事情感到如此痛苦', options: AGGRESSION_OPTIONS },
+      { text: '我曾威胁过我认识的人', options: AGGRESSION_OPTIONS },
+      { text: '如果受到足够的刺激，我可能会揍另一个来出气', options: AGGRESSION_OPTIONS },
+      { text: '有时候我觉得在生活中受到了不公平的待遇', options: AGGRESSION_OPTIONS },
+      { text: '我难于控制自己的脾气', options: AGGRESSION_OPTIONS },
+      { text: '我经常发现自己和人们意见不和', options: AGGRESSION_OPTIONS },
+      { text: '有时，我感觉自己像一个随时要爆炸的火药筒一样', options: AGGRESSION_OPTIONS },
+      { text: '别人似乎总能交好运', options: AGGRESSION_OPTIONS },
+      { text: '如果有人很用力推我，我们就会打起来', options: AGGRESSION_OPTIONS },
+      { text: '朋友们说我有点儿好与人争辩', options: AGGRESSION_OPTIONS },
+      { text: '有时我会无缘无故地发火', options: AGGRESSION_OPTIONS },
+      { text: '请在此题选择第一个选项', options: AGGRESSION_OPTIONS }
+    ]
+  },
+  {
+    id: 'coping_styles',
+    title: '压力应对评估 (心理防卫机制)',
+    subtitle: '应对方式量表',
+    description: '以下列出的是当你在生活中收到挫折打击，或遇到困难时可能采取的态度和做法。请你仔细阅读每一项，选择最适合你的选项。',
+    questions: [
+      { text: '试图休息或放假，暂时把问题(烦恼)抛开', options: COPING_OPTIONS },
+      { text: '通过吸烟、喝酒、服药和吃东西来解除烦恼', options: COPING_OPTIONS },
+      { text: '认为时间会改变现状，唯一要做的是等待', options: COPING_OPTIONS },
+      { text: '试图忘记整个事情', options: COPING_OPTIONS },
+      { text: '依靠别人解决问题', options: COPING_OPTIONS },
+      { text: '接受现实，因为没有其它办法', options: COPING_OPTIONS },
+      { text: '幻想可能会发生某种奇迹改变现状', options: COPING_OPTIONS },
+      { text: '自己安慰自己', options: COPING_OPTIONS }
+    ]
+  },
+  {
+    id: 'swls',
+    title: '生活展望评估 (主观幸福感)',
+    subtitle: '生活满意度量表',
+    description: '请根据您对当前生活质量与状态的真实评价进行选择。',
+    questions: [
+      { text: '我现在的生活大致符合我的期待', options: SWLS_OPTIONS },
+      { text: '我的生活状态非常幸福', options: SWLS_OPTIONS },
+      { text: '我能得到我想要的重要东西', options: SWLS_OPTIONS },
+      { text: '我满意自己的生活', options: SWLS_OPTIONS },
+      { text: '如果回到过去我也不想改变什么', options: SWLS_OPTIONS }
+    ]
+  },
+  {
+    id: 'big_five',
+    title: '核心特质评估 (基本人格特质)',
+    subtitle: '大五人格量表',
+    description: '请根据以下大五人格的相关描述与您自身情况的符合程度进行选择。',
+    questions: [
+      { text: '我觉得大部分人基本上是心怀善意的', options: BIG_FIVE_OPTIONS },
+      { text: '请在这个选项中选择第二个选项', options: BIG_FIVE_OPTIONS },
+      { text: '我对人多的聚会感到乏味', options: BIG_FIVE_OPTIONS },
+      { text: '我是个勇于冒险，突破常规的人', options: BIG_FIVE_OPTIONS },
+      { text: '我喜欢冒险', options: BIG_FIVE_OPTIONS },
+      { text: '我尽量避免参加人多的聚会和去嘈杂的环境', options: BIG_FIVE_OPTIONS },
+      { text: '我喜欢一开头就把事情计划好', options: BIG_FIVE_OPTIONS },
+      { text: '我常担忧一些无关紧要的事情', options: BIG_FIVE_OPTIONS },
+      { text: '我工作或学习很勤奋', options: BIG_FIVE_OPTIONS },
+      { text: '虽然社会上有些骗子，但大部分人还是可信的', options: BIG_FIVE_OPTIONS },
+      { text: '我身上具有别人没有的冒险精神', options: BIG_FIVE_OPTIONS },
+      { text: '我常常感到内心不踏实', options: BIG_FIVE_OPTIONS },
+      { text: '我常担心有什么不好 的事情要发生', options: BIG_FIVE_OPTIONS },
+      { text: '尽管社会存在阴暗面，我仍坚信人性本善。', options: BIG_FIVE_OPTIONS },
+      { text: '我喜欢参加社交与娱乐聚会', options: BIG_FIVE_OPTIONS },
+      { text: '做事讲究逻辑和条理是我的一个特点', options: BIG_FIVE_OPTIONS }
+    ]
+  }
+];

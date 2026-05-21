@@ -3,7 +3,7 @@ import { AssessmentCard } from './AssessmentCard';
 import { SegmentedButton } from '../common/Buttons';
 import { AssessmentDialog } from './AssessmentDialog';
 import { AssessmentFlow } from './AssessmentFlow';
-import { MENTAL_HEALTH_ASSESSMENT, SLEEP_ASSESSMENT, DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT, SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT, SELF_REGULATION_PERSONALITY_ASSESSMENT, FAMILY_BACKGROUND_EARLY_EXPERIENCES_ASSESSMENT, CLINICAL_SCREENING_NEURODIVERGENCE_ASSESSMENT, AssessmentSection } from './AssessmentData';
+import { MENTAL_HEALTH_ASSESSMENT, SLEEP_ASSESSMENT, DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT, SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT, SELF_REGULATION_PERSONALITY_ASSESSMENT, FAMILY_BACKGROUND_EARLY_EXPERIENCES_ASSESSMENT, CLINICAL_SCREENING_NEURODIVERGENCE_ASSESSMENT, PERSONALITY_COPING_OUTLOOK_ASSESSMENT, AssessmentSection } from './AssessmentData';
 
 interface Assessment {
   id: string;
@@ -148,6 +148,22 @@ export function SelfAssessmentsView() {
       type: '测试',
       completionPercentage: 0,
       duration: '25 分钟',
+      status: 'In progress'
+    },
+    {
+      id: 'personality_coping',
+      title: '人格特质、应对方式与生活展望评估',
+      subtitle: '大五人格特质、情绪宣泄、压力应对及幸福感展望',
+      sections: PERSONALITY_COPING_OUTLOOK_ASSESSMENT,
+      assignedBy: {
+        name: '艾米丽·沃森博士',
+        initial: 'E',
+        bgColor: 'var(--md-sys-color-secondary-container)',
+        textColor: 'var(--md-sys-color-on-secondary-container)'
+      },
+      type: '测试',
+      completionPercentage: 0,
+      duration: '20 分钟',
       status: 'In progress'
     },
     {
