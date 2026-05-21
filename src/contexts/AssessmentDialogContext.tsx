@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { AssessmentDialog } from '../components/assessments/AssessmentDialog';
 import { AssessmentFlow } from '../components/assessments/AssessmentFlow';
+import { MENTAL_HEALTH_ASSESSMENT, SLEEP_ASSESSMENT } from '../components/assessments/AssessmentData';
 
 
 interface Assessment {
@@ -63,7 +64,10 @@ export function AssessmentDialogProvider({ children }: { children: React.ReactNo
       <AssessmentFlow
         isOpen={isFullScreenOpen}
         onClose={() => setIsFullScreenOpen(false)}
+        assessmentId={selectedAssessment?.id || ''}
         assessmentTitle={selectedAssessment?.title || ''}
+        assessmentSubtitle={selectedAssessment?.id === 'sleep' ? '最近1个月的睡眠与失眠状况调查' : '2025-2026 学年学生心理健康普查'}
+        sections={selectedAssessment?.id === 'sleep' ? SLEEP_ASSESSMENT : MENTAL_HEALTH_ASSESSMENT}
       />
     </AssessmentDialogContext.Provider>
 

@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { AssessmentCard } from './AssessmentCard';
-import { SegmentedButton } from '../common/SegmentedButton';
+import { SegmentedButton } from '../common/Buttons';
 import { AssessmentDialog } from './AssessmentDialog';
 import { AssessmentFlow } from './AssessmentFlow';
+import { MENTAL_HEALTH_ASSESSMENT, SLEEP_ASSESSMENT } from './AssessmentData';
 
 interface Assessment {
   id: string;
@@ -47,6 +48,20 @@ export function SelfAssessmentsView() {
       type: '测试',
       completionPercentage: 0,
       duration: '15 分钟',
+      status: 'In progress'
+    },
+    {
+      id: 'sleep',
+      title: '睡眠状况评估',
+      assignedBy: {
+        name: '莎拉·詹金斯',
+        initial: 'S',
+        bgColor: 'var(--md-sys-color-primary-container)',
+        textColor: 'var(--md-sys-color-on-primary-container)'
+      },
+      type: '测试',
+      completionPercentage: 0,
+      duration: '10 分钟',
       status: 'In progress'
     },
     {
@@ -147,7 +162,10 @@ export function SelfAssessmentsView() {
         <AssessmentFlow
           isOpen={isFlowOpen}
           onClose={() => setIsFlowOpen(false)}
+          assessmentId={selectedAssessment.id}
           assessmentTitle={selectedAssessment.title}
+          assessmentSubtitle={selectedAssessment.id === 'sleep' ? '最近1个月的睡眠与失眠状况调查' : '2025-2026 学年学生心理健康普查'}
+          sections={selectedAssessment.id === 'sleep' ? SLEEP_ASSESSMENT : MENTAL_HEALTH_ASSESSMENT}
         />
       )}
     </div>

@@ -46,6 +46,20 @@ function AssessmentsContent() {
       status: 'In progress'
     },
     {
+      id: 'sleep',
+      title: '睡眠状况评估',
+      assignedBy: {
+        name: '莎拉·詹金斯',
+        initial: 'S',
+        bgColor: 'var(--md-sys-color-primary-container)',
+        textColor: 'var(--md-sys-color-on-primary-container)'
+      },
+      type: '测试',
+      completionPercentage: 0,
+      duration: '10 分钟',
+      status: 'In progress'
+    },
+    {
       id: '2',
       title: '心血管风险自我评估',
       assignedBy: {

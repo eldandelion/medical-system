@@ -5,51 +5,9 @@ import { GenericDialog } from '../common/GenericDialog';
 import { motion, AnimatePresence } from 'motion/react';
 import { Header } from '../layout/Header';
 import { useSnackbar } from '../../contexts/SnackbarContext';
+import { AssessmentSection, Question } from './AssessmentData';
 
-interface AssessmentSection {
-  id: string;
-  title: string;
-  subtitle: string;
-  description: string;
-  questions: string[];
-}
-
-const ASSESSMENTS: AssessmentSection[] = [
-  {
-    id: 'phq9',
-    title: '情绪状况评估',
-    subtitle: 'PHQ-9',
-    description: '在过去的两周里，您有多少时间受到以下问题的困扰？',
-    questions: [
-      '做事时提不起劲或没有兴趣',
-      '感到心情低落，沮丧或绝望',
-      '入睡困难、睡不安稳或睡得太多',
-      '感觉疲倦或没有活力',
-      '食欲不振或吃太多',
-      '觉得自己很糟或觉得自己很失败，或让自己、家人失望',
-      '对事物专注有困难，例如看报纸或看电视时',
-      '动作或说话速度缓慢到别人已经察觉，或正好相反，烦躁或坐立不安、动来动去的情况比平常更多',
-      '有不如死掉或用某种方式伤害自己的念头'
-    ]
-  },
-  {
-    id: 'gad7',
-    title: '焦虑状况评估',
-    subtitle: 'GAD-7',
-    description: '在过去的两周里，您有多少时间受到以下问题的困扰？',
-    questions: [
-      '感觉紧张，焦虑或急切',
-      '不能够停止或控制担忧',
-      '对各种各样的事情担忧过多',
-      '很难放松下来',
-      '由于不安而无法静坐',
-      '变得容易烦恼或急躁',
-      '感到似乎将有可怕的事情发生而害怕'
-    ]
-  }
-];
-
-const OPTIONS = [
+const DEFAULT_OPTIONS = [
   { value: 0, label: '完全不会' },
   { value: 1, label: '好几天' },
   { value: 2, label: '一半以上时间' },
@@ -59,23 +17,39 @@ const OPTIONS = [
 interface AssessmentFlowProps {
   isOpen: boolean;
   onClose: () => void;
+  assessmentId?: string;
   assessmentTitle: string;
+  assessmentSubtitle?: string;
+  sections: AssessmentSection[];
 }
 
 type AppState = 'intro' | 'assessment' | 'outro';
 
-export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentFlowProps) {
+export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle, assessmentSubtitle, sections }: AssessmentFlowProps) {
   const { showSnackbar } = useSnackbar();
   const [appState, setAppState] = React.useState<AppState>('intro');
   const [currentSectionIdx, setCurrentSectionIdx] = React.useState(0);
   const [currentQuestionIdx, setCurrentQuestionIdx] = React.useState(0);
   const [answers, setAnswers] = React.useState<Record<string, number>>({});
 
-  const currentSection = ASSESSMENTS[currentSectionIdx];
+  // Reset state when assessment is opened or switched to avoid index mismatch crashes
+  React.useEffect(() => {
+    if (isOpen) {
+      setAppState('intro');
+      setCurrentSectionIdx(0);
+      setCurrentQuestionIdx(0);
+      setAnswers({});
+    }
+  }, [isOpen, assessmentId]);
+
+  const currentSection = sections[currentSectionIdx];
   const currentQuestion = currentSection?.questions[currentQuestionIdx];
   const questionKey = `${currentSection?.id}_${currentQuestionIdx}`;
 
-  const totalQuestions = ASSESSMENTS.reduce((acc, section) => acc + section.questions.length, 0);
+  const questionText = typeof currentQuestion === 'string' ? currentQuestion : currentQuestion?.text;
+  const questionOptions = typeof currentQuestion === 'string' ? DEFAULT_OPTIONS : currentQuestion?.options || DEFAULT_OPTIONS;
+
+  const totalQuestions = sections.reduce((acc, section) => acc + section.questions.length, 0);
   const answeredCount = Object.keys(answers).length;
   const progress = (answeredCount / totalQuestions) * 100;
 
@@ -84,9 +58,10 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
   };
 
   const handleNext = () => {
+    if (!currentSection) return;
     if (currentQuestionIdx < currentSection.questions.length - 1) {
       setCurrentQuestionIdx(prev => prev + 1);
-    } else if (currentSectionIdx < ASSESSMENTS.length - 1) {
+    } else if (currentSectionIdx < sections.length - 1) {
       setCurrentSectionIdx(prev => prev + 1);
       setCurrentQuestionIdx(0);
     } else {
@@ -97,9 +72,9 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
   const handleBack = () => {
     if (currentQuestionIdx > 0) {
       setCurrentQuestionIdx(prev => prev - 1);
-    } else if (currentSectionIdx > 0) {
+    } else if (currentSectionIdx > 0 && sections[currentSectionIdx - 1]) {
       setCurrentSectionIdx(prev => prev - 1);
-      setCurrentQuestionIdx(ASSESSMENTS[currentSectionIdx - 1].questions.length - 1);
+      setCurrentQuestionIdx(sections[currentSectionIdx - 1].questions.length - 1);
     }
   };
 
@@ -114,7 +89,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
   // Detailed sidebar content showing all sections and questions
   const sidebar = (
     <div className="flex flex-col py-6 gap-6">
-      {ASSESSMENTS.map((section, sIdx) => (
+      {sections.map((section, sIdx) => (
         <div key={section.id} className="flex flex-col gap-2 px-4">
           <h4 className="text-[11px] font-bold text-[var(--md-sys-color-primary)] uppercase tracking-[0.1em] px-4 mb-1">
             {section.subtitle}
@@ -139,7 +114,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
                 >
                   <span className={`truncate pr-4 flex-1 text-[13px] transition-opacity duration-200 ${isActive || isAnswered ? 'text-[var(--md-sys-color-on-surface)] opacity-100' : 'text-[var(--md-sys-color-on-surface-variant)] opacity-60 group-hover:opacity-100'
                     }`}>
-                    {qIdx + 1}. {q}
+                    {qIdx + 1}. {typeof q === 'string' ? q : q.text}
                   </span>
                   <div className={`w-2 h-2 rounded-full shrink-0 transition-all ${isActive ? 'bg-[var(--md-sys-color-primary)] ring-4 ring-[var(--md-sys-color-primary)] ring-opacity-20' :
                     isAnswered ? 'bg-[var(--md-sys-color-primary)]' :
@@ -172,7 +147,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
     <div className="bg-transparent text-[var(--md-sys-color-primary)] px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 border border-[var(--md-sys-color-outline-variant)] animate-in fade-in zoom-in duration-300">
       <md-icon style={{ fontSize: '18px' }}>list_alt</md-icon>
       <span>
-        {ASSESSMENTS.slice(0, currentSectionIdx).reduce((acc, section) => acc + section.questions.length, 0) + currentQuestionIdx + 1} / {totalQuestions}
+        {sections.slice(0, currentSectionIdx).reduce((acc, section) => acc + section.questions.length, 0) + currentQuestionIdx + 1} / {totalQuestions}
       </span>
     </div>
   );
@@ -195,19 +170,21 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
     }
   };
 
+  const sectionsSummary = `本评估包括 ${sections.length} 个部分（${sections.map(s => s.subtitle || s.title).join(' 与 ')}），旨在全面了解您近期的健康状况。`;
+
   return (
     <>
       <FullScreenView
         isOpen={isOpen}
         onClose={handleCloseAttempt}
-        title={appState === 'assessment' && isUIVisible ? currentSection.title : assessmentTitle}
-        subtitle={appState === 'assessment' && isUIVisible ? currentSection.description : undefined}
+        title={appState === 'assessment' && isUIVisible ? (currentSection?.title || '') : assessmentTitle}
+        subtitle={appState === 'assessment' && isUIVisible ? currentSection?.description : undefined}
         sidebar={appState === 'assessment' && isUIVisible ? sidebar : undefined}
         actions={appState === 'assessment' && isUIVisible ? questionActions : undefined}
         progress={appState === 'assessment' && isUIVisible ? (answeredCount / totalQuestions) : undefined}
         activeTab={currentSection?.id}
         onTabChange={(id) => {
-          const idx = ASSESSMENTS.findIndex(s => s.id === id);
+          const idx = sections.findIndex(s => s.id === id);
           if (idx !== -1) {
             setCurrentSectionIdx(idx);
             setCurrentQuestionIdx(0);
@@ -235,7 +212,9 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
                   <div className="py-8">
                     <div className="mb-10">
                       <h2 className="text-3xl font-semibold text-[var(--md-sys-color-on-surface)] leading-tight">{assessmentTitle}</h2>
-                      <p className="text-[var(--md-sys-color-on-surface-variant)] mt-3 text-lg opacity-80">2025-2026 学年学生心理健康普查</p>
+                      <p className="text-[var(--md-sys-color-on-surface-variant)] mt-3 text-lg opacity-80">
+                        {assessmentSubtitle || '健康状况评估'}
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-1 gap-2 mb-12 text-left">
@@ -243,7 +222,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
                         {
                           icon: 'assignment',
                           title: '评估内容',
-                          description: '本问卷包括两部分（PHQ-9 情绪状况与 GAD-7 焦虑状况），旨在全面了解您近期的情绪与心理健康状况'
+                          description: sectionsSummary
                         },
                         {
                           icon: 'volunteer_activism',
@@ -289,11 +268,11 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
                 >
                   <div className="flex flex-col flex-1">
                     <h3 className="text-2xl sm:text-3xl font-medium text-[var(--md-sys-color-on-surface)] mb-10 leading-snug">
-                      {currentQuestion}
+                      {questionText}
                     </h3>
 
                     <div className="space-y-3 mb-12">
-                      {OPTIONS.map((option) => {
+                      {questionOptions.map((option) => {
                         const isSelected = answers[questionKey] === option.value;
                         return (
                           <button
@@ -327,8 +306,8 @@ export function AssessmentFlow({ isOpen, onClose, assessmentTitle }: AssessmentF
 
                       <PrimaryButton
                         onClick={handleNext}
-                        label={currentSectionIdx === ASSESSMENTS.length - 1 && currentQuestionIdx === currentSection.questions.length - 1 ? '完成' : '下一题'}
-                        icon={currentSectionIdx === ASSESSMENTS.length - 1 && currentQuestionIdx === currentSection.questions.length - 1 ? 'check' : 'chevron_right'}
+                        label={currentSectionIdx === sections.length - 1 && currentQuestionIdx === currentSection.questions.length - 1 ? '完成' : '下一题'}
+                        icon={currentSectionIdx === sections.length - 1 && currentQuestionIdx === currentSection.questions.length - 1 ? 'check' : 'chevron_right'}
                         trailingIcon={true}
                         className="h-12 px-8"
                         noCollapse

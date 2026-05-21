@@ -22,7 +22,7 @@ interface ReferralManagementViewProps {
 }
 
 export function ReferralManagementView({ onReferralSelect, selectedReferralId }: ReferralManagementViewProps) {
-  const referrals: Referral[] = [
+  const referrals: Referral[] = ([
     {
       id: '1',
       studentName: 'Daniil Petrov',
@@ -103,7 +103,7 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
       status: 'AwaitingApproval',
       referredBy: { name: '陈老师' }
     },
-  ].sort((a, b) => {
+  ] as Referral[]).sort((a, b) => {
     if (a.status === 'AwaitingApproval' && b.status !== 'AwaitingApproval') return -1;
     if (a.status !== 'AwaitingApproval' && b.status === 'AwaitingApproval') return 1;
     return 0;
