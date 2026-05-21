@@ -60,6 +60,20 @@ function AssessmentsContent() {
       status: 'In progress'
     },
     {
+      id: 'digital_habits',
+      title: '数字化习惯与日常行为评估',
+      assignedBy: {
+        name: '迈克尔·陈',
+        initial: 'M',
+        bgColor: 'var(--md-sys-color-tertiary-container)',
+        textColor: 'var(--md-sys-color-on-tertiary-container)'
+      },
+      type: '测试',
+      completionPercentage: 0,
+      duration: '20 分钟',
+      status: 'In progress'
+    },
+    {
       id: '2',
       title: '心血管风险自我评估',
       assignedBy: {
