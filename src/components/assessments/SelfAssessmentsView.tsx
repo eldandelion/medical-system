@@ -3,7 +3,7 @@ import { AssessmentCard } from './AssessmentCard';
 import { SegmentedButton } from '../common/Buttons';
 import { AssessmentDialog } from './AssessmentDialog';
 import { AssessmentFlow } from './AssessmentFlow';
-import { MENTAL_HEALTH_ASSESSMENT, SLEEP_ASSESSMENT, DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT, SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT, SELF_REGULATION_PERSONALITY_ASSESSMENT, FAMILY_BACKGROUND_EARLY_EXPERIENCES_ASSESSMENT, AssessmentSection } from './AssessmentData';
+import { MENTAL_HEALTH_ASSESSMENT, SLEEP_ASSESSMENT, DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT, SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT, SELF_REGULATION_PERSONALITY_ASSESSMENT, FAMILY_BACKGROUND_EARLY_EXPERIENCES_ASSESSMENT, CLINICAL_SCREENING_NEURODIVERGENCE_ASSESSMENT, AssessmentSection } from './AssessmentData';
 
 interface Assessment {
   id: string;
@@ -132,6 +132,22 @@ export function SelfAssessmentsView() {
       type: '测试',
       completionPercentage: 0,
       duration: '20 分钟',
+      status: 'In progress'
+    },
+    {
+      id: 'clinical_screening',
+      title: '临床筛查与神经多样性评估',
+      subtitle: '自伤风险、思维模式、注意力ADHD及执行功能障碍筛查',
+      sections: CLINICAL_SCREENING_NEURODIVERGENCE_ASSESSMENT,
+      assignedBy: {
+        name: '迈克尔·陈',
+        initial: 'M',
+        bgColor: 'var(--md-sys-color-tertiary-container)',
+        textColor: 'var(--md-sys-color-on-tertiary-container)'
+      },
+      type: '测试',
+      completionPercentage: 0,
+      duration: '25 分钟',
       status: 'In progress'
     },
     {

@@ -639,3 +639,125 @@ export const FAMILY_BACKGROUND_EARLY_EXPERIENCES_ASSESSMENT: AssessmentSection[]
     ]
   }
 ];
+
+export const NSSI_OPTIONS = [
+  { value: 1, label: '0次' },
+  { value: 2, label: '1~2次' },
+  { value: 3, label: '3~5次' },
+  { value: 4, label: '6次及以上' }
+];
+
+export const PQ16_OPTIONS = [
+  { value: 0, label: '否' },
+  { value: 1, label: '是，无痛苦' },
+  { value: 2, label: '是，轻度痛苦' },
+  { value: 3, label: '是，中度痛苦' },
+  { value: 4, label: '是，重度痛苦' }
+];
+
+export const ADHD_OPTIONS = [
+  { value: 0, label: '从不' },
+  { value: 1, label: '很少' },
+  { value: 2, label: '有时' },
+  { value: 3, label: '经常' },
+  { value: 4, label: '非常频繁' }
+];
+
+export const BRIEF_A_OPTIONS = [
+  { value: 1, label: '从不' },
+  { value: 2, label: '偶尔' },
+  { value: 3, label: '经常' }
+];
+
+export const CLINICAL_SCREENING_NEURODIVERGENCE_ASSESSMENT: AssessmentSection[] = [
+  {
+    id: 'nssi',
+    title: '高危筛查评估 (非自杀性自伤行为)',
+    subtitle: '自伤量表',
+    description: '请您选择在过去的一年内出现以下行为的次数。选择最适合的选项。',
+    questions: [
+      { text: '刻意用刀划自己', options: NSSI_OPTIONS },
+      { text: '刻意用力咬自己', options: NSSI_OPTIONS },
+      { text: '刻意用力抓破皮肤', options: NSSI_OPTIONS },
+      { text: '刻意将物体刺入指甲或皮肤', options: NSSI_OPTIONS },
+      { text: '刻意用拳头猛打自己', options: NSSI_OPTIONS }
+    ]
+  },
+  {
+    id: 'pq16',
+    title: '临床筛查评估 (感知与思维模式)',
+    subtitle: '超高危筛查量表',
+    description: '在过去的一个月内，您的想法、情感或体验是否存在以下情况？（注：请勿将使用酒精或药物后的反应计算在内，若回答“是”，请评定其带来的痛苦程度）。',
+    questions: [
+      { text: '我对喜欢的事情不再有兴趣。', options: PQ16_OPTIONS },
+      { text: '我经常经历一些似曾发生过的事情。', options: PQ16_OPTIONS },
+      { text: '我有时可以闻到别人闻不到的气味，或尝到别人尝不到的味道。', options: PQ16_OPTIONS },
+      { text: '我耳朵里经常出现一些不寻常的声音，如撞击声、破裂声、嘶嘶声、拍打声、铃声等。', options: PQ16_OPTIONS },
+      { text: '我有时会对自己经历的事情是真实的还是想象的感到困惑。', options: PQ16_OPTIONS },
+      { text: '当我注视他们或者镜子中的自己时，会发现面部在发生变化。', options: PQ16_OPTIONS },
+      { text: '我与人首次见面时会非常不安。', options: PQ16_OPTIONS },
+      { text: '我曾看到过别人无法看到的事物。', options: PQ16_OPTIONS },
+      { text: '我的想法有时很强烈以至于我几乎都能听到。', options: PQ16_OPTIONS },
+      { text: '我有时能从广告、商店橱窗或者周围事物的排列方式中发现特别的意义。', options: PQ16_OPTIONS },
+      { text: '有时我觉得无法控制自己的思维或想法。', options: PQ16_OPTIONS },
+      { text: '有时我会突然被远处一些平时没意识到的声音弄得分心。', options: PQ16_OPTIONS },
+      { text: '我曾听到别人无法听到的声音，诸如窃窃私语或谈话声。', options: PQ16_OPTIONS },
+      { text: '我经常感到别人在针对我。', options: PQ16_OPTIONS },
+      { text: '我曾感到过有人或某种力量在我周围，虽然我看不见。', options: PQ16_OPTIONS },
+      { text: '我感到身体的某些部位以某种方式发生了变化，或某些部位的功能与以往不同。', options: PQ16_OPTIONS }
+    ]
+  },
+  {
+    id: 'adhd',
+    title: '神经多样性评估 (执行力与注意力)',
+    subtitle: '成人 ADHD 自我报告量表 (ASRS)',
+    description: '请根据您在过去六个月中的真实感受与行为表现，在右侧选择最相符的频率。',
+    questions: [
+      { text: '当必须进行一件枯燥或困难的计划时，你会多常粗心犯错？', options: ADHD_OPTIONS },
+      { text: '当正在做枯燥或重复性的工作时，你多常有持续专注的困难？', options: ADHD_OPTIONS },
+      { text: '即使有人直接对你说话，你会多常有困难专注于别人跟你讲话的内容？', options: ADHD_OPTIONS },
+      { text: '一旦完成任何计划中最具挑战的部份之后，你多常有完成计划最后细节的困难？', options: ADHD_OPTIONS },
+      { text: '当必须从事需要有组织规划性的任务时，你会多常有困难并然有序地去做？', options: ADHD_OPTIONS },
+      { text: '当有一件需要多费心思考的工作时，你会多常逃避或是延后开始去做？', options: ADHD_OPTIONS },
+      { text: '在家里或是在工作时，你会多常没有把东西放对地方或是找不到东西？', options: ADHD_OPTIONS },
+      { text: '你会多常因身旁的活动或声音而分心？', options: ADHD_OPTIONS },
+      { text: '你会多常有问题去记得约会或是必须要做的事？', options: ADHD_OPTIONS },
+      { text: '当你必须长时间坐着时，你会多常坐不安稳或扭动手脚？', options: ADHD_OPTIONS },
+      { text: '你会多常在开会时或在其他被期待坐好的场合中离开座位？', options: ADHD_OPTIONS },
+      { text: '你会多常觉得静下来或烦躁不安？', options: ADHD_OPTIONS },
+      { text: '当有自己独处的时间时，你会多常觉得有困难使自己平静和放松？', options: ADHD_OPTIONS },
+      { text: '你会多常像被马达所驱动一样，觉得自己过度地活跃，不得不做事情？', options: ADHD_OPTIONS },
+      { text: '在社交场合中，你会多常发现自己话讲得太多？', options: ADHD_OPTIONS },
+      { text: '当与他人交谈时，你会多常在别人还没把话讲完前就插嘴或接话替对方把话讲完？', options: ADHD_OPTIONS },
+      { text: '在需要轮流排队的场合时，你会多常有困难轮流等待？', options: ADHD_OPTIONS },
+      { text: '你会多常在别人忙碌时打断别人？', options: ADHD_OPTIONS },
+      { text: '小时候老师或家长多常会说你容易走神/坐不住/太好动？', options: ADHD_OPTIONS }
+    ]
+  },
+  {
+    id: 'brief_a',
+    title: '神经多样性评估 (执行功能障碍)',
+    subtitle: '行为评定量表 (Brief-A)',
+    description: '请使用三个等级来评价以下描述和您实际情况的相符程度，答案无好坏对错之分。',
+    questions: [
+      { text: '我难以集中精力做事情（例如家务阅读或者工作）', options: BRIEF_A_OPTIONS },
+      { text: '我难以完成包含多个步骤的工作或任务', options: BRIEF_A_OPTIONS },
+      { text: '我做事中途忘记自己在干什么', options: BRIEF_A_OPTIONS },
+      { text: '我交谈时难以保持在同一话题', options: BRIEF_A_OPTIONS },
+      { text: '我注意力持续时间短', options: BRIEF_A_OPTIONS },
+      { text: '我容易忘记指示', options: BRIEF_A_OPTIONS },
+      { text: '即使只隔几分钟我也难以记住（方位，电话号码）之类的事情', options: BRIEF_A_OPTIONS },
+      { text: '我难以同时做两件事情', options: BRIEF_A_OPTIONS },
+      { text: '我承受不了大任务', options: BRIEF_A_OPTIONS },
+      { text: '我难以区分活动的优先次序', options: BRIEF_A_OPTIONS },
+      { text: '我没准备好恰当的材料就开始做事，如做饭，实施一项计划等', options: BRIEF_A_OPTIONS },
+      { text: '我不为未来活动提前做计划', options: BRIEF_A_OPTIONS },
+      { text: '我有不现实的计划', options: BRIEF_A_OPTIONS },
+      { text: '我有好的想法但是难以使之成文', options: BRIEF_A_OPTIONS },
+      { text: '我难以独自完成任务', options: BRIEF_A_OPTIONS },
+      { text: '我不提前为需要完成的任务做计划', options: BRIEF_A_OPTIONS },
+      { text: '我难以组织活动', options: BRIEF_A_OPTIONS },
+      { text: '我难以组织工作', options: BRIEF_A_OPTIONS }
+    ]
+  }
+];
