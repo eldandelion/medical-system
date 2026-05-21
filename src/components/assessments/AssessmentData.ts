@@ -439,3 +439,104 @@ export const SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT: AssessmentSection[] = [
     ]
   }
 ];
+
+export const IMPULSIVITY_OPTIONS = [
+  { value: 1, label: '完全不符合' },
+  { value: 2, label: '不符合' },
+  { value: 3, label: '符合' },
+  { value: 4, label: '完全符合' }
+];
+
+export const SELF_CONTROL_OPTIONS = [
+  { value: 1, label: '完全不符合' },
+  { value: 2, label: '较少不符合' },
+  { value: 3, label: '一般符合' },
+  { value: 4, label: '比较符合' },
+  { value: 5, label: '完全符合' }
+];
+
+export const GRIT_OPTIONS = [
+  { value: 1, label: '完全不像我' },
+  { value: 2, label: '大部分不像我' },
+  { value: 3, label: '有些像我' },
+  { value: 4, label: '大部分像我' },
+  { value: 5, label: '完全像我' }
+];
+
+export const EMOTION_REGULATION_OPTIONS = [
+  { value: 1, label: '非常不符合' },
+  { value: 2, label: '不符合' },
+  { value: 3, label: '有点不符合' },
+  { value: 4, label: '不确定' },
+  { value: 5, label: '有点符合' },
+  { value: 6, label: '符合' },
+  { value: 7, label: '完全符合' }
+];
+
+export const SELF_REGULATION_PERSONALITY_ASSESSMENT: AssessmentSection[] = [
+  {
+    id: 'impulsivity',
+    title: '行为倾向评估 (冲动程度)',
+    subtitle: '冲动量表',
+    description: '下列是一些日常行为表现的描述，请仔细阅读每一条，然后尽可能根据自己的真实情况回答下列问题与你的符合程度。',
+    questions: [
+      { text: '我不专心', options: IMPULSIVITY_OPTIONS },
+      { text: '我容易集中注意力', options: IMPULSIVITY_OPTIONS },
+      { text: '我一时兴起而行事', options: IMPULSIVITY_OPTIONS },
+      { text: '我做事不加考虑', options: IMPULSIVITY_OPTIONS },
+      { text: '我是一个思考问题谨慎的人', options: IMPULSIVITY_OPTIONS },
+      { text: '我仔细地计划任务', options: IMPULSIVITY_OPTIONS },
+      { text: '我能够自我控制', options: IMPULSIVITY_OPTIONS },
+      { text: '我说话不加思考', options: IMPULSIVITY_OPTIONS }
+    ]
+  },
+  {
+    id: 'self_control',
+    title: '自我管理评估 (自制力状况)',
+    subtitle: '自我控制量表',
+    description: '下列是一些日常行为表现的描述，请仔细阅读每一条，然后尽可能根据自己的真实情况回答下列问题与你的符合程度。',
+    questions: [
+      { text: '我能很好地抵抗诱惑', options: SELF_CONTROL_OPTIONS },
+      { text: '大家说我有钢铁般的自制力', options: SELF_CONTROL_OPTIONS },
+      { text: '我能为了一个长远目标高效地工作', options: SELF_CONTROL_OPTIONS },
+      { text: '我会做一些能给自己带来快乐但对自己有害的事', options: SELF_CONTROL_OPTIONS },
+      { text: '有时我会被有趣的事情干扰而不能按时完成任务', options: SELF_CONTROL_OPTIONS },
+      { text: '有时我会忍不住去做一些明明知道不对的事情', options: SELF_CONTROL_OPTIONS },
+      { text: '我常常考虑不周就付诸行动', options: SELF_CONTROL_OPTIONS }
+    ]
+  },
+  {
+    id: 'grit',
+    title: '意志毅力评估 (坚毅品质)',
+    subtitle: '坚毅量表',
+    description: '请根据您对以下描述的相符程度，选择最符合您的实际选项。',
+    questions: [
+      { text: '新的计划和想法有时候会让我想无法专心于现有的计划。', options: GRIT_OPTIONS },
+      { text: '挫折不会使我气馁。', options: GRIT_OPTIONS },
+      { text: '当我着迷于某件计划一阵子后，会失去兴趣。', options: GRIT_OPTIONS },
+      { text: '我是个努力工作的人。', options: GRIT_OPTIONS },
+      { text: '我时常立下一个目标，但一阵子过后又改追求别的目标。', options: GRIT_OPTIONS },
+      { text: '我很难把我的注意力集中在一个要好几个月才能完成的计划上。', options: GRIT_OPTIONS },
+      { text: '无论什么事情，我开了头就要完成它。', options: GRIT_OPTIONS },
+      { text: '我很勤劳（我不轻言放弃）。', options: GRIT_OPTIONS }
+    ]
+  },
+  {
+    id: 'emotion_regulation',
+    title: '情绪机制评估 (调节策略)',
+    subtitle: '认知重评与表达抑制量表',
+    description: '请根据您日常处理情绪时的真实表现，选择最相符的程度。',
+    questions: [
+      { text: '当我想让自己更快乐时，我改变些观念就能实现。', options: EMOTION_REGULATION_OPTIONS },
+      { text: '我会控制自己的情绪', options: EMOTION_REGULATION_OPTIONS },
+      { text: '当我想让自己少点消极情绪，我改变些想法就可实现', options: EMOTION_REGULATION_OPTIONS },
+      { text: '我高兴时，我会压抑自己不把这种情绪外显', options: EMOTION_REGULATION_OPTIONS },
+      { text: '面对压力，我会使用一些策略让自己保持冷静', options: EMOTION_REGULATION_OPTIONS },
+      { text: '我通常采用压抑的方式来控制自己的情绪', options: EMOTION_REGULATION_OPTIONS },
+      { text: '当我想让情绪更积极，我会换种方式看待糟糕的处境', options: EMOTION_REGULATION_OPTIONS },
+      { text: '我会换种角度看待周边环境，以此达到控制情绪目的', options: EMOTION_REGULATION_OPTIONS },
+      { text: '当我体验到消极情绪时，我会压抑这种情绪表现出来', options: EMOTION_REGULATION_OPTIONS },
+      { text: '当我想减少消极情绪，我会换种方式看待不利处境', options: EMOTION_REGULATION_OPTIONS }
+    ]
+  }
+];

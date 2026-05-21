@@ -3,7 +3,7 @@ import { AssessmentCard } from './AssessmentCard';
 import { SegmentedButton } from '../common/Buttons';
 import { AssessmentDialog } from './AssessmentDialog';
 import { AssessmentFlow } from './AssessmentFlow';
-import { MENTAL_HEALTH_ASSESSMENT, SLEEP_ASSESSMENT, DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT, SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT, AssessmentSection } from './AssessmentData';
+import { MENTAL_HEALTH_ASSESSMENT, SLEEP_ASSESSMENT, DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT, SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT, SELF_REGULATION_PERSONALITY_ASSESSMENT, AssessmentSection } from './AssessmentData';
 
 interface Assessment {
   id: string;
@@ -96,6 +96,22 @@ export function SelfAssessmentsView() {
         initial: 'E',
         bgColor: 'var(--md-sys-color-secondary-container)',
         textColor: 'var(--md-sys-color-on-secondary-container)'
+      },
+      type: '测试',
+      completionPercentage: 0,
+      duration: '15 分钟',
+      status: 'In progress'
+    },
+    {
+      id: 'self_regulation',
+      title: '自我调节与人格特质评估',
+      subtitle: '自控力、坚毅性及情绪调节能力评估',
+      sections: SELF_REGULATION_PERSONALITY_ASSESSMENT,
+      assignedBy: {
+        name: '迈克尔·陈',
+        initial: 'M',
+        bgColor: 'var(--md-sys-color-tertiary-container)',
+        textColor: 'var(--md-sys-color-on-tertiary-container)'
       },
       type: '测试',
       completionPercentage: 0,
