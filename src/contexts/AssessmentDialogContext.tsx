@@ -1,12 +1,14 @@
 import * as React from 'react';
 import { AssessmentDialog } from '../components/assessments/AssessmentDialog';
 import { AssessmentFlow } from '../components/assessments/AssessmentFlow';
-import { MENTAL_HEALTH_ASSESSMENT, SLEEP_ASSESSMENT, DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT } from '../components/assessments/AssessmentData';
+import { AssessmentSection } from '../components/assessments/AssessmentData';
 
 
 interface Assessment {
   id: string;
   title: string;
+  subtitle?: string;
+  sections?: AssessmentSection[];
   assignedBy: {
     name: string;
     initial: string;
@@ -66,20 +68,8 @@ export function AssessmentDialogProvider({ children }: { children: React.ReactNo
         onClose={() => setIsFullScreenOpen(false)}
         assessmentId={selectedAssessment?.id || ''}
         assessmentTitle={selectedAssessment?.title || ''}
-        assessmentSubtitle={
-          selectedAssessment?.id === 'sleep'
-            ? '最近1个月的睡眠与失眠状况调查'
-            : selectedAssessment?.id === 'digital_habits'
-              ? '数字化习惯与日常行为状况综合评估'
-              : '2025-2026 学年学生心理健康普查'
-        }
-        sections={
-          selectedAssessment?.id === 'sleep'
-            ? SLEEP_ASSESSMENT
-            : selectedAssessment?.id === 'digital_habits'
-              ? DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT
-              : MENTAL_HEALTH_ASSESSMENT
-        }
+        assessmentSubtitle={selectedAssessment?.subtitle}
+        sections={selectedAssessment?.sections || []}
       />
     </AssessmentDialogContext.Provider>
 

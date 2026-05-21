@@ -2,10 +2,13 @@ import * as React from 'react';
 import { AssessmentCard } from './AssessmentCard';
 import { SegmentedButton } from '../common/Buttons';
 import { AssessmentDialogProvider, useAssessmentDialog } from '../../contexts/AssessmentDialogContext';
+import { MENTAL_HEALTH_ASSESSMENT, SLEEP_ASSESSMENT, DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT, AssessmentSection } from './AssessmentData';
 
 interface Assessment {
   id: string;
   title: string;
+  subtitle?: string;
+  sections?: AssessmentSection[];
   assignedBy: {
     name: string;
     initial: string;
@@ -34,6 +37,8 @@ function AssessmentsContent() {
     {
       id: '1',
       title: '年度身心健康状况评估',
+      subtitle: '2025-2026 学年学生心理健康普查',
+      sections: MENTAL_HEALTH_ASSESSMENT,
       assignedBy: {
         name: '莎拉·詹金斯',
         initial: 'S',
@@ -48,6 +53,8 @@ function AssessmentsContent() {
     {
       id: 'sleep',
       title: '睡眠状况评估',
+      subtitle: '最近1个月的睡眠与失眠状况调查',
+      sections: SLEEP_ASSESSMENT,
       assignedBy: {
         name: '莎拉·詹金斯',
         initial: 'S',
@@ -62,6 +69,8 @@ function AssessmentsContent() {
     {
       id: 'digital_habits',
       title: '数字化习惯与日常行为评估',
+      subtitle: '数字化习惯与日常行为状况综合评估',
+      sections: DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT,
       assignedBy: {
         name: '迈克尔·陈',
         initial: 'M',
