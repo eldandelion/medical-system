@@ -536,7 +536,106 @@ export const SELF_REGULATION_PERSONALITY_ASSESSMENT: AssessmentSection[] = [
       { text: '当我想让情绪更积极，我会换种方式看待糟糕的处境', options: EMOTION_REGULATION_OPTIONS },
       { text: '我会换种角度看待周边环境，以此达到控制情绪目的', options: EMOTION_REGULATION_OPTIONS },
       { text: '当我体验到消极情绪时，我会压抑这种情绪表现出来', options: EMOTION_REGULATION_OPTIONS },
-      { text: '当我想减少消极情绪，我会换种方式看待不利处境', options: EMOTION_REGULATION_OPTIONS }
+      { text: '当想减少消极情绪，我会换种方式看待不利处境', options: EMOTION_REGULATION_OPTIONS }
+    ]
+  }
+];
+
+export const LIFE_EVENTS_OPTIONS = [
+  { value: 0, label: '未发生' },
+  { value: 1, label: '没有' },
+  { value: 2, label: '轻度' },
+  { value: 3, label: '中度' },
+  { value: 4, label: '重度' },
+  { value: 5, label: '极度' }
+];
+
+export const CHILDHOOD_SES_OPTIONS = [
+  { value: 1, label: '完全不符合' },
+  { value: 2, label: '大多不符合' },
+  { value: 3, label: '少许不符合' },
+  { value: 4, label: '中立' },
+  { value: 5, label: '少许符合' },
+  { value: 6, label: '大多符合' },
+  { value: 7, label: '完全符合' }
+];
+
+export const CHILDHOOD_TRAUMA_OPTIONS = [
+  { value: 1, label: '没有' },
+  { value: 2, label: '偶尔' },
+  { value: 3, label: '有时' },
+  { value: 4, label: '经常' },
+  { value: 5, label: '总是' }
+];
+
+export const FAMILY_BACKGROUND_EARLY_EXPERIENCES_ASSESSMENT: AssessmentSection[] = [
+  {
+    id: 'life_events',
+    title: '家庭背景与环境评估 (生活事件)',
+    subtitle: '一般生活事件量表',
+    description: '下面想了解一下过去任何时候你经历过且近 12 个月内对你心理有不良影响的生活事件。若发生过，请填写对你心理不良影响的影响程度。',
+    questions: [
+      { text: '夫妻或恋人间发生矛盾', options: LIFE_EVENTS_OPTIONS },
+      { text: '与生育有关的问题(流产、不孕不育等)', options: LIFE_EVENTS_OPTIONS },
+      { text: '恋爱或结婚问题（失恋、离婚等）', options: LIFE_EVENTS_OPTIONS },
+      { text: '与家庭其他成员发生矛盾', options: LIFE_EVENTS_OPTIONS },
+      { text: '与其他人发生矛盾', options: LIFE_EVENTS_OPTIONS },
+      { text: '家庭其他成员间发生矛盾', options: LIFE_EVENTS_OPTIONS },
+      { text: '患急、重病或外伤', options: LIFE_EVENTS_OPTIONS },
+      { text: '经济问题', options: LIFE_EVENTS_OPTIONS },
+      { text: '工作或学习问题', options: LIFE_EVENTS_OPTIONS },
+      { text: '亲友患重病或去世', options: LIFE_EVENTS_OPTIONS },
+      { text: '被虐待', options: LIFE_EVENTS_OPTIONS },
+      { text: '其它负性生活事件', options: LIFE_EVENTS_OPTIONS }
+    ]
+  },
+  {
+    id: 'childhood_ses',
+    title: '早期经历与背景评估 (经济地位)',
+    subtitle: '童年社会经济地位量表',
+    description: '请根据您对童年成长时期家庭经济及社会层级的真实感受进行选择。',
+    questions: [
+      { text: '我童年时家庭有足够的钱来满足各种需求', options: CHILDHOOD_SES_OPTIONS },
+      { text: '我童年时，父母在当地有较高的社会地位', options: CHILDHOOD_SES_OPTIONS },
+      { text: '相比于童年的伙伴，我的生活更加富足', options: CHILDHOOD_SES_OPTIONS },
+      { text: '我成长在一个富足稳定的小区环境', options: CHILDHOOD_SES_OPTIONS }
+    ]
+  },
+  {
+    id: 'childhood_trauma',
+    title: '早期经历评估 (成长逆境)',
+    subtitle: '儿童期虐待与忽视量表',
+    description: '本问卷调查的是你儿童期（16岁以前）的成长经历。请根据你当时的体会选择最适合您情况的答案（在你16岁以前无出现以下情况及出现的频率）。',
+    questions: [
+      { text: '我无法获得足够的食物', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '我知道有人照顾我和保护我', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '家里人喊我“笨蛋”、“懒虫”或“丑八怪”等', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '我的父母因为喝酒太多或太贪玩而不能照顾家庭', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '家里有人使我感到自己是重要的或特别的', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '我不得不穿脏衣服', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '我感受到有人爱我', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '我觉得父母希望从来没有生下我', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '家里有人把我打得很重，不得不去医院就诊', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '我觉得家里的状况不需要改变', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '家里有人把我打得很重，使我皮肤青紫或留下伤痕', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '有人用皮带、绳子、木板或其它硬东西惩罚我', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '家里人彼此互相关心', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '家里有人说让我伤心或侮辱我的话', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '我觉得自己受到了躯体虐待', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '请在此题选择第三个选项', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '我觉得自己有一个完美的童年', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '我被打得很惨，引起了老师、邻居或医生的注意', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '我觉得家里有人恨我', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '家里人关系很亲密', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '有人以带有性色彩的方式触摸我或让我触摸他/她', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '有人通过威胁或欺骗的方式让我同他/她做与性有关的事', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '我的家庭是世界上最好的', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '有人试图让我做与性有关的事或观看与性有关的内容', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '有人对我进行性骚扰', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '我觉得自己受到了情感虐待', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '有人在我生病时带我去看医生', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '我觉得自己受到了性虐待', options: CHILDHOOD_TRAUMA_OPTIONS },
+      { text: '家是我获得力量和支持的源泉', options: CHILDHOOD_TRAUMA_OPTIONS }
     ]
   }
 ];

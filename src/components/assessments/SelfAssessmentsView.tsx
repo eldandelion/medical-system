@@ -3,7 +3,7 @@ import { AssessmentCard } from './AssessmentCard';
 import { SegmentedButton } from '../common/Buttons';
 import { AssessmentDialog } from './AssessmentDialog';
 import { AssessmentFlow } from './AssessmentFlow';
-import { MENTAL_HEALTH_ASSESSMENT, SLEEP_ASSESSMENT, DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT, SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT, SELF_REGULATION_PERSONALITY_ASSESSMENT, AssessmentSection } from './AssessmentData';
+import { MENTAL_HEALTH_ASSESSMENT, SLEEP_ASSESSMENT, DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT, SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT, SELF_REGULATION_PERSONALITY_ASSESSMENT, FAMILY_BACKGROUND_EARLY_EXPERIENCES_ASSESSMENT, AssessmentSection } from './AssessmentData';
 
 interface Assessment {
   id: string;
@@ -116,6 +116,22 @@ export function SelfAssessmentsView() {
       type: '测试',
       completionPercentage: 0,
       duration: '15 分钟',
+      status: 'In progress'
+    },
+    {
+      id: 'family_experiences',
+      title: '家庭背景与早期经历评估',
+      subtitle: '童年环境、家庭地位及早期成长经历综合评估',
+      sections: FAMILY_BACKGROUND_EARLY_EXPERIENCES_ASSESSMENT,
+      assignedBy: {
+        name: '艾米丽·沃森博士',
+        initial: 'E',
+        bgColor: 'var(--md-sys-color-secondary-container)',
+        textColor: 'var(--md-sys-color-on-secondary-container)'
+      },
+      type: '测试',
+      completionPercentage: 0,
+      duration: '20 分钟',
       status: 'In progress'
     },
     {
