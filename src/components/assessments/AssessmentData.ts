@@ -61,7 +61,7 @@ export const MENTAL_HEALTH_ASSESSMENT: AssessmentSection[] = [
     id: 'apq9_father',
     title: '教养行为评估 (父亲篇)',
     subtitle: 'APQ-9 父亲',
-    description: '指导语：此问卷是关于您的父亲对您的教养方式，请实事求是地回答。',
+    description: '此问卷是关于您的父亲对您的教养方式，请实事求是地回答。',
     questions: [
       { text: '当我很好地完成一项任务时，父亲会告诉我：“你做的很棒（或其他肯定的话）！”', options: APQ_OPTIONS },
       { text: '父亲会威胁要惩罚我，但是事实上并没有那么做', options: APQ_OPTIONS },
@@ -78,7 +78,7 @@ export const MENTAL_HEALTH_ASSESSMENT: AssessmentSection[] = [
     id: 'apq9_mother',
     title: '教养行为评估 (母亲篇)',
     subtitle: 'APQ-9 母亲',
-    description: '指导语：此问卷是关于您的母亲对您的教养方式，请实事求是地回答。',
+    description: '此问卷是关于您的母亲对您的教养方式，请实事求是地回答。',
     questions: [
       { text: '当我很好地完成一项任务时，母亲会告诉我：“你做的很棒（或其他肯定的话）！”', options: APQ_OPTIONS },
       { text: '母亲会威胁要惩罚我，但是事实上并没有那么做', options: APQ_OPTIONS },
@@ -277,7 +277,7 @@ export const DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT: AssessmentSection[] = [
     id: 'mobile_addiction',
     title: '数字化行为评估 (手机成瘾)',
     subtitle: '手机成瘾量表',
-    description: '指导语：请根据您的实际手机使用体验，选择最符合的同意程度。',
+    description: '请根据您的实际手机使用体验，选择最符合的同意程度。',
     questions: [
       { text: '手机是我生命里最重要的东西', options: MOBILE_ADDICTION_OPTIONS },
       { text: '使用手机会使我和父母或家人之间出现冲突', options: MOBILE_ADDICTION_OPTIONS },
@@ -291,7 +291,7 @@ export const DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT: AssessmentSection[] = [
     id: 'game_addiction',
     title: '数字化行为评估 (网络游戏)',
     subtitle: '网络游戏成瘾量表',
-    description: '指导语：请根据您最近的网络游戏使用情况，客观地选择频率。',
+    description: '请根据您最近的网络游戏使用情况，客观地选择频率。',
     questions: [
       { text: '你是否觉得对网络游戏过于关注（如放学后还想着刚才网络游戏中的场景、或计划下次再去玩；你是否认为游戏已经成为你日常生活中的主要活动？）？', options: GAME_ADDICTION_OPTIONS },
       { text: '你是否感觉需要不断增加网络游戏的时间才能得到满足？', options: GAME_ADDICTION_OPTIONS },
@@ -308,7 +308,7 @@ export const DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT: AssessmentSection[] = [
     id: 'procrastination',
     title: '自律与自控评估 (拖延倾向)',
     subtitle: '拖延量表',
-    description: '指导语：请根据以下拖延描述和您实际情况的相符程度进行选择，答案无好坏对错之分。',
+    description: '请根据以下拖延描述和您实际情况的相符程度进行选择，答案无好坏对错之分。',
     questions: [
       { text: '我总是到拖得不能再拖时才做决定。', options: PROCRASTINATION_OPTIONS },
       { text: '即便我做好了决定，我仍迟迟不愿行动。', options: PROCRASTINATION_OPTIONS },
@@ -326,7 +326,7 @@ export const DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT: AssessmentSection[] = [
     id: 'eating_habits',
     title: '日常生活评估 (饮食习惯)',
     subtitle: '饮食情况评估',
-    description: '指导语：请根据您平常吃东西的实际情况，选择最适合的选项。',
+    description: '请根据您平常吃东西的实际情况，选择最适合的选项。',
     questions: [
       { text: '当我闻到或看到美味可口的食物，即使才刚吃完饭，我也很难克制自己不吃。', options: EATING_HABITS_OPTIONS_1 },
       { text: '我会刻意用取用小分量来控制体重。', options: EATING_HABITS_OPTIONS_1 },
@@ -380,7 +380,7 @@ export const SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT: AssessmentSection[] = [
     id: 'peer_relationship',
     title: '社交环境评估 (同伴关系)',
     subtitle: '同伴关系量表',
-    description: '指导语：下面描述的是您日常生活中与人交往的情况，请按照实际情况回答。',
+    description: '下面描述的是您日常生活中与人交往的情况，请按照实际情况回答。',
     questions: [
       { text: '同学们都不喜欢我', options: PEER_RELATIONSHIP_OPTIONS },
       { text: '在学校里，我很孤单', options: PEER_RELATIONSHIP_OPTIONS },
@@ -394,7 +394,7 @@ export const SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT: AssessmentSection[] = [
     id: 'teacher_relationship',
     title: '社交环境评估 (师生关系)',
     subtitle: '师生关系量表',
-    description: '指导语：下面描述的是您日常生活中与人交往的情况，请按照实际情况回答。',
+    description: '下面描述的是您日常生活中与人交往的情况，请按照实际情况回答。',
     questions: [
       { text: '我认为老师从不真正理解我', options: PEER_RELATIONSHIP_OPTIONS },
       { text: '即使我表现出色老师也视而不见', options: PEER_RELATIONSHIP_OPTIONS },
@@ -406,7 +406,7 @@ export const SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT: AssessmentSection[] = [
     id: 'loneliness',
     title: '心理感受评估 (孤独体验)',
     subtitle: '孤独感量表',
-    description: '指导语：请根据您近期在人际交往中的主观感受，选择最符合的频率。',
+    description: '请根据您近期在人际交往中的主观感受，选择最符合的频率。',
     questions: [
       { text: '我感到自己缺少伙伴', options: LONELINESS_OPTIONS },
       { text: '当当我遇到困难时，周围没有人能帮助我', options: LONELINESS_OPTIONS },
@@ -422,7 +422,7 @@ export const SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT: AssessmentSection[] = [
     id: 'social_support',
     title: '支持系统评估 (社会支持)',
     subtitle: '社会支持量表',
-    description: '指导语：下面的问题主要反映了您身边所能获得的支持，根据实际情况选择最相符的程度。',
+    description: '下面的问题主要反映了您身边所能获得的支持，根据实际情况选择最相符的程度。',
     questions: [
       { text: '在我遇到问题时有些人（亲戚、老师、同学）会出现在我的身旁', options: SOCIAL_SUPPORT_OPTIONS },
       { text: '我能够与有些人（亲戚、老师、同学）分享快乐与忧伤', options: SOCIAL_SUPPORT_OPTIONS },
