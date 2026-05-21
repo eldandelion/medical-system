@@ -349,3 +349,93 @@ export const DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT: AssessmentSection[] = [
     ]
   }
 ];
+
+export const PEER_RELATIONSHIP_OPTIONS = [
+  { value: 1, label: '完全不符合' },
+  { value: 2, label: '比较不符合' },
+  { value: 3, label: '不确定' },
+  { value: 4, label: '比较符合' },
+  { value: 5, label: '完全符合' }
+];
+
+export const LONELINESS_OPTIONS = [
+  { value: 1, label: '从不' },
+  { value: 2, label: '有时' },
+  { value: 3, label: '经常' },
+  { value: 4, label: '总是' }
+];
+
+export const SOCIAL_SUPPORT_OPTIONS = [
+  { value: 1, label: '完全不同意' },
+  { value: 2, label: '大多不同意' },
+  { value: 3, label: '少许不同意' },
+  { value: 4, label: '中立' },
+  { value: 5, label: '少许同意' },
+  { value: 6, label: '大多同意' },
+  { value: 7, label: '完全同意' }
+];
+
+export const SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT: AssessmentSection[] = [
+  {
+    id: 'peer_relationship',
+    title: '社交环境评估 (同伴关系)',
+    subtitle: '同伴关系量表',
+    description: '指导语：下面描述的是您日常生活中与人交往的情况，请按照实际情况回答。',
+    questions: [
+      { text: '同学们都不喜欢我', options: PEER_RELATIONSHIP_OPTIONS },
+      { text: '在学校里，我很孤单', options: PEER_RELATIONSHIP_OPTIONS },
+      { text: '许多同学和我有矛盾', options: PEER_RELATIONSHIP_OPTIONS },
+      { text: '学校里，没有同学和我一起玩', options: PEER_RELATIONSHIP_OPTIONS },
+      { text: '在班上，我没有朋友可以交谈', options: PEER_RELATIONSHIP_OPTIONS },
+      { text: '同学们对我不好', options: PEER_RELATIONSHIP_OPTIONS }
+    ]
+  },
+  {
+    id: 'teacher_relationship',
+    title: '社交环境评估 (师生关系)',
+    subtitle: '师生关系量表',
+    description: '指导语：下面描述的是您日常生活中与人交往的情况，请按照实际情况回答。',
+    questions: [
+      { text: '我认为老师从不真正理解我', options: PEER_RELATIONSHIP_OPTIONS },
+      { text: '即使我表现出色老师也视而不见', options: PEER_RELATIONSHIP_OPTIONS },
+      { text: '有时我觉得老师故意找我的麻烦', options: PEER_RELATIONSHIP_OPTIONS },
+      { text: '老师对我很轻视', options: PEER_RELATIONSHIP_OPTIONS }
+    ]
+  },
+  {
+    id: 'loneliness',
+    title: '心理感受评估 (孤独体验)',
+    subtitle: '孤独感量表',
+    description: '指导语：请根据您近期在人际交往中的主观感受，选择最符合的频率。',
+    questions: [
+      { text: '我感到自己缺少伙伴', options: LONELINESS_OPTIONS },
+      { text: '当当我遇到困难时，周围没有人能帮助我', options: LONELINESS_OPTIONS },
+      { text: '我是一个好相处的人', options: LONELINESS_OPTIONS },
+      { text: '我感到被人忽视', options: LONELINESS_OPTIONS },
+      { text: '我觉得自己与别人(同学、朋友)的关系不亲密', options: LONELINESS_OPTIONS },
+      { text: '当当我愿意时就能找到伙伴', options: LONELINESS_OPTIONS },
+      { text: '对于自己的离群（或孤独），我是不开心的', options: LONELINESS_OPTIONS },
+      { text: '我感觉我周围的人不关心我', options: LONELINESS_OPTIONS }
+    ]
+  },
+  {
+    id: 'social_support',
+    title: '支持系统评估 (社会支持)',
+    subtitle: '社会支持量表',
+    description: '指导语：下面的问题主要反映了您身边所能获得的支持，根据实际情况选择最相符的程度。',
+    questions: [
+      { text: '在我遇到问题时有些人（亲戚、老师、同学）会出现在我的身旁', options: SOCIAL_SUPPORT_OPTIONS },
+      { text: '我能够与有些人（亲戚、老师、同学）分享快乐与忧伤', options: SOCIAL_SUPPORT_OPTIONS },
+      { text: '我的家庭能够切实具体地给我帮助', options: SOCIAL_SUPPORT_OPTIONS },
+      { text: '我能够从家庭中获得感情上帮助和支持', options: SOCIAL_SUPPORT_OPTIONS },
+      { text: '当我有困难时有些人（亲戚、老师、同学）是安慰我的真正源泉', options: SOCIAL_SUPPORT_OPTIONS },
+      { text: '我的朋友们能真正的帮助我', options: SOCIAL_SUPPORT_OPTIONS },
+      { text: '在发生困难时我可以依靠我的朋友们', options: SOCIAL_SUPPORT_OPTIONS },
+      { text: '我能与自己的家庭谈论我的难题', options: SOCIAL_SUPPORT_OPTIONS },
+      { text: '我的朋友们能与我分享快乐与忧伤', options: SOCIAL_SUPPORT_OPTIONS },
+      { text: '有些人（老师同学）关心我情绪情感', options: SOCIAL_SUPPORT_OPTIONS },
+      { text: '我的家庭能协助我作出各种决定', options: SOCIAL_SUPPORT_OPTIONS },
+      { text: '我能与朋友们讨论自己的难题', options: SOCIAL_SUPPORT_OPTIONS }
+    ]
+  }
+];

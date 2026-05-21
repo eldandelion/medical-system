@@ -3,7 +3,7 @@ import { AssessmentCard } from './AssessmentCard';
 import { SegmentedButton } from '../common/Buttons';
 import { AssessmentDialog } from './AssessmentDialog';
 import { AssessmentFlow } from './AssessmentFlow';
-import { MENTAL_HEALTH_ASSESSMENT, SLEEP_ASSESSMENT, DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT, AssessmentSection } from './AssessmentData';
+import { MENTAL_HEALTH_ASSESSMENT, SLEEP_ASSESSMENT, DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT, SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT, AssessmentSection } from './AssessmentData';
 
 interface Assessment {
   id: string;
@@ -84,6 +84,22 @@ export function SelfAssessmentsView() {
       type: '测试',
       completionPercentage: 0,
       duration: '20 分钟',
+      status: 'In progress'
+    },
+    {
+      id: 'social_support',
+      title: '社交环境与支持系统评估',
+      subtitle: '人际关系与社会支持状况综合评估',
+      sections: SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT,
+      assignedBy: {
+        name: '艾米丽·沃森博士',
+        initial: 'E',
+        bgColor: 'var(--md-sys-color-secondary-container)',
+        textColor: 'var(--md-sys-color-on-secondary-container)'
+      },
+      type: '测试',
+      completionPercentage: 0,
+      duration: '15 分钟',
       status: 'In progress'
     },
     {
