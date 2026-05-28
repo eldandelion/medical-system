@@ -18,53 +18,32 @@ interface RecordsViewProps {
 }
 
 export function RecordsView({ onRecordSelect, selectedRecordId }: RecordsViewProps) {
-  const records: PsychiatricRecord[] = [
-    {
-      id: '1',
-      type: '初诊转诊',
-      icon: 'clinical_notes',
-      iconColor: 'var(--md-sys-color-on-surface-variant)',
-      reason: '焦虑与惊恐发作评估',
-      date: '2026年4月12日',
-      status: 'Closed'
-    },
-    {
-      id: '2',
-      type: '随访',
-      icon: 'forum',
-      iconColor: 'var(--md-sys-color-on-surface-variant)',
-      reason: '药物管理（SSRI 调整）',
-      date: '2026年4月20日',
-      status: 'Pending'
-    },
-    {
-      id: '3',
-      type: '初诊转诊',
-      icon: 'clinical_notes',
-      iconColor: 'var(--md-sys-color-on-surface-variant)',
-      reason: 'ADHD 评估与诊断访谈',
-      date: '2026年5月05日',
-      status: 'Pending'
-    },
-    {
-      id: '4',
-      type: '随访',
-      icon: 'forum',
-      iconColor: 'var(--md-sys-color-on-surface-variant)',
-      reason: '认知行为疗法（CBT）第 4 次会谈',
-      date: '2026年3月15日',
-      status: 'Closed'
-    },
-    {
-      id: '5',
-      type: '随访',
-      icon: 'forum',
-      iconColor: 'var(--md-sys-color-on-surface-variant)',
-      reason: '睡眠障碍与失眠复查',
-      date: '2026年3月01日',
-      status: 'Closed'
-    }
-  ];
+  const [records, setRecords] = React.useState<PsychiatricRecord[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    let active = true;
+    fetch('/api/records')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch records');
+        return res.json();
+      })
+      .then((data) => {
+        if (active) {
+          setRecords(data);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load psychiatric records:', err);
+        if (active) {
+          setLoading(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const columns: ColumnDefinition<PsychiatricRecord>[] = [
     {
@@ -138,12 +117,20 @@ export function RecordsView({ onRecordSelect, selectedRecordId }: RecordsViewPro
       </div>
       
       <div className="mt-2">
-        <DataTable 
-          columns={columns} 
-          data={records} 
-          onRowClick={onRecordSelect} 
-          selectedId={selectedRecordId} 
-        />
+        {loading ? (
+          <div className="py-12 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)]">
+            {/* @ts-ignore */}
+            <md-linear-progress indeterminate className="w-full max-w-xs mb-4"></md-linear-progress>
+            <span className="text-[14px] opacity-75">正在获取医学记录...</span>
+          </div>
+        ) : (
+          <DataTable 
+            columns={columns} 
+            data={records} 
+            onRowClick={onRecordSelect} 
+            selectedId={selectedRecordId} 
+          />
+        )}
       </div>
     </div>
   );
