@@ -15,9 +15,9 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
             </h3>
             <div className="relative">
               {/* @ts-ignore */}
-              <md-outlined-select label="Student Search" className="w-full relative">
+              <md-outlined-select label="Student" className="w-full relative">
                 {/* @ts-ignore */}
-                <md-icon slot="leading-icon">search</md-icon>
+                {/* <md-icon slot="leading-icon">search</md-icon> */}
                 {/* @ts-ignore */}
                 <md-select-option value="1">
                   <div slot="headline">Daniil Petrov</div>
@@ -114,28 +114,12 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
             </md-outlined-text-field>
           </section>
 
-          {/* 4. Compliance and Attachments Block */}
+          {/* 4. Attachments Block */}
           <section className="flex flex-col gap-6">
             <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
-              <span className="material-symbols-outlined text-[20px]">verified_user</span>
-              Compliance & Attachments
+              <span className="material-symbols-outlined text-[20px]">attachment</span>
+              Attachments
             </h3>
-
-            <div className="bg-transparent rounded-[12px] p-2 flex items-center border border-[var(--md-sys-color-outline-variant)]">
-              {/* @ts-ignore */}
-              <md-list className="bg-transparent w-full" style={{ '--md-list-container-color': 'transparent' }}>
-                {/* @ts-ignore */}
-                <md-list-item>
-                  {/* @ts-ignore */}
-                  <md-checkbox slot="start" checked disabled></md-checkbox>
-                  <div slot="headline" className="text-[14px] leading-[20px] font-normal text-[var(--md-sys-color-on-surface)] whitespace-normal">
-                    Verified positive consent for PIPL compliance status in external communications.
-                  </div>
-                  {/* @ts-ignore */}
-                </md-list-item>
-                {/* @ts-ignore */}
-              </md-list>
-            </div>
 
             <div className="flex flex-col gap-4">
               <div>

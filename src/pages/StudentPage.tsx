@@ -48,7 +48,7 @@ export function StudentPage() {
 
         <NavItem icon="assignment" label="自我测评" active={activePage === 'Assessments'} onClick={() => handlePageChange('Assessments')} />
         <NavItem icon="folder" label="我的记录" active={activePage === 'My Records'} onClick={() => handlePageChange('My Records')} />
-        <NavItem icon="security" label="安全与知情同意" active={activePage === 'Security & Consent'} onClick={() => handlePageChange('Security & Consent')} />
+        <NavItem icon="security" label="知情同意" active={activePage === 'Security & Consent'} onClick={() => handlePageChange('Security & Consent')} />
       </Sidebar>
 
       <div className="flex-1 flex flex-col min-w-0 bg-transparent">
