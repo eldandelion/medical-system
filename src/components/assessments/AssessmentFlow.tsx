@@ -31,25 +31,49 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
   const [currentSectionIdx, setCurrentSectionIdx] = React.useState(0);
   const [currentQuestionIdx, setCurrentQuestionIdx] = React.useState(0);
   const [answers, setAnswers] = React.useState<Record<string, number>>({});
+  const [loadedSections, setLoadedSections] = React.useState<AssessmentSection[]>(sections);
+  const [loading, setLoading] = React.useState(false);
 
-  // Reset state when assessment is opened or switched to avoid index mismatch crashes
+  // Fetch sections from API dynamically if assessmentId is provided
   React.useEffect(() => {
     if (isOpen) {
       setAppState('intro');
       setCurrentSectionIdx(0);
       setCurrentQuestionIdx(0);
       setAnswers({});
-    }
-  }, [isOpen, assessmentId]);
+      setLoadedSections(sections);
 
-  const currentSection = sections[currentSectionIdx];
+      if (assessmentId) {
+        setLoading(true);
+        fetch(`/api/assessments/${assessmentId}`)
+          .then((res) => {
+            if (!res.ok) throw new Error('Failed to fetch assessment');
+            return res.json();
+          })
+          .then((data) => {
+            if (data && data.sections) {
+              setLoadedSections(data.sections);
+            }
+            setLoading(false);
+          })
+          .catch((err) => {
+            console.error('Failed to fetch assessment sections:', err);
+            setLoading(false);
+          });
+      }
+    }
+  }, [isOpen, assessmentId, sections]);
+
+  const activeSections = loadedSections || [];
+
+  const currentSection = activeSections[currentSectionIdx];
   const currentQuestion = currentSection?.questions[currentQuestionIdx];
   const questionKey = `${currentSection?.id}_${currentQuestionIdx}`;
 
   const questionText = typeof currentQuestion === 'string' ? currentQuestion : currentQuestion?.text;
   const questionOptions = typeof currentQuestion === 'string' ? DEFAULT_OPTIONS : currentQuestion?.options || DEFAULT_OPTIONS;
 
-  const totalQuestions = sections.reduce((acc, section) => acc + section.questions.length, 0);
+  const totalQuestions = activeSections.reduce((acc, section) => acc + section.questions.length, 0);
   const answeredCount = Object.keys(answers).length;
   const progress = (answeredCount / totalQuestions) * 100;
 
@@ -61,7 +85,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
     if (!currentSection) return;
     if (currentQuestionIdx < currentSection.questions.length - 1) {
       setCurrentQuestionIdx(prev => prev + 1);
-    } else if (currentSectionIdx < sections.length - 1) {
+    } else if (currentSectionIdx < activeSections.length - 1) {
       setCurrentSectionIdx(prev => prev + 1);
       setCurrentQuestionIdx(0);
     } else {
@@ -72,9 +96,9 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
   const handleBack = () => {
     if (currentQuestionIdx > 0) {
       setCurrentQuestionIdx(prev => prev - 1);
-    } else if (currentSectionIdx > 0 && sections[currentSectionIdx - 1]) {
+    } else if (currentSectionIdx > 0 && activeSections[currentSectionIdx - 1]) {
       setCurrentSectionIdx(prev => prev - 1);
-      setCurrentQuestionIdx(sections[currentSectionIdx - 1].questions.length - 1);
+      setCurrentQuestionIdx(activeSections[currentSectionIdx - 1].questions.length - 1);
     }
   };
 
@@ -306,8 +330,8 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
 
                       <PrimaryButton
                         onClick={handleNext}
-                        label={currentSectionIdx === sections.length - 1 && currentQuestionIdx === currentSection.questions.length - 1 ? '完成' : '下一题'}
-                        icon={currentSectionIdx === sections.length - 1 && currentQuestionIdx === currentSection.questions.length - 1 ? 'check' : 'chevron_right'}
+                        label={currentSectionIdx === activeSections.length - 1 && currentQuestionIdx === currentSection.questions.length - 1 ? '完成' : '下一题'}
+                        icon={currentSectionIdx === activeSections.length - 1 && currentQuestionIdx === currentSection.questions.length - 1 ? 'check' : 'chevron_right'}
                         trailingIcon={true}
                         className="h-12 px-8"
                         noCollapse
