@@ -1,9 +1,8 @@
 import { http, HttpResponse } from 'msw';
+import { mockAssessmentsDb } from './db';
 
 export const handlers = [
-  // Add your API mocks/handlers here.
-  // Example:
-  // http.get('/api/students', () => {
-  //   return HttpResponse.json([{ id: 1, name: 'Daniil Petrov' }]);
-  // })
+  http.get('/api/assessments', () => {
+    return HttpResponse.json(mockAssessmentsDb);
+  })
 ];

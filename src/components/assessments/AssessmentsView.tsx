@@ -2,7 +2,7 @@ import * as React from 'react';
 import { AssessmentCard } from './AssessmentCard';
 import { SegmentedButton } from '../common/Buttons';
 import { AssessmentDialogProvider, useAssessmentDialog } from '../../contexts/AssessmentDialogContext';
-import { MENTAL_HEALTH_ASSESSMENT, SLEEP_ASSESSMENT, DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT, SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT, SELF_REGULATION_PERSONALITY_ASSESSMENT, FAMILY_BACKGROUND_EARLY_EXPERIENCES_ASSESSMENT, CLINICAL_SCREENING_NEURODIVERGENCE_ASSESSMENT, PERSONALITY_COPING_OUTLOOK_ASSESSMENT, AssessmentSection } from './AssessmentData';
+import { AssessmentSection } from './AssessmentData';
 
 interface Assessment {
   id: string;
@@ -26,6 +26,8 @@ let persistentFilter = '全部';
 
 function AssessmentsContent() {
   const [selectedFilter, setSelectedFilter] = React.useState(persistentFilter);
+  const [assessments, setAssessments] = React.useState<Assessment[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const { openAssessment } = useAssessmentDialog();
 
   const handleFilterChange = (filter: string) => {
@@ -33,164 +35,31 @@ function AssessmentsContent() {
     setSelectedFilter(filter);
   };
 
-  const assessments: Assessment[] = [
-    {
-      id: '1',
-      title: '年度身心健康状况评估',
-      subtitle: '2025-2026 学年学生心理健康普查',
-      sections: MENTAL_HEALTH_ASSESSMENT,
-      assignedBy: {
-        name: '莎拉·詹金斯',
-        initial: 'S',
-        bgColor: 'var(--md-sys-color-primary-container)',
-        textColor: 'var(--md-sys-color-on-primary-container)'
-      },
-      type: '测试',
-      completionPercentage: 0,
-      duration: '15 分钟',
-      status: 'In progress'
-    },
-    {
-      id: 'sleep',
-      title: '睡眠状况评估',
-      subtitle: '最近1个月的睡眠与失眠状况调查',
-      sections: SLEEP_ASSESSMENT,
-      assignedBy: {
-        name: '莎拉·詹金斯',
-        initial: 'S',
-        bgColor: 'var(--md-sys-color-primary-container)',
-        textColor: 'var(--md-sys-color-on-primary-container)'
-      },
-      type: '测试',
-      completionPercentage: 0,
-      duration: '10 分钟',
-      status: 'In progress'
-    },
-    {
-      id: 'digital_habits',
-      title: '数字化习惯与日常行为评估',
-      subtitle: '数字化习惯与日常行为状况综合评估',
-      sections: DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT,
-      assignedBy: {
-        name: '迈克尔·陈',
-        initial: 'M',
-        bgColor: 'var(--md-sys-color-tertiary-container)',
-        textColor: 'var(--md-sys-color-on-tertiary-container)'
-      },
-      type: '测试',
-      completionPercentage: 0,
-      duration: '20 分钟',
-      status: 'In progress'
-    },
-    {
-      id: 'social_support',
-      title: '社交环境与支持系统评估',
-      subtitle: '人际关系与社会支持状况综合评估',
-      sections: SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT,
-      assignedBy: {
-        name: '艾米丽·沃森博士',
-        initial: 'E',
-        bgColor: 'var(--md-sys-color-secondary-container)',
-        textColor: 'var(--md-sys-color-on-secondary-container)'
-      },
-      type: '测试',
-      completionPercentage: 0,
-      duration: '15 分钟',
-      status: 'In progress'
-    },
-    {
-      id: 'self_regulation',
-      title: '自我调节与人格特质评估',
-      subtitle: '自控力、坚毅性及情绪调节能力评估',
-      sections: SELF_REGULATION_PERSONALITY_ASSESSMENT,
-      assignedBy: {
-        name: '迈克尔·陈',
-        initial: 'M',
-        bgColor: 'var(--md-sys-color-tertiary-container)',
-        textColor: 'var(--md-sys-color-on-tertiary-container)'
-      },
-      type: '测试',
-      completionPercentage: 0,
-      duration: '15 分钟',
-      status: 'In progress'
-    },
-    {
-      id: 'family_experiences',
-      title: '家庭背景与早期经历评估',
-      subtitle: '童年环境、家庭地位及早期成长经历综合评估',
-      sections: FAMILY_BACKGROUND_EARLY_EXPERIENCES_ASSESSMENT,
-      assignedBy: {
-        name: '艾米丽·沃森博士',
-        initial: 'E',
-        bgColor: 'var(--md-sys-color-secondary-container)',
-        textColor: 'var(--md-sys-color-on-secondary-container)'
-      },
-      type: '测试',
-      completionPercentage: 0,
-      duration: '20 分钟',
-      status: 'In progress'
-    },
-    {
-      id: 'clinical_screening',
-      title: '临床筛查与神经多样性评估',
-      subtitle: '自伤风险、思维模式、注意力ADHD及执行功能障碍筛查',
-      sections: CLINICAL_SCREENING_NEURODIVERGENCE_ASSESSMENT,
-      assignedBy: {
-        name: '迈克尔·陈',
-        initial: 'M',
-        bgColor: 'var(--md-sys-color-tertiary-container)',
-        textColor: 'var(--md-sys-color-on-tertiary-container)'
-      },
-      type: '测试',
-      completionPercentage: 0,
-      duration: '25 分钟',
-      status: 'In progress'
-    },
-    {
-      id: 'personality_coping',
-      title: '人格特质、应对方式与生活展望评估',
-      subtitle: '大五人格特质、情绪宣泄、压力应对及幸福感展望',
-      sections: PERSONALITY_COPING_OUTLOOK_ASSESSMENT,
-      assignedBy: {
-        name: '艾米丽·沃森博士',
-        initial: 'E',
-        bgColor: 'var(--md-sys-color-secondary-container)',
-        textColor: 'var(--md-sys-color-on-secondary-container)'
-      },
-      type: '测试',
-      completionPercentage: 0,
-      duration: '20 分钟',
-      status: 'In progress'
-    },
-    {
-      id: '2',
-      title: '心血管风险自我评估',
-      assignedBy: {
-        name: '迈克尔·陈',
-        initial: 'M',
-        bgColor: 'var(--md-sys-color-tertiary-container)',
-        textColor: 'var(--md-sys-color-on-tertiary-container)'
-      },
-      type: '测试',
-      completionPercentage: 45,
-      duration: '15 分钟',
-      status: 'In progress'
-    },
-    {
-      id: '3',
-      title: '心理健康基线调查',
-      assignedBy: {
-        name: '艾米丽·沃森博士',
-        initial: 'E',
-        bgColor: 'var(--md-sys-color-secondary-container)',
-        textColor: 'var(--md-sys-color-on-secondary-container)'
-      },
-      type: '调查',
-      completionPercentage: 100,
-      duration: '10 分钟',
-      status: 'Completed'
-    }
-  ];
+  React.useEffect(() => {
+    let active = true;
+    fetch('/api/assessments')
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (active) {
+          setAssessments(data);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch assessments:', err);
+        if (active) {
+          setLoading(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const filteredAssessments = assessments.filter(a =>
     selectedFilter === '全部' || (selectedFilter === '进行中' && a.status === 'In progress') || (selectedFilter === '已完成' && a.status === 'Completed')
@@ -211,7 +80,13 @@ function AssessmentsContent() {
 
       {/* Assessments List */}
       <div className="max-w-3xl w-full flex flex-col mx-auto mt-2 gap-4 px-6 pb-20">
-        {filteredAssessments.length > 0 ? (
+        {loading ? (
+          <div className="py-12 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)]">
+            {/* @ts-ignore */}
+            <md-linear-progress indeterminate className="w-48 mb-4"></md-linear-progress>
+            <span className="text-[14px] opacity-75">正在获取评估列表...</span>
+          </div>
+        ) : filteredAssessments.length > 0 ? (
           filteredAssessments.map((assessment) => (
             <AssessmentCard
               key={assessment.id}
