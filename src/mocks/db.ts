@@ -18,8 +18,6 @@ export interface Assessment {
   assignedBy: {
     name: string;
     initial: string;
-    bgColor?: string;
-    textColor?: string;
   };
   type: string;
   completionPercentage: number;
@@ -35,9 +33,7 @@ export const mockAssessmentsDb: Assessment[] = [
     sections: MENTAL_HEALTH_ASSESSMENT,
     assignedBy: {
       name: '莎拉·詹金斯',
-      initial: 'S',
-      bgColor: 'var(--md-sys-color-primary-container)',
-      textColor: 'var(--md-sys-color-on-primary-container)'
+      initial: 'S'
     },
     type: '测试',
     completionPercentage: 0,
@@ -51,9 +47,7 @@ export const mockAssessmentsDb: Assessment[] = [
     sections: SLEEP_ASSESSMENT,
     assignedBy: {
       name: '莎拉·詹金斯',
-      initial: 'S',
-      bgColor: 'var(--md-sys-color-primary-container)',
-      textColor: 'var(--md-sys-color-on-primary-container)'
+      initial: 'S'
     },
     type: '测试',
     completionPercentage: 0,
@@ -67,9 +61,7 @@ export const mockAssessmentsDb: Assessment[] = [
     sections: DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT,
     assignedBy: {
       name: '迈克尔·陈',
-      initial: 'M',
-      bgColor: 'var(--md-sys-color-tertiary-container)',
-      textColor: 'var(--md-sys-color-on-tertiary-container)'
+      initial: 'M'
     },
     type: '测试',
     completionPercentage: 0,
@@ -83,9 +75,7 @@ export const mockAssessmentsDb: Assessment[] = [
     sections: SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT,
     assignedBy: {
       name: '艾米丽·沃森博士',
-      initial: 'E',
-      bgColor: 'var(--md-sys-color-secondary-container)',
-      textColor: 'var(--md-sys-color-on-secondary-container)'
+      initial: 'E'
     },
     type: '测试',
     completionPercentage: 0,
@@ -99,9 +89,7 @@ export const mockAssessmentsDb: Assessment[] = [
     sections: SELF_REGULATION_PERSONALITY_ASSESSMENT,
     assignedBy: {
       name: '迈克尔·陈',
-      initial: 'M',
-      bgColor: 'var(--md-sys-color-tertiary-container)',
-      textColor: 'var(--md-sys-color-on-tertiary-container)'
+      initial: 'M'
     },
     type: '测试',
     completionPercentage: 0,
@@ -115,9 +103,7 @@ export const mockAssessmentsDb: Assessment[] = [
     sections: FAMILY_BACKGROUND_EARLY_EXPERIENCES_ASSESSMENT,
     assignedBy: {
       name: '艾米丽·沃森博士',
-      initial: 'E',
-      bgColor: 'var(--md-sys-color-secondary-container)',
-      textColor: 'var(--md-sys-color-on-secondary-container)'
+      initial: 'E'
     },
     type: '测试',
     completionPercentage: 0,
@@ -131,9 +117,7 @@ export const mockAssessmentsDb: Assessment[] = [
     sections: CLINICAL_SCREENING_NEURODIVERGENCE_ASSESSMENT,
     assignedBy: {
       name: '迈克尔·陈',
-      initial: 'M',
-      bgColor: 'var(--md-sys-color-tertiary-container)',
-      textColor: 'var(--md-sys-color-on-tertiary-container)'
+      initial: 'M'
     },
     type: '测试',
     completionPercentage: 0,
@@ -147,9 +131,7 @@ export const mockAssessmentsDb: Assessment[] = [
     sections: PERSONALITY_COPING_OUTLOOK_ASSESSMENT,
     assignedBy: {
       name: '艾米丽·沃森博士',
-      initial: 'E',
-      bgColor: 'var(--md-sys-color-secondary-container)',
-      textColor: 'var(--md-sys-color-on-secondary-container)'
+      initial: 'E'
     },
     type: '测试',
     completionPercentage: 0,
@@ -161,9 +143,7 @@ export const mockAssessmentsDb: Assessment[] = [
     title: '心血管风险自我评估',
     assignedBy: {
       name: '迈克尔·陈',
-      initial: 'M',
-      bgColor: 'var(--md-sys-color-tertiary-container)',
-      textColor: 'var(--md-sys-color-on-tertiary-container)'
+      initial: 'M'
     },
     type: '测试',
     completionPercentage: 45,
@@ -175,9 +155,7 @@ export const mockAssessmentsDb: Assessment[] = [
     title: '心理健康基线调查',
     assignedBy: {
       name: '艾米丽·沃森博士',
-      initial: 'E',
-      bgColor: 'var(--md-sys-color-secondary-container)',
-      textColor: 'var(--md-sys-color-on-secondary-container)'
+      initial: 'E'
     },
     type: '调查',
     completionPercentage: 100,

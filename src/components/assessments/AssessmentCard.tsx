@@ -6,8 +6,6 @@ interface AssessmentCardProps {
   assignedBy: {
     name: string;
     initial: string;
-    bgColor?: string;
-    textColor?: string;
   };
   type: string;
   completionPercentage: number;
@@ -43,8 +41,8 @@ export function AssessmentCard({
         <div
           className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium"
           style={{
-            backgroundColor: assignedBy.bgColor || 'var(--md-sys-color-primary-container)',
-            color: assignedBy.textColor || 'var(--md-sys-color-on-primary-container)'
+            backgroundColor: 'var(--md-sys-color-tertiary-container)',
+            color: 'var(--md-sys-color-on-tertiary-container)'
           }}
         >
           {assignedBy.initial}

@@ -12,8 +12,6 @@ interface Assessment {
   assignedBy: {
     name: string;
     initial: string;
-    bgColor?: string;
-    textColor?: string;
   };
   type: string;
   completionPercentage: number;
