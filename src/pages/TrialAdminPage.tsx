@@ -19,6 +19,14 @@ import { TertiaryFab } from '../components/common/Buttons';
 
 import { TRIAL_ADMIN_METRICS_CONFIG } from '../config/dashboardConfig';
 
+const TRIAL_ADMIN_TAB_TITLES: Record<string, string> = {
+  'Dashboard': '控制面板',
+  'Notifications': '通知中心',
+  'Staff': '人员管理',
+  'Referral Management': '转诊管理',
+  'Security & Consent': '安全与知情同意'
+};
+
 export function TrialAdminPage() {
   const [activePage, setActivePage] = React.useState('Dashboard');
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
@@ -190,14 +198,7 @@ export function TrialAdminPage() {
               )}
             </DetailsPanel>
           }>
-          <CanvasHeader title={
-            activePage === 'Dashboard' ? '控制面板' :
-              activePage === 'Notifications' ? '通知中心' :
-                activePage === 'Staff' ? '人员管理' :
-                  activePage === 'Referral Management' ? '转诊管理' :
-                    activePage === 'Security & Consent' ? '安全与知情同意' :
-                      activePage
-          } />
+          <CanvasHeader title={TRIAL_ADMIN_TAB_TITLES[activePage] || activePage} />
 
           {activePage === 'Notifications' ? (
             <NotificationsView />

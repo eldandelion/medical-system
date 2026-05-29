@@ -16,6 +16,14 @@ import { STUDENT_METRICS_CONFIG } from '../config/dashboardConfig';
 
 export type StudentTab = 'Dashboard' | 'Notifications' | 'Assessments' | 'My Records' | 'Security & Consent';
 
+const STUDENT_TAB_TITLES: Record<StudentTab, string> = {
+  'Dashboard': '控制面板',
+  'Notifications': '通知中心',
+  'Assessments': '自我测评',
+  'My Records': '我的记录',
+  'Security & Consent': '安全与知情同意'
+};
+
 export function StudentPage() {
   const [activePage, setActivePage] = React.useState<StudentTab>('Dashboard');
   const [selectedRecord, setSelectedRecord] = React.useState<any>(null);
@@ -94,14 +102,7 @@ export function StudentPage() {
               <RecordDetailsView record={selectedRecord} />
             </DetailsPanel>
           }>
-          <CanvasHeader title={
-            activePage === 'Dashboard' ? '控制面板' :
-              activePage === 'Notifications' ? '通知中心' :
-                activePage === 'Assessments' ? '自我测评' :
-                  activePage === 'My Records' ? '我的记录' :
-                    activePage === 'Security & Consent' ? '安全与知情同意' :
-                      activePage
-          } />
+          <CanvasHeader title={STUDENT_TAB_TITLES[activePage] || activePage} />
 
           {activePage === 'Notifications' ? (
             <NotificationsView />
