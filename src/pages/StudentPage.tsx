@@ -7,7 +7,7 @@ import { CanvasHeader } from '../components/layout/CanvasHeader';
 import { NotificationsView } from '../components/notifications/NotificationsView';
 import { ProfileView } from '../components/profile/ProfileView';
 import { AssessmentsView } from '../components/assessments/AssessmentsView';
-import { RecordsView } from '../components/records/RecordsView';
+import { RecordsView, getRecordIcon } from '../components/records/RecordsView';
 import { DashboardView } from '../components/dashboard/DashboardView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
@@ -147,7 +147,7 @@ export function StudentPage() {
               isOpen={!!selectedRecord}
               onClose={() => setSelectedRecord(null)}
               title=""
-              icon={selectedRecord?.icon || 'description'}
+              icon={selectedRecord ? getRecordIcon(selectedRecord.type) : 'description'}
             >
               <RecordDetailsView record={selectedRecord} />
             </DetailsPanel>

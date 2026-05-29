@@ -2,15 +2,24 @@ import * as React from 'react';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { RecordHeader } from './RecordHeader';
 
-interface PsychiatricRecord {
+export type PsychiatricRecordType = '初诊转诊' | '随访';
+
+export interface PsychiatricRecord {
   id: string;
-  type: string;
-  icon: string;
-  iconColor: string;
+  type: PsychiatricRecordType;
   reason: string;
   date: string;
   status: 'Pending' | 'Closed';
 }
+
+export const getRecordIcon = (type: PsychiatricRecordType): string => {
+  switch (type) {
+    case '初诊转诊':
+      return 'clinical_notes';
+    case '随访':
+      return 'forum';
+  }
+};
 
 interface RecordsViewProps {
   onRecordSelect?: (record: PsychiatricRecord) => void;
@@ -55,11 +64,11 @@ export function RecordsView({ onRecordSelect, selectedRecordId }: RecordsViewPro
           <span
             className="material-symbols-outlined text-[18px] shrink-0"
             style={{ 
-              color: isSelected ? 'inherit' : item.iconColor, 
+              color: isSelected ? 'inherit' : 'var(--md-sys-color-on-surface-variant)', 
               fontVariationSettings: isSelected ? "'FILL' 1" : "'FILL' 0" 
             }}
           >
-            {item.icon}
+            {getRecordIcon(item.type)}
           </span>
           <span className="text-[14px] font-normal truncate">{item.type}</span>
         </div>

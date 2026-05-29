@@ -8,6 +8,7 @@ import {
   CLINICAL_SCREENING_NEURODIVERGENCE_ASSESSMENT,
   PERSONALITY_COPING_OUTLOOK_ASSESSMENT
 } from '../components/assessments/AssessmentData';
+import { PsychiatricRecordType } from '../components/records/RecordsView';
 
 export interface Assessment {
   id: string;
@@ -187,9 +188,7 @@ export const mockAssessmentsDb: Assessment[] = [
 
 export interface PsychiatricRecord {
   id: string;
-  type: string;
-  icon: string;
-  iconColor: string;
+  type: PsychiatricRecordType;
   reason: string;
   date: string;
   status: 'Pending' | 'Closed';
@@ -199,8 +198,6 @@ export const mockPsychiatricRecordsDb: PsychiatricRecord[] = [
   {
     id: '1',
     type: '初诊转诊',
-    icon: 'clinical_notes',
-    iconColor: 'var(--md-sys-color-on-surface-variant)',
     reason: '焦虑与惊恐发作评估',
     date: '2026年4月12日',
     status: 'Closed'
@@ -208,8 +205,6 @@ export const mockPsychiatricRecordsDb: PsychiatricRecord[] = [
   {
     id: '2',
     type: '随访',
-    icon: 'forum',
-    iconColor: 'var(--md-sys-color-on-surface-variant)',
     reason: '药物管理（SSRI 调整）',
     date: '2026年4月20日',
     status: 'Pending'
@@ -217,8 +212,6 @@ export const mockPsychiatricRecordsDb: PsychiatricRecord[] = [
   {
     id: '3',
     type: '初诊转诊',
-    icon: 'clinical_notes',
-    iconColor: 'var(--md-sys-color-on-surface-variant)',
     reason: 'ADHD 评估与诊断访谈',
     date: '2026年5月05日',
     status: 'Pending'
@@ -226,8 +219,6 @@ export const mockPsychiatricRecordsDb: PsychiatricRecord[] = [
   {
     id: '4',
     type: '随访',
-    icon: 'forum',
-    iconColor: 'var(--md-sys-color-on-surface-variant)',
     reason: '认知行为疗法（CBT）第 4 次会谈',
     date: '2026年3月15日',
     status: 'Closed'
@@ -235,8 +226,6 @@ export const mockPsychiatricRecordsDb: PsychiatricRecord[] = [
   {
     id: '5',
     type: '随访',
-    icon: 'forum',
-    iconColor: 'var(--md-sys-color-on-surface-variant)',
     reason: '睡眠障碍与失眠复查',
     date: '2026年3月01日',
     status: 'Closed'
