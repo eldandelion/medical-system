@@ -10,7 +10,7 @@ import { MyStudentsView } from '../components/students/MyStudentsView';
 import { ReferralManagementView } from '../components/records/ReferralManagementView';
 import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
-import { ProfileSummaryCard, ActionMetricWidget, InteractiveStatusList } from '../components/dashboard/DashboardComponents';
+import { DashboardView } from '../components/dashboard/DashboardView';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { StudentDetailsView } from '../components/students/StudentDetailsView';
 import { ReferralDetailsView } from '../components/records/ReferralDetailsView';
@@ -210,65 +210,51 @@ export function HeadCouncillorPage() {
           ) : activePage === 'Security & Consent' ? (
             <SecurityConsentView />
           ) : activePage === 'Dashboard' ? (
-            <div className="w-full h-full p-6 bg-[var(--md-sys-color-surface)] overflow-y-auto">
-              <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 pb-12">
-                {/* Top Section */}
-                <div className="md:col-span-4 flex flex-col h-full">
-                  <ProfileSummaryCard
-                    avatarText="H"
-                    title="主任辅导员"
-                    subtitle="行政管理"
-                    metadata={[
-                      { icon: "badge", value: "HC-1001" },
-                      { icon: "account_balance", value: "咨询中心" }
-                    ]}
-                    onClick={() => setShowProfileDetails(true)}
-                  />
-                </div>
-                <div className="md:col-span-4 flex flex-col h-full">
-                  <ActionMetricWidget
-                    icon="group"
-                    numericValue={124}
-                    label="学生总数"
-                    containerColorClass="bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]"
-                    onClick={() => handlePageChange('Students')}
-                  />
-                </div>
-                <div className="md:col-span-4 flex flex-col h-full">
-                  <ActionMetricWidget
-                    icon="assignment_late"
-                    numericValue={12}
-                    label="待处理转诊"
-                    containerColorClass="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]"
-                    onClick={() => handlePageChange('Referral Management')}
-                  />
-                </div>
-
-                {/* Bottom Section */}
-                <div className="md:col-span-12 flex flex-col gap-4 mt-4">
-                  <h3 className="text-[16px] leading-[24px] font-medium text-[var(--md-sys-color-on-surface)] tracking-[0.15px]">全局活动</h3>
-                  <InteractiveStatusList
-                    items={[
-                      {
-                        id: '1',
-                        title: '新分配学生：达尼尔·彼得罗夫',
-                        timestamp: '2小时前',
-                        statusText: '高风险标识',
-                        statusChipColor: 'error-container'
-                      },
-                      {
-                        id: '2',
-                        title: '转诊更新：爱丽丝·史密斯',
-                        timestamp: '昨天',
-                        statusText: '审核中',
-                        statusChipColor: 'secondary-container'
-                      }
-                    ]}
-                    onRowClick={() => { }}
-                  />
-                </div>
-              </div>
-            </div>
+            <DashboardView
+              profileSummary={{
+                avatarText: "H",
+                title: "主任辅导员",
+                subtitle: "行政管理",
+                metadata: [
+                  { icon: "badge", value: "HC-1001" },
+                  { icon: "account_balance", value: "咨询中心" }
+                ],
+                onClick: () => setShowProfileDetails(true)
+              }}
+              actionMetrics={[
+                {
+                  icon: "group",
+                  numericValue: 124,
+                  label: "学生总数",
+                  containerColorClass: "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]",
+                  onClick: () => handlePageChange('Students')
+                },
+                {
+                  icon: "assignment_late",
+                  numericValue: 12,
+                  label: "待处理转诊",
+                  containerColorClass: "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]",
+                  onClick: () => handlePageChange('Referral Management')
+                }
+              ]}
+              activityTitle="全局活动"
+              activities={[
+                {
+                  id: '1',
+                  title: '新分配学生：达尼尔·彼得罗夫',
+                  timestamp: '2小时前',
+                  statusText: '高风险标识',
+                  statusChipColor: 'error-container'
+                },
+                {
+                  id: '2',
+                  title: '转诊更新：爱丽丝·史密斯',
+                  timestamp: '昨天',
+                  statusText: '审核中',
+                  statusChipColor: 'secondary-container'
+                }
+              ]}
+            />
           ) : (
             <div className="flex-1 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
               请从侧边栏选择一项

@@ -8,7 +8,7 @@ import { NotificationsView } from '../components/notifications/NotificationsView
 import { ProfileView } from '../components/profile/ProfileView';
 import { AssessmentsView } from '../components/assessments/AssessmentsView';
 import { RecordsView } from '../components/records/RecordsView';
-import { ProfileSummaryCard, ActionMetricWidget, InteractiveStatusList } from '../components/dashboard/DashboardComponents';
+import { DashboardView } from '../components/dashboard/DashboardView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { RecordDetailsView } from '../components/records/RecordDetailsView';
@@ -83,72 +83,58 @@ export function StudentPage() {
           ) : activePage === 'My Records' ? (
             <RecordsView onRecordSelect={setSelectedRecord} selectedRecordId={selectedRecord?.id} />
           ) : activePage === 'Dashboard' ? (
-            <div className="w-full h-full p-6 bg-[var(--md-sys-color-surface)] overflow-y-auto">
-              <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 pb-12">
-                {/* Top Section */}
-                <div className="md:col-span-4 flex flex-col h-full">
-                  <ProfileSummaryCard
-                    avatarText="D"
-                    title="Daniil Petrov"
-                    subtitle="中南大学学生"
-                    metadata={[
-                      { icon: "badge", value: "987654321" },
-                      { icon: "school", value: "计算机科学与工程学院" }
-                    ]}
-                    onClick={() => setShowProfileDetails(true)}
-                  />
-                </div>
-                <div className="md:col-span-4 flex flex-col h-full">
-                  <ActionMetricWidget
-                    icon="assignment_late"
-                    numericValue={2}
-                    label="待完成测评"
-                    containerColorClass="bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]"
-                    onClick={() => handlePageChange('Assessments')}
-                  />
-                </div>
-                <div className="md:col-span-4 flex flex-col h-full">
-                  <ActionMetricWidget
-                    icon="notifications"
-                    numericValue={3}
-                    label="未读通知"
-                    containerColorClass="bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]"
-                    onClick={() => handlePageChange('Notifications')}
-                  />
-                </div>
-
-                {/* Bottom Section */}
-                <div className="md:col-span-12 flex flex-col gap-4 mt-4">
-                  <h3 className="text-[16px] leading-[24px] font-medium text-[var(--md-sys-color-on-surface)] tracking-[0.15px]">最近记录</h3>
-                  <InteractiveStatusList
-                    items={[
-                      {
-                        id: '1',
-                        title: '完成期中自我测评',
-                        timestamp: '2天后到期',
-                        statusText: '需处理',
-                        statusChipColor: 'error-container'
-                      },
-                      {
-                        id: '2',
-                        title: '查看反馈摘要：算法',
-                        timestamp: '昨天发布',
-                        statusText: '未读',
-                        statusChipColor: 'secondary-container'
-                      },
-                      {
-                        id: '3',
-                        title: '更新年度知情同意书',
-                        timestamp: '下学期必需',
-                        statusText: '待处理',
-                        statusChipColor: 'surface-variant'
-                      }
-                    ]}
-                    onRowClick={() => { }}
-                  />
-                </div>
-              </div>
-            </div>
+            <DashboardView
+              profileSummary={{
+                avatarText: "D",
+                title: "Daniil Petrov",
+                subtitle: "中南大学学生",
+                metadata: [
+                  { icon: "badge", value: "987654321" },
+                  { icon: "school", value: "计算机科学与工程学院" }
+                ],
+                onClick: () => setShowProfileDetails(true)
+              }}
+              actionMetrics={[
+                {
+                  icon: "assignment_late",
+                  numericValue: 2,
+                  label: "待完成测评",
+                  containerColorClass: "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]",
+                  onClick: () => handlePageChange('Assessments')
+                },
+                {
+                  icon: "notifications",
+                  numericValue: 3,
+                  label: "未读通知",
+                  containerColorClass: "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]",
+                  onClick: () => handlePageChange('Notifications')
+                }
+              ]}
+              activityTitle="最近记录"
+              activities={[
+                {
+                  id: '1',
+                  title: '完成期中自我测评',
+                  timestamp: '2天后到期',
+                  statusText: '需处理',
+                  statusChipColor: 'error-container'
+                },
+                {
+                  id: '2',
+                  title: '查看反馈摘要：算法',
+                  timestamp: '昨天发布',
+                  statusText: '未读',
+                  statusChipColor: 'secondary-container'
+                },
+                {
+                  id: '3',
+                  title: '更新年度知情同意书',
+                  timestamp: '下学期必需',
+                  statusText: '待处理',
+                  statusChipColor: 'surface-variant'
+                }
+              ]}
+            />
           ) : (
             <div className="flex-1 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
               请从侧边栏选择一项

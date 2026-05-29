@@ -8,7 +8,7 @@ import { NotificationsView } from '../components/notifications/NotificationsView
 import { ReferralManagementView } from '../components/records/ReferralManagementView';
 import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
-import { ProfileSummaryCard, ActionMetricWidget, InteractiveStatusList } from '../components/dashboard/DashboardComponents';
+import { DashboardView } from '../components/dashboard/DashboardView';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { ReferralDetailsView } from '../components/records/ReferralDetailsView';
 import { StaffManagementView } from '../components/staff/StaffManagementView';
@@ -180,65 +180,51 @@ export function TrialAdminPage() {
           ) : activePage === 'Security & Consent' ? (
             <SecurityConsentView />
           ) : activePage === 'Dashboard' ? (
-            <div className="w-full h-full p-6 bg-[var(--md-sys-color-surface)] overflow-y-auto">
-              <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 pb-12">
-                {/* Top Section */}
-                <div className="md:col-span-4 flex flex-col h-full">
-                  <ProfileSummaryCard
-                    avatarText="T"
-                    title="初试管理员"
-                    subtitle="试验权限"
-                    metadata={[
-                      { icon: "badge", value: "TA-9009" },
-                      { icon: "verified_user", value: "限制访问" }
-                    ]}
-                    onClick={() => setShowProfileDetails(true)}
-                  />
-                </div>
-                <div className="md:col-span-4 flex flex-col h-full">
-                  <ActionMetricWidget
-                    icon="engineering"
-                    numericValue={42}
-                    label="人员总数"
-                    containerColorClass="bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]"
-                    onClick={() => handlePageChange('Staff')}
-                  />
-                </div>
-                <div className="md:col-span-4 flex flex-col h-full">
-                  <ActionMetricWidget
-                    icon="assignment_late"
-                    numericValue={8}
-                    label="待审核转诊"
-                    containerColorClass="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]"
-                    onClick={() => handlePageChange('Referral Management')}
-                  />
-                </div>
-
-                {/* Bottom Section */}
-                <div className="md:col-span-12 flex flex-col gap-4 mt-4">
-                  <h3 className="text-[16px] leading-[24px] font-medium text-[var(--md-sys-color-on-surface)] tracking-[0.15px]">全局活动</h3>
-                  <InteractiveStatusList
-                    items={[
-                      {
-                        id: '1',
-                        title: '新转诊申请：转诊中心',
-                        timestamp: '1小时前',
-                        statusText: '待审核',
-                        statusChipColor: 'secondary-container'
-                      },
-                      {
-                        id: '2',
-                        title: '系统维护通知',
-                        timestamp: '昨天',
-                        statusText: '已发布',
-                        statusChipColor: 'tertiary-container'
-                      }
-                    ]}
-                    onRowClick={() => { }}
-                  />
-                </div>
-              </div>
-            </div>
+            <DashboardView
+              profileSummary={{
+                avatarText: "T",
+                title: "初试管理员",
+                subtitle: "试验权限",
+                metadata: [
+                  { icon: "badge", value: "TA-9009" },
+                  { icon: "verified_user", value: "限制访问" }
+                ],
+                onClick: () => setShowProfileDetails(true)
+              }}
+              actionMetrics={[
+                {
+                  icon: "engineering",
+                  numericValue: 42,
+                  label: "人员总数",
+                  containerColorClass: "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]",
+                  onClick: () => handlePageChange('Staff')
+                },
+                {
+                  icon: "assignment_late",
+                  numericValue: 8,
+                  label: "待审核转诊",
+                  containerColorClass: "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]",
+                  onClick: () => handlePageChange('Referral Management')
+                }
+              ]}
+              activityTitle="全局活动"
+              activities={[
+                {
+                  id: '1',
+                  title: '新转诊申请：转诊中心',
+                  timestamp: '1小时前',
+                  statusText: '待审核',
+                  statusChipColor: 'secondary-container'
+                },
+                {
+                  id: '2',
+                  title: '系统维护通知',
+                  timestamp: '昨天',
+                  statusText: '已发布',
+                  statusChipColor: 'tertiary-container'
+                }
+              ]}
+            />
           ) : (
             <div className="flex-1 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
               请从侧边栏选择一项
