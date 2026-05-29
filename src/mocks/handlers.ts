@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import { mockAssessmentsDb, mockPsychiatricRecordsDb } from './db';
+import { mockAssessmentsDb, mockPsychiatricRecordsDb, mockDashboardDb } from './db';
 
 export const handlers = [
   http.get('/api/assessments', () => {
@@ -26,5 +26,14 @@ export const handlers = [
       return new HttpResponse(null, { status: 404 });
     }
     return HttpResponse.json(record);
+  }),
+
+  http.get('/api/dashboard/:role', ({ params }) => {
+    const { role } = params;
+    const dashboardData = mockDashboardDb[role as string];
+    if (!dashboardData) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    return HttpResponse.json(dashboardData);
   })
 ];

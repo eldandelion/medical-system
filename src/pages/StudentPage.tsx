@@ -12,6 +12,7 @@ import { DashboardView } from '../components/dashboard/DashboardView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { RecordDetailsView } from '../components/records/RecordDetailsView';
+import { STUDENT_METRICS_CONFIG } from '../config/dashboardConfig';
 
 export type StudentTab = 'Dashboard' | 'Notifications' | 'Assessments' | 'My Records' | 'Security & Consent';
 
@@ -19,6 +20,8 @@ export function StudentPage() {
   const [activePage, setActivePage] = React.useState<StudentTab>('Dashboard');
   const [selectedRecord, setSelectedRecord] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
+  const [dashboardData, setDashboardData] = React.useState<any>(null);
+  const [dashboardLoading, setDashboardLoading] = React.useState(true);
 
   React.useEffect(() => {
     (window as any).dispatchPageChange = (page: string) => {
@@ -27,6 +30,30 @@ export function StudentPage() {
       }
     };
     return () => void delete (window as any).dispatchPageChange;
+  }, []);
+
+  React.useEffect(() => {
+    let active = true;
+    fetch('/api/dashboard/student')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch dashboard');
+        return res.json();
+      })
+      .then((data) => {
+        if (active) {
+          setDashboardData(data);
+          setDashboardLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load student dashboard:', err);
+        if (active) {
+          setDashboardLoading(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   // Handle page change to clear selection
@@ -83,58 +110,35 @@ export function StudentPage() {
           ) : activePage === 'My Records' ? (
             <RecordsView onRecordSelect={setSelectedRecord} selectedRecordId={selectedRecord?.id} />
           ) : activePage === 'Dashboard' ? (
-            <DashboardView
-              profileSummary={{
-                avatarText: "D",
-                title: "Daniil Petrov",
-                subtitle: "中南大学学生",
-                metadata: [
-                  { icon: "badge", value: "987654321" },
-                  { icon: "school", value: "计算机科学与工程学院" }
-                ],
-                onClick: () => setShowProfileDetails(true)
-              }}
-              actionMetrics={[
-                {
-                  icon: "assignment_late",
-                  numericValue: 2,
-                  label: "待完成测评",
-                  containerColorClass: "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]",
-                  onClick: () => handlePageChange('Assessments')
-                },
-                {
-                  icon: "notifications",
-                  numericValue: 3,
-                  label: "未读通知",
-                  containerColorClass: "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]",
-                  onClick: () => handlePageChange('Notifications')
-                }
-              ]}
-              activityTitle="最近记录"
-              activities={[
-                {
-                  id: '1',
-                  title: '完成期中自我测评',
-                  timestamp: '2天后到期',
-                  statusText: '需处理',
-                  statusChipColor: 'error-container'
-                },
-                {
-                  id: '2',
-                  title: '查看反馈摘要：算法',
-                  timestamp: '昨天发布',
-                  statusText: '未读',
-                  statusChipColor: 'secondary-container'
-                },
-                {
-                  id: '3',
-                  title: '更新年度知情同意书',
-                  timestamp: '下学期必需',
-                  statusText: '待处理',
-                  statusChipColor: 'surface-variant'
-                }
-              ]}
-            />
+            dashboardLoading ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
+                {/* @ts-ignore */}
+                <md-linear-progress indeterminate className="w-full max-w-xs mb-4"></md-linear-progress>
+                <span className="text-[14px] opacity-75">正在加载控制面板...</span>
+              </div>
+            ) : dashboardData ? (
+              <DashboardView
+                profileSummary={{
+                  avatarText: dashboardData.profileSummary.avatarText,
+                  title: dashboardData.profileSummary.title,
+                  subtitle: dashboardData.profileSummary.subtitle,
+                  metadata: [
+                    { icon: "badge", value: dashboardData.profileSummary.studentId || "" },
+                    { icon: "school", value: dashboardData.profileSummary.school || "" }
+                  ],
+                  onClick: () => setShowProfileDetails(true)
+                }}
+                actionMetrics={STUDENT_METRICS_CONFIG.map((metric) => ({
+                  icon: metric.icon,
+                  numericValue: dashboardData.metrics[metric.metricKey] || 0,
+                  label: metric.label,
+                  containerColorClass: metric.containerColorClass,
+                  onClick: () => handlePageChange(metric.targetPage as StudentTab)
+                }))}
+                activityTitle={dashboardData.activityTitle}
+                activities={dashboardData.activities}
+              />
+            ) : null
           ) : (
             <div className="flex-1 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
               请从侧边栏选择一项

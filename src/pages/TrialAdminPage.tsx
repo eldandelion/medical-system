@@ -17,10 +17,14 @@ import { useCreationOverlay } from '../contexts/CreationContext';
 import { ReferralCreationForm } from '../components/records/ReferralCreationForm';
 import { TertiaryFab } from '../components/common/Buttons';
 
+import { TRIAL_ADMIN_METRICS_CONFIG } from '../config/dashboardConfig';
+
 export function TrialAdminPage() {
   const [activePage, setActivePage] = React.useState('Dashboard');
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
+  const [dashboardData, setDashboardData] = React.useState<any>(null);
+  const [dashboardLoading, setDashboardLoading] = React.useState(true);
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
 
   React.useEffect(() => {
@@ -30,6 +34,30 @@ export function TrialAdminPage() {
       }
     };
     return () => void delete (window as any).dispatchPageChange;
+  }, []);
+
+  React.useEffect(() => {
+    let active = true;
+    fetch('/api/dashboard/trial-admin')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch dashboard');
+        return res.json();
+      })
+      .then((data) => {
+        if (active) {
+          setDashboardData(data);
+          setDashboardLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load trial admin dashboard:', err);
+        if (active) {
+          setDashboardLoading(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handlePageChange = (page: string) => {
@@ -180,51 +208,35 @@ export function TrialAdminPage() {
           ) : activePage === 'Security & Consent' ? (
             <SecurityConsentView />
           ) : activePage === 'Dashboard' ? (
-            <DashboardView
-              profileSummary={{
-                avatarText: "T",
-                title: "初试管理员",
-                subtitle: "试验权限",
-                metadata: [
-                  { icon: "badge", value: "TA-9009" },
-                  { icon: "verified_user", value: "限制访问" }
-                ],
-                onClick: () => setShowProfileDetails(true)
-              }}
-              actionMetrics={[
-                {
-                  icon: "engineering",
-                  numericValue: 42,
-                  label: "人员总数",
-                  containerColorClass: "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]",
-                  onClick: () => handlePageChange('Staff')
-                },
-                {
-                  icon: "assignment_late",
-                  numericValue: 8,
-                  label: "待审核转诊",
-                  containerColorClass: "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]",
-                  onClick: () => handlePageChange('Referral Management')
-                }
-              ]}
-              activityTitle="全局活动"
-              activities={[
-                {
-                  id: '1',
-                  title: '新转诊申请：转诊中心',
-                  timestamp: '1小时前',
-                  statusText: '待审核',
-                  statusChipColor: 'secondary-container'
-                },
-                {
-                  id: '2',
-                  title: '系统维护通知',
-                  timestamp: '昨天',
-                  statusText: '已发布',
-                  statusChipColor: 'tertiary-container'
-                }
-              ]}
-            />
+            dashboardLoading ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
+                {/* @ts-ignore */}
+                <md-linear-progress indeterminate className="w-full max-w-xs mb-4"></md-linear-progress>
+                <span className="text-[14px] opacity-75">正在加载控制面板...</span>
+              </div>
+            ) : dashboardData ? (
+              <DashboardView
+                profileSummary={{
+                  avatarText: dashboardData.profileSummary.avatarText,
+                  title: dashboardData.profileSummary.title,
+                  subtitle: dashboardData.profileSummary.subtitle,
+                  metadata: [
+                    { icon: "badge", value: dashboardData.profileSummary.employeeId || "" },
+                    { icon: "verified_user", value: dashboardData.profileSummary.accessLevel || "" }
+                  ],
+                  onClick: () => setShowProfileDetails(true)
+                }}
+                actionMetrics={TRIAL_ADMIN_METRICS_CONFIG.map((metric) => ({
+                  icon: metric.icon,
+                  numericValue: dashboardData.metrics[metric.metricKey] || 0,
+                  label: metric.label,
+                  containerColorClass: metric.containerColorClass,
+                  onClick: () => handlePageChange(metric.targetPage)
+                }))}
+                activityTitle={dashboardData.activityTitle}
+                activities={dashboardData.activities}
+              />
+            ) : null
           ) : (
             <div className="flex-1 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
               请从侧边栏选择一项
