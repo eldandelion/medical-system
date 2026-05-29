@@ -13,8 +13,10 @@ import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/D
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { RecordDetailsView } from '../components/records/RecordDetailsView';
 
+export type StudentTab = 'Dashboard' | 'Notifications' | 'Assessments' | 'My Records' | 'Security & Consent';
+
 export function StudentPage() {
-  const [activePage, setActivePage] = React.useState('Dashboard');
+  const [activePage, setActivePage] = React.useState<StudentTab>('Dashboard');
   const [selectedRecord, setSelectedRecord] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
 
@@ -28,7 +30,7 @@ export function StudentPage() {
   }, []);
 
   // Handle page change to clear selection
-  const handlePageChange = (page: string) => {
+  const handlePageChange = (page: StudentTab) => {
     setActivePage(page);
     setSelectedRecord(null);
   };
