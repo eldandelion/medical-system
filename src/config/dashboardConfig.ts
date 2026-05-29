@@ -73,3 +73,13 @@ export const TRIAL_ADMIN_METRICS_CONFIG: MetricConfig[] = [
     metricKey: "referralsCount"
   }
 ];
+
+export type ActivityStatusType = 'error' | 'warning' | 'info' | 'neutral' | 'success';
+
+export const STATUS_CHIP_COLORS: Record<ActivityStatusType, string> = {
+  error: 'error-container',
+  warning: 'tertiary-container',
+  info: 'secondary-container',
+  neutral: 'surface-variant',
+  success: 'tertiary-container'
+};

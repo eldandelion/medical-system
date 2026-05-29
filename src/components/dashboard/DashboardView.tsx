@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { ProfileSummaryCard, ActionMetricWidget, InteractiveStatusList } from './DashboardComponents';
+import { ActivityStatusType } from '../../config/dashboardConfig';
 
 export interface ProfileSummary {
   avatarText: string;
@@ -22,7 +23,7 @@ export interface ActivityItem {
   title: string;
   timestamp: string;
   statusText: string;
-  statusChipColor: string;
+  statusType?: ActivityStatusType;
 }
 
 interface DashboardViewProps {

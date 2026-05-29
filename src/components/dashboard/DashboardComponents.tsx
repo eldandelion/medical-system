@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { ActivityStatusType, STATUS_CHIP_COLORS } from '../../config/dashboardConfig';
 
 // --- Profile Summary Card ---
 interface ProfileSummaryCardProps {
@@ -86,7 +87,7 @@ export interface StatusListItem {
   title: string;
   timestamp: string;
   statusText: string;
-  statusChipColor?: string; // e.g., 'primary-container', 'error-container'
+  statusType?: ActivityStatusType;
 }
 
 interface InteractiveStatusListProps {
@@ -120,9 +121,14 @@ export function InteractiveStatusList({ items, onRowClick }: InteractiveStatusLi
             </div>
             
             <div className="flex items-center gap-4">
-              <span className={`px-3 py-1 rounded-full text-[14px] leading-[20px] tracking-[0.1px] font-medium bg-[var(--md-sys-color-${item.statusChipColor || 'surface-variant'})] text-[var(--md-sys-color-on-${item.statusChipColor || 'surface-variant'})]`}>
-                {item.statusText}
-              </span>
+              {(() => {
+                const chipColor = item.statusType ? STATUS_CHIP_COLORS[item.statusType] : 'surface-variant';
+                return (
+                  <span className={`px-3 py-1 rounded-full text-[14px] leading-[20px] tracking-[0.1px] font-medium bg-[var(--md-sys-color-${chipColor})] text-[var(--md-sys-color-on-${chipColor})]`}>
+                    {item.statusText}
+                  </span>
+                );
+              })()}
               <span className="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
             </div>
           </div>

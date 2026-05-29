@@ -9,6 +9,7 @@ import {
   PERSONALITY_COPING_OUTLOOK_ASSESSMENT
 } from '../components/assessments/AssessmentData';
 import { PsychiatricRecordType } from '../components/records/RecordsView';
+import { ActivityStatusType } from '../config/dashboardConfig';
 
 export interface Assessment {
   id: string;
@@ -228,7 +229,7 @@ export interface DashboardData {
     title: string;
     timestamp: string;
     statusText: string;
-    statusChipColor: string;
+    statusType: ActivityStatusType;
   }[];
 }
 
@@ -252,21 +253,21 @@ export const mockDashboardDb: Record<string, DashboardData> = {
         title: '完成期中自我测评',
         timestamp: '2天后到期',
         statusText: '需处理',
-        statusChipColor: 'error-container'
+        statusType: 'error'
       },
       {
         id: '2',
         title: '查看反馈摘要：算法',
         timestamp: '昨天发布',
         statusText: '未读',
-        statusChipColor: 'secondary-container'
+        statusType: 'info'
       },
       {
         id: '3',
         title: '更新年度知情同意书',
         timestamp: '下学期必需',
         statusText: '待处理',
-        statusChipColor: 'surface-variant'
+        statusType: 'neutral'
       }
     ]
   },
@@ -289,14 +290,14 @@ export const mockDashboardDb: Record<string, DashboardData> = {
         title: '新分配学生：达尼尔·彼得罗夫',
         timestamp: '2小时前',
         statusText: '高风险标识',
-        statusChipColor: 'error-container'
+        statusType: 'error'
       },
       {
         id: '2',
         title: '转诊更新：爱丽丝·史密斯',
         timestamp: '昨天',
         statusText: '审核中',
-        statusChipColor: 'secondary-container'
+        statusType: 'info'
       }
     ]
   },
@@ -319,14 +320,14 @@ export const mockDashboardDb: Record<string, DashboardData> = {
         title: '新分配学生：达尼尔·彼得罗夫',
         timestamp: '2小时前',
         statusText: '高风险标识',
-        statusChipColor: 'error-container'
+        statusType: 'error'
       },
       {
         id: '2',
         title: '转诊更新：爱丽丝·史密斯',
         timestamp: '昨天',
         statusText: '审核中',
-        statusChipColor: 'secondary-container'
+        statusType: 'info'
       }
     ]
   },
@@ -349,14 +350,14 @@ export const mockDashboardDb: Record<string, DashboardData> = {
         title: '新转诊申请：转诊中心',
         timestamp: '1小时前',
         statusText: '待审核',
-        statusChipColor: 'secondary-container'
+        statusType: 'info'
       },
       {
         id: '2',
         title: '系统维护通知',
         timestamp: '昨天',
         statusText: '已发布',
-        statusChipColor: 'tertiary-container'
+        statusType: 'warning'
       }
     ]
   }
