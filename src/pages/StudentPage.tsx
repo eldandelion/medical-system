@@ -70,6 +70,56 @@ export function StudentPage() {
     setSelectedRecord(null);
   };
 
+  const renderActiveContent = () => {
+    switch (activePage) {
+      case 'Notifications':
+        return <NotificationsView />;
+      case 'Assessments':
+        return <AssessmentsView />;
+      case 'My Records':
+        return <RecordsView onRecordSelect={setSelectedRecord} selectedRecordId={selectedRecord?.id} />;
+      case 'Dashboard':
+        if (dashboardLoading) {
+          return (
+            <div className="flex-1 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
+              {/* @ts-ignore */}
+              <md-linear-progress indeterminate className="w-full max-w-xs mb-4"></md-linear-progress>
+              <span className="text-[14px] opacity-75">正在加载控制面板...</span>
+            </div>
+          );
+        }
+        return dashboardData ? (
+          <DashboardView
+            profileSummary={{
+              avatarText: dashboardData.profileSummary.avatarText,
+              title: dashboardData.profileSummary.title,
+              subtitle: dashboardData.profileSummary.subtitle,
+              metadata: [
+                { icon: "badge", value: dashboardData.profileSummary.studentId || "" },
+                { icon: "school", value: dashboardData.profileSummary.school || "" }
+              ],
+              onClick: () => setShowProfileDetails(true)
+            }}
+            actionMetrics={STUDENT_METRICS_CONFIG.map((metric) => ({
+              icon: metric.icon,
+              numericValue: dashboardData.metrics[metric.metricKey] || 0,
+              label: metric.label,
+              containerColorClass: metric.containerColorClass,
+              onClick: () => handlePageChange(metric.targetPage as StudentTab)
+            }))}
+            activityTitle={dashboardData.activityTitle}
+            activities={dashboardData.activities}
+          />
+        ) : null;
+      default:
+        return (
+          <div className="flex-1 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
+            请从侧边栏选择一项
+          </div>
+        );
+    }
+  };
+
   return (
     <div
       className="flex h-screen overflow-hidden transition-colors duration-300"
@@ -104,47 +154,7 @@ export function StudentPage() {
           }>
           <CanvasHeader title={STUDENT_TAB_TITLES[activePage] || activePage} />
 
-          {activePage === 'Notifications' ? (
-            <NotificationsView />
-          ) : activePage === 'Assessments' ? (
-            <AssessmentsView />
-          ) : activePage === 'My Records' ? (
-            <RecordsView onRecordSelect={setSelectedRecord} selectedRecordId={selectedRecord?.id} />
-          ) : activePage === 'Dashboard' ? (
-            dashboardLoading ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
-                {/* @ts-ignore */}
-                <md-linear-progress indeterminate className="w-full max-w-xs mb-4"></md-linear-progress>
-                <span className="text-[14px] opacity-75">正在加载控制面板...</span>
-              </div>
-            ) : dashboardData ? (
-              <DashboardView
-                profileSummary={{
-                  avatarText: dashboardData.profileSummary.avatarText,
-                  title: dashboardData.profileSummary.title,
-                  subtitle: dashboardData.profileSummary.subtitle,
-                  metadata: [
-                    { icon: "badge", value: dashboardData.profileSummary.studentId || "" },
-                    { icon: "school", value: dashboardData.profileSummary.school || "" }
-                  ],
-                  onClick: () => setShowProfileDetails(true)
-                }}
-                actionMetrics={STUDENT_METRICS_CONFIG.map((metric) => ({
-                  icon: metric.icon,
-                  numericValue: dashboardData.metrics[metric.metricKey] || 0,
-                  label: metric.label,
-                  containerColorClass: metric.containerColorClass,
-                  onClick: () => handlePageChange(metric.targetPage as StudentTab)
-                }))}
-                activityTitle={dashboardData.activityTitle}
-                activities={dashboardData.activities}
-              />
-            ) : null
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
-              请从侧边栏选择一项
-            </div>
-          )}
+          {renderActiveContent()}
         </MainContent>
       </div>
 

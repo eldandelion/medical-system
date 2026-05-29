@@ -132,6 +132,60 @@ export function HeadCouncillorPage() {
     }
   }, [tabs, activeTab]);
 
+  const renderActiveContent = () => {
+    switch (activePage) {
+      case 'Notifications':
+        return <NotificationsView />;
+      case 'Students':
+        return <MyStudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} />;
+      case 'Staff':
+        return <StaffManagementView onStaffSelect={setSelectedItem} selectedStaffId={selectedItem?.id} />;
+      case 'Referral Management':
+        return <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} />;
+      case 'Security & Consent':
+        return <SecurityConsentView />;
+      case 'Dashboard':
+        if (dashboardLoading) {
+          return (
+            <div className="flex-1 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
+              {/* @ts-ignore */}
+              <md-linear-progress indeterminate className="w-full max-w-xs mb-4"></md-linear-progress>
+              <span className="text-[14px] opacity-75">正在加载控制面板...</span>
+            </div>
+          );
+        }
+        return dashboardData ? (
+          <DashboardView
+            profileSummary={{
+              avatarText: dashboardData.profileSummary.avatarText,
+              title: dashboardData.profileSummary.title,
+              subtitle: dashboardData.profileSummary.subtitle,
+              metadata: [
+                { icon: "badge", value: dashboardData.profileSummary.employeeId || "" },
+                { icon: "account_balance", value: dashboardData.profileSummary.department || "" }
+              ],
+              onClick: () => setShowProfileDetails(true)
+            }}
+            actionMetrics={HEAD_COUNCILLOR_METRICS_CONFIG.map((metric) => ({
+              icon: metric.icon,
+              numericValue: dashboardData.metrics[metric.metricKey] || 0,
+              label: metric.label,
+              containerColorClass: metric.containerColorClass,
+              onClick: () => handlePageChange(metric.targetPage)
+            }))}
+            activityTitle={dashboardData.activityTitle}
+            activities={dashboardData.activities}
+          />
+        ) : null;
+      default:
+        return (
+          <div className="flex-1 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
+            请从侧边栏选择一项
+          </div>
+        );
+    }
+  };
+
   return (
     <div
       className="flex h-screen overflow-hidden transition-colors duration-300"
@@ -228,51 +282,7 @@ export function HeadCouncillorPage() {
           }>
           <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage] || activePage} />
 
-          {activePage === 'Notifications' ? (
-            <NotificationsView />
-          ) : activePage === 'Students' ? (
-            <MyStudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} />
-          ) : activePage === 'Staff' ? (
-            <StaffManagementView onStaffSelect={setSelectedItem} selectedStaffId={selectedItem?.id} />
-          ) : activePage === 'Referral Management' ? (
-            <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} />
-          ) : activePage === 'Security & Consent' ? (
-            <SecurityConsentView />
-          ) : activePage === 'Dashboard' ? (
-            dashboardLoading ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
-                {/* @ts-ignore */}
-                <md-linear-progress indeterminate className="w-full max-w-xs mb-4"></md-linear-progress>
-                <span className="text-[14px] opacity-75">正在加载控制面板...</span>
-              </div>
-            ) : dashboardData ? (
-              <DashboardView
-                profileSummary={{
-                  avatarText: dashboardData.profileSummary.avatarText,
-                  title: dashboardData.profileSummary.title,
-                  subtitle: dashboardData.profileSummary.subtitle,
-                  metadata: [
-                    { icon: "badge", value: dashboardData.profileSummary.employeeId || "" },
-                    { icon: "account_balance", value: dashboardData.profileSummary.department || "" }
-                  ],
-                  onClick: () => setShowProfileDetails(true)
-                }}
-                actionMetrics={HEAD_COUNCILLOR_METRICS_CONFIG.map((metric) => ({
-                  icon: metric.icon,
-                  numericValue: dashboardData.metrics[metric.metricKey] || 0,
-                  label: metric.label,
-                  containerColorClass: metric.containerColorClass,
-                  onClick: () => handlePageChange(metric.targetPage)
-                }))}
-                activityTitle={dashboardData.activityTitle}
-                activities={dashboardData.activities}
-              />
-            ) : null
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
-              请从侧边栏选择一项
-            </div>
-          )}
+          {renderActiveContent()}
         </MainContent>
       </div>
 
