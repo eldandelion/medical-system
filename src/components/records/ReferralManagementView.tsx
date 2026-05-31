@@ -2,19 +2,7 @@ import * as React from 'react';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { FilterChipSet } from '../common/FilterChip';
 
-interface Referral {
-  id: string;
-  studentName: string;
-  type: string;
-  date: string;
-  reason: string;
-  riskLevel: 'High' | 'Medium' | 'Low';
-  status: 'Draft' | 'Closed' | 'Pending' | 'Approved' | 'AwaitingApproval';
-  referredBy: {
-    name: string;
-    avatar?: string;
-  };
-}
+import { Referral } from '../../types';
 
 interface ReferralManagementViewProps {
   onReferralSelect?: (referral: Referral) => void;
