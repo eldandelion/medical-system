@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import { mockAssessmentsDb, mockPsychiatricRecordsDb, mockDashboardDb } from './db';
+import { mockAssessmentsDb, mockPsychiatricRecordsDb, mockDashboardDb, mockStudentsDb } from './db';
 
 export const handlers = [
   http.get('/api/assessments', () => {
@@ -35,5 +35,9 @@ export const handlers = [
       return new HttpResponse(null, { status: 404 });
     }
     return HttpResponse.json(dashboardData);
+  }),
+
+  http.get('/api/students', () => {
+    return HttpResponse.json(mockStudentsDb);
   })
 ];

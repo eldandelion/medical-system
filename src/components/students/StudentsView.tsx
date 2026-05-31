@@ -16,12 +16,32 @@ interface StudentsViewProps {
 }
 
 export function StudentsView({ onStudentSelect, selectedStudentId }: StudentsViewProps) {
-  const students: Student[] = [
-    { id: '1', name: 'Daniil Petrov', major: '计算机科学', year: '大三', status: 'Active' },
-    { id: '2', name: 'Alice Smith', major: '心理学', year: '大四', status: 'Active' },
-    { id: '3', name: 'Bob Johnson', major: '生物学', year: '大一', status: 'Inactive' },
-    { id: '4', name: 'Charlie Brown', major: '艺术史', year: '大二', status: 'Active' },
-  ];
+  const [students, setStudents] = React.useState<Student[]>([]);
+  const [loading, setLoading] = React.useState<boolean>(true);
+
+  React.useEffect(() => {
+    let active = true;
+    fetch('/api/students')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch students');
+        return res.json();
+      })
+      .then((data) => {
+        if (active) {
+          setStudents(data);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load mock students database:', err);
+        if (active) {
+          setLoading(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const columns: ColumnDefinition<Student>[] = [
     {
@@ -78,7 +98,18 @@ export function StudentsView({ onStudentSelect, selectedStudentId }: StudentsVie
           { label: '导师', options: ['Dr. Watson', 'Dr. Smith', 'Prof. Miller'] }
         ]}
       />
-      <DataTable columns={columns} data={students} onRowClick={onStudentSelect} selectedId={selectedStudentId} />
+      
+      <div className="mt-2">
+        {loading ? (
+          <div className="py-12 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)]">
+            {/* @ts-ignore */}
+            <md-linear-progress indeterminate className="w-full max-w-xs mb-4"></md-linear-progress>
+            <span className="text-[14px] opacity-75">正在获取学生档案...</span>
+          </div>
+        ) : (
+          <DataTable columns={columns} data={students} onRowClick={onStudentSelect} selectedId={selectedStudentId} />
+        )}
+      </div>
     </div>
   );
 }
