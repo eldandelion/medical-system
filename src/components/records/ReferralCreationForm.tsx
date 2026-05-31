@@ -16,9 +16,6 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
       .then(res => res.json())
       .then(data => {
         setStudents(data);
-        if (data.length > 0) {
-          setSelectedStudentId(data[0].id);
-        }
         setLoading(false);
       })
       .catch(err => {
@@ -75,28 +72,30 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
               </md-outlined-select>
             </div>
 
-            <div className="border border-[var(--md-sys-color-outline-variant)] rounded-[12px] p-6 bg-[var(--md-sys-color-surface)]">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="flex flex-col">
-                  <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)]">Name</span>
-                  <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">
-                    {loading ? 'Loading...' : (selectedStudent?.name || 'N/A')}
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)]">ID</span>
-                  <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">
-                    {loading ? 'Loading...' : (selectedStudent?.demographics?.studentId || selectedStudent?.id || 'N/A')}
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)]">Major</span>
-                  <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">
-                    {loading ? 'Loading...' : (selectedStudent?.major || 'N/A')}
-                  </span>
+            {selectedStudent && (
+              <div className="border border-[var(--md-sys-color-outline-variant)] rounded-[12px] p-6 bg-[var(--md-sys-color-surface)]">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="flex flex-col">
+                    <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)]">Name</span>
+                    <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">
+                      {selectedStudent.name}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)]">ID</span>
+                    <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">
+                      {selectedStudent.demographics?.studentId || selectedStudent.id}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)]">Major</span>
+                    <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">
+                      {selectedStudent.major}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </section>
 
           {/* 2. Triage Classification Block */}
