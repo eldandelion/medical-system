@@ -33,7 +33,12 @@ type TabType = 'overview' | 'psychometrics' | 'history';
 export function StudentDetailsView({ student, hideHeader, activeTab: propsActiveTab, onTabChange }: StudentDetailsViewProps) {
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
+  const [isScrolled, setIsScrolled] = React.useState(false);
   
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setIsScrolled(e.currentTarget.scrollTop > 20);
+  };
+
   const setActiveTab = (tab: TabType) => {
     setInternalActiveTab(tab);
     onTabChange?.(tab);
@@ -52,47 +57,57 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
 
   return (
     <div className="flex flex-col h-full bg-[var(--md-sys-color-surface)] min-w-[350px]">
-      {/* Primary Anchor Header Section (Persistent) */}
-      {!hideHeader && !isFullScreen && (
-        <div className="p-6 pb-4 flex flex-col gap-5">
-          <div className="flex items-center justify-between gap-4 flex-nowrap overflow-hidden">
-            <div className="flex items-center gap-4 shrink-0">
-              {/* Primary Anchor: First Letter Avatar */}
-              <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium shrink-0 animate-in fade-in zoom-in duration-300">
-                {student.name ? student.name.charAt(0) : '?'}
-              </div>
-              <div className="flex flex-col gap-1">
-                <h1 className="text-[24px] font-medium leading-[32px] text-[var(--md-sys-color-on-surface)] tracking-tight whitespace-nowrap">
-                  {student.name}
-                </h1>
-                <div className="flex items-center gap-3 overflow-hidden flex-nowrap">
-                  <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80 whitespace-nowrap">
-                    <span className="material-symbols-outlined text-[18px] shrink-0" style={{ fontVariationSettings: "'FILL' 0" }}>badge</span>
-                    <span>{student.demographics?.studentId || 'N/A'}</span>
+      {/* Primary Anchor Header Section (Collapsible) */}
+      <AnimatePresence initial={false}>
+        {!hideHeader && !isFullScreen && !isScrolled && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="overflow-hidden origin-top"
+          >
+            <div className="p-6 pb-4 flex flex-col gap-5">
+              <div className="flex items-center justify-between gap-4 flex-nowrap overflow-hidden">
+                <div className="flex items-center gap-4 shrink-0">
+                  {/* Primary Anchor: First Letter Avatar */}
+                  <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium shrink-0 animate-in fade-in zoom-in duration-300">
+                    {student.name ? student.name.charAt(0) : '?'}
                   </div>
-                  <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80 whitespace-nowrap">
-                    <span className="material-symbols-outlined text-[18px] shrink-0" style={{ fontVariationSettings: "'FILL' 0" }}>school</span>
-                    <span>{student.major}</span>
+                  <div className="flex flex-col gap-1">
+                    <h1 className="text-[24px] font-medium leading-[32px] text-[var(--md-sys-color-on-surface)] tracking-tight whitespace-nowrap">
+                      {student.name}
+                    </h1>
+                    <div className="flex items-center gap-3 overflow-hidden flex-nowrap">
+                      <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80 whitespace-nowrap">
+                        <span className="material-symbols-outlined text-[18px] shrink-0" style={{ fontVariationSettings: "'FILL' 0" }}>badge</span>
+                        <span>{student.demographics?.studentId || 'N/A'}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80 whitespace-nowrap">
+                        <span className="material-symbols-outlined text-[18px] shrink-0" style={{ fontVariationSettings: "'FILL' 0" }}>school</span>
+                        <span>{student.major}</span>
+                      </div>
+                    </div>
                   </div>
+                </div>
+
+                {/* Critical Status: Risk Level Chip */}
+                <div className={`px-4 py-2 rounded-full flex items-center gap-2 font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${student.riskLevel === 'High'
+                  ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
+                  : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                  }`}>
+                  <span className="material-symbols-outlined text-[18px] shrink-0">
+                    {student.riskLevel === 'High' ? 'warning' : 'info'}
+                  </span>
+                  <span>
+                    {student.riskLevel === 'High' ? '高风险' : '中低风险'}
+                  </span>
                 </div>
               </div>
             </div>
-
-            {/* Critical Status: Risk Level Chip */}
-            <div className={`px-4 py-2 rounded-full flex items-center gap-2 font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${student.riskLevel === 'High'
-              ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
-              : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-              }`}>
-              <span className="material-symbols-outlined text-[18px] shrink-0">
-                {student.riskLevel === 'High' ? 'warning' : 'info'}
-              </span>
-              <span>
-                {student.riskLevel === 'High' ? '高风险' : '中低风险'}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Tabs Header */}
       {!isFullScreen && (
@@ -104,7 +119,10 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
       )}
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar pb-32">
+      <div 
+        className="flex-1 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar pb-32"
+        onScroll={handleScroll}
+      >
         <AnimatePresence mode="wait">
           {activeTab === 'overview' && (
             <motion.div
