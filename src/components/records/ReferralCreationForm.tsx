@@ -1,10 +1,30 @@
 import * as React from 'react';
 import { SecondaryButton, PrimaryButton } from '../common/Buttons';
+import { useCreationOverlay } from '../../contexts/CreationContext';
 
 export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
+  const { viewState, setHeaderActions } = useCreationOverlay();
+  const isFullscreen = viewState === 'FULLSCREEN';
+
+  React.useEffect(() => {
+    if (isFullscreen) {
+      setHeaderActions(
+        <div className="flex items-center gap-3 mr-4">
+          <SecondaryButton label="Save Draft" onClick={onClose} />
+          <PrimaryButton label="Submit" onClick={onClose} />
+        </div>
+      );
+    } else {
+      setHeaderActions(null);
+    }
+    return () => {
+      setHeaderActions(null);
+    };
+  }, [isFullscreen, setHeaderActions, onClose]);
+
   return (
     <div className="flex flex-col h-full bg-[var(--md-sys-color-surface)] relative">
-      <div className="flex-1 overflow-y-auto p-6 pb-32">
+      <div className={`flex-1 overflow-y-auto p-6 ${isFullscreen ? 'pb-8' : 'pb-32'}`}>
         <div className="max-w-3xl mx-auto flex flex-col gap-10">
 
           {/* 1. Target Identification Block */}
@@ -174,13 +194,14 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* 6. Persistent Action Footer */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] flex items-center justify-between z-10 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-        <SecondaryButton label="Cancel" onClick={onClose} />
-        <div className="flex items-center gap-4">
-          <SecondaryButton label="Save Draft" onClick={onClose} />
-          <PrimaryButton label="Submit" onClick={onClose} />
+      {!isFullscreen && (
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] z-10 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+          <div className="flex items-center justify-end gap-4 w-full">
+            <SecondaryButton label="Save Draft" onClick={onClose} />
+            <PrimaryButton label="Submit" onClick={onClose} />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

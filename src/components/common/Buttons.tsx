@@ -17,7 +17,7 @@ export function PrimaryButton({ icon, label, className = "h-10", onClick, style,
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   return (
     <md-filled-button
-      className={`${className} shrink-0 whitespace-nowrap overflow-hidden transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0' : ''}`}
+      className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       onClick={onClick}
       trailing-icon={trailingIcon ? "" : undefined}
       style={{
@@ -38,7 +38,7 @@ export function SecondaryButton({ icon, label, className = "h-10", onClick, styl
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   return (
     <md-outlined-button
-      className={`${className} shrink-0 whitespace-nowrap overflow-hidden transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0' : ''}`}
+      className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       onClick={onClick}
       trailing-icon={trailingIcon ? "" : undefined}
       style={{
@@ -57,7 +57,7 @@ export function TertiaryButton({ icon, label, className = "h-10", onClick, style
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   return (
     <md-text-button
-      className={`${className} shrink-0 whitespace-nowrap overflow-hidden transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0' : ''}`}
+      className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       onClick={onClick}
       trailing-icon={trailingIcon ? "" : undefined}
       style={{

@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { useCreationOverlay } from '../../contexts/CreationContext';
 
 export function CreationSheetTemplate() {
-  const { viewState, title, activePayload, minimizeCreation, expandToFullscreen, collapseToStandard, closeCreation } = useCreationOverlay();
+  const { viewState, title, activePayload, headerActions, minimizeCreation, expandToFullscreen, collapseToStandard, closeCreation } = useCreationOverlay();
   const isFullscreen = viewState === 'FULLSCREEN';
   const sheetRef = React.useRef<HTMLDivElement>(null);
 
@@ -41,8 +41,10 @@ export function CreationSheetTemplate() {
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', bounce: 0, duration: 0.5 }}
-        className={`fixed bottom-0 left-0 right-0 z-[100] bg-[var(--md-sys-color-surface-container-low)] flex flex-col overflow-hidden ${
-          isFullscreen ? 'top-0 w-full rounded-none' : 'h-[75dvh] w-full max-w-4xl mx-auto rounded-t-[32px] shadow-[0px_-2px_8px_rgba(0,0,0,0.1)]'
+        className={`fixed bottom-0 left-0 right-0 z-[100] flex flex-col overflow-hidden ${
+          isFullscreen 
+            ? 'top-0 w-full rounded-none bg-[var(--md-sys-color-surface)]' 
+            : 'h-[75dvh] w-full max-w-4xl mx-auto rounded-t-[32px] bg-[var(--md-sys-color-surface-container-low)] shadow-[0px_-2px_8px_rgba(0,0,0,0.1)]'
         }`}
       >
         {/* Header Architecture */}
@@ -56,6 +58,7 @@ export function CreationSheetTemplate() {
             </div>
 
             <div className="flex items-center gap-2">
+              {headerActions}
               {isFullscreen ? (
                 <md-icon-button onClick={collapseToStandard}>
                   <md-icon>close_fullscreen</md-icon>

@@ -6,6 +6,8 @@ interface CreationContextProps {
   viewState: ViewState;
   title: string | null;
   activePayload: React.ReactNode | null;
+  headerActions: React.ReactNode | null;
+  setHeaderActions: (actions: React.ReactNode | null) => void;
   openCreation: (title: string, payload: React.ReactNode) => void;
   minimizeCreation: () => void;
   maximizeCreation: () => void; // Restores to STANDARD
@@ -20,6 +22,7 @@ export function CreationOverlayProvider({ children }: { children: React.ReactNod
   const [viewState, setViewState] = React.useState<ViewState>('CLOSED');
   const [title, setTitle] = React.useState<string | null>(null);
   const [activePayload, setActivePayload] = React.useState<React.ReactNode | null>(null);
+  const [headerActions, setHeaderActions] = React.useState<React.ReactNode | null>(null);
 
   const openCreation = React.useCallback((newTitle: string, payload: React.ReactNode) => {
     setTitle(newTitle);
@@ -49,6 +52,7 @@ export function CreationOverlayProvider({ children }: { children: React.ReactNod
     setTimeout(() => {
       setActivePayload(null);
       setTitle(null);
+      setHeaderActions(null);
     }, 400); 
   }, []);
 
@@ -58,6 +62,8 @@ export function CreationOverlayProvider({ children }: { children: React.ReactNod
         viewState,
         title,
         activePayload,
+        headerActions,
+        setHeaderActions,
         openCreation,
         minimizeCreation,
         maximizeCreation,
