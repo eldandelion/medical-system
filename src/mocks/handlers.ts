@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import { mockAssessmentsDb, mockPsychiatricRecordsDb, mockDashboardDb, mockStudentsDb } from './db';
+import { mockAssessmentsDb, mockPsychiatricRecordsDb, mockDashboardDb, mockStudentsDb, mockReferralsDb } from './db';
 
 export const handlers = [
   http.get('/api/assessments', () => {
@@ -39,5 +39,18 @@ export const handlers = [
 
   http.get('/api/students', () => {
     return HttpResponse.json(mockStudentsDb);
+  }),
+
+  http.get('/api/referrals', () => {
+    return HttpResponse.json(mockReferralsDb);
+  }),
+
+  http.get('/api/referrals/:id', ({ params }) => {
+    const { id } = params;
+    const referral = mockReferralsDb.find((r) => r.id === id);
+    if (!referral) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    return HttpResponse.json(referral);
   })
 ];

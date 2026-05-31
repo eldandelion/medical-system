@@ -22,92 +22,37 @@ interface ReferralManagementViewProps {
 }
 
 export function ReferralManagementView({ onReferralSelect, selectedReferralId }: ReferralManagementViewProps) {
-  const referrals: Referral[] = ([
-    {
-      id: '1',
-      studentName: 'Daniil Petrov',
-      type: '初次转诊',
-      date: '2026年4月12日',
-      reason: '期中考试后出现急性恐慌发作和睡眠剥夺',
-      riskLevel: 'High',
-      status: 'Approved',
-      referredBy: { name: '张教授' }
-    },
-    {
-      id: '2',
-      studentName: 'Alice Smith',
-      type: '随访',
-      date: '2026年4月20日',
-      reason: '每周治疗随访；情绪持续低落',
-      riskLevel: 'Medium',
-      status: 'Pending',
-      referredBy: { name: '李医生' }
-    },
-    {
-      id: '3',
-      studentName: 'Bob Johnson',
-      type: '初次转诊',
-      date: '2026年5月5日',
-      reason: '因注意力问题和学业压力自愿转诊',
-      riskLevel: 'Low',
-      status: 'Draft',
-      referredBy: { name: '王老师' }
-    },
-    {
-      id: '4',
-      studentName: 'Elena Gilbert',
-      type: '紧急',
-      date: '2026年4月18日',
-      reason: '宿舍事故报告；提到自杀意念',
-      riskLevel: 'High',
-      status: 'Approved',
-      referredBy: { name: '宿舍管理员' }
-    },
-    {
-      id: '5',
-      studentName: 'Chris Evans',
-      type: '随访',
-      date: '2026年4月15日',
-      reason: '药物复核；报告注意力集中情况有所改善',
-      riskLevel: 'Low',
-      status: 'Closed',
-      referredBy: { name: '李医生' }
-    },
-    {
-      id: '6',
-      studentName: 'Sarah Connor',
-      type: '初次转诊',
-      date: '2026年4月22日',
-      reason: '持续疲劳并退出社交活动',
-      riskLevel: 'Medium',
-      status: 'Pending',
-      referredBy: { name: '张教授' }
-    },
-    {
-      id: '7',
-      studentName: 'James Bond',
-      type: '转诊',
-      date: '2026年4月10日',
-      reason: '与工作相关的压力和创伤后症状',
-      riskLevel: 'High',
-      status: 'Closed',
-      referredBy: { name: '心理咨询中心' }
-    },
-    {
-      id: '8',
-      studentName: '王小明',
-      type: '初次转诊',
-      date: '2026年4月28日',
-      reason: '由于学业压力导致严重的睡眠障碍和情绪波动',
-      riskLevel: 'Medium',
-      status: 'AwaitingApproval',
-      referredBy: { name: '陈老师' }
-    },
-  ] as Referral[]).sort((a, b) => {
-    if (a.status === 'AwaitingApproval' && b.status !== 'AwaitingApproval') return -1;
-    if (a.status !== 'AwaitingApproval' && b.status === 'AwaitingApproval') return 1;
-    return 0;
-  });
+  const [referrals, setReferrals] = React.useState<Referral[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    let active = true;
+    fetch('/api/referrals')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch referrals');
+        return res.json();
+      })
+      .then((data) => {
+        if (active) {
+          const sorted = (data as Referral[]).sort((a, b) => {
+            if (a.status === 'AwaitingApproval' && b.status !== 'AwaitingApproval') return -1;
+            if (a.status !== 'AwaitingApproval' && b.status === 'AwaitingApproval') return 1;
+            return 0;
+          });
+          setReferrals(sorted);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load referrals:', err);
+        if (active) {
+          setLoading(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const columns: ColumnDefinition<Referral>[] = [
     {
@@ -204,7 +149,15 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
           { label: '指派至', options: ['教职工', '部门负责人', '顾问'] }
         ]}
       />
-      <DataTable columns={columns} data={referrals} onRowClick={onReferralSelect} selectedId={selectedReferralId} />
+      {loading ? (
+        <div className="py-12 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)]">
+          {/* @ts-ignore */}
+          <md-linear-progress indeterminate className="w-full max-w-xs mb-4"></md-linear-progress>
+          <span className="text-[14px] opacity-75">正在获取转诊记录...</span>
+        </div>
+      ) : (
+        <DataTable columns={columns} data={referrals} onRowClick={onReferralSelect} selectedId={selectedReferralId} />
+      )}
     </div>
   );
 }
