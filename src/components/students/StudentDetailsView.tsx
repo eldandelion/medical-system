@@ -39,7 +39,7 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
     setInternalActiveTab(tab);
     onTabChange?.(tab);
   };
-  
+
   const { openCreation } = useCreationOverlay();
   const { isFullScreen } = useDetails();
 
@@ -75,21 +75,20 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
                     <span className="material-symbols-outlined text-[18px] shrink-0" style={{ fontVariationSettings: "'FILL' 0" }}>school</span>
                     <span>{student.major}</span>
                   </div>
+                  {/* Critical Status: Risk Level Chip */}
+                  <div className={`px-2 py-0.5 rounded-full flex items-center gap-1 font-bold text-[10px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${student.riskLevel === 'High'
+                    ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
+                    : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                    }`}>
+                    <span className="material-symbols-outlined text-[10px] shrink-0">
+                      {student.riskLevel === 'High' ? 'warning' : 'info'}
+                    </span>
+                    <span>
+                      {student.riskLevel === 'High' ? '高风险' : '中低风险'}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Critical Status: Risk Level Chip */}
-            <div className={`px-4 py-2 rounded-full flex items-center gap-2 font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${student.riskLevel === 'High'
-              ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
-              : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-              }`}>
-              <span className="material-symbols-outlined text-[18px] shrink-0">
-                {student.riskLevel === 'High' ? 'warning' : 'info'}
-              </span>
-              <span>
-                {student.riskLevel === 'High' ? '高风险' : '中低风险'}
-              </span>
             </div>
           </div>
         </div>
@@ -97,15 +96,15 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
 
       {/* Tabs Header */}
       {!isFullScreen && (
-        <PrimaryTabs 
-          tabs={tabs} 
-          activeTab={activeTab} 
-          onTabChange={(id) => setActiveTab(id as TabType)} 
+        <PrimaryTabs
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={(id) => setActiveTab(id as TabType)}
         />
       )}
 
       {/* Tab Content */}
-      <div 
+      <div
         className="flex-1 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar pb-32"
         onScroll={handleScroll}
       >
