@@ -121,7 +121,7 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
               {item.studentName.charAt(0)}
             </div>
             {item.status === 'AwaitingApproval' && (
-              <div className="absolute -left-3.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[var(--md-sys-color-error)] animate-pulse shadow-[0_0_8px_rgba(179,38,30,0.4)]" />
+              <div className="absolute -left-3.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[var(--md-sys-color-error)] shadow-[0_0_8px_rgba(179,38,30,0.4)]" />
             )}
           </div>
           <span className="text-[14px] font-normal">{item.studentName}</span>
