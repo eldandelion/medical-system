@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { DetailsSection, DetailItem } from '../common/DetailsPanel';
+import { DetailsSection, DetailItem, useScrollCollapse, CollapsibleHeader } from '../common/DetailsPanel';
 import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
 import { PsychometricTable } from '../common/PsychometricTable';
@@ -35,6 +35,8 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
   const [isRejectionDialogOpen, setIsRejectionDialogOpen] = React.useState(false);
   const [rejectionReason, setRejectionReason] = React.useState('');
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
+  const { isScrolled, handleScroll } = useScrollCollapse(20);
+
   const setActiveTab = (tab: TabType) => {
     setInternalActiveTab(tab);
     onTabChange?.(tab);
@@ -94,8 +96,8 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
 
   return (
     <div className="flex flex-col h-full bg-[var(--md-sys-color-surface)]">
-      {/* Primary Anchor Header Section (Persistent) */}
-      {!hideHeader && !isFullScreen && (
+      {/* Primary Anchor Header Section (Collapsible) */}
+      <CollapsibleHeader visible={!hideHeader && !isFullScreen && !isScrolled}>
         <div className="p-6 pb-4 flex flex-col gap-5">
           <div className="flex items-center justify-between gap-4 flex-nowrap overflow-hidden">
             <div className="flex items-center gap-4 shrink-0">
@@ -109,32 +111,31 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                 </h1>
                 <div className="flex items-center gap-3 overflow-hidden flex-nowrap">
                   <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80 whitespace-nowrap">
-                    <span className="material-symbols-outlined text-[18px] shrink-0" style={{ fontVariationSettings: "'FILL' 0" }}>badge</span>
+                    <md-icon style={{ fontSize: '20px', width: '20px', height: '20px' }}>badge</md-icon>
                     <span>{extendedData.studentId}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80 whitespace-nowrap">
-                    <span className="material-symbols-outlined text-[18px] shrink-0" style={{ fontVariationSettings: "'FILL' 0" }}>school</span>
+                    <md-icon style={{ fontSize: '20px', width: '20px', height: '20px' }}>school</md-icon>
                     <span>{extendedData.school}</span>
+                  </div>
+                  {/* Critical Status: Risk Level Chip */}
+                  <div className={`px-3 py-0.5 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${referral.riskLevel === 'High'
+                    ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
+                    : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                    }`}>
+                    <md-icon style={{ fontSize: '16px', width: '14px', height: '14px' }}>
+                      {referral.riskLevel === 'High' ? 'warning' : 'info'}
+                    </md-icon>
+                    <span>
+                      {referral.riskLevel === 'High' ? '高风险' : '中低风险'}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Critical Status: Risk Level Chip */}
-            <div className={`px-4 py-2 rounded-full flex items-center gap-2 font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${referral.riskLevel === 'High'
-              ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
-              : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-              }`}>
-              <span className="material-symbols-outlined text-[18px] shrink-0">
-                {referral.riskLevel === 'High' ? 'warning' : 'info'}
-              </span>
-              <span>
-                {referral.riskLevel === 'High' ? '高风险' : '中低风险'}
-              </span>
-            </div>
           </div>
         </div>
-      )}
+      </CollapsibleHeader>
 
       {/* Primary Tabs */}
       {!isFullScreen && (
@@ -146,7 +147,10 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
       )}
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto p-6 custom-scrollbar pb-32">
+      <div 
+        className="flex-1 overflow-y-auto p-6 custom-scrollbar pb-32"
+        onScroll={handleScroll}
+      >
         <AnimatePresence mode="wait">
           {activeTab === 'overview' && (
             <motion.div

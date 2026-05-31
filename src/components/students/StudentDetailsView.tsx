@@ -68,21 +68,21 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
                 </h1>
                 <div className="flex items-center gap-3 overflow-hidden flex-nowrap">
                   <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80 whitespace-nowrap">
-                    <span className="material-symbols-outlined text-[18px] shrink-0" style={{ fontVariationSettings: "'FILL' 0" }}>badge</span>
+                    <md-icon style={{ fontSize: '20px', width: '20px', height: '20px' }}>badge</md-icon>
                     <span>{student.demographics?.studentId || 'N/A'}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80 whitespace-nowrap">
-                    <span className="material-symbols-outlined text-[18px] shrink-0" style={{ fontVariationSettings: "'FILL' 0" }}>school</span>
+                    <md-icon style={{ fontSize: '20px', width: '20px', height: '20px' }}>school</md-icon>
                     <span>{student.major}</span>
                   </div>
                   {/* Critical Status: Risk Level Chip */}
-                  <div className={`px-2 py-0.5 rounded-full flex items-center gap-1 font-bold text-[10px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${student.riskLevel === 'High'
+                  <div className={`px-3 py-0.5 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${student.riskLevel === 'High'
                     ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
                     : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
                     }`}>
-                    <span className="material-symbols-outlined text-[10px] shrink-0">
+                    <md-icon style={{ fontSize: '16px', width: '14px', height: '14px' }}>
                       {student.riskLevel === 'High' ? 'warning' : 'info'}
-                    </span>
+                    </md-icon>
                     <span>
                       {student.riskLevel === 'High' ? '高风险' : '中低风险'}
                     </span>
