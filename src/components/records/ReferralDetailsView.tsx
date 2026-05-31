@@ -69,7 +69,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                     <span>{extendedData.school}</span>
                   </div>
                   {/* Critical Status: Risk Level Chip */}
-                  <div className={`px-3 py-0.5 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${referral.riskLevel === 'High'
+                  <div className={`px-3 py-1 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${referral.riskLevel === 'High'
                     ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
                     : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
                     }`}>

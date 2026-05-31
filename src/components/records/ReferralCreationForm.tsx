@@ -74,13 +74,7 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
 
             {selectedStudent && (
               <div className="border border-[var(--md-sys-color-outline-variant)] rounded-[12px] p-6 bg-[var(--md-sys-color-surface)]">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="flex flex-col">
-                    <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)]">Name</span>
-                    <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">
-                      {selectedStudent.name}
-                    </span>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                   <div className="flex flex-col">
                     <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)]">ID</span>
                     <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">
@@ -92,6 +86,20 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
                     <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">
                       {selectedStudent.major}
                     </span>
+                  </div>
+                  <div className="flex flex-col items-start justify-center">
+                    <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)] mb-2">Risk Factor</span>
+                    <div className={`px-3 py-1 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${selectedStudent.riskLevel === 'High'
+                      ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
+                      : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                      }`}>
+                      <md-icon style={{ fontSize: '16px', width: '14px', height: '14px' }}>
+                        {selectedStudent.riskLevel === 'High' ? 'warning' : 'info'}
+                      </md-icon>
+                      <span>
+                        {selectedStudent.riskLevel === 'High' ? '高风险' : '中低风险'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
