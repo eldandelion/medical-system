@@ -74,7 +74,7 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
 
             {selectedStudent && (
               <div className="border border-[var(--md-sys-color-outline-variant)] rounded-[12px] p-6 bg-[var(--md-sys-color-surface)]">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_auto] gap-6 items-center">
                   <div className="flex flex-col">
                     <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)]">ID</span>
                     <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">
@@ -100,6 +100,14 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
                         {selectedStudent.riskLevel === 'High' ? '高风险' : '中低风险'}
                       </span>
                     </div>
+                  </div>
+                  <div className="flex items-center justify-end text-[var(--md-sys-color-on-surface-variant)] shrink-0">
+                    {/* @ts-ignore */}
+                    <md-icon-button>
+                      {/* @ts-ignore */}
+                      <md-icon>chevron_right</md-icon>
+                    {/* @ts-ignore */}
+                    </md-icon-button>
                   </div>
                 </div>
               </div>
