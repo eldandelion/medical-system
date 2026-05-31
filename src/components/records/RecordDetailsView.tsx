@@ -11,7 +11,7 @@ export function RecordDetailsView({ record }: RecordDetailsViewProps) {
   return (
     <div className="flex flex-col gap-0">
       {/* Split Header Architecture */}
-      <div className="flex flex-row justify-between items-start pt-2 pb-6">
+      <div className="flex flex-row justify-between items-start pt-2 pb-6 border-b border-[var(--md-sys-color-outline-variant)] border-opacity-20 mb-4">
         {/* Left Container */}
         <div className="flex flex-col gap-2">
           <h1 className="text-[28px] leading-[36px] font-normal text-[var(--md-sys-color-on-surface)] tracking-tight">
@@ -24,7 +24,7 @@ export function RecordDetailsView({ record }: RecordDetailsViewProps) {
           </div>
         </div>
 
-        {/* Right Container (Metatdata) */}
+        {/* Right Container (Metadata) */}
         <div className="flex flex-col items-end text-right gap-1 pt-1">
           <span className="text-[12px] leading-[16px] font-medium text-[var(--md-sys-color-on-surface-variant)]">
             {record.date}
@@ -39,7 +39,7 @@ export function RecordDetailsView({ record }: RecordDetailsViewProps) {
       <DetailsSection title="现有问题" icon="psychology">
         <div className="border border-[var(--md-sys-color-outline)] rounded-xl p-4 bg-transparent outline-none">
           <p className="text-[14px] leading-[20px] font-normal text-[var(--md-sys-color-on-surface)]">
-            {record.reason}。患者报告在临床环境中持续存在注意力集中和情绪调节困难。建议进一步进行广泛症状筛查。
+            {record.detailedReason || record.reason}
           </p>
         </div>
       </DetailsSection>
@@ -48,44 +48,50 @@ export function RecordDetailsView({ record }: RecordDetailsViewProps) {
       {record.status === 'Closed' && (
         <DetailsSection title="反馈与建议" icon="clinical_notes">
           <div className="bg-[var(--md-sys-color-surface-container)] rounded-xl p-4 flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <span className="text-[12px] font-medium text-[var(--md-sys-color-on-surface-variant)] uppercase">医院摘要</span>
-              <p className="text-[14px] text-[var(--md-sys-color-on-surface)]">
-                该学生已完成初步评估。心理测评结果显示中度困扰水平。目前阶段未启动药物治疗。
-              </p>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-[12px] font-medium text-[var(--md-sys-color-on-surface-variant)] uppercase">随访安排</span>
-              <p className="text-[14px] text-[var(--md-sys-color-on-surface)]">
-                已安排每两周一次的咨询环节。下次复核定于 2026年6月。
-              </p>
-            </div>
+            {record.hospitalSummary && (
+              <div className="flex flex-col gap-1">
+                <span className="text-[12px] font-medium text-[var(--md-sys-color-on-surface-variant)] uppercase">医院摘要</span>
+                <p className="text-[14px] text-[var(--md-sys-color-on-surface)]">
+                  {record.hospitalSummary}
+                </p>
+              </div>
+            )}
+            {record.followUpArrangement && (
+              <div className="flex flex-col gap-1">
+                <span className="text-[12px] font-medium text-[var(--md-sys-color-on-surface-variant)] uppercase">随访安排</span>
+                <p className="text-[14px] text-[var(--md-sys-color-on-surface)]">
+                  {record.followUpArrangement}
+                </p>
+              </div>
+            )}
           </div>
         </DetailsSection>
       )}
 
       {/* Attachments Section */}
-      <DetailsSection title="附件" icon="attach_file">
-        <div className="flex flex-col gap-2">
-          {[1, 2].map(id => (
-            <div key={id} className="flex items-center gap-3 p-3 rounded-lg border border-[var(--md-sys-color-outline-variant)] border-opacity-30 hover:bg-[var(--md-sys-color-surface-container-low)] transition-colors cursor-pointer group">
-              <span className="material-symbols-outlined text-[var(--md-sys-color-primary)]">description</span>
-              <div className="flex flex-col flex-1 min-w-0">
-                <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)] truncate">Sanitized_Report_00{id}.pdf</span>
-                <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)]">1.4 MB • PDF</span>
+      {record.attachments && record.attachments.length > 0 && (
+        <DetailsSection title="附件" icon="attach_file">
+          <div className="flex flex-col gap-2">
+            {record.attachments.map((attachment: any, idx: number) => (
+              <div key={idx} className="flex items-center gap-3 p-3 rounded-lg border border-[var(--md-sys-color-outline-variant)] border-opacity-30 hover:bg-[var(--md-sys-color-surface-container-low)] transition-colors cursor-pointer group">
+                <span className="material-symbols-outlined text-[var(--md-sys-color-primary)]">description</span>
+                <div className="flex flex-col flex-1 min-w-0">
+                  <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)] truncate">{attachment.name}</span>
+                  <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)]">{attachment.size} • {attachment.type}</span>
+                </div>
+                <span className="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity text-[20px] text-[var(--md-sys-color-on-surface-variant)]">download</span>
               </div>
-              <span className="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity text-[20px] text-[var(--md-sys-color-on-surface-variant)]">download</span>
-            </div>
-          ))}
-        </div>
-      </DetailsSection>
+            ))}
+          </div>
+        </DetailsSection>
+      )}
 
       {/* Data Sharing & Consent Section */}
       <DetailsSection title="数据共享与知情同意" icon="shield_lock">
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-[#E47035] text-white flex items-center justify-center text-sm font-medium shrink-0">
-              D
+              {record.privacyVisitInitial || 'D'}
             </div>
             <div className="flex flex-col">
               <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">隐私访问</span>

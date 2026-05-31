@@ -10,6 +10,11 @@ export interface PsychiatricRecord {
   reason: string;
   date: string;
   status: 'Pending' | 'Closed';
+  detailedReason?: string;
+  hospitalSummary?: string;
+  followUpArrangement?: string;
+  attachments?: { name: string; size: string; type: string }[];
+  privacyVisitInitial?: string;
 }
 
 export const getRecordIcon = (type: PsychiatricRecordType): string => {
