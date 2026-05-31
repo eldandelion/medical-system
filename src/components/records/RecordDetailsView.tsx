@@ -11,7 +11,7 @@ export function RecordDetailsView({ record }: RecordDetailsViewProps) {
   return (
     <div className="flex flex-col gap-0">
       {/* Split Header Architecture */}
-      <div className="flex flex-row justify-between items-start pt-2 pb-6 border-b border-[var(--md-sys-color-outline-variant)] border-opacity-20 mb-4">
+      <div className="flex flex-row justify-between items-start pt-2 pb-6">
         {/* Left Container */}
         <div className="flex flex-col gap-2">
           <h1 className="text-[28px] leading-[36px] font-normal text-[var(--md-sys-color-on-surface)] tracking-tight">
