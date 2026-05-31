@@ -1,30 +1,4 @@
-export interface Student {
-  id: string;
-  name: string;
-  major: string;
-  year: string;
-  status: 'Active' | 'Inactive';
-  riskLevel?: 'High' | 'Moderate' | 'Low';
-  riskReason?: string;
-  referralReason?: string;
-  scidDiagnosis?: string;
-  riskFlags?: { label: string; value: boolean; severity: 'high' | 'medium' | 'none' }[];
-  demographics?: {
-    age: number;
-    gender: string;
-    studentId: string;
-    emergencyContact: string;
-  };
-  psychometrics?: {
-    scores: { date: string; value: number }[];
-    radarData: { subject: string; A: number; fullMark: number }[];
-  };
-  history?: {
-    date: string;
-    type: string;
-    description: string;
-  }[];
-}
+import { Student } from '../../types';
 
 export const mockStudentsDb: Student[] = [
   {

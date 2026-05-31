@@ -1,10 +1,31 @@
 import * as React from 'react';
 import { SecondaryButton, PrimaryButton } from '../common/Buttons';
 import { useCreationOverlay } from '../../contexts/CreationContext';
+import { Student } from '../../types';
 
 export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
   const { viewState, setHeaderActions } = useCreationOverlay();
   const isFullscreen = viewState === 'FULLSCREEN';
+
+  const [students, setStudents] = React.useState<Student[]>([]);
+  const [selectedStudentId, setSelectedStudentId] = React.useState<string>('');
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch('/api/students')
+      .then(res => res.json())
+      .then(data => {
+        setStudents(data);
+        if (data.length > 0) {
+          setSelectedStudentId(data[0].id);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch students:', err);
+        setLoading(false);
+      });
+  }, []);
 
   React.useEffect(() => {
     if (isFullscreen) {
@@ -22,6 +43,8 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
     };
   }, [isFullscreen, setHeaderActions, onClose]);
 
+  const selectedStudent = students.find(s => s.id === selectedStudentId);
+
   return (
     <div className="flex flex-col h-full bg-[var(--md-sys-color-surface)] relative">
       <div className={`flex-1 overflow-y-auto p-6 ${isFullscreen ? 'pb-8' : 'pb-32'}`}>
@@ -35,20 +58,20 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
             </h3>
             <div className="relative">
               {/* @ts-ignore */}
-              <md-outlined-select label="Student" className="w-full relative">
-                {/* @ts-ignore */}
-                {/* <md-icon slot="leading-icon">search</md-icon> */}
-                {/* @ts-ignore */}
-                <md-select-option value="1">
-                  <div slot="headline">Daniil Petrov</div>
-                  {/* @ts-ignore */}
-                </md-select-option>
-                {/* @ts-ignore */}
-                <md-select-option value="2">
-                  <div slot="headline">Alice Smith</div>
-                  {/* @ts-ignore */}
-                </md-select-option>
-                {/* @ts-ignore */}
+              <md-outlined-select
+                label="Student"
+                className="w-full relative"
+                value={selectedStudentId}
+                onChange={(e: any) => setSelectedStudentId(e.target.value)}
+              >
+                {students.map((student) => {
+                  // @ts-ignore
+                  return (
+                    <md-select-option key={student.id} value={student.id}>
+                      <div slot="headline">{student.name}</div>
+                    </md-select-option>
+                  );
+                })}
               </md-outlined-select>
             </div>
 
@@ -56,15 +79,21 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="flex flex-col">
                   <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)]">Name</span>
-                  <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">Daniil Petrov</span>
+                  <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">
+                    {loading ? 'Loading...' : (selectedStudent?.name || 'N/A')}
+                  </span>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)]">ID</span>
-                  <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">987654321</span>
+                  <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">
+                    {loading ? 'Loading...' : (selectedStudent?.demographics?.studentId || selectedStudent?.id || 'N/A')}
+                  </span>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)]">Major</span>
-                  <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">Computer Science</span>
+                  <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">
+                    {loading ? 'Loading...' : (selectedStudent?.major || 'N/A')}
+                  </span>
                 </div>
               </div>
             </div>
