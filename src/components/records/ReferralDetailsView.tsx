@@ -100,16 +100,16 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
       <CollapsibleHeader visible={!hideHeader && !isFullScreen && !isScrolled}>
         <div className="p-6 pb-4 flex flex-col gap-5">
           <div className="flex items-center justify-between gap-4 flex-nowrap overflow-hidden">
-            <div className="flex items-center gap-4 shrink-0">
+            <div className="flex items-center gap-4 min-w-0">
               {/* Primary Anchor: First Letter Avatar */}
               <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium shrink-0 animate-in fade-in zoom-in duration-300">
                 {referral.studentName.charAt(0)}
               </div>
-              <div className="flex flex-col gap-1">
-                <h1 className="text-[24px] font-medium leading-[32px] text-[var(--md-sys-color-on-surface)] tracking-tight whitespace-nowrap">
+              <div className="flex flex-col gap-1 min-w-0">
+                <h1 className="text-[24px] font-medium leading-[32px] text-[var(--md-sys-color-on-surface)] tracking-tight truncate">
                   {referral.studentName}
                 </h1>
-                <div className="flex items-center gap-3 overflow-hidden flex-nowrap">
+                <div className="flex items-center gap-3 flex-wrap">
                   <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80 whitespace-nowrap">
                     <md-icon style={{ fontSize: '20px', width: '20px', height: '20px' }}>badge</md-icon>
                     <span>{extendedData.studentId}</span>
@@ -133,21 +133,28 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                 </div>
               </div>
             </div>
+
+            {/* Clickable right arrow button in the vertical middle */}
+            <div className="flex items-center text-[var(--md-sys-color-on-surface-variant)] shrink-0">
+              <md-icon-button>
+                <md-icon>chevron_right</md-icon>
+              </md-icon-button>
+            </div>
           </div>
         </div>
       </CollapsibleHeader>
 
       {/* Primary Tabs */}
       {!isFullScreen && (
-        <PrimaryTabs 
-          tabs={tabs} 
-          activeTab={activeTab} 
-          onTabChange={(id) => setActiveTab(id as TabType)} 
+        <PrimaryTabs
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={(id) => setActiveTab(id as TabType)}
         />
       )}
 
       {/* Content Area */}
-      <div 
+      <div
         className="flex-1 overflow-y-auto p-6 custom-scrollbar pb-32"
         onScroll={handleScroll}
       >
@@ -161,22 +168,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
               transition={{ duration: 0.2 }}
               className="flex flex-col gap-6"
             >
-              {/* Static Demographics Section - Outlined Card with Navigation Arrow */}
-              <div className="p-5 rounded-2xl border border-[var(--md-sys-color-outline-variant)] flex flex-col gap-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface)]">
-                    <span className="material-symbols-outlined text-[20px] font-variation-settings-fill-1">fingerprint</span>
-                    <span className="text-sm font-bold uppercase tracking-widest leading-none">静态统计数据</span>
-                  </div>
-                  <span className="material-symbols-outlined text-[var(--md-sys-color-on-surface-variant)] opacity-50 cursor-pointer hover:opacity-100 transition-opacity">chevron_right</span>
-                </div>
-                <div className="grid grid-cols-2 gap-x-6 gap-y-4 px-2">
-                  <DetailItem label="年龄 (岁)" value={extendedData.age.toString() || ''} />
-                  <DetailItem label="性别" value={extendedData.gender || ''} />
-                  <DetailItem label="年级" value={extendedData.grade} />
-                  <DetailItem label="专业" value={extendedData.school} />
-                </div>
-              </div>
+
 
               {/* Triage Basics Card - Outlined */}
               <div className="p-5 rounded-2xl border border-[var(--md-sys-color-outline-variant)] flex flex-col gap-6">
