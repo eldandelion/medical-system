@@ -66,15 +66,13 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
                 <h1 className="text-[24px] font-medium leading-[32px] text-[var(--md-sys-color-on-surface)] tracking-tight whitespace-nowrap">
                   {student.name}
                 </h1>
-                <div className="flex items-center gap-3 overflow-hidden flex-nowrap">
-                  <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80 whitespace-nowrap">
-                    <md-icon style={{ fontSize: '20px', width: '20px', height: '20px' }}>badge</md-icon>
-                    <span>{student.demographics?.studentId || 'N/A'}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80 whitespace-nowrap">
-                    <md-icon style={{ fontSize: '20px', width: '20px', height: '20px' }}>school</md-icon>
-                    <span>{student.major}</span>
-                  </div>
+                <div className="flex items-center gap-2 text-[14px] text-[var(--md-sys-color-on-surface-variant)] overflow-hidden flex-nowrap">
+                  <span className="font-mono text-[13px] tracking-tight text-[var(--md-sys-color-primary)] font-bold">
+                    {student.demographics?.studentId || 'N/A'}
+                  </span>
+                  <span className="opacity-40 shrink-0">•</span>
+                  <span className="font-medium truncate">{student.major}</span>
+                  <span className="opacity-40 shrink-0">•</span>
                   {/* Critical Status: Risk Level Chip */}
                   <div className={`px-3 py-1 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${student.riskLevel === 'High'
                     ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
