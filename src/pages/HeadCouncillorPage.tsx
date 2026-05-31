@@ -6,7 +6,7 @@ import { NavItem } from '../components/layout/NavItem';
 import { CanvasHeader } from '../components/layout/CanvasHeader';
 import { NotificationsView } from '../components/notifications/NotificationsView';
 import { ProfileView } from '../components/profile/ProfileView';
-import { MyStudentsView } from '../components/students/MyStudentsView';
+import { StudentsView } from '../components/students/StudentsView';
 import { ReferralManagementView } from '../components/records/ReferralManagementView';
 import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
@@ -137,7 +137,7 @@ export function HeadCouncillorPage() {
       case 'Notifications':
         return <NotificationsView />;
       case 'Students':
-        return <MyStudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} />;
+        return <StudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} />;
       case 'Staff':
         return <StaffManagementView onStaffSelect={setSelectedItem} selectedStaffId={selectedItem?.id} />;
       case 'Referral Management':

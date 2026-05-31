@@ -10,12 +10,12 @@ interface Student {
   status: 'Active' | 'Inactive';
 }
 
-interface MyStudentsViewProps {
+interface StudentsViewProps {
   onStudentSelect?: (student: Student) => void;
   selectedStudentId?: string;
 }
 
-export function MyStudentsView({ onStudentSelect, selectedStudentId }: MyStudentsViewProps) {
+export function StudentsView({ onStudentSelect, selectedStudentId }: StudentsViewProps) {
   const students: Student[] = [
     { id: '1', name: 'Daniil Petrov', major: '计算机科学', year: '大三', status: 'Active' },
     { id: '2', name: 'Alice Smith', major: '心理学', year: '大四', status: 'Active' },
