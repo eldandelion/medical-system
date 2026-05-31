@@ -138,3 +138,43 @@ export function DetailItem({ label, value }: { label: string, value: string | Re
     </div>
   );
 }
+
+/**
+ * Hook to manage scroll collapsing state for detail view headers.
+ */
+export function useScrollCollapse(threshold = 20) {
+  const [isScrolled, setIsScrolled] = React.useState(false);
+  
+  const handleScroll = React.useCallback((e: React.UIEvent<HTMLElement>) => {
+    setIsScrolled(e.currentTarget.scrollTop > threshold);
+  }, [threshold]);
+
+  return { isScrolled, handleScroll, setIsScrolled };
+}
+
+interface CollapsibleHeaderProps {
+  visible: boolean;
+  children: React.ReactNode;
+  className?: string;
+}
+
+/**
+ * Reusable motion wrapper to animate header collapse on scroll.
+ */
+export function CollapsibleHeader({ visible, children, className = '' }: CollapsibleHeaderProps) {
+  return (
+    <AnimatePresence initial={false}>
+      {visible && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
+          className={`overflow-hidden origin-top ${className}`}
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
