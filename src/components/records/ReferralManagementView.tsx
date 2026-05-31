@@ -121,7 +121,7 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
               {item.studentName.charAt(0)}
             </div>
             {item.status === 'AwaitingApproval' && (
-              <div className="absolute -left-3.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[var(--md-sys-color-error)] shadow-[0_0_8px_rgba(179,38,30,0.4)]" />
+              <div className="absolute -left-3.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[var(--md-sys-color-error)] shadow-[0_0_8px_rgba(179,38,30,0.4)]" />
             )}
           </div>
           <span className="text-[14px] font-normal">{item.studentName}</span>
@@ -158,10 +158,10 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
       render: (item) => (
         <div className="flex items-center">
           <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider ${item.riskLevel === 'High'
-              ? 'bg-[#fee2e2] text-[#991b1b]' // Red for High
-              : item.riskLevel === 'Medium'
-                ? 'bg-[#fef9c3] text-[#854d0e]' // Yellow for Medium
-                : 'bg-[#f0fdf4] text-[#166534]' // Green for Low
+            ? 'bg-[#fee2e2] text-[#991b1b]' // Red for High
+            : item.riskLevel === 'Medium'
+              ? 'bg-[#fef9c3] text-[#854d0e]' // Yellow for Medium
+              : 'bg-[#f0fdf4] text-[#166534]' // Green for Low
             }`}>
             {item.riskLevel === 'High' ? '高' : item.riskLevel === 'Medium' ? '中' : '低'}
           </span>
@@ -174,14 +174,14 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
       width: 'w-[15%]',
       render: (item) => (
         <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${item.status === 'Approved'
-            ? 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]'
-            : item.status === 'AwaitingApproval'
-              ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-              : item.status === 'Pending'
-                ? 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]'
-                : item.status === 'Closed'
-                  ? 'bg-[#f0fdf4] text-[#166534]' // Green for Closed
-                  : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]'
+          ? 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]'
+          : item.status === 'AwaitingApproval'
+            ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+            : item.status === 'Pending'
+              ? 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]'
+              : item.status === 'Closed'
+                ? 'bg-[#f0fdf4] text-[#166534]' // Green for Closed
+                : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]'
           }`}>
           {item.status === 'Approved' ? '已批准' :
             item.status === 'AwaitingApproval' ? '待审批' :

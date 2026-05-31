@@ -88,10 +88,10 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
   };
 
   const tabs = [
-    { id: 'overview', label: '基本信息与转诊情况', icon: 'clinical_notes' },
-    { id: 'risk', label: '风险相关信息', icon: 'warning' },
-    { id: 'psychometrics', label: '量表结果摘要', icon: 'analytics' },
-    { id: 'feedback', label: '病历/医院诊断结果', icon: 'history_edu' },
+    { id: 'overview', label: '转诊概览', icon: 'clinical_notes' },
+    { id: 'risk', label: '风险评估', icon: 'warning' },
+    { id: 'psychometrics', label: '量表数据', icon: 'analytics' },
+    { id: 'feedback', label: '诊疗反馈', icon: 'history_edu' },
   ];
 
   return (
