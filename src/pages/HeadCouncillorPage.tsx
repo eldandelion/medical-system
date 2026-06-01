@@ -22,17 +22,28 @@ import { TertiaryFab } from '../components/common/Buttons';
 
 import { HEAD_COUNCILLOR_METRICS_CONFIG } from '../config/dashboardConfig';
 
-const HEAD_COUNCILLOR_TAB_TITLES: Record<string, string> = {
-  'Dashboard': '控制面板',
-  'Notifications': '通知中心',
-  'Students': '学生管理',
-  'Staff': '人员管理',
-  'Referral Management': '转诊管理',
-  'Security & Consent': '安全与知情同意'
+export const HeadCouncillorTabs = {
+  DASHBOARD: 'Dashboard',
+  NOTIFICATIONS: 'Notifications',
+  STUDENTS: 'Students',
+  STAFF: 'Staff',
+  REFERRAL_MANAGEMENT: 'Referral Management',
+  SECURITY: 'Security & Consent',
+} as const;
+
+export type HeadCouncillorPageName = typeof HeadCouncillorTabs[keyof typeof HeadCouncillorTabs];
+
+const HEAD_COUNCILLOR_TAB_TITLES: Record<HeadCouncillorPageName, string> = {
+  [HeadCouncillorTabs.DASHBOARD]: '控制面板',
+  [HeadCouncillorTabs.NOTIFICATIONS]: '通知中心',
+  [HeadCouncillorTabs.STUDENTS]: '学生管理',
+  [HeadCouncillorTabs.STAFF]: '人员管理',
+  [HeadCouncillorTabs.REFERRAL_MANAGEMENT]: '转诊管理',
+  [HeadCouncillorTabs.SECURITY]: '安全与知情同意'
 };
 
 export function HeadCouncillorPage() {
-  const [activePage, setActivePage] = React.useState('Dashboard');
+  const [activePage, setActivePage] = React.useState<HeadCouncillorPageName>(HeadCouncillorTabs.DASHBOARD);
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
   const [dashboardData, setDashboardData] = React.useState<any>(null);
@@ -64,7 +75,7 @@ export function HeadCouncillorPage() {
     };
   }, []);
 
-  const handlePageChange = (page: string) => {
+  const handlePageChange = (page: HeadCouncillorPageName) => {
     setActivePage(page);
     setSelectedItem(null);
   };
@@ -91,11 +102,11 @@ export function HeadCouncillorPage() {
   // Define tabs configuration for different detail views
   const getTabsForPage = () => {
     switch (activePage) {
-      case 'Students':
+      case HeadCouncillorTabs.STUDENTS:
         return STUDENT_DETAILS_TABS;
-      case 'Referral Management':
+      case HeadCouncillorTabs.REFERRAL_MANAGEMENT:
         return REFERRAL_DETAILS_TABS;
-      case 'Staff':
+      case HeadCouncillorTabs.STAFF:
         return STAFF_DETAILS_TABS;
       default:
         return [];
@@ -113,17 +124,17 @@ export function HeadCouncillorPage() {
 
   const renderActiveContent = () => {
     switch (activePage) {
-      case 'Notifications':
+      case HeadCouncillorTabs.NOTIFICATIONS:
         return <NotificationsView />;
-      case 'Students':
+      case HeadCouncillorTabs.STUDENTS:
         return <StudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} />;
-      case 'Staff':
+      case HeadCouncillorTabs.STAFF:
         return <StaffManagementView onStaffSelect={setSelectedItem} selectedStaffId={selectedItem?.id} />;
-      case 'Referral Management':
+      case HeadCouncillorTabs.REFERRAL_MANAGEMENT:
         return <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} />;
-      case 'Security & Consent':
+      case HeadCouncillorTabs.SECURITY:
         return <SecurityConsentView />;
-      case 'Dashboard':
+      case HeadCouncillorTabs.DASHBOARD:
         if (dashboardLoading) {
           return (
             <div className="flex-1 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
@@ -150,7 +161,7 @@ export function HeadCouncillorPage() {
               numericValue: dashboardData.metrics[metric.metricKey] || 0,
               label: metric.label,
               containerColorClass: metric.containerColorClass,
-              onClick: () => handlePageChange(metric.targetPage)
+              onClick: () => handlePageChange(metric.targetPage as HeadCouncillorPageName)
             }))}
             activityTitle={dashboardData.activityTitle}
             activities={dashboardData.activities}
@@ -175,13 +186,13 @@ export function HeadCouncillorPage() {
       }}
     >
       <Sidebar composeButton={composeButton}>
-        <NavItem icon="dashboard" label="控制面板" active={activePage === 'Dashboard'} onClick={() => handlePageChange('Dashboard')} />
-        <NavItem icon="notifications" label="通知中心" active={activePage === 'Notifications'} onClick={() => handlePageChange('Notifications')} badge={true} />
+        <NavItem icon="dashboard" label="控制面板" active={activePage === HeadCouncillorTabs.DASHBOARD} onClick={() => handlePageChange(HeadCouncillorTabs.DASHBOARD)} />
+        <NavItem icon="notifications" label="通知中心" active={activePage === HeadCouncillorTabs.NOTIFICATIONS} onClick={() => handlePageChange(HeadCouncillorTabs.NOTIFICATIONS)} badge={true} />
 
-        <NavItem icon="group" label="学生管理" active={activePage === 'Students'} onClick={() => handlePageChange('Students')} />
-        <NavItem icon="engineering" label="人员管理" active={activePage === 'Staff'} onClick={() => handlePageChange('Staff')} />
-        <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === 'Referral Management'} onClick={() => handlePageChange('Referral Management')} />
-        <NavItem icon="security" label="安全与知情同意" active={activePage === 'Security & Consent'} onClick={() => handlePageChange('Security & Consent')} />
+        <NavItem icon="group" label="学生管理" active={activePage === HeadCouncillorTabs.STUDENTS} onClick={() => handlePageChange(HeadCouncillorTabs.STUDENTS)} />
+        <NavItem icon="engineering" label="人员管理" active={activePage === HeadCouncillorTabs.STAFF} onClick={() => handlePageChange(HeadCouncillorTabs.STAFF)} />
+        <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === HeadCouncillorTabs.REFERRAL_MANAGEMENT} onClick={() => handlePageChange(HeadCouncillorTabs.REFERRAL_MANAGEMENT)} />
+        <NavItem icon="security" label="安全与知情同意" active={activePage === HeadCouncillorTabs.SECURITY} onClick={() => handlePageChange(HeadCouncillorTabs.SECURITY)} />
       </Sidebar>
 
       <div className="flex-1 flex flex-col min-w-0 bg-transparent">
@@ -192,7 +203,7 @@ export function HeadCouncillorPage() {
             <DetailsPanel
               isOpen={!!selectedItem}
               onClose={() => setSelectedItem(null)}
-              title={selectedItem?.name || selectedItem?.studentName || ''}
+              title={selectedItem?.employeeId ? '人员详情' : (selectedItem?.name ? '学生详情' : (selectedItem?.studentName || ''))}
               subtitle={selectedItem?.major || selectedItem?.type || selectedItem?.department || ''}
               headerAvatar={
                 (selectedItem?.name || selectedItem?.studentName) ? (
@@ -205,17 +216,17 @@ export function HeadCouncillorPage() {
               tabs={tabs}
               activeTab={activeTab}
               onTabChange={setActiveTab}
-              disablePadding={(activePage === 'Students' && !!selectedItem?.name) || (activePage === 'Referral Management' && !!selectedItem?.studentName) || (activePage === 'Staff' && !!selectedItem?.employeeId)}
+              disablePadding={(activePage === HeadCouncillorTabs.STUDENTS && !!selectedItem?.name) || (activePage === HeadCouncillorTabs.REFERRAL_MANAGEMENT && !!selectedItem?.studentName) || (activePage === HeadCouncillorTabs.STAFF && !!selectedItem?.employeeId)}
             >
               {selectedItem && (
                 <>
-                  {activePage === 'Students' && (
+                  {activePage === HeadCouncillorTabs.STUDENTS && (
                     <StudentDetailsView student={selectedItem} activeTab={activeTab} onTabChange={setActiveTab} />
                   )}
-                  {activePage === 'Staff' && (
+                  {activePage === HeadCouncillorTabs.STAFF && (
                     <StaffDetailsView staff={selectedItem} activeTab={activeTab} onTabChange={setActiveTab} />
                   )}
-                  {activePage === 'Referral Management' && (
+                  {activePage === HeadCouncillorTabs.REFERRAL_MANAGEMENT && (
                     <ReferralDetailsView referral={selectedItem} userRole="head-councillor" activeTab={activeTab} onTabChange={setActiveTab} />
                   )}
                 </>

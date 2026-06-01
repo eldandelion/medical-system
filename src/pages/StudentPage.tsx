@@ -14,18 +14,26 @@ import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { RecordDetailsView } from '../components/records/RecordDetailsView';
 import { STUDENT_METRICS_CONFIG } from '../config/dashboardConfig';
 
-export type StudentTab = 'Dashboard' | 'Notifications' | 'Assessments' | 'My Records' | 'Security & Consent';
+export const StudentTabs = {
+  DASHBOARD: 'Dashboard',
+  NOTIFICATIONS: 'Notifications',
+  ASSESSMENTS: 'Assessments',
+  MY_RECORDS: 'My Records',
+  SECURITY: 'Security & Consent',
+} as const;
+
+export type StudentTab = typeof StudentTabs[keyof typeof StudentTabs];
 
 const STUDENT_TAB_TITLES: Record<StudentTab, string> = {
-  'Dashboard': '控制面板',
-  'Notifications': '通知中心',
-  'Assessments': '自我测评',
-  'My Records': '我的记录',
-  'Security & Consent': '安全与知情同意'
+  [StudentTabs.DASHBOARD]: '控制面板',
+  [StudentTabs.NOTIFICATIONS]: '通知中心',
+  [StudentTabs.ASSESSMENTS]: '自我测评',
+  [StudentTabs.MY_RECORDS]: '我的记录',
+  [StudentTabs.SECURITY]: '安全与知情同意'
 };
 
 export function StudentPage() {
-  const [activePage, setActivePage] = React.useState<StudentTab>('Dashboard');
+  const [activePage, setActivePage] = React.useState<StudentTab>(StudentTabs.DASHBOARD);
   const [selectedRecord, setSelectedRecord] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
   const [dashboardData, setDashboardData] = React.useState<any>(null);
@@ -64,13 +72,13 @@ export function StudentPage() {
 
   const renderActiveContent = () => {
     switch (activePage) {
-      case 'Notifications':
+      case StudentTabs.NOTIFICATIONS:
         return <NotificationsView />;
-      case 'Assessments':
+      case StudentTabs.ASSESSMENTS:
         return <AssessmentsView />;
-      case 'My Records':
+      case StudentTabs.MY_RECORDS:
         return <RecordsView onRecordSelect={setSelectedRecord} selectedRecordId={selectedRecord?.id} />;
-      case 'Dashboard':
+      case StudentTabs.DASHBOARD:
         if (dashboardLoading) {
           return (
             <div className="flex-1 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
@@ -122,12 +130,12 @@ export function StudentPage() {
       }}
     >
       <Sidebar>
-        <NavItem icon="dashboard" label="控制面板" active={activePage === 'Dashboard'} onClick={() => handlePageChange('Dashboard')} />
-        <NavItem icon="notifications" label="通知中心" active={activePage === 'Notifications'} onClick={() => handlePageChange('Notifications')} badge={true} />
+        <NavItem icon="dashboard" label="控制面板" active={activePage === StudentTabs.DASHBOARD} onClick={() => handlePageChange(StudentTabs.DASHBOARD)} />
+        <NavItem icon="notifications" label="通知中心" active={activePage === StudentTabs.NOTIFICATIONS} onClick={() => handlePageChange(StudentTabs.NOTIFICATIONS)} badge={true} />
 
-        <NavItem icon="assignment" label="自我测评" active={activePage === 'Assessments'} onClick={() => handlePageChange('Assessments')} />
-        <NavItem icon="folder" label="我的记录" active={activePage === 'My Records'} onClick={() => handlePageChange('My Records')} />
-        <NavItem icon="security" label="知情同意" active={activePage === 'Security & Consent'} onClick={() => handlePageChange('Security & Consent')} />
+        <NavItem icon="assignment" label="自我测评" active={activePage === StudentTabs.ASSESSMENTS} onClick={() => handlePageChange(StudentTabs.ASSESSMENTS)} />
+        <NavItem icon="folder" label="我的记录" active={activePage === StudentTabs.MY_RECORDS} onClick={() => handlePageChange(StudentTabs.MY_RECORDS)} />
+        <NavItem icon="security" label="知情同意" active={activePage === StudentTabs.SECURITY} onClick={() => handlePageChange(StudentTabs.SECURITY)} />
       </Sidebar>
 
       <div className="flex-1 flex flex-col min-w-0 bg-transparent">

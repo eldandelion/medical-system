@@ -20,18 +20,26 @@ import { TertiaryFab } from '../components/common/Buttons';
 
 import { TEACHER_METRICS_CONFIG } from '../config/dashboardConfig';
 
-export type TeacherPageName = 'Dashboard' | 'Notifications' | 'Students' | 'Referral Management' | 'Security & Consent';
+export const TeacherTabs = {
+  DASHBOARD: 'Dashboard',
+  NOTIFICATIONS: 'Notifications',
+  STUDENTS: 'Students',
+  REFERRAL_MANAGEMENT: 'Referral Management',
+  SECURITY: 'Security & Consent',
+} as const;
+
+export type TeacherPageName = typeof TeacherTabs[keyof typeof TeacherTabs];
 
 const TEACHER_TAB_TITLES: Record<TeacherPageName, string> = {
-  'Dashboard': '控制面板',
-  'Notifications': '通知中心',
-  'Students': '学生管理',
-  'Referral Management': '转诊管理',
-  'Security & Consent': '安全与知情同意'
+  [TeacherTabs.DASHBOARD]: '控制面板',
+  [TeacherTabs.NOTIFICATIONS]: '通知中心',
+  [TeacherTabs.STUDENTS]: '学生管理',
+  [TeacherTabs.REFERRAL_MANAGEMENT]: '转诊管理',
+  [TeacherTabs.SECURITY]: '安全与知情同意'
 };
 
 export function TeacherPage() {
-  const [activePage, setActivePage] = React.useState<TeacherPageName>('Dashboard');
+  const [activePage, setActivePage] = React.useState<TeacherPageName>(TeacherTabs.DASHBOARD);
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
   const [dashboardData, setDashboardData] = React.useState<any>(null);
@@ -73,9 +81,9 @@ export function TeacherPage() {
   // Define tabs configuration for different detail views
   const getTabsForPage = () => {
     switch (activePage) {
-      case 'Students':
+      case TeacherTabs.STUDENTS:
         return STUDENT_DETAILS_TABS;
-      case 'Referral Management':
+      case TeacherTabs.REFERRAL_MANAGEMENT:
         return REFERRAL_DETAILS_TABS;
       default:
         return [];
@@ -110,15 +118,15 @@ export function TeacherPage() {
 
   const renderActiveContent = () => {
     switch (activePage) {
-      case 'Notifications':
+      case TeacherTabs.NOTIFICATIONS:
         return <NotificationsView />;
-      case 'Students':
+      case TeacherTabs.STUDENTS:
         return <StudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} />;
-      case 'Referral Management':
+      case TeacherTabs.REFERRAL_MANAGEMENT:
         return <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} />;
-      case 'Security & Consent':
+      case TeacherTabs.SECURITY:
         return <SecurityConsentView />;
-      case 'Dashboard':
+      case TeacherTabs.DASHBOARD:
         if (dashboardLoading) {
           return (
             <div className="flex-1 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
@@ -170,12 +178,12 @@ export function TeacherPage() {
       }}
     >
       <Sidebar composeButton={composeButton}>
-        <NavItem icon="dashboard" label="控制面板" active={activePage === 'Dashboard'} onClick={() => handlePageChange('Dashboard')} />
-        <NavItem icon="notifications" label="通知中心" active={activePage === 'Notifications'} onClick={() => handlePageChange('Notifications')} badge={true} />
+        <NavItem icon="dashboard" label="控制面板" active={activePage === TeacherTabs.DASHBOARD} onClick={() => handlePageChange(TeacherTabs.DASHBOARD)} />
+        <NavItem icon="notifications" label="通知中心" active={activePage === TeacherTabs.NOTIFICATIONS} onClick={() => handlePageChange(TeacherTabs.NOTIFICATIONS)} badge={true} />
 
-        <NavItem icon="group" label="学生管理" active={activePage === 'Students'} onClick={() => handlePageChange('Students')} />
-        <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === 'Referral Management'} onClick={() => handlePageChange('Referral Management')} />
-        <NavItem icon="security" label="安全与知情同意" active={activePage === 'Security & Consent'} onClick={() => handlePageChange('Security & Consent')} />
+        <NavItem icon="group" label="学生管理" active={activePage === TeacherTabs.STUDENTS} onClick={() => handlePageChange(TeacherTabs.STUDENTS)} />
+        <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === TeacherTabs.REFERRAL_MANAGEMENT} onClick={() => handlePageChange(TeacherTabs.REFERRAL_MANAGEMENT)} />
+        <NavItem icon="security" label="安全与知情同意" active={activePage === TeacherTabs.SECURITY} onClick={() => handlePageChange(TeacherTabs.SECURITY)} />
       </Sidebar>
 
       <div className="flex-1 flex flex-col min-w-0 bg-transparent">
@@ -186,7 +194,7 @@ export function TeacherPage() {
             <DetailsPanel
               isOpen={!!selectedItem}
               onClose={() => setSelectedItem(null)}
-              title={selectedItem?.name || selectedItem?.studentName || ''}
+              title={selectedItem?.name ? '学生详情' : (selectedItem?.studentName || '')}
               subtitle={selectedItem?.major || selectedItem?.type || selectedItem?.department || ''}
               headerAvatar={
                 (selectedItem?.name || selectedItem?.studentName) ? (
@@ -199,14 +207,14 @@ export function TeacherPage() {
               tabs={tabs}
               activeTab={activeTab}
               onTabChange={setActiveTab}
-              disablePadding={(activePage === 'Students' && !!selectedItem?.name) || (activePage === 'Referral Management' && !!selectedItem?.studentName)}
+              disablePadding={(activePage === TeacherTabs.STUDENTS && !!selectedItem?.name) || (activePage === TeacherTabs.REFERRAL_MANAGEMENT && !!selectedItem?.studentName)}
             >
               {selectedItem && (
                 <>
-                  {activePage === 'Students' && (
+                  {activePage === TeacherTabs.STUDENTS && (
                     <StudentDetailsView student={selectedItem} activeTab={activeTab} onTabChange={setActiveTab} />
                   )}
-                  {activePage === 'Referral Management' && (
+                  {activePage === TeacherTabs.REFERRAL_MANAGEMENT && (
                     <ReferralDetailsView referral={selectedItem} userRole="teacher" activeTab={activeTab} onTabChange={setActiveTab} />
                   )}
                 </>

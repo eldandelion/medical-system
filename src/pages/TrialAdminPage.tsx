@@ -19,16 +19,26 @@ import { TertiaryFab } from '../components/common/Buttons';
 
 import { TRIAL_ADMIN_METRICS_CONFIG } from '../config/dashboardConfig';
 
-const TRIAL_ADMIN_TAB_TITLES: Record<string, string> = {
-  'Dashboard': '控制面板',
-  'Notifications': '通知中心',
-  'Staff': '人员管理',
-  'Referral Management': '转诊管理',
-  'Security & Consent': '安全与知情同意'
+export const TrialAdminTabs = {
+  DASHBOARD: 'Dashboard',
+  NOTIFICATIONS: 'Notifications',
+  STAFF: 'Staff',
+  REFERRAL_MANAGEMENT: 'Referral Management',
+  SECURITY: 'Security & Consent',
+} as const;
+
+export type TrialAdminPageName = typeof TrialAdminTabs[keyof typeof TrialAdminTabs];
+
+const TRIAL_ADMIN_TAB_TITLES: Record<TrialAdminPageName, string> = {
+  [TrialAdminTabs.DASHBOARD]: '控制面板',
+  [TrialAdminTabs.NOTIFICATIONS]: '通知中心',
+  [TrialAdminTabs.STAFF]: '人员管理',
+  [TrialAdminTabs.REFERRAL_MANAGEMENT]: '转诊管理',
+  [TrialAdminTabs.SECURITY]: '安全与知情同意'
 };
 
 export function TrialAdminPage() {
-  const [activePage, setActivePage] = React.useState('Dashboard');
+  const [activePage, setActivePage] = React.useState<TrialAdminPageName>(TrialAdminTabs.DASHBOARD);
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
   const [dashboardData, setDashboardData] = React.useState<any>(null);
@@ -60,7 +70,7 @@ export function TrialAdminPage() {
     };
   }, []);
 
-  const handlePageChange = (page: string) => {
+  const handlePageChange = (page: TrialAdminPageName) => {
     setActivePage(page);
     setSelectedItem(null);
   };
@@ -70,9 +80,9 @@ export function TrialAdminPage() {
   // Define tabs configuration for different detail views
   const getTabsForPage = () => {
     switch (activePage) {
-      case 'Staff':
+      case TrialAdminTabs.STAFF:
         return STAFF_DETAILS_TABS;
-      case 'Referral Management':
+      case TrialAdminTabs.REFERRAL_MANAGEMENT:
         return REFERRAL_DETAILS_TABS;
       default:
         return [];
@@ -106,15 +116,15 @@ export function TrialAdminPage() {
 
   const renderActiveContent = () => {
     switch (activePage) {
-      case 'Notifications':
+      case TrialAdminTabs.NOTIFICATIONS:
         return <NotificationsView />;
-      case 'Staff':
+      case TrialAdminTabs.STAFF:
         return <StaffManagementView onStaffSelect={setSelectedItem} selectedStaffId={selectedItem?.id} />;
-      case 'Referral Management':
+      case TrialAdminTabs.REFERRAL_MANAGEMENT:
         return <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} />;
-      case 'Security & Consent':
+      case TrialAdminTabs.SECURITY:
         return <SecurityConsentView />;
-      case 'Dashboard':
+      case TrialAdminTabs.DASHBOARD:
         if (dashboardLoading) {
           return (
             <div className="flex-1 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
@@ -141,7 +151,7 @@ export function TrialAdminPage() {
               numericValue: dashboardData.metrics[metric.metricKey] || 0,
               label: metric.label,
               containerColorClass: metric.containerColorClass,
-              onClick: () => handlePageChange(metric.targetPage)
+              onClick: () => handlePageChange(metric.targetPage as TrialAdminPageName)
             }))}
             activityTitle={dashboardData.activityTitle}
             activities={dashboardData.activities}
@@ -166,13 +176,13 @@ export function TrialAdminPage() {
       }}
     >
       <Sidebar composeButton={composeButton}>
-        <NavItem icon="dashboard" label="控制面板" active={activePage === 'Dashboard'} onClick={() => handlePageChange('Dashboard')} />
-        <NavItem icon="notifications" label="通知中心" active={activePage === 'Notifications'} onClick={() => handlePageChange('Notifications')} badge={true} />
+        <NavItem icon="dashboard" label="控制面板" active={activePage === TrialAdminTabs.DASHBOARD} onClick={() => handlePageChange(TrialAdminTabs.DASHBOARD)} />
+        <NavItem icon="notifications" label="通知中心" active={activePage === TrialAdminTabs.NOTIFICATIONS} onClick={() => handlePageChange(TrialAdminTabs.NOTIFICATIONS)} badge={true} />
 
         {/* Note: Student Management is removed for Trial Admin */}
-        <NavItem icon="engineering" label="人员管理" active={activePage === 'Staff'} onClick={() => handlePageChange('Staff')} />
-        <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === 'Referral Management'} onClick={() => handlePageChange('Referral Management')} />
-        <NavItem icon="security" label="安全与知情同意" active={activePage === 'Security & Consent'} onClick={() => handlePageChange('Security & Consent')} />
+        <NavItem icon="engineering" label="人员管理" active={activePage === TrialAdminTabs.STAFF} onClick={() => handlePageChange(TrialAdminTabs.STAFF)} />
+        <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === TrialAdminTabs.REFERRAL_MANAGEMENT} onClick={() => handlePageChange(TrialAdminTabs.REFERRAL_MANAGEMENT)} />
+        <NavItem icon="security" label="安全与知情同意" active={activePage === TrialAdminTabs.SECURITY} onClick={() => handlePageChange(TrialAdminTabs.SECURITY)} />
       </Sidebar>
 
       <div className="flex-1 flex flex-col min-w-0 bg-transparent">
@@ -183,7 +193,7 @@ export function TrialAdminPage() {
             <DetailsPanel
               isOpen={!!selectedItem}
               onClose={() => setSelectedItem(null)}
-              title={selectedItem?.name || selectedItem?.studentName || ''}
+              title={selectedItem?.employeeId ? '人员详情' : (selectedItem?.name || selectedItem?.studentName || '')}
               subtitle={selectedItem?.major || selectedItem?.type || selectedItem?.department || ''}
               headerAvatar={
                 (selectedItem?.name || selectedItem?.studentName) ? (
@@ -196,14 +206,14 @@ export function TrialAdminPage() {
               tabs={tabs}
               activeTab={activeTab}
               onTabChange={setActiveTab}
-              disablePadding={(activePage === 'Referral Management' && !!selectedItem?.studentName) || (activePage === 'Staff' && !!selectedItem?.employeeId)}
+              disablePadding={(activePage === TrialAdminTabs.REFERRAL_MANAGEMENT && !!selectedItem?.studentName) || (activePage === TrialAdminTabs.STAFF && !!selectedItem?.employeeId)}
             >
               {selectedItem && (
                 <>
-                  {activePage === 'Staff' && (
+                  {activePage === TrialAdminTabs.STAFF && (
                     <StaffDetailsView staff={selectedItem} activeTab={activeTab} onTabChange={setActiveTab} />
                   )}
-                  {activePage === 'Referral Management' && (
+                  {activePage === TrialAdminTabs.REFERRAL_MANAGEMENT && (
                     <ReferralDetailsView referral={selectedItem} userRole="trial-admin" activeTab={activeTab} onTabChange={setActiveTab} />
                   )}
                 </>
