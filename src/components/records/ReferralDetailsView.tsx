@@ -60,22 +60,17 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                   {referral.studentName}
                 </h1>
                 <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80 whitespace-nowrap">
-                    <md-icon style={{ fontSize: '20px', width: '20px', height: '20px' }}>badge</md-icon>
-                    <span>{extendedData.studentId}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] opacity-80 whitespace-nowrap">
-                    <md-icon style={{ fontSize: '20px', width: '20px', height: '20px' }}>school</md-icon>
-                    <span>{extendedData.school}</span>
-                  </div>
+                  <span className="font-mono text-[13px] tracking-tight text-[var(--md-sys-color-primary)] font-bold">
+                    {extendedData.studentId || 'N/A'}
+                  </span>
+                  <span className="opacity-40 shrink-0">•</span>
+                  <span className="font-medium truncate">{extendedData.school}</span>
+                  <span className="opacity-40 shrink-0">•</span>
                   {/* Critical Status: Risk Level Chip */}
                   <div className={`px-3 py-1 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${referral.riskLevel === 'High'
                     ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
                     : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
                     }`}>
-                    <md-icon style={{ fontSize: '16px', width: '14px', height: '14px' }}>
-                      {referral.riskLevel === 'High' ? 'warning' : 'info'}
-                    </md-icon>
                     <span>
                       {referral.riskLevel === 'High' ? '高风险' : '中低风险'}
                     </span>
@@ -86,8 +81,11 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
 
             {/* Clickable right arrow button in the vertical middle */}
             <div className="flex items-center text-[var(--md-sys-color-on-surface-variant)] shrink-0">
+              {/* @ts-ignore */}
               <md-icon-button>
+                {/* @ts-ignore */}
                 <md-icon>chevron_right</md-icon>
+              {/* @ts-ignore */}
               </md-icon-button>
             </div>
           </div>
@@ -95,13 +93,15 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
       </CollapsibleHeader>
 
       {/* Primary Tabs */}
-      {!isFullScreen && (
-        <PrimaryTabs
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={(id) => setActiveTab(id as TabType)}
-        />
-      )}
+      {
+        !isFullScreen && (
+          <PrimaryTabs
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={(id) => setActiveTab(id as TabType)}
+          />
+        )
+      }
 
       {/* Content Area */}
       <div
@@ -390,6 +390,6 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
           </>
         )}
       </ActionFooter>
-    </div>
+    </div >
   );
 }

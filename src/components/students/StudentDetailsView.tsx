@@ -57,16 +57,16 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
       <CollapsibleHeader visible={!hideHeader && !isFullScreen && !isScrolled}>
         <div className="p-6 pb-4 flex flex-col gap-5">
           <div className="flex items-center justify-between gap-4 flex-nowrap overflow-hidden">
-            <div className="flex items-center gap-4 shrink-0">
+            <div className="flex items-center gap-4 min-w-0">
               {/* Primary Anchor: First Letter Avatar */}
               <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium shrink-0 animate-in fade-in zoom-in duration-300">
                 {student.name ? student.name.charAt(0) : '?'}
               </div>
-              <div className="flex flex-col gap-1">
-                <h1 className="text-[24px] font-medium leading-[32px] text-[var(--md-sys-color-on-surface)] tracking-tight whitespace-nowrap">
+              <div className="flex flex-col gap-1 min-w-0">
+                <h1 className="text-[24px] font-medium leading-[32px] text-[var(--md-sys-color-on-surface)] tracking-tight truncate">
                   {student.name}
                 </h1>
-                <div className="flex items-center gap-2 text-[14px] text-[var(--md-sys-color-on-surface-variant)] overflow-hidden flex-nowrap">
+                <div className="flex items-center gap-x-2 gap-y-1 text-[14px] text-[var(--md-sys-color-on-surface-variant)] flex-wrap">
                   <span className="font-mono text-[13px] tracking-tight text-[var(--md-sys-color-primary)] font-bold">
                     {student.demographics?.studentId || 'N/A'}
                   </span>
@@ -78,9 +78,9 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
                     ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
                     : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
                     }`}>
-                    <md-icon style={{ fontSize: '16px', width: '14px', height: '14px' }}>
+                    {/* <md-icon style={{ fontSize: '16px', width: '14px', height: '14px' }}>
                       {student.riskLevel === 'High' ? 'warning' : 'info'}
-                    </md-icon>
+                    </md-icon> */}
                     <span>
                       {student.riskLevel === 'High' ? '高风险' : '中低风险'}
                     </span>
