@@ -4,28 +4,34 @@ import { DetailsSection, DetailItem, useScrollCollapse, CollapsibleHeader } from
 import { PrimaryButton, SecondaryButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
 import { useCreationOverlay } from '../../contexts/CreationContext';
-import { PsychometricTable } from '../common/PsychometricTable';
 import { useDetails } from '../../contexts/DetailsContext';
 import { PrimaryTabs } from '../common/Tabs';
 import { PsychometricsTabContent } from '../assessments/PsychometricsTabContent';
+import { Student } from '../../types';
 
 interface StudentDetailsViewProps {
-  student: any;
+  student: Student;
   hideHeader?: boolean;
   activeTab?: string;
   onTabChange?: (tabId: string) => void;
 }
 
-type TabType = 'overview' | 'psychometrics' | 'history';
+export const StudentDetailsTabs = {
+  OVERVIEW: 'overview',
+  PSYCHOMETRICS: 'psychometrics',
+  HISTORY: 'history',
+} as const;
+
+export type TabType = typeof StudentDetailsTabs[keyof typeof StudentDetailsTabs];
 
 export const STUDENT_DETAILS_TABS = [
-  { id: 'overview', label: '临床概览', icon: 'clinical_notes' },
-  { id: 'psychometrics', label: '量表数据', icon: 'analytics' },
-  { id: 'history', label: '档案记录', icon: 'history_edu' },
+  { id: StudentDetailsTabs.OVERVIEW, label: '临床概览', icon: 'clinical_notes' },
+  { id: StudentDetailsTabs.PSYCHOMETRICS, label: '量表数据', icon: 'analytics' },
+  { id: StudentDetailsTabs.HISTORY, label: '档案记录', icon: 'history_edu' },
 ];
 
 export function StudentDetailsView({ student, hideHeader, activeTab: propsActiveTab, onTabChange }: StudentDetailsViewProps) {
-  const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
+  const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>(StudentDetailsTabs.OVERVIEW);
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
   const { isScrolled, handleScroll } = useScrollCollapse(20);
 
@@ -97,7 +103,7 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
         onScroll={handleScroll}
       >
         <AnimatePresence mode="wait">
-          {activeTab === 'overview' && (
+          {activeTab === StudentDetailsTabs.OVERVIEW && (
             <motion.div
               key="overview"
               initial={{ opacity: 0, x: isFullScreen ? 0 : 10, y: isFullScreen ? 10 : 0 }}
@@ -135,7 +141,7 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
             </motion.div>
           )}
 
-          {activeTab === 'psychometrics' && (
+          {activeTab === StudentDetailsTabs.PSYCHOMETRICS && (
             <motion.div
               key="psychometrics"
               initial={{ opacity: 0, x: isFullScreen ? 0 : 10, y: isFullScreen ? 10 : 0 }}
@@ -149,7 +155,7 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
             </motion.div>
           )}
 
-          {activeTab === 'history' && (
+          {activeTab === StudentDetailsTabs.HISTORY && (
             <motion.div
               key="history"
               initial={{ opacity: 0, x: isFullScreen ? 0 : 10, y: isFullScreen ? 10 : 0 }}
