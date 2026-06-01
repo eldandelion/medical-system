@@ -203,7 +203,7 @@ export function HeadCouncillorPage() {
             <DetailsPanel
               isOpen={!!selectedItem}
               onClose={() => setSelectedItem(null)}
-              title={selectedItem?.employeeId ? '人员详情' : (selectedItem?.name ? '学生详情' : (selectedItem?.studentName || ''))}
+              title={selectedItem?.employeeId ? '人员详情' : (selectedItem?.name ? '学生详情' : (selectedItem?.type || '转诊详情'))}
               subtitle={selectedItem?.major || selectedItem?.type || selectedItem?.department || ''}
               headerAvatar={
                 (selectedItem?.name || selectedItem?.studentName) ? (

@@ -37,11 +37,13 @@ export function DetailsPanel({
   disablePadding = false
 }: DetailsPanelProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
+  const [titleOverride, setTitleOverride] = React.useState<string | null>(null);
 
   // Reset expansion state when the panel is closed
   React.useEffect(() => {
     if (!isOpen) {
       setIsExpanded(false);
+      setTitleOverride(null);
     }
   }, [isOpen]);
 
@@ -63,7 +65,7 @@ export function DetailsPanel({
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="material-symbols-outlined shrink-0" style={{ color: iconColor, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
                 </div>
-                <span className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)] truncate">{title}</span>
+                <span className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)] truncate">{titleOverride || title}</span>
               </div>
               <div className="flex items-center gap-0.5 shrink-0">
                 <button
@@ -82,9 +84,8 @@ export function DetailsPanel({
             </div>
 
 
-            {/* Panel Scrollable Content */}
             <div className={`flex-1 custom-scrollbar flex flex-col scroll-smooth ${disablePadding ? 'overflow-hidden' : 'overflow-y-auto p-5'}`}>
-              <DetailsContext.Provider value={{ isFullScreen: false }}>
+              <DetailsContext.Provider value={{ isFullScreen: false, titleOverride, setTitleOverride }}>
                 {children}
               </DetailsContext.Provider>
             </div>
@@ -102,7 +103,7 @@ export function DetailsPanel({
         onTabChange={onTabChange}
         disablePadding={disablePadding}
       >
-        <DetailsContext.Provider value={{ isFullScreen: true }}>
+        <DetailsContext.Provider value={{ isFullScreen: true, titleOverride, setTitleOverride }}>
           {children}
         </DetailsContext.Provider>
       </FullScreenView>

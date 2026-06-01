@@ -28,12 +28,22 @@ export const REFERRAL_DETAILS_TABS = [
 ];
 
 export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab: propsActiveTab, onTabChange }: ReferralDetailsViewProps) {
-  const { isFullScreen } = useDetails();
+  const { isFullScreen, setTitleOverride } = useDetails();
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
   const [isRejectionDialogOpen, setIsRejectionDialogOpen] = React.useState(false);
   const [rejectionReason, setRejectionReason] = React.useState('');
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
   const { isScrolled, handleScroll } = useScrollCollapse(20);
+
+  React.useEffect(() => {
+    if (setTitleOverride) {
+      if (isScrolled && referral.studentName) {
+        setTitleOverride(referral.studentName);
+      } else {
+        setTitleOverride(null);
+      }
+    }
+  }, [isScrolled, referral.studentName, setTitleOverride]);
   const [studentData, setStudentData] = React.useState<any>(null);
 
   React.useEffect(() => {

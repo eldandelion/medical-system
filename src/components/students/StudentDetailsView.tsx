@@ -41,7 +41,17 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
   };
 
   const { openCreation } = useCreationOverlay();
-  const { isFullScreen } = useDetails();
+  const { isFullScreen, setTitleOverride } = useDetails();
+
+  React.useEffect(() => {
+    if (setTitleOverride) {
+      if (isScrolled && student?.name) {
+        setTitleOverride(student.name);
+      } else {
+        setTitleOverride(null);
+      }
+    }
+  }, [isScrolled, student?.name, setTitleOverride]);
 
   const tabs = STUDENT_DETAILS_TABS;
 
