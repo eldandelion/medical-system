@@ -118,7 +118,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
               <md-icon-button>
                 {/* @ts-ignore */}
                 <md-icon>chevron_right</md-icon>
-              {/* @ts-ignore */}
+                {/* @ts-ignore */}
               </md-icon-button>
             </div>
           </div>
@@ -153,48 +153,106 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
             >
 
 
-              {/* Triage Basics Card - Outlined */}
-              <div className="p-5 rounded-2xl border border-[var(--md-sys-color-outline-variant)] flex flex-col gap-6">
-                <div className="flex items-center gap-2 text-[var(--md-sys-color-primary)]">
-                  <span className="material-symbols-outlined text-[20px]">medical_information</span>
-                  <span className="text-sm font-bold uppercase tracking-widest">分诊基本信息</span>
+              {/* Triage Basics Redesigned Container */}
+              <div className="flex flex-col gap-6">
+                {/* Lavender Styled Header */}
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[24px]">assignment</span>
+                  </div>
+                  <span className="text-[18px] font-bold text-[var(--md-sys-color-on-surface)]">分诊基本信息</span>
                 </div>
-                <div className="grid grid-cols-2 gap-y-6">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-60">
-                      是否初诊
-                    </span>
-                    <span className="text-[14px] font-medium">{extendedData.triage.isFirstVisit ? '是' : '否'}</span>
+
+                {/* 3-Column Metrics Grid */}
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Card 1: 是否初诊 */}
+                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3 ] border-opacity-20">
+                    <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
+                      <span className="material-symbols-outlined text-[20px]">person_add</span>
+                      <span className="text-[14px] font-bold">是否初诊</span>
+                    </div>
+                    <div className="flex">
+                      {extendedData.triage.isFirstVisit ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
+                          <span className="material-symbols-outlined text-[16px] font-bold">check</span>是
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
+                          <span className="material-symbols-outlined text-[16px] font-bold">close</span>否
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-60">
-                      是否服药
-                    </span>
-                    <span className="text-[14px] font-medium">{extendedData.triage.isMedicated ? '是' : '否'}</span>
+
+                  {/* Card 2: 是否服药 */}
+                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
+                    <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
+                      <span className="material-symbols-outlined text-[20px]">medication</span>
+                      <span className="text-[14px] font-bold">是否服药</span>
+                    </div>
+                    <div className="flex">
+                      {extendedData.triage.isMedicated ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
+                          <span className="material-symbols-outlined text-[16px] font-bold">check</span>是
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
+                          <span className="material-symbols-outlined text-[16px] font-bold">close</span>否
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-60">
-                      接受过心理治疗
-                    </span>
-                    <span className="text-[14px] font-medium">{extendedData.triage.priorTherapy}</span>
+
+                  {/* Card 3: 心理治疗 */}
+                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
+                    <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
+                      <span className="material-symbols-outlined text-[20px]">monitoring</span>
+                      <span className="text-[14px] font-bold">心理治疗</span>
+                    </div>
+                    <div className="flex">
+                      {extendedData.triage.priorTherapy === '无' ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
+                          <span className="material-symbols-outlined text-[16px] font-bold">remove</span>无
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
+                          <span className="material-symbols-outlined text-[16px] font-bold">check</span>{extendedData.triage.priorTherapy}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-60">
-                      SCID诊断
-                    </span>
-                    <span className="text-[14px] font-medium text-[var(--md-sys-color-primary)]">{extendedData.triage.scidDiagnosis}</span>
+                </div>
+
+                {/* SCID Diagnosis Result Box (Bordered with error system color) */}
+                {extendedData.triage.scidDiagnosis && (
+                  <div className="flex items-center justify-between p-4 rounded-3xl bg-[var(--md-sys-color-error-container)] bg-opacity-[0.04] border border-[var(--md-sys-color-error-container)] border-opacity-25 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-error-container)] bg-opacity-20 text-[var(--md-sys-color-error)] flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[20px] font-bold">stethoscope</span>
+                      </div>
+                      <span className="text-[14px] font-bold text-[var(--md-sys-color-on-surface)] opacity-90">SCID诊断结果</span>
+                    </div>
+                    <div className="px-4 py-2 bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] rounded-2xl text-[14px] font-bold tracking-wide">
+                      {extendedData.triage.scidDiagnosis}
+                    </div>
                   </div>
-                  <div className="col-span-2 flex flex-col gap-2 p-4 bg-[var(--md-sys-color-surface-container-lowest)] rounded-xl border border-dashed border-[var(--md-sys-color-outline-variant)]">
-                    <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-60 uppercase">转诊详细说明</span>
-                    <p className="text-[14px] leading-relaxed text-[var(--md-sys-color-on-surface)] italic font-light">
-                      "{extendedData.triage.fullDescription}"
-                    </p>
-                  </div>
+                )}
+
+                {/* Referral Full Description Card (Watermarked elegant quote) */}
+                <div className="relative p-6 rounded-[28px] bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline-variant)] border-opacity-10 overflow-hidden flex flex-col gap-3">
+                  <span className="text-[14px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-85">转诊详细说明</span>
+                  <p className="text-[15px] leading-relaxed text-[var(--md-sys-color-on-surface)] font-normal z-10 pr-6">
+                    "{extendedData.triage.fullDescription}"
+                  </p>
+                  {/* Large elegant watermark quote mark */}
+                  <span className="absolute right-4 bottom-[-15px] text-[100px] font-serif text-[var(--md-sys-color-on-surface)] opacity-5 select-none leading-none z-0">
+                    99
+                  </span>
                 </div>
               </div>
 
               {/* Referral Destination Card - Surface Container High with Tonal Icons */}
-              <div className="p-5 rounded-2xl bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] flex flex-col gap-4 border border-[var(--md-sys-color-outline-variant)] border-opacity-30">
+              <div className="p-5 rounded-2xl bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface)] flex flex-col gap-4 border border-[var(--md-sys-color-outline-variant)] border-opacity-30">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-[var(--md-sys-color-primary)]">
                     <span className="material-symbols-outlined text-xl">output_circle</span>
