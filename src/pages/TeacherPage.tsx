@@ -20,7 +20,9 @@ import { TertiaryFab } from '../components/common/Buttons';
 
 import { TEACHER_METRICS_CONFIG } from '../config/dashboardConfig';
 
-const TEACHER_TAB_TITLES: Record<string, string> = {
+export type TeacherPageName = 'Dashboard' | 'Notifications' | 'Students' | 'Referral Management' | 'Security & Consent';
+
+const TEACHER_TAB_TITLES: Record<TeacherPageName, string> = {
   'Dashboard': '控制面板',
   'Notifications': '通知中心',
   'Students': '学生管理',
@@ -29,7 +31,7 @@ const TEACHER_TAB_TITLES: Record<string, string> = {
 };
 
 export function TeacherPage() {
-  const [activePage, setActivePage] = React.useState('Dashboard');
+  const [activePage, setActivePage] = React.useState<TeacherPageName>('Dashboard');
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
   const [dashboardData, setDashboardData] = React.useState<any>(null);
@@ -61,7 +63,7 @@ export function TeacherPage() {
     };
   }, []);
 
-  const handlePageChange = (page: string) => {
+  const handlePageChange = (page: TeacherPageName) => {
     setActivePage(page);
     setSelectedItem(null);
   };
@@ -143,7 +145,7 @@ export function TeacherPage() {
               numericValue: dashboardData.metrics[metric.metricKey] || 0,
               label: metric.label,
               containerColorClass: metric.containerColorClass,
-              onClick: () => handlePageChange(metric.targetPage)
+              onClick: () => handlePageChange(metric.targetPage as TeacherPageName)
             }))}
             activityTitle={dashboardData.activityTitle}
             activities={dashboardData.activities}
