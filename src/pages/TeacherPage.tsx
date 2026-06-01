@@ -12,8 +12,8 @@ import { SecurityConsentView } from '../components/security/SecurityConsentView'
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
 import { DashboardView } from '../components/dashboard/DashboardView';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
-import { StudentDetailsView } from '../components/students/StudentDetailsView';
-import { ReferralDetailsView } from '../components/records/ReferralDetailsView';
+import { StudentDetailsView, STUDENT_DETAILS_TABS } from '../components/students/StudentDetailsView';
+import { ReferralDetailsView, REFERRAL_DETAILS_TABS } from '../components/records/ReferralDetailsView';
 import { useCreationOverlay } from '../contexts/CreationContext';
 import { ReferralCreationForm } from '../components/records/ReferralCreationForm';
 import { TertiaryFab } from '../components/common/Buttons';
@@ -80,17 +80,9 @@ export function TeacherPage() {
   const getTabsForPage = () => {
     switch (activePage) {
       case 'Students':
-        return [
-          { id: 'overview', label: '临床概览', icon: 'clinical_notes' },
-          { id: 'psychometrics', label: '量表数据', icon: 'analytics' },
-          { id: 'history', label: '档案记录', icon: 'history_edu' },
-        ];
+        return STUDENT_DETAILS_TABS;
       case 'Referral Management':
-        return [
-          { id: 'overview', label: '详情概览', icon: 'description' },
-          { id: 'psychometrics', label: '心理测量', icon: 'analytics' },
-          { id: 'feedback', label: '反馈记录', icon: 'chat_bubble' },
-        ];
+        return REFERRAL_DETAILS_TABS;
       default:
         return [];
     }

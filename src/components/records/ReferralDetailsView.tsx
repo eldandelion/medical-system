@@ -34,6 +34,12 @@ interface ReferralDetailsViewProps {
 
 type TabType = 'overview' | 'psychometrics' | 'feedback';
 
+export const REFERRAL_DETAILS_TABS = [
+  { id: 'overview', label: '转诊概览', icon: 'clinical_notes' },
+  { id: 'psychometrics', label: '量表数据', icon: 'analytics' },
+  { id: 'feedback', label: '诊疗反馈', icon: 'history_edu' },
+];
+
 export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab: propsActiveTab, onTabChange }: ReferralDetailsViewProps) {
   const { isFullScreen } = useDetails();
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
@@ -72,11 +78,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
   const extendedData = referral.extendedData;
   if (!extendedData) return null;
 
-  const tabs = [
-    { id: 'overview', label: '转诊概览', icon: 'clinical_notes' },
-    { id: 'psychometrics', label: '量表数据', icon: 'analytics' },
-    { id: 'feedback', label: '诊疗反馈', icon: 'history_edu' },
-  ];
+  const tabs = REFERRAL_DETAILS_TABS;
 
   return (
     <div className="flex flex-col h-full bg-[var(--md-sys-color-surface)]">

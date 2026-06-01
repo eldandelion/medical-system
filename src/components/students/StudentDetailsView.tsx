@@ -30,6 +30,12 @@ interface StudentDetailsViewProps {
 
 type TabType = 'overview' | 'psychometrics' | 'history';
 
+export const STUDENT_DETAILS_TABS = [
+  { id: 'overview', label: '临床概览', icon: 'clinical_notes' },
+  { id: 'psychometrics', label: '量表数据', icon: 'analytics' },
+  { id: 'history', label: '档案记录', icon: 'history_edu' },
+];
+
 export function StudentDetailsView({ student, hideHeader, activeTab: propsActiveTab, onTabChange }: StudentDetailsViewProps) {
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
@@ -43,11 +49,7 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
   const { openCreation } = useCreationOverlay();
   const { isFullScreen } = useDetails();
 
-  const tabs = [
-    { id: 'overview', label: '临床概览', icon: 'clinical_notes' },
-    { id: 'psychometrics', label: '量表数据', icon: 'analytics' },
-    { id: 'history', label: '档案记录', icon: 'history_edu' },
-  ];
+  const tabs = STUDENT_DETAILS_TABS;
 
   if (!student) return null;
 

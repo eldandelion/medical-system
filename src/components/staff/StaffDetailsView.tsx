@@ -26,6 +26,12 @@ interface StaffDetailsViewProps {
 
 type TabType = 'caseload' | 'audit' | 'scopes';
 
+export const STAFF_DETAILS_TABS = [
+  { id: 'caseload', label: '负责学生', icon: 'group' },
+  { id: 'audit', label: '操作日志', icon: 'history' },
+  { id: 'scopes', label: '权限范围', icon: 'admin_panel_settings' },
+];
+
 export function StaffDetailsView({ staff, hideHeader, activeTab: propsActiveTab, onTabChange }: StaffDetailsViewProps) {
   const { isFullScreen } = useDetails();
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('caseload');
@@ -37,11 +43,7 @@ export function StaffDetailsView({ staff, hideHeader, activeTab: propsActiveTab,
   const [selectedCaseloadIds, setSelectedCaseloadIds] = React.useState<string[]>([]);
   const { openCreation, closeCreation } = useCreationOverlay();
 
-  const tabs = [
-    { id: 'caseload', label: '负责学生', icon: 'group' },
-    { id: 'audit', label: '操作日志', icon: 'history' },
-    { id: 'scopes', label: '权限范围', icon: 'admin_panel_settings' },
-  ];
+  const tabs = STAFF_DETAILS_TABS;
 
   // Mock data for tabs
   const caseload = [
