@@ -35,14 +35,6 @@ export function TrialAdminPage() {
   const [dashboardLoading, setDashboardLoading] = React.useState(true);
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
 
-  React.useEffect(() => {
-    (window as any).dispatchPageChange = (page: string) => {
-      if (page === 'ProfileDetails') {
-        setShowProfileDetails(true);
-      }
-    };
-    return () => void delete (window as any).dispatchPageChange;
-  }, []);
 
   React.useEffect(() => {
     let active = true;
@@ -184,7 +176,7 @@ export function TrialAdminPage() {
       </Sidebar>
 
       <div className="flex-1 flex flex-col min-w-0 bg-transparent">
-        <Header searchPlaceholder="搜索转诊与人员" />
+        <Header searchPlaceholder="搜索转诊与人员" onProfileClick={() => setShowProfileDetails(true)} />
         <MainContent
           isSidePanelOpen={!!selectedItem}
           sidePanel={

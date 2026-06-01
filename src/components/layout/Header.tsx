@@ -5,9 +5,10 @@ import { GlobalSearch } from './GlobalSearch';
 
 interface HeaderProps {
   searchPlaceholder?: string;
+  onProfileClick?: () => void;
 }
 
-export function Header({ searchPlaceholder }: HeaderProps) {
+export function Header({ searchPlaceholder, onProfileClick }: HeaderProps) {
   const [isAccountMenuOpen, setIsAccountMenuOpen] = React.useState(false);
   const [isThemeMenuOpen, setIsThemeMenuOpen] = React.useState(false);
   const { theme, setTheme } = useTheme();
@@ -89,6 +90,7 @@ export function Header({ searchPlaceholder }: HeaderProps) {
           <AccountMenu
             isOpen={isAccountMenuOpen}
             onClose={() => setIsAccountMenuOpen(false)}
+            onProfileClick={onProfileClick}
           />
         </div>
       </div>

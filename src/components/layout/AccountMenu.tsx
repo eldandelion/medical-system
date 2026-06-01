@@ -3,9 +3,10 @@ import React from 'react';
 interface AccountMenuProps {
     isOpen: boolean;
     onClose: () => void;
+    onProfileClick?: () => void;
 }
 
-export function AccountMenu({ isOpen, onClose }: AccountMenuProps) {
+export function AccountMenu({ isOpen, onClose, onProfileClick }: AccountMenuProps) {
     if (!isOpen) return null;
 
     return (
@@ -44,7 +45,7 @@ export function AccountMenu({ isOpen, onClose }: AccountMenuProps) {
                         className="mt-3 px-6 py-2 rounded-full border border-[var(--md-sys-color-outline)] text-sm font-medium text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-surface-variant)] transition-colors"
                         onClick={() => {
                             onClose();
-                            (window as any).dispatchPageChange?.('ProfileDetails');
+                            onProfileClick?.();
                         }}
                     >
                         管理您的账号
