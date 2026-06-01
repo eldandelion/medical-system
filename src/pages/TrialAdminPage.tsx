@@ -200,34 +200,11 @@ export function TrialAdminPage() {
             >
               {selectedItem && (
                 <>
-                  {activePage === 'Staff' && selectedItem.employeeId ? (
+                  {activePage === 'Staff' && (
                     <StaffDetailsView staff={selectedItem} activeTab={activeTab} onTabChange={setActiveTab} />
-                  ) : activePage === 'Referral Management' && selectedItem.studentName ? (
+                  )}
+                  {activePage === 'Referral Management' && (
                     <ReferralDetailsView referral={selectedItem} userRole="trial-admin" activeTab={activeTab} onTabChange={setActiveTab} />
-                  ) : (
-                    <>
-                      <div className="flex justify-center py-6 mb-2">
-                        <div className="text-[var(--md-sys-color-on-surface-variant)]">
-                          <svg width="72" height="96" viewBox="0 0 24 32" fill="currentColor">
-                            <path d="M14 0H4C1.8 0 0 1.8 0 4V28C0 30.2 1.8 32 4 32H20C22.2 32 24 30.2 24 28V10L14 0ZM13 11.5V3L21 11.5H13Z" />
-                          </svg>
-                        </div>
-                      </div>
-
-                      <DetailsSection title="访问权限">
-                        <div className="w-8 h-8 rounded-full bg-[#E47035] text-white flex items-center justify-center text-sm font-medium mt-1">
-                          D
-                        </div>
-                        <span className="text-[14px] text-[var(--md-sys-color-on-surface-variant)]">仅限教职工访问</span>
-                      </DetailsSection>
-
-                      <DetailsSection title="详情">
-                        <DetailItem label="标题" value={selectedItem.studentName || selectedItem.name} />
-                        <DetailItem label="类型" value={selectedItem.type} />
-                        <DetailItem label="日期" value={selectedItem.date} />
-                        <DetailItem label="状态" value={selectedItem.status} />
-                      </DetailsSection>
-                    </>
                   )}
                 </>
               )}
