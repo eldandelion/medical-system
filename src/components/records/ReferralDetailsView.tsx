@@ -156,10 +156,8 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
               {/* Triage Basics Redesigned Container */}
               <div className="flex flex-col gap-6">
                 {/* Lavender Styled Header */}
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[24px]">assignment</span>
-                  </div>
+                <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)]">
+                  <span className="material-symbols-outlined text-[22px]">assignment</span>
                   <span className="text-[18px] font-bold text-[var(--md-sys-color-on-surface)]">分诊基本信息</span>
                 </div>
 
@@ -173,7 +171,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                     </div>
                     <div className="flex">
                       {extendedData.triage.isFirstVisit ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]">
                           <span className="material-symbols-outlined text-[16px] font-bold">check</span>是
                         </span>
                       ) : (
@@ -239,7 +237,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                 )}
 
                 {/* Referral Full Description Card (Watermarked elegant quote) */}
-                <div className="relative p-6 rounded-[28px] bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline-variant)] border-opacity-10 overflow-hidden flex flex-col gap-3">
+                <div className="relative p-6 rounded-[28px] bg-[var(--md-sys-color-surface-container-low)] border-opacity-10 overflow-hidden flex flex-col gap-3">
                   <span className="text-[14px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-85">转诊详细说明</span>
                   <p className="text-[15px] leading-relaxed text-[var(--md-sys-color-on-surface)] font-normal z-10 pr-6">
                     "{extendedData.triage.fullDescription}"
