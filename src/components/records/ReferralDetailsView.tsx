@@ -274,6 +274,12 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                   {/* Large elegant watermark quote mark */}
                   <Quote className="absolute top-6 right-6 text-[#6750A4] opacity-10" size={30} />
                 </div>
+
+                {/* Attachment List */}
+                <AttachmentList 
+                  attachments={extendedData.feedback.attachments} 
+                  title="转诊附件" 
+                />
               </div>
 
               {/* Referral Destination Card - Surface Container High with Tonal Icons */}
