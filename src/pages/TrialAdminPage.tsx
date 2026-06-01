@@ -87,7 +87,6 @@ export function TrialAdminPage() {
       case 'Referral Management':
         return [
           { id: 'overview', label: '详情概览', icon: 'description' },
-          { id: 'risk', label: '风险评估', icon: 'warning' },
           { id: 'psychometrics', label: '心理测量', icon: 'analytics' },
           { id: 'feedback', label: '反馈记录', icon: 'chat_bubble' },
         ];

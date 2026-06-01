@@ -32,7 +32,7 @@ interface ReferralDetailsViewProps {
   onTabChange?: (tabId: string) => void;
 }
 
-type TabType = 'overview' | 'risk' | 'psychometrics' | 'feedback';
+type TabType = 'overview' | 'psychometrics' | 'feedback';
 
 export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab: propsActiveTab, onTabChange }: ReferralDetailsViewProps) {
   const { isFullScreen } = useDetails();
@@ -74,7 +74,6 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
 
   const tabs = [
     { id: 'overview', label: '转诊概览', icon: 'clinical_notes' },
-    { id: 'risk', label: '风险评估', icon: 'warning' },
     { id: 'psychometrics', label: '量表数据', icon: 'analytics' },
     { id: 'feedback', label: '诊疗反馈', icon: 'history_edu' },
   ];
@@ -233,48 +232,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
             </motion.div>
           )}
 
-          {activeTab === 'risk' && (
-            <motion.div
-              key="risk"
-              initial={{ opacity: 0, x: isFullScreen ? 0 : 10, y: isFullScreen ? 10 : 0 }}
-              animate={{ opacity: 1, x: 0, y: 0 }}
-              exit={{ opacity: 0, x: isFullScreen ? 0 : -10, y: isFullScreen ? -10 : 0 }}
-              transition={{ duration: 0.2 }}
-              className="flex flex-col gap-6"
-            >
-              <div className="p-2 rounded-2xl border border-[var(--md-sys-color-outline-variant)] flex flex-col">
-                {[
-                  { label: '自杀意念终身', value: extendedData.risk.ideation },
-                  { label: '自杀尝试终身', value: extendedData.risk.attempt },
-                  { label: '自伤行为终身', value: extendedData.risk.selfHarm },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-4 border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 last:border-0 hover:bg-[var(--md-sys-color-surface-container-low)] transition-colors rounded-xl">
-                    <span className="text-[15px] font-medium">{item.label}</span>
-                    <div className="flex items-center gap-2">
-                      {item.value ? (
-                        <div className="flex items-center gap-2 text-[var(--md-sys-color-error)]">
-                          <span className="material-symbols-outlined font-variation-settings-fill-1">warning</span>
-                          <span className="text-xs font-bold uppercase">阳性 Positive</span>
-                        </div>
-                      ) : (
-                        <span className="text-[var(--md-sys-color-on-surface-variant)] opacity-40 text-xs font-bold uppercase">阴性 Negative</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
 
-              <div className="p-5 rounded-2xl bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
-                <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)]">
-                  <span className="material-symbols-outlined text-sm">sticky_note_2</span>
-                  <span className="text-xs font-bold uppercase tracking-widest">补充风险笔记</span>
-                </div>
-                <p className="text-[14px] leading-relaxed text-[var(--md-sys-color-on-surface)]">
-                  {extendedData.risk.notes}
-                </p>
-              </div>
-            </motion.div>
-          )}
 
 
           {activeTab === 'psychometrics' && (
