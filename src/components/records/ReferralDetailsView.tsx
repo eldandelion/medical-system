@@ -222,20 +222,47 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                   </div>
                 </div>
 
-                {/* SCID Diagnosis Result Box (Bordered with error system color) */}
-                {extendedData.triage.scidDiagnosis && (
-                  <div className="flex items-center justify-between p-4 rounded-3xl bg-[var(--md-sys-color-error-container)] bg-opacity-[0.04] border border-[var(--md-sys-color-error-container)] border-opacity-25 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-error-container)] bg-opacity-20 text-[var(--md-sys-color-error)] flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[20px] font-bold">stethoscope</span>
-                      </div>
-                      <span className="text-[14px] font-bold text-[var(--md-sys-color-on-surface)] opacity-90">SCID诊断结果</span>
+                {/* 3-Column Risk Grid */}
+                <div className="grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  {/* Card 1: Suicidal Ideation */}
+                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
+                    <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
+                      <span className="material-symbols-outlined text-[20px]">psychology</span>
+                      <span className="text-[14px] font-bold">自杀意念</span>
                     </div>
-                    <div className="px-4 py-2 bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] rounded-2xl text-[14px] font-bold tracking-wide">
-                      {extendedData.triage.scidDiagnosis}
+                    <div className="flex">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
+                        <span className="material-symbols-outlined text-[16px] font-bold">warning</span>是
+                      </span>
                     </div>
                   </div>
-                )}
+
+                  {/* Card 2: Suicide Attempt */}
+                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
+                    <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
+                      <span className="material-symbols-outlined text-[20px]">personal_injury</span>
+                      <span className="text-[14px] font-bold">自杀企图</span>
+                    </div>
+                    <div className="flex">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
+                        <span className="material-symbols-outlined text-[16px] font-bold">warning</span>是
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card 3: Self-Harm */}
+                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
+                    <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
+                      <span className="material-symbols-outlined text-[20px]">healing</span>
+                      <span className="text-[14px] font-bold">自残行为</span>
+                    </div>
+                    <div className="flex">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
+                        <span className="material-symbols-outlined text-[16px] font-bold">warning</span>是
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Referral Full Description Card (Watermarked elegant quote) */}
                 <div className="relative p-6 rounded-[28px] bg-[var(--md-sys-color-surface-container-low)] border-opacity-10 overflow-hidden flex flex-col gap-3">
