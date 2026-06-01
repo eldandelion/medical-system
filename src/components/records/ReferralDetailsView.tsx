@@ -5,6 +5,7 @@ import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Button
 import { ActionFooter } from '../common/ActionFooter';
 import { PrimaryTabs } from '../common/Tabs';
 import { PsychometricsTabContent } from '../assessments/PsychometricsTabContent';
+import { Quote } from 'lucide-react';
 
 import { useDetails } from '../../contexts/DetailsContext';
 import { GenericDialog } from '../common/GenericDialog';
@@ -243,9 +244,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                     "{extendedData.triage.fullDescription}"
                   </p>
                   {/* Large elegant watermark quote mark */}
-                  <span className="absolute right-4 bottom-[-15px] text-[100px] font-serif text-[var(--md-sys-color-on-surface)] opacity-5 select-none leading-none z-0">
-                    99
-                  </span>
+                  <Quote className="absolute top-6 right-6 text-[#6750A4] opacity-10" size={30} />
                 </div>
               </div>
 
