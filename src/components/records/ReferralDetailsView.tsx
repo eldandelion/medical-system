@@ -225,40 +225,40 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                 {/* 3-Column Risk Grid */}
                 <div className="grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   {/* Card 1: Suicidal Ideation */}
-                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
-                    <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
+                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] flex flex-col gap-3">
+                    <div className="flex items-center gap-2 opacity-90">
                       <span className="material-symbols-outlined text-[20px]">psychology</span>
                       <span className="text-[14px] font-bold">自杀意念</span>
                     </div>
                     <div className="flex">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
-                        <span className="material-symbols-outlined text-[16px] font-bold">warning</span>是
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-on-error-container)] text-[var(--md-sys-color-error-container)]">
+                        <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
                       </span>
                     </div>
                   </div>
 
                   {/* Card 2: Suicide Attempt */}
-                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
-                    <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
+                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] flex flex-col gap-3">
+                    <div className="flex items-center gap-2 opacity-90">
                       <span className="material-symbols-outlined text-[20px]">personal_injury</span>
                       <span className="text-[14px] font-bold">自杀企图</span>
                     </div>
                     <div className="flex">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
-                        <span className="material-symbols-outlined text-[16px] font-bold">warning</span>是
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-on-error-container)] text-[var(--md-sys-color-error-container)]">
+                        <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
                       </span>
                     </div>
                   </div>
 
                   {/* Card 3: Self-Harm */}
-                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
-                    <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
+                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] flex flex-col gap-3">
+                    <div className="flex items-center gap-2 opacity-90">
                       <span className="material-symbols-outlined text-[20px]">healing</span>
                       <span className="text-[14px] font-bold">自残行为</span>
                     </div>
                     <div className="flex">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
-                        <span className="material-symbols-outlined text-[16px] font-bold">warning</span>是
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-on-error-container)] text-[var(--md-sys-color-error-container)]">
+                        <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
                       </span>
                     </div>
                   </div>
