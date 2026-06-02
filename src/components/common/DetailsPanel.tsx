@@ -116,7 +116,7 @@ export function DetailsPanel({
  */
 export function DetailsSection({ title, children, icon, className = "" }: { title?: string, children: React.ReactNode, icon?: string, className?: string }) {
   return (
-    <div className={`flex flex-col gap-4 border-t border-[var(--md-sys-color-outline-variant)] border-opacity-30 pt-6 mt-6 first:border-0 first:pt-0 first:mt-0 ${className}`}>
+    <div className={`flex flex-col gap-4 border-t border-[var(--md-sys-color-outline-variant)] border-opacity-30 pt-0 mt-6 first:border-0 first:pt-0 first:mt-0 ${className}`}>
       {title && (
         <div className="flex items-center gap-3">
           {icon && <span className="material-symbols-outlined text-[var(--md-sys-color-on-surface)]">{icon}</span>}
@@ -124,6 +124,43 @@ export function DetailsSection({ title, children, icon, className = "" }: { titl
         </div>
       )}
       {children}
+    </div>
+  );
+}
+
+/**
+ * Helper component for structured 3-column demographic or metric card items
+ */
+export function MetricCard({ 
+  label, 
+  value, 
+  icon, 
+  className = "", 
+  labelClassName = "text-[var(--md-sys-color-on-surface-variant)] opacity-85",
+  badgeClassName = "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]"
+}: { 
+  label: string; 
+  value: React.ReactNode; 
+  icon: string; 
+  className?: string; 
+  labelClassName?: string;
+  badgeClassName?: string;
+}) {
+  return (
+    <div className={`p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3 ${className}`}>
+      <div className={`flex items-center gap-2 ${labelClassName}`}>
+        <span className="material-symbols-outlined text-[20px]">{icon}</span>
+        <span className="text-[14px] font-bold">{label}</span>
+      </div>
+      <div className="flex">
+        {typeof value === 'string' ? (
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold ${badgeClassName}`}>
+            {value}
+          </span>
+        ) : (
+          value
+        )}
+      </div>
     </div>
   );
 }
@@ -145,7 +182,7 @@ export function DetailItem({ label, value }: { label: string, value: string | Re
  */
 export function useScrollCollapse(threshold = 20) {
   const [isScrolled, setIsScrolled] = React.useState(false);
-  
+
   const handleScroll = React.useCallback((e: React.UIEvent<HTMLElement>) => {
     setIsScrolled(e.currentTarget.scrollTop > threshold);
   }, [threshold]);

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { DetailsSection, DetailItem, useScrollCollapse, CollapsibleHeader } from '../common/DetailsPanel';
+import { DetailsSection, DetailItem, MetricCard, useScrollCollapse, CollapsibleHeader } from '../common/DetailsPanel';
 import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
 import { PrimaryTabs } from '../common/Tabs';
@@ -156,23 +156,14 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
 
 
               {/* Triage Basics Redesigned Container */}
-              <div className="flex flex-col gap-6">
-                {/* Lavender Styled Header */}
-                <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)]">
-                  {/* <span className="material-symbols-outlined text-[22px]">assignment</span> */}
-                  <span className="text-[18px] font-bold text-[var(--md-sys-color-on-surface)]">分诊基本信息</span>
-                </div>
-
-                {/* 3-Column Metrics Grid */}
-                <div className="grid grid-cols-3 gap-4">
-                  {/* Card 1: 是否初诊 */}
-                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3 ] border-opacity-20">
-                    <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
-                      <span className="material-symbols-outlined text-[20px]">person_add</span>
-                      <span className="text-[14px] font-bold">是否初诊</span>
-                    </div>
-                    <div className="flex">
-                      {extendedData.triage.isFirstVisit ? (
+              <DetailsSection title="分诊基本信息" className="border-t-0 pt-0 mt-0">
+                <div className="flex flex-col gap-6">
+                  {/* 3-Column Metrics Grid */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <MetricCard
+                      label="是否初诊"
+                      icon="person_add"
+                      value={extendedData.triage.isFirstVisit ? (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]">
                           <span className="material-symbols-outlined text-[16px] font-bold">check</span>是
                         </span>
@@ -181,17 +172,12 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                           <span className="material-symbols-outlined text-[16px] font-bold">close</span>否
                         </span>
                       )}
-                    </div>
-                  </div>
+                    />
 
-                  {/* Card 2: 是否服药 */}
-                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
-                    <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
-                      <span className="material-symbols-outlined text-[20px]">medication</span>
-                      <span className="text-[14px] font-bold">是否服药</span>
-                    </div>
-                    <div className="flex">
-                      {extendedData.triage.isMedicated ? (
+                    <MetricCard
+                      label="是否服药"
+                      icon="medication"
+                      value={extendedData.triage.isMedicated ? (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
                           <span className="material-symbols-outlined text-[16px] font-bold">check</span>是
                         </span>
@@ -200,17 +186,12 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                           <span className="material-symbols-outlined text-[16px] font-bold">close</span>否
                         </span>
                       )}
-                    </div>
-                  </div>
+                    />
 
-                  {/* Card 3: 心理治疗 */}
-                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
-                    <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
-                      <span className="material-symbols-outlined text-[20px]">monitoring</span>
-                      <span className="text-[14px] font-bold">心理治疗</span>
-                    </div>
-                    <div className="flex">
-                      {extendedData.triage.priorTherapy === '无' ? (
+                    <MetricCard
+                      label="心理治疗"
+                      icon="monitoring"
+                      value={extendedData.triage.priorTherapy === '无' ? (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
                           <span className="material-symbols-outlined text-[16px] font-bold">remove</span>无
                         </span>
@@ -219,68 +200,65 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                           <span className="material-symbols-outlined text-[16px] font-bold">check</span>{extendedData.triage.priorTherapy}
                         </span>
                       )}
-                    </div>
+                    />
                   </div>
+
+                  {/* 3-Column Risk Grid */}
+                  <div className="grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <MetricCard
+                      label="自杀意念"
+                      icon="psychology"
+                      className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]"
+                      labelClassName="text-[var(--md-sys-color-on-error-container)] opacity-90"
+                      value={
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-on-error-container)] text-[var(--md-sys-color-error-container)]">
+                          <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
+                        </span>
+                      }
+                    />
+
+                    <MetricCard
+                      label="自杀企图"
+                      icon="personal_injury"
+                      className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]"
+                      labelClassName="text-[var(--md-sys-color-on-error-container)] opacity-90"
+                      value={
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-on-error-container)] text-[var(--md-sys-color-error-container)]">
+                          <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
+                        </span>
+                      }
+                    />
+
+                    <MetricCard
+                      label="自残行为"
+                      icon="healing"
+                      className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]"
+                      labelClassName="text-[var(--md-sys-color-on-error-container)] opacity-90"
+                      value={
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-on-error-container)] text-[var(--md-sys-color-error-container)]">
+                          <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
+                        </span>
+                      }
+                    />
+                  </div>
+
+                  {/* Referral Full Description Card (Watermarked elegant quote) */}
+                  <div className="relative p-6 rounded-[28px] bg-[var(--md-sys-color-surface-container-low)] border-opacity-10 overflow-hidden flex flex-col gap-3">
+                    <span className="text-[14px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-85">转诊详细说明</span>
+                    <p className="text-[15px] leading-relaxed text-[var(--md-sys-color-on-surface)] font-normal z-10 pr-6">
+                      "{extendedData.triage.fullDescription}"
+                    </p>
+                    {/* Large elegant watermark quote mark */}
+                    <Quote className="absolute top-6 right-6 text-[#6750A4] opacity-10" size={30} />
+                  </div>
+
+                  {/* Attachment List */}
+                  <AttachmentList
+                    attachments={extendedData.feedback.attachments}
+                    title="转诊附件"
+                  />
                 </div>
-
-                {/* 3-Column Risk Grid */}
-                <div className="grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  {/* Card 1: Suicidal Ideation */}
-                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] flex flex-col gap-3">
-                    <div className="flex items-center gap-2 opacity-90">
-                      <span className="material-symbols-outlined text-[20px]">psychology</span>
-                      <span className="text-[14px] font-bold">自杀意念</span>
-                    </div>
-                    <div className="flex">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-on-error-container)] text-[var(--md-sys-color-error-container)]">
-                        <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Card 2: Suicide Attempt */}
-                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] flex flex-col gap-3">
-                    <div className="flex items-center gap-2 opacity-90">
-                      <span className="material-symbols-outlined text-[20px]">personal_injury</span>
-                      <span className="text-[14px] font-bold">自杀企图</span>
-                    </div>
-                    <div className="flex">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-on-error-container)] text-[var(--md-sys-color-error-container)]">
-                        <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Card 3: Self-Harm */}
-                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] flex flex-col gap-3">
-                    <div className="flex items-center gap-2 opacity-90">
-                      <span className="material-symbols-outlined text-[20px]">healing</span>
-                      <span className="text-[14px] font-bold">自残行为</span>
-                    </div>
-                    <div className="flex">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-on-error-container)] text-[var(--md-sys-color-error-container)]">
-                        <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Referral Full Description Card (Watermarked elegant quote) */}
-                <div className="relative p-6 rounded-[28px] bg-[var(--md-sys-color-surface-container-low)] border-opacity-10 overflow-hidden flex flex-col gap-3">
-                  <span className="text-[14px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-85">转诊详细说明</span>
-                  <p className="text-[15px] leading-relaxed text-[var(--md-sys-color-on-surface)] font-normal z-10 pr-6">
-                    "{extendedData.triage.fullDescription}"
-                  </p>
-                  {/* Large elegant watermark quote mark */}
-                  <Quote className="absolute top-6 right-6 text-[#6750A4] opacity-10" size={30} />
-                </div>
-
-                {/* Attachment List */}
-                <AttachmentList
-                  attachments={extendedData.feedback.attachments}
-                  title="转诊附件"
-                />
-              </div>
+              </DetailsSection>
 
               {/* Referral Destination Card - Surface Container High with Tonal Icons */}
               <div className="p-5 rounded-2xl bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface)] flex flex-col gap-4 border border-[var(--md-sys-color-outline-variant)] border-opacity-30">

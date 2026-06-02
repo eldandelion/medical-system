@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { DetailsSection, DetailItem, useScrollCollapse, CollapsibleHeader } from '../common/DetailsPanel';
+import { DetailsSection, DetailItem, MetricCard, useScrollCollapse, CollapsibleHeader } from '../common/DetailsPanel';
 import { PrimaryButton, SecondaryButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
 import { useCreationOverlay } from '../../contexts/CreationContext';
@@ -122,72 +122,44 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
               transition={{ duration: 0.2 }}
               className="flex flex-col gap-1"
             >
-              {/* Static Demographics Section - Redesigned Container */}
-              <div className="flex flex-col gap-4 mb-4">
-                {/* Header */}
-                <div className="flex items-center gap-2 text-[var(--md-sys-color-secondary)]">
-                  {/* <span className="material-symbols-outlined text-[22px]">fingerprint</span> */}
-                  <span className="text-[18px] font-bold text-[var(--md-sys-color-on-surface)]">学生基本信息</span>
-                </div>
-
-                {/* 3-Column Demographic Grid */}
-                <div className="grid grid-cols-3 gap-4">
-                  {/* Card 1: 年龄 */}
-                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
-                    <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
-                      <span className="material-symbols-outlined text-[20px]">cake</span>
-                      <span className="text-[14px] font-bold">年龄</span>
-                    </div>
-                    <div className="flex">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]">
-                        {student.demographics?.age?.toString() || 'N/A'} 岁
-                      </span>
-                    </div>
+              <DetailsSection title="学生基本信息" className="border-t-0 pt-0 mt-0">
+                <div className="flex flex-col gap-4">
+                  {/* 3-Column Demographic Grid */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <MetricCard 
+                      label="年龄" 
+                      value={`${student.demographics?.age?.toString() || 'N/A'} 岁`} 
+                      icon="cake" 
+                    />
+                    <MetricCard 
+                      label="性别" 
+                      value={student.demographics?.gender || 'N/A'} 
+                      icon="wc" 
+                    />
+                    <MetricCard 
+                      label="年级" 
+                      value={student.year || 'N/A'} 
+                      icon="school" 
+                    />
                   </div>
 
-                  {/* Card 2: 性别 */}
-                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
-                    <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
-                      <span className="material-symbols-outlined text-[20px]">wc</span>
-                      <span className="text-[14px] font-bold">性别</span>
-                    </div>
-                    <div className="flex">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]">
-                        {student.demographics?.gender || 'N/A'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Card 3: 年级 */}
-                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
-                    <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
-                      <span className="material-symbols-outlined text-[20px]">school</span>
-                      <span className="text-[14px] font-bold">年级</span>
-                    </div>
-                    <div className="flex">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]">
-                        {student.year || 'N/A'}
-                      </span>
+                  {/* 就读专业 Card */}
+                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex items-center justify-between animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-secondary-container)] bg-opacity-20 text-[var(--md-sys-color-secondary)] flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[20px] font-bold">menu_book</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-70 uppercase tracking-tight">就读专业</span>
+                        <span className="text-[15px] font-medium leading-tight mt-0.5">{student.major || 'N/A'}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-
-                {/* 就读专业 Card */}
-                <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex items-center justify-between animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-secondary-container)] bg-opacity-20 text-[var(--md-sys-color-secondary)] flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-[20px] font-bold">menu_book</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-70 uppercase tracking-tight">就读专业</span>
-                      <span className="text-[15px] font-medium leading-tight mt-0.5">{student.major || 'N/A'}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              </DetailsSection>
 
               {student.referralReason && (
-                <DetailsSection title="当前转诊原因" icon="description" className="border-t-0 pt-0 mt-0">
+                <DetailsSection title="当前转诊原因" className="border-t-0 pt-0 mt-0">
                   <div className="p-4 rounded-2xl bg-[var(--md-sys-color-primary-container)] bg-opacity-10 border-l-4 border-[var(--md-sys-color-primary)]">
                     <p className="text-[14px] text-[var(--md-sys-color-on-surface)] leading-relaxed italic">
                       "{student.referralReason}"
