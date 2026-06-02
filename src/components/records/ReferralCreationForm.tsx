@@ -45,8 +45,8 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
     if (isFullscreen) {
       setHeaderActions(
         <div className="flex items-center gap-3 mr-4">
-          <SecondaryButton label="Save Draft" onClick={onClose} />
-          <PrimaryButton label="Submit" onClick={onClose} />
+          <SecondaryButton label="保存草稿" onClick={onClose} />
+          <PrimaryButton label="提交" onClick={onClose} />
         </div>
       );
     } else {
@@ -68,11 +68,11 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
           <section className="flex flex-col gap-6">
             <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
               <span className="material-symbols-outlined text-[20px]">person_search</span>
-              Target Identification
+              转诊学生选择
             </h3>
             <div className="relative">
               <md-outlined-select
-                label={loading ? 'Loading students...' : 'Student'}
+                label={loading ? '正在加载学生列表...' : '选择学生'}
                 className="w-full relative"
                 value={formData.studentId}
                 onChange={(e: any) => setFormData(prev => ({ ...prev, studentId: e.target.value }))}
@@ -92,19 +92,19 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
               <div className="border border-[var(--md-sys-color-outline-variant)] rounded-[12px] p-6 bg-[var(--md-sys-color-surface)]">
                 <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_auto] gap-6 items-center">
                   <div className="flex flex-col">
-                    <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)]">ID</span>
+                    <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)]">学号</span>
                     <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">
                       {selectedStudent.demographics?.studentId || selectedStudent.id}
                     </span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)]">Major</span>
+                    <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)]">专业</span>
                     <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">
                       {selectedStudent.major}
                     </span>
                   </div>
                   <div className="flex flex-col items-start justify-center">
-                    <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)] mb-2">Risk Factor</span>
+                    <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)] mb-2">风险因素</span>
                     <div className={`px-3 py-1 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${selectedStudent.riskLevel === 'High'
                       ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
                       : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
@@ -131,10 +131,10 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
           <section className="flex flex-col gap-6">
             <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
               <span className="material-symbols-outlined text-[20px]">assignment</span>
-              Clinical Context
+              临床背景
             </h3>
             <md-outlined-text-field
-              label="Title"
+              label="标题"
               className="w-full"
               value={formData.title}
               onInput={(e: any) => setFormData(prev => ({ ...prev, title: e.target.value }))}
@@ -143,9 +143,9 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
             <md-outlined-text-field
               type="textarea"
               rows={4}
-              label="Referral Reason"
+              label="转诊原因"
               className="w-full"
-              supporting-text={`* Character limit: ${formData.reason.length}/500`}
+              supporting-text={`* 字数限制: ${formData.reason.length}/500`}
               maxLength={500}
               value={formData.reason}
               onInput={(e: any) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
@@ -157,33 +157,33 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
           <section className="flex flex-col gap-6">
             <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
               <span className="material-symbols-outlined text-[20px]">medical_information</span>
-              Triage Classification
+              分诊评估分类
             </h3>
             <div className="flex flex-col gap-3">
-              <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">Risk Level</span>
+              <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">风险等级</span>
               <div className="flex border border-[var(--md-sys-color-outline)] rounded-full overflow-hidden w-fit">
-                <button className="px-6 py-2.5 text-[14px] font-medium hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)] border-r border-[var(--md-sys-color-outline)] transition-colors">Low</button>
-                <button className="px-6 py-2.5 text-[14px] font-medium hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)] border-r border-[var(--md-sys-color-outline)] transition-colors">Medium</button>
-                <button className="px-6 py-2.5 text-[14px] font-medium bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] transition-colors">High</button>
+                <button className="px-6 py-2.5 text-[14px] font-medium hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)] border-r border-[var(--md-sys-color-outline)] transition-colors">低风险</button>
+                <button className="px-6 py-2.5 text-[14px] font-medium hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)] border-r border-[var(--md-sys-color-outline)] transition-colors">中风险</button>
+                <button className="px-6 py-2.5 text-[14px] font-medium bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] transition-colors">高风险</button>
               </div>
             </div>
 
             <div className="flex flex-col gap-3 mt-2">
-              <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">Clinical Status</span>
+              <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">临床就诊状态</span>
               <md-chip-set>
-                <md-filter-chip label="First Visit"></md-filter-chip>
-                <md-filter-chip label="Current Medication" selected></md-filter-chip>
-                <md-filter-chip label="Prior Therapy" selected></md-filter-chip>
+                <md-filter-chip label="初诊"></md-filter-chip>
+                <md-filter-chip label="正在服药" selected></md-filter-chip>
+                <md-filter-chip label="既往心理治疗" selected></md-filter-chip>
               </md-chip-set>
             </div>
 
             {/* Severe Risk Factors (embedded in Triage section layout) */}
             <div className="flex flex-col gap-3 pt-2">
-              <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">Severe Risk Factors</span>
+              <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">严重风险因素</span>
               <md-chip-set>
-                <md-filter-chip label="Suicidal Ideation"></md-filter-chip>
-                <md-filter-chip label="Suicide Attempt"></md-filter-chip>
-                <md-filter-chip label="Self-Harm"></md-filter-chip>
+                <md-filter-chip label="自杀意念"></md-filter-chip>
+                <md-filter-chip label="自杀企图"></md-filter-chip>
+                <md-filter-chip label="自残行为"></md-filter-chip>
               </md-chip-set>
             </div>
           </section>
@@ -192,18 +192,18 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
           <section className="flex flex-col gap-6">
             <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
               <span className="material-symbols-outlined text-[20px]">attachment</span>
-              Attachments
+              附件列表
             </h3>
 
             <div className="flex flex-col gap-4">
               <div>
                 <md-filled-tonal-button className="[&::part(button)]:px-0">
                   <md-icon slot="icon" className="ml-4">upload</md-icon>
-                  <span className="mr-4">Attach Files</span>
+                  <span className="mr-4">上传附件</span>
                 </md-filled-tonal-button>
               </div>
               <AttachmentList
-                title="Files"
+                title="已上传文件"
                 attachments={formData.attachments}
                 onDelete={(file) => setFormData(prev => ({ 
                   ...prev, 
@@ -219,8 +219,8 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
       {!isFullscreen && (
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] z-10 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
           <div className="flex items-center justify-end gap-4 w-full">
-            <SecondaryButton label="Save Draft" onClick={onClose} />
-            <PrimaryButton label="Submit" onClick={onClose} />
+            <SecondaryButton label="保存草稿" onClick={onClose} />
+            <PrimaryButton label="提交" onClick={onClose} />
           </div>
         </div>
       )}
