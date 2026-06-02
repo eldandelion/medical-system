@@ -41,8 +41,20 @@ export const handlers = [
     return HttpResponse.json(mockStudentsDb);
   }),
 
-  http.get('/api/referrals', () => {
-    return HttpResponse.json(mockReferralsDb);
+  http.get('/api/referrals', ({ request }) => {
+    const authHeader = request.headers.get('Authorization') || '';
+    let filteredReferrals = [...mockReferralsDb];
+
+    // Decode mock token logic
+    if (authHeader.includes('teacher_token_zhang')) {
+      // Teacher role sees only referrals they created
+      filteredReferrals = mockReferralsDb.filter(r => r.referredBy?.name === '张教授');
+    } else if (authHeader.includes('head_councillor')) {
+      // Head Councillor role sees all referrals (no filtering)
+      filteredReferrals = [...mockReferralsDb];
+    }
+    
+    return HttpResponse.json(filteredReferrals);
   }),
 
   http.get('/api/referrals/:id', ({ params }) => {

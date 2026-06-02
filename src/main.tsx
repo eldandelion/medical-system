@@ -49,10 +49,14 @@ async function enableMocking() {
   });
 }
 
+import { AuthProvider } from './contexts/AuthContext';
+
 enableMocking().then(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </StrictMode>,
   );
 });

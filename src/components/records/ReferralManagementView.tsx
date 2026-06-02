@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { FilterChipSet } from '../common/FilterChip';
+import { useAuth } from '../../contexts/AuthContext';
 
 import { Referral } from '../../types';
 
@@ -12,10 +13,15 @@ interface ReferralManagementViewProps {
 export function ReferralManagementView({ onReferralSelect, selectedReferralId }: ReferralManagementViewProps) {
   const [referrals, setReferrals] = React.useState<Referral[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const { session } = useAuth();
 
   React.useEffect(() => {
     let active = true;
-    fetch('/api/referrals')
+    fetch('/api/referrals', {
+      headers: {
+        'Authorization': `Bearer ${session.token}`
+      }
+    })
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch referrals');
         return res.json();

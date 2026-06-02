@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { StudentPage } from './pages/StudentPage';
 import { TeacherPage } from './pages/TeacherPage';
 import { HeadCouncillorPage } from './pages/HeadCouncillorPage';
@@ -7,9 +7,11 @@ import { CreationOverlayProvider } from './contexts/CreationContext';
 import { CreationRoot } from './components/creation-overlay/CreationRoot';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { SnackbarProvider } from './contexts/SnackbarContext';
+import { useAuth } from './contexts/AuthContext';
 
 export default function App() {
-  const [role, setRole] = useState<'student' | 'teacher' | 'head-councillor' | 'trial-admin'>('student');
+  const { session, setRole } = useAuth();
+  const role = session.role;
 
   return (
     <ThemeProvider>
