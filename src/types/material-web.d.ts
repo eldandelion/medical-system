@@ -38,6 +38,24 @@ declare global {
         label?: string;
         lowered?: boolean;
       }, HTMLElement>;
+      'md-outlined-text-field': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        type?: string;
+        rows?: number;
+        label?: string;
+        value?: string;
+        'supporting-text'?: string;
+        maxLength?: number;
+      }, HTMLElement>;
+      'md-outlined-select': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        label?: string;
+        value?: string;
+      }, HTMLElement>;
+      'md-select-option': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        value?: string;
+      }, HTMLElement>;
+      'md-filled-tonal-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        disabled?: boolean;
+      }, HTMLElement>;
     }
   }
 }

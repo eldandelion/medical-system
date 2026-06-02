@@ -9,24 +9,36 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
   const isFullscreen = viewState === 'FULLSCREEN';
 
   const [students, setStudents] = React.useState<Student[]>([]);
-  const [selectedStudentId, setSelectedStudentId] = React.useState<string>('');
   const [loading, setLoading] = React.useState(true);
-  const [attachments, setAttachments] = React.useState([
-    { name: 'Patient_Intake_Scan_v2.pdf', size: '2.4 MB' },
-    { name: 'Hospital_Release_Form.png', size: '1.1 MB' },
-  ]);
+  
+  const [formData, setFormData] = React.useState({
+    studentId: '',
+    title: '',
+    reason: '',
+    riskLevel: '',
+    clinicalStatus: ['Current Medication', 'Prior Therapy'],
+    severeRiskFactors: [] as string[],
+    attachments: [
+      { name: 'Patient_Intake_Scan_v2.pdf', size: '2.4 MB' },
+      { name: 'Hospital_Release_Form.png', size: '1.1 MB' },
+    ]
+  });
 
   React.useEffect(() => {
-    fetch('/api/students')
+    const controller = new AbortController();
+    fetch('/api/students', { signal: controller.signal })
       .then(res => res.json())
       .then(data => {
         setStudents(data);
         setLoading(false);
       })
       .catch(err => {
-        console.error('Failed to fetch students:', err);
-        setLoading(false);
+        if (err.name !== 'AbortError') {
+          console.error('Failed to fetch students:', err);
+          setLoading(false);
+        }
       });
+    return () => controller.abort();
   }, []);
 
   React.useEffect(() => {
@@ -45,7 +57,7 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
     };
   }, [isFullscreen, setHeaderActions, onClose]);
 
-  const selectedStudent = students.find(s => s.id === selectedStudentId);
+  const selectedStudent = students.find(s => s.id === formData.studentId);
 
   return (
     <div className="flex flex-col h-full bg-[var(--md-sys-color-surface)] relative">
@@ -59,15 +71,14 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
               Target Identification
             </h3>
             <div className="relative">
-              {/* @ts-ignore */}
               <md-outlined-select
-                label="Student"
+                label={loading ? 'Loading students...' : 'Student'}
                 className="w-full relative"
-                value={selectedStudentId}
-                onChange={(e: any) => setSelectedStudentId(e.target.value)}
+                value={formData.studentId}
+                onChange={(e: any) => setFormData(prev => ({ ...prev, studentId: e.target.value }))}
+                disabled={loading || students.length === 0}
               >
                 {students.map((student) => {
-                  // @ts-ignore
                   return (
                     <md-select-option key={student.id} value={student.id}>
                       <div slot="headline">{student.name}</div>
@@ -107,11 +118,8 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
                     </div>
                   </div>
                   <div className="flex items-center justify-end text-[var(--md-sys-color-on-surface-variant)] shrink-0">
-                    {/* @ts-ignore */}
                     <md-icon-button>
-                      {/* @ts-ignore */}
                       <md-icon>chevron_right</md-icon>
-                    {/* @ts-ignore */}
                     </md-icon-button>
                   </div>
                 </div>
@@ -125,23 +133,23 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
               <span className="material-symbols-outlined text-[20px]">assignment</span>
               Clinical Context
             </h3>
-            {/* @ts-ignore */}
             <md-outlined-text-field
               label="Title"
               className="w-full"
+              value={formData.title}
+              onInput={(e: any) => setFormData(prev => ({ ...prev, title: e.target.value }))}
             >
-              {/* @ts-ignore */}
             </md-outlined-text-field>
-            {/* @ts-ignore */}
             <md-outlined-text-field
               type="textarea"
               rows={4}
               label="Referral Reason"
               className="w-full"
-              supporting-text="* Character limit: 0/500"
+              supporting-text={`* Character limit: ${formData.reason.length}/500`}
               maxLength={500}
+              value={formData.reason}
+              onInput={(e: any) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
             >
-              {/* @ts-ignore */}
             </md-outlined-text-field>
           </section>
 
@@ -162,30 +170,20 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
 
             <div className="flex flex-col gap-3 mt-2">
               <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">Clinical Status</span>
-              {/* @ts-ignore */}
               <md-chip-set>
-                {/* @ts-ignore */}
                 <md-filter-chip label="First Visit"></md-filter-chip>
-                {/* @ts-ignore */}
                 <md-filter-chip label="Current Medication" selected></md-filter-chip>
-                {/* @ts-ignore */}
                 <md-filter-chip label="Prior Therapy" selected></md-filter-chip>
-                {/* @ts-ignore */}
               </md-chip-set>
             </div>
 
             {/* Severe Risk Factors (embedded in Triage section layout) */}
             <div className="flex flex-col gap-3 pt-2">
               <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">Severe Risk Factors</span>
-              {/* @ts-ignore */}
               <md-chip-set>
-                {/* @ts-ignore */}
                 <md-filter-chip label="Suicidal Ideation"></md-filter-chip>
-                {/* @ts-ignore */}
                 <md-filter-chip label="Suicide Attempt"></md-filter-chip>
-                {/* @ts-ignore */}
                 <md-filter-chip label="Self-Harm"></md-filter-chip>
-                {/* @ts-ignore */}
               </md-chip-set>
             </div>
           </section>
@@ -199,18 +197,18 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
 
             <div className="flex flex-col gap-4">
               <div>
-                {/* @ts-ignore */}
                 <md-filled-tonal-button className="[&::part(button)]:px-0">
-                  {/* @ts-ignore */}
                   <md-icon slot="icon" className="ml-4">upload</md-icon>
                   <span className="mr-4">Attach Files</span>
-                  {/* @ts-ignore */}
                 </md-filled-tonal-button>
               </div>
               <AttachmentList
                 title="Files"
-                attachments={attachments}
-                onDelete={(file) => setAttachments(prev => prev.filter(f => f.name !== file.name))}
+                attachments={formData.attachments}
+                onDelete={(file) => setFormData(prev => ({ 
+                  ...prev, 
+                  attachments: prev.attachments.filter(f => f.name !== file.name) 
+                }))}
               />
             </div>
           </section>
