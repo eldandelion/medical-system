@@ -125,47 +125,47 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
               {/* Static Demographics Section - Redesigned Container */}
               <div className="flex flex-col gap-6 mb-4">
                 {/* Header */}
-                <div className="flex items-center gap-2 text-[var(--md-sys-color-primary)]">
-                  <span className="material-symbols-outlined text-[22px]">fingerprint</span>
-                  <span className="text-[18px] font-bold text-[var(--md-sys-color-on-surface)]">静态统计数据</span>
+                <div className="flex items-center gap-2 text-[var(--md-sys-color-secondary)]">
+                  {/* <span className="material-symbols-outlined text-[22px]">fingerprint</span> */}
+                  <span className="text-[18px] font-bold text-[var(--md-sys-color-on-surface)]">学生基本信息</span>
                 </div>
 
                 {/* 3-Column Demographic Grid */}
                 <div className="grid grid-cols-3 gap-4">
                   {/* Card 1: 年龄 */}
-                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3 border border-[var(--md-sys-color-outline-variant)] border-opacity-20">
+                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
                     <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
                       <span className="material-symbols-outlined text-[20px]">cake</span>
                       <span className="text-[14px] font-bold">年龄</span>
                     </div>
                     <div className="flex">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]">
                         {student.demographics?.age?.toString() || 'N/A'} 岁
                       </span>
                     </div>
                   </div>
 
                   {/* Card 2: 性别 */}
-                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3 border border-[var(--md-sys-color-outline-variant)] border-opacity-20">
+                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
                     <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
                       <span className="material-symbols-outlined text-[20px]">wc</span>
                       <span className="text-[14px] font-bold">性别</span>
                     </div>
                     <div className="flex">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]">
                         {student.demographics?.gender || 'N/A'}
                       </span>
                     </div>
                   </div>
 
                   {/* Card 3: 年级 */}
-                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3 border border-[var(--md-sys-color-outline-variant)] border-opacity-20">
+                  <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3">
                     <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] opacity-85">
                       <span className="material-symbols-outlined text-[20px]">school</span>
                       <span className="text-[14px] font-bold">年级</span>
                     </div>
                     <div className="flex">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]">
                         {student.year || 'N/A'}
                       </span>
                     </div>
@@ -173,9 +173,9 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
                 </div>
 
                 {/* 就读专业 Card */}
-                <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex items-center justify-between border border-[var(--md-sys-color-outline-variant)] border-opacity-20 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex items-center justify-between animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-primary-container)] bg-opacity-20 text-[var(--md-sys-color-primary)] flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-secondary-container)] bg-opacity-20 text-[var(--md-sys-color-secondary)] flex items-center justify-center shrink-0">
                       <span className="material-symbols-outlined text-[20px] font-bold">menu_book</span>
                     </div>
                     <div className="flex flex-col">

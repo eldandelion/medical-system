@@ -159,7 +159,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
               <div className="flex flex-col gap-6">
                 {/* Lavender Styled Header */}
                 <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)]">
-                  <span className="material-symbols-outlined text-[22px]">assignment</span>
+                  {/* <span className="material-symbols-outlined text-[22px]">assignment</span> */}
                   <span className="text-[18px] font-bold text-[var(--md-sys-color-on-surface)]">分诊基本信息</span>
                 </div>
 
@@ -276,9 +276,9 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                 </div>
 
                 {/* Attachment List */}
-                <AttachmentList 
-                  attachments={extendedData.feedback.attachments} 
-                  title="转诊附件" 
+                <AttachmentList
+                  attachments={extendedData.feedback.attachments}
+                  title="转诊附件"
                 />
               </div>
 
@@ -370,9 +370,9 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                 </div>
               </div>
 
-              <AttachmentList 
-                attachments={extendedData.feedback.attachments} 
-                title="附件" 
+              <AttachmentList
+                attachments={extendedData.feedback.attachments}
+                title="附件"
               />
             </motion.div>
           )}
