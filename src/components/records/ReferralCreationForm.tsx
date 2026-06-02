@@ -14,12 +14,12 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
   const [students, setStudents] = React.useState<Student[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  
+
   const [formData, setFormData] = React.useState({
     studentId: '',
     title: '',
     reason: '',
-    riskLevel: '',
+    riskLevel: 'Low',
     clinicalStatus: ['Current Medication', 'Prior Therapy'],
     severeRiskFactors: [] as string[],
     attachments: [
@@ -28,7 +28,30 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
     ]
   });
 
+  const [errors, setErrors] = React.useState({
+    studentId: false,
+    title: false,
+    reason: false,
+    riskLevel: false
+  });
+
   const handleSubmit = (actionType: 'draft' | 'submit') => {
+    if (actionType === 'submit') {
+      const newErrors = {
+        studentId: !formData.studentId,
+        title: !formData.title.trim(),
+        reason: !formData.reason.trim(),
+        riskLevel: !formData.riskLevel
+      };
+
+      setErrors(newErrors);
+
+      if (Object.values(newErrors).some(isError => isError)) {
+        showSnackbar({ message: '请填写所有必填字段', duration: 3000 });
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
@@ -62,7 +85,7 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
       setHeaderActions(
         <div className="flex items-center gap-3 mr-4">
           <SecondaryButton label="保存草稿" onClick={() => handleSubmit('draft')} disabled={isSubmitting} />
-          <PrimaryButton label={isSubmitting ? "提交中..." : "提交"} onClick={() => handleSubmit('submit')} disabled={isSubmitting} />
+          <PrimaryButton label={isSubmitting ? "提交中" : "提交"} onClick={() => handleSubmit('submit')} disabled={isSubmitting} />
         </div>
       );
     } else {
@@ -80,8 +103,8 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
   return (
     <div className="flex flex-col h-full bg-[var(--md-sys-color-surface)] relative">
       {isSubmitting && progressSlot && ReactDOM.createPortal(
-        <md-linear-progress 
-          indeterminate 
+        <md-linear-progress
+          indeterminate
           className="w-full block"
         ></md-linear-progress>,
         progressSlot
@@ -99,8 +122,14 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
                 label={loading ? '正在加载学生列表...' : '选择学生'}
                 className="w-full relative"
                 value={formData.studentId}
-                onChange={(e: any) => setFormData(prev => ({ ...prev, studentId: e.target.value }))}
+                onChange={(e: any) => {
+                  const val = e.target.value;
+                  setFormData(prev => ({ ...prev, studentId: val }));
+                  if (errors.studentId) setErrors(prev => ({ ...prev, studentId: false }));
+                }}
                 disabled={loading || students.length === 0 || isSubmitting}
+                error={errors.studentId || undefined}
+                error-text="此项为必填项"
               >
                 {students.map((student) => {
                   return (
@@ -155,8 +184,14 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
               label="标题"
               className="w-full"
               value={formData.title}
-              onInput={(e: any) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              onInput={(e: any) => {
+                const val = e.target.value;
+                setFormData(prev => ({ ...prev, title: val }));
+                if (errors.title) setErrors(prev => ({ ...prev, title: false }));
+              }}
               disabled={isSubmitting}
+              error={errors.title || undefined}
+              error-text="此项为必填项"
             >
             </md-outlined-text-field>
             <md-outlined-text-field
@@ -167,8 +202,14 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
               supporting-text={`* 字数限制: ${formData.reason.length}/500`}
               maxLength={500}
               value={formData.reason}
-              onInput={(e: any) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
+              onInput={(e: any) => {
+                const val = e.target.value;
+                setFormData(prev => ({ ...prev, reason: val }));
+                if (errors.reason) setErrors(prev => ({ ...prev, reason: false }));
+              }}
               disabled={isSubmitting}
+              error={errors.reason || undefined}
+              error-text="此项为必填项"
             >
             </md-outlined-text-field>
           </section>
@@ -181,10 +222,32 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
             <div className="flex flex-col gap-3">
               <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">风险等级</span>
               <div className="flex border border-[var(--md-sys-color-outline)] rounded-full overflow-hidden w-fit">
-                <button disabled={isSubmitting} className="px-6 py-2.5 text-[14px] font-medium hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)] border-r border-[var(--md-sys-color-outline)] transition-colors">低风险</button>
-                <button disabled={isSubmitting} className="px-6 py-2.5 text-[14px] font-medium hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)] border-r border-[var(--md-sys-color-outline)] transition-colors">中风险</button>
-                <button disabled={isSubmitting} className="px-6 py-2.5 text-[14px] font-medium bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] transition-colors">高风险</button>
+                <button
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, riskLevel: 'Low' }));
+                    if (errors.riskLevel) setErrors(prev => ({ ...prev, riskLevel: false }));
+                  }}
+                  className={`px-6 py-2.5 text-[14px] font-medium transition-colors border-r border-[var(--md-sys-color-outline)] ${formData.riskLevel === 'Low' ? 'bg-[#f0fdf4] text-[#166534]' : 'hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)]'}`}
+                >低风险</button>
+                <button
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, riskLevel: 'Medium' }));
+                    if (errors.riskLevel) setErrors(prev => ({ ...prev, riskLevel: false }));
+                  }}
+                  className={`px-6 py-2.5 text-[14px] font-medium transition-colors border-r border-[var(--md-sys-color-outline)] ${formData.riskLevel === 'Medium' ? 'bg-[#fef9c3] text-[#854d0e]' : 'hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)]'}`}
+                >中风险</button>
+                <button
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, riskLevel: 'High' }));
+                    if (errors.riskLevel) setErrors(prev => ({ ...prev, riskLevel: false }));
+                  }}
+                  className={`px-6 py-2.5 text-[14px] font-medium transition-colors ${formData.riskLevel === 'High' ? 'bg-[#fee2e2] text-[#991b1b]' : 'hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)]'}`}
+                >高风险</button>
               </div>
+              {errors.riskLevel && <span className="text-[12px] text-[var(--md-sys-color-error)] mt-1">此项为必填项</span>}
             </div>
 
             <div className="flex flex-col gap-3 mt-2">
@@ -222,9 +285,9 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
               <AttachmentList
                 title="已上传文件"
                 attachments={formData.attachments}
-                onDelete={(file) => setFormData(prev => ({ 
-                  ...prev, 
-                  attachments: prev.attachments.filter(f => f.name !== file.name) 
+                onDelete={(file) => setFormData(prev => ({
+                  ...prev,
+                  attachments: prev.attachments.filter(f => f.name !== file.name)
                 }))}
               />
             </div>

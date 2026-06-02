@@ -45,10 +45,14 @@ declare global {
         value?: string;
         'supporting-text'?: string;
         maxLength?: number;
+        error?: boolean;
+        'error-text'?: string;
       }, HTMLElement>;
       'md-outlined-select': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
         label?: string;
         value?: string;
+        error?: boolean;
+        'error-text'?: string;
       }, HTMLElement>;
       'md-select-option': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
         value?: string;
