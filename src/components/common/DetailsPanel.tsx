@@ -131,18 +131,18 @@ export function DetailsSection({ title, children, icon, className = "" }: { titl
 /**
  * Helper component for structured 3-column demographic or metric card items
  */
-export function MetricCard({ 
-  label, 
-  value, 
-  icon, 
-  className = "", 
+export function MetricCard({
+  label,
+  value,
+  icon,
+  className = "",
   labelClassName = "text-[var(--md-sys-color-on-surface-variant)] opacity-85",
   badgeClassName = "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]"
-}: { 
-  label: string; 
-  value: React.ReactNode; 
-  icon: string; 
-  className?: string; 
+}: {
+  label: string;
+  value: React.ReactNode;
+  icon: string;
+  className?: string;
   labelClassName?: string;
   badgeClassName?: string;
 }) {
@@ -216,3 +216,71 @@ export function CollapsibleHeader({ visible, children, className = '' }: Collaps
     </AnimatePresence>
   );
 }
+
+interface ScrollableDetailsLayoutProps {
+  header?: React.ReactNode;
+  tabs?: React.ReactNode;
+  footer?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+  title?: string;
+}
+
+/**
+ * Reusable details view layout that handles standard scroll-to-collapse header interactions,
+ * sticky tab items with scroll-based shadows, fixed action footers, and minimum tab content heights.
+ * Automatically synchronizes the scroll title with the outer details shell.
+ */
+export function ScrollableDetailsLayout({
+  header,
+  tabs,
+  footer,
+  children,
+  className = '',
+  title
+}: ScrollableDetailsLayoutProps) {
+  const { isScrolled, handleScroll } = useScrollCollapse(20);
+  const { setTitleOverride } = React.useContext(DetailsContext);
+
+  React.useEffect(() => {
+    if (setTitleOverride) {
+      if (isScrolled && title) {
+        setTitleOverride(title);
+      } else {
+        setTitleOverride(null);
+      }
+    }
+  }, [isScrolled, title, setTitleOverride]);
+
+  return (
+    <div className={`flex flex-col h-full bg-[var(--md-sys-color-surface)] relative overflow-hidden ${className}`}>
+      <div 
+        className="flex-1 overflow-y-auto custom-scrollbar overflow-x-hidden relative"
+        onScroll={handleScroll}
+      >
+        {/* Header Section */}
+        {header && (
+          <div className="p-6 pb-4 flex flex-col gap-5 shrink-0">
+            {header}
+          </div>
+        )}
+
+        {/* Sticky Tabs */}
+        {tabs && (
+          <div className={`sticky top-0 z-20 bg-[var(--md-sys-color-surface)] transition-shadow duration-200 ${isScrolled ? 'shadow-sm' : ''}`}>
+            {tabs}
+          </div>
+        )}
+
+        {/* Content Area */}
+        <div className="flex-1 p-6 pb-8 min-h-[75vh]">
+          {children}
+        </div>
+      </div>
+
+      {/* Fixed Action Footer */}
+      {footer}
+    </div>
+  );
+}
+
