@@ -10,17 +10,19 @@ interface AttachmentListProps {
   title?: string;
   className?: string;
   onDownload?: (file: Attachment) => void;
+  onDelete?: (file: Attachment) => void;
 }
 
 /**
  * Material Design 3 inspired Attachment List component.
- * Displays a list of file attachments with download action buttons.
+ * Displays a list of file attachments with download/delete action buttons.
  */
 export function AttachmentList({ 
   attachments, 
   title = "附件", 
   className = "", 
-  onDownload 
+  onDownload,
+  onDelete
 }: AttachmentListProps) {
   if (!attachments || attachments.length === 0) return null;
 
@@ -34,7 +36,13 @@ export function AttachmentList({
           <div 
             key={idx} 
             className="p-4 rounded-xl border border-[var(--md-sys-color-outline-variant)] hover:bg-[var(--md-sys-color-surface-container-low)] transition-all flex items-center justify-between group cursor-pointer"
-            onClick={() => onDownload?.(file)}
+            onClick={() => {
+              if (onDelete) {
+                onDelete(file);
+              } else {
+                onDownload?.(file);
+              }
+            }}
           >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-full bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] group-hover:bg-[var(--md-sys-color-primary-container)] group-hover:text-[var(--md-sys-color-on-primary-container)] transition-colors shrink-0">
@@ -53,11 +61,15 @@ export function AttachmentList({
             <md-icon-button 
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
-                onDownload?.(file);
+                if (onDelete) {
+                  onDelete(file);
+                } else {
+                  onDownload?.(file);
+                }
               }}
             >
               {/* @ts-ignore */}
-              <md-icon>download</md-icon>
+              <md-icon>{onDelete ? 'delete' : 'download'}</md-icon>
             {/* @ts-ignore */}
             </md-icon-button>
           </div>

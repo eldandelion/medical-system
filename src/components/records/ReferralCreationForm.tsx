@@ -2,6 +2,7 @@ import * as React from 'react';
 import { SecondaryButton, PrimaryButton } from '../common/Buttons';
 import { useCreationOverlay } from '../../contexts/CreationContext';
 import { Student } from '../../types';
+import { AttachmentList } from '../common/AttachmentList';
 
 export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
   const { viewState, setHeaderActions } = useCreationOverlay();
@@ -10,6 +11,10 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
   const [students, setStudents] = React.useState<Student[]>([]);
   const [selectedStudentId, setSelectedStudentId] = React.useState<string>('');
   const [loading, setLoading] = React.useState(true);
+  const [attachments, setAttachments] = React.useState([
+    { name: 'Patient_Intake_Scan_v2.pdf', size: '2.4 MB' },
+    { name: 'Hospital_Release_Form.png', size: '1.1 MB' },
+  ]);
 
   React.useEffect(() => {
     fetch('/api/students')
@@ -114,6 +119,32 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
             )}
           </section>
 
+          {/* 3. Clinical Context Block */}
+          <section className="flex flex-col gap-6">
+            <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
+              <span className="material-symbols-outlined text-[20px]">assignment</span>
+              Clinical Context
+            </h3>
+            {/* @ts-ignore */}
+            <md-outlined-text-field
+              label="Title"
+              className="w-full"
+            >
+              {/* @ts-ignore */}
+            </md-outlined-text-field>
+            {/* @ts-ignore */}
+            <md-outlined-text-field
+              type="textarea"
+              rows={4}
+              label="Referral Reason"
+              className="w-full"
+              supporting-text="* Character limit: 0/500"
+              maxLength={500}
+            >
+              {/* @ts-ignore */}
+            </md-outlined-text-field>
+          </section>
+
           {/* 2. Triage Classification Block */}
           <section className="flex flex-col gap-6">
             <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
@@ -159,25 +190,6 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
             </div>
           </section>
 
-          {/* 3. Clinical Context Block */}
-          <section className="flex flex-col gap-6">
-            <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
-              <span className="material-symbols-outlined text-[20px]">assignment</span>
-              Clinical Context
-            </h3>
-            {/* @ts-ignore */}
-            <md-outlined-text-field
-              type="textarea"
-              rows={4}
-              label="Referral Reason"
-              className="w-full"
-              supporting-text="* Character limit: 0/500"
-              maxLength={500}
-            >
-              {/* @ts-ignore */}
-            </md-outlined-text-field>
-          </section>
-
           {/* 4. Attachments Block */}
           <section className="flex flex-col gap-6">
             <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
@@ -195,43 +207,11 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
                   {/* @ts-ignore */}
                 </md-filled-tonal-button>
               </div>
-              <div className="grid grid-cols-1 gap-3">
-                <div className="p-4 rounded-[12px] border border-[var(--md-sys-color-outline-variant)] hover:bg-[var(--md-sys-color-surface-container-low)] transition-all flex items-center justify-between group">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] group-hover:bg-[var(--md-sys-color-primary-container)] group-hover:text-[var(--md-sys-color-on-primary-container)] transition-colors shrink-0">
-                      <span className="material-symbols-outlined">attach_file</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">Patient_Intake_Scan_v2.pdf</span>
-                      <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] opacity-60 uppercase">2.4 MB</span>
-                    </div>
-                  </div>
-                  {/* @ts-ignore */}
-                  <md-icon-button>
-                    {/* @ts-ignore */}
-                    <md-icon>delete</md-icon>
-                    {/* @ts-ignore */}
-                  </md-icon-button>
-                </div>
-
-                <div className="p-4 rounded-[12px] border border-[var(--md-sys-color-outline-variant)] hover:bg-[var(--md-sys-color-surface-container-low)] transition-all flex items-center justify-between group">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] group-hover:bg-[var(--md-sys-color-primary-container)] group-hover:text-[var(--md-sys-color-on-primary-container)] transition-colors shrink-0">
-                      <span className="material-symbols-outlined">attach_file</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">Hospital_Release_Form.png</span>
-                      <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] opacity-60 uppercase">1.1 MB</span>
-                    </div>
-                  </div>
-                  {/* @ts-ignore */}
-                  <md-icon-button>
-                    {/* @ts-ignore */}
-                    <md-icon>delete</md-icon>
-                    {/* @ts-ignore */}
-                  </md-icon-button>
-                </div>
-              </div>
+              <AttachmentList
+                title="Files"
+                attachments={attachments}
+                onDelete={(file) => setAttachments(prev => prev.filter(f => f.name !== file.name))}
+              />
             </div>
           </section>
         </div>
