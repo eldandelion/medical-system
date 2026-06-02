@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { SecondaryButton, PrimaryButton } from '../common/Buttons';
 import { useCreationOverlay } from '../../contexts/CreationContext';
 import { useSnackbar } from '../../contexts/SnackbarContext';
@@ -74,10 +75,16 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
 
   const selectedStudent = students.find(s => s.id === formData.studentId);
 
+  const progressSlot = document.getElementById('creation-progress-slot');
+
   return (
     <div className="flex flex-col h-full bg-[var(--md-sys-color-surface)] relative">
-      {isSubmitting && (
-        <md-linear-progress indeterminate className="absolute top-0 left-0 right-0 w-full z-50"></md-linear-progress>
+      {isSubmitting && progressSlot && ReactDOM.createPortal(
+        <md-linear-progress 
+          indeterminate 
+          className="w-full block"
+        ></md-linear-progress>,
+        progressSlot
       )}
       <div className={`flex-1 overflow-y-auto p-6 ${isFullscreen ? 'pb-8' : 'pb-32'}`}>
         <div className="max-w-3xl mx-auto flex flex-col gap-10">

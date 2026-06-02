@@ -48,7 +48,7 @@ export function CreationSheetTemplate() {
         }`}
       >
         {/* Header Architecture */}
-        <div className="flex-none flex flex-col">
+        <div className="flex-none flex flex-col relative">
           {/* Top App Bar Content */}
           <div className="flex items-center justify-between px-6 py-4 min-h-[64px]">
             <div className="flex-1 truncate">
@@ -73,6 +73,8 @@ export function CreationSheetTemplate() {
               </md-icon-button>
             </div>
           </div>
+          {/* Slot for injecting progress bars right underneath the header */}
+          <div id="creation-progress-slot" className="absolute bottom-0 left-0 right-0 w-full z-50"></div>
         </div>
 
         {/* Dynamic Content Payload */}
