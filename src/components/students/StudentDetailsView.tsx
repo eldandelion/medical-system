@@ -123,7 +123,7 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
               className="flex flex-col gap-1"
             >
               {/* Static Demographics Section - Redesigned Container */}
-              <div className="flex flex-col gap-6 mb-4">
+              <div className="flex flex-col gap-4 mb-4">
                 {/* Header */}
                 <div className="flex items-center gap-2 text-[var(--md-sys-color-secondary)]">
                   {/* <span className="material-symbols-outlined text-[22px]">fingerprint</span> */}
