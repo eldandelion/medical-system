@@ -10,15 +10,17 @@ interface ButtonProps {
   noCollapse?: boolean;
   trailingIcon?: boolean;
   iconSize?: string;
+  disabled?: boolean;
 }
 
-export function PrimaryButton({ icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize }: ButtonProps) {
+export function PrimaryButton({ icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   return (
     <md-filled-button
       className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       onClick={onClick}
+      disabled={disabled}
       trailing-icon={trailingIcon ? "" : undefined}
       style={{
         '--md-filled-button-container-elevation': '0',
@@ -33,13 +35,14 @@ export function PrimaryButton({ icon, label, className = "h-10", onClick, style,
   );
 }
 
-export function SecondaryButton({ icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize }: ButtonProps) {
+export function SecondaryButton({ icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   return (
     <md-outlined-button
       className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       onClick={onClick}
+      disabled={disabled}
       trailing-icon={trailingIcon ? "" : undefined}
       style={{
         '--md-outlined-button-icon-size': iconSize,
@@ -52,13 +55,14 @@ export function SecondaryButton({ icon, label, className = "h-10", onClick, styl
   );
 }
 
-export function TertiaryButton({ icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize }: ButtonProps) {
+export function TertiaryButton({ icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   return (
     <md-text-button
       className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       onClick={onClick}
+      disabled={disabled}
       trailing-icon={trailingIcon ? "" : undefined}
       style={{
         '--md-text-button-icon-size': iconSize,
@@ -99,9 +103,10 @@ interface SegmentedButtonProps {
   items: SegmentedButtonItem[];
   selectedValue: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }
 
-export function SegmentedButton({ items, selectedValue, onChange }: SegmentedButtonProps) {
+export function SegmentedButton({ items, selectedValue, onChange, disabled }: SegmentedButtonProps) {
   return (
     <div className="inline-flex h-10 border border-[var(--md-sys-color-outline)] rounded-full overflow-hidden bg-transparent">
       {items.map((item, index) => {
@@ -111,8 +116,9 @@ export function SegmentedButton({ items, selectedValue, onChange }: SegmentedBut
         return (
           <button
             key={item.value}
+            disabled={disabled}
             onClick={() => onChange(item.value)}
-            className={`flex items-center justify-center px-6 text-sm font-medium transition-all relative group cursor-pointer ${isSelected
+            className={`flex items-center justify-center px-6 text-sm font-medium transition-all relative group ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${isSelected
               ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
               : 'text-[var(--md-sys-color-on-surface)]'
               } ${!isLast ? 'border-r border-[var(--md-sys-color-outline)]' : ''}`}

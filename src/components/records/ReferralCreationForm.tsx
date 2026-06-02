@@ -1,15 +1,18 @@
 import * as React from 'react';
 import { SecondaryButton, PrimaryButton } from '../common/Buttons';
 import { useCreationOverlay } from '../../contexts/CreationContext';
+import { useSnackbar } from '../../contexts/SnackbarContext';
 import { Student } from '../../types';
 import { AttachmentList } from '../common/AttachmentList';
 
 export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
   const { viewState, setHeaderActions } = useCreationOverlay();
+  const { showSnackbar } = useSnackbar();
   const isFullscreen = viewState === 'FULLSCREEN';
 
   const [students, setStudents] = React.useState<Student[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   
   const [formData, setFormData] = React.useState({
     studentId: '',
@@ -23,6 +26,18 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
       { name: 'Hospital_Release_Form.png', size: '1.1 MB' },
     ]
   });
+
+  const handleSubmit = (actionType: 'draft' | 'submit') => {
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      onClose();
+      showSnackbar({
+        message: actionType === 'draft' ? '草稿已保存' : '转诊申请已成功提交',
+        duration: 4000
+      });
+    }, 1500);
+  };
 
   React.useEffect(() => {
     const controller = new AbortController();
@@ -45,8 +60,8 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
     if (isFullscreen) {
       setHeaderActions(
         <div className="flex items-center gap-3 mr-4">
-          <SecondaryButton label="保存草稿" onClick={onClose} />
-          <PrimaryButton label="提交" onClick={onClose} />
+          <SecondaryButton label="保存草稿" onClick={() => handleSubmit('draft')} disabled={isSubmitting} />
+          <PrimaryButton label={isSubmitting ? "提交中..." : "提交"} onClick={() => handleSubmit('submit')} disabled={isSubmitting} />
         </div>
       );
     } else {
@@ -55,16 +70,18 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
     return () => {
       setHeaderActions(null);
     };
-  }, [isFullscreen, setHeaderActions, onClose]);
+  }, [isFullscreen, setHeaderActions, isSubmitting]);
 
   const selectedStudent = students.find(s => s.id === formData.studentId);
 
   return (
     <div className="flex flex-col h-full bg-[var(--md-sys-color-surface)] relative">
+      {isSubmitting && (
+        <md-linear-progress indeterminate className="absolute top-0 left-0 right-0 w-full z-50"></md-linear-progress>
+      )}
       <div className={`flex-1 overflow-y-auto p-6 ${isFullscreen ? 'pb-8' : 'pb-32'}`}>
         <div className="max-w-3xl mx-auto flex flex-col gap-10">
 
-          {/* 1. Target Identification Block */}
           <section className="flex flex-col gap-6">
             <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
               <span className="material-symbols-outlined text-[20px]">person_search</span>
@@ -76,7 +93,7 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
                 className="w-full relative"
                 value={formData.studentId}
                 onChange={(e: any) => setFormData(prev => ({ ...prev, studentId: e.target.value }))}
-                disabled={loading || students.length === 0}
+                disabled={loading || students.length === 0 || isSubmitting}
               >
                 {students.map((student) => {
                   return (
@@ -117,17 +134,11 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-end text-[var(--md-sys-color-on-surface-variant)] shrink-0">
-                    <md-icon-button>
-                      <md-icon>chevron_right</md-icon>
-                    </md-icon-button>
-                  </div>
                 </div>
               </div>
             )}
           </section>
 
-          {/* 3. Clinical Context Block */}
           <section className="flex flex-col gap-6">
             <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
               <span className="material-symbols-outlined text-[20px]">assignment</span>
@@ -138,6 +149,7 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
               className="w-full"
               value={formData.title}
               onInput={(e: any) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              disabled={isSubmitting}
             >
             </md-outlined-text-field>
             <md-outlined-text-field
@@ -149,11 +161,11 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
               maxLength={500}
               value={formData.reason}
               onInput={(e: any) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
+              disabled={isSubmitting}
             >
             </md-outlined-text-field>
           </section>
 
-          {/* 2. Triage Classification Block */}
           <section className="flex flex-col gap-6">
             <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
               <span className="material-symbols-outlined text-[20px]">medical_information</span>
@@ -162,33 +174,31 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
             <div className="flex flex-col gap-3">
               <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">风险等级</span>
               <div className="flex border border-[var(--md-sys-color-outline)] rounded-full overflow-hidden w-fit">
-                <button className="px-6 py-2.5 text-[14px] font-medium hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)] border-r border-[var(--md-sys-color-outline)] transition-colors">低风险</button>
-                <button className="px-6 py-2.5 text-[14px] font-medium hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)] border-r border-[var(--md-sys-color-outline)] transition-colors">中风险</button>
-                <button className="px-6 py-2.5 text-[14px] font-medium bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] transition-colors">高风险</button>
+                <button disabled={isSubmitting} className="px-6 py-2.5 text-[14px] font-medium hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)] border-r border-[var(--md-sys-color-outline)] transition-colors">低风险</button>
+                <button disabled={isSubmitting} className="px-6 py-2.5 text-[14px] font-medium hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)] border-r border-[var(--md-sys-color-outline)] transition-colors">中风险</button>
+                <button disabled={isSubmitting} className="px-6 py-2.5 text-[14px] font-medium bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] transition-colors">高风险</button>
               </div>
             </div>
 
             <div className="flex flex-col gap-3 mt-2">
               <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">临床就诊状态</span>
               <md-chip-set>
-                <md-filter-chip label="初诊"></md-filter-chip>
-                <md-filter-chip label="正在服药" selected></md-filter-chip>
-                <md-filter-chip label="既往心理治疗" selected></md-filter-chip>
+                <md-filter-chip label="初诊" disabled={isSubmitting}></md-filter-chip>
+                <md-filter-chip label="正在服药" selected disabled={isSubmitting}></md-filter-chip>
+                <md-filter-chip label="既往心理治疗" selected disabled={isSubmitting}></md-filter-chip>
               </md-chip-set>
             </div>
 
-            {/* Severe Risk Factors (embedded in Triage section layout) */}
             <div className="flex flex-col gap-3 pt-2">
               <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">严重风险因素</span>
               <md-chip-set>
-                <md-filter-chip label="自杀意念"></md-filter-chip>
-                <md-filter-chip label="自杀企图"></md-filter-chip>
-                <md-filter-chip label="自残行为"></md-filter-chip>
+                <md-filter-chip label="自杀意念" disabled={isSubmitting}></md-filter-chip>
+                <md-filter-chip label="自杀企图" disabled={isSubmitting}></md-filter-chip>
+                <md-filter-chip label="自残行为" disabled={isSubmitting}></md-filter-chip>
               </md-chip-set>
             </div>
           </section>
 
-          {/* 4. Attachments Block */}
           <section className="flex flex-col gap-6">
             <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
               <span className="material-symbols-outlined text-[20px]">attachment</span>
@@ -197,7 +207,7 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
 
             <div className="flex flex-col gap-4">
               <div>
-                <md-filled-tonal-button className="[&::part(button)]:px-0">
+                <md-filled-tonal-button className="[&::part(button)]:px-0" disabled={isSubmitting}>
                   <md-icon slot="icon" className="ml-4">upload</md-icon>
                   <span className="mr-4">上传附件</span>
                 </md-filled-tonal-button>
@@ -215,12 +225,11 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
         </div>
       </div>
 
-      {/* 6. Persistent Action Footer */}
       {!isFullscreen && (
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] z-10 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
           <div className="flex items-center justify-end gap-4 w-full">
-            <SecondaryButton label="保存草稿" onClick={onClose} />
-            <PrimaryButton label="提交" onClick={onClose} />
+            <SecondaryButton label="保存草稿" onClick={() => handleSubmit('draft')} disabled={isSubmitting} />
+            <PrimaryButton label={isSubmitting ? "提交中..." : "提交"} onClick={() => handleSubmit('submit')} disabled={isSubmitting} />
           </div>
         </div>
       )}
