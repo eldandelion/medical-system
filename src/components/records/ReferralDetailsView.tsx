@@ -5,6 +5,7 @@ import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Button
 import { ActionFooter } from '../common/ActionFooter';
 import { PrimaryTabs } from '../common/Tabs';
 import { PsychometricsTabContent } from '../assessments/PsychometricsTabContent';
+import { ReferralTracker } from './ReferralTracker';
 import { AttachmentList } from '../common/AttachmentList';
 import { Quote } from 'lucide-react';
 
@@ -21,10 +22,11 @@ interface ReferralDetailsViewProps {
   onTabChange?: (tabId: string) => void;
 }
 
-type TabType = 'overview' | 'psychometrics' | 'feedback';
+type TabType = 'overview' | 'tracker' | 'psychometrics' | 'feedback';
 
 export const REFERRAL_DETAILS_TABS = [
   { id: 'overview', label: '转诊概览', icon: 'clinical_notes' },
+  { id: 'tracker', label: '转诊进度', icon: 'timeline' },
   { id: 'psychometrics', label: '量表数据', icon: 'analytics' },
   { id: 'feedback', label: '诊疗反馈', icon: 'history_edu' },
 ];
@@ -279,7 +281,20 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                 />
               </div>
             </DetailsSection>
+          </motion.div>
+        )}
 
+        {activeTab === 'tracker' && (
+          <motion.div
+            key="tracker"
+            initial={{ opacity: 0, x: isFullScreen ? 0 : 10, y: isFullScreen ? 10 : 0 }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            exit={{ opacity: 0, x: isFullScreen ? 0 : -10, y: isFullScreen ? -10 : 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col gap-6"
+          >
+            <ReferralTracker />
+            
             {/* Referral Destination Card - Surface Container High with Tonal Icons */}
             <div className="p-5 rounded-2xl bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface)] flex flex-col gap-4 border border-[var(--md-sys-color-outline-variant)] border-opacity-30">
               <div className="flex items-center justify-between">
@@ -309,7 +324,10 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                       <span className="text-[15px] font-medium leading-tight mt-0.5">{item.value}</span>
                     </div>
                     {item.clickable && (
-                      <span className="material-symbols-outlined text-[var(--md-sys-color-on-surface-variant)] opacity-40 group-hover:opacity-100 transition-opacity">chevron_right</span>
+                      <md-icon-button class="w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                        {/* @ts-ignore */}
+                        <md-icon style={{ fontSize: '18px' }}>chevron_right</md-icon>
+                      </md-icon-button>
                     )}
                   </div>
                 ))}

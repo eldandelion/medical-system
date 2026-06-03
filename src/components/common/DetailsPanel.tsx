@@ -137,7 +137,7 @@ export function MetricCard({
   icon,
   className = "",
   labelClassName = "text-[var(--md-sys-color-on-surface-variant)] opacity-85",
-  badgeClassName = "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]"
+  badgeClassName = "bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-container)]"
 }: {
   label: string;
   value: React.ReactNode;
@@ -254,7 +254,7 @@ export function ScrollableDetailsLayout({
 
   return (
     <div className={`flex flex-col h-full bg-[var(--md-sys-color-surface)] relative overflow-hidden ${className}`}>
-      <div 
+      <div
         className="flex-1 overflow-y-auto custom-scrollbar overflow-x-hidden relative"
         onScroll={handleScroll}
       >
