@@ -294,11 +294,11 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
             className="flex flex-col gap-6"
           >
             <ReferralTracker />
-            
+
             {/* Referral Destination Card - Surface Container High with Tonal Icons */}
             <div className="p-5 rounded-2xl bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface)] flex flex-col gap-4 border border-[var(--md-sys-color-outline-variant)] border-opacity-30">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[var(--md-sys-color-primary)]">
+                <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface)]">
                   <span className="material-symbols-outlined text-xl">output_circle</span>
                   <span className="text-sm font-bold uppercase tracking-widest">转诊去向</span>
                 </div>

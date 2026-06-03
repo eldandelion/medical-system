@@ -1,7 +1,7 @@
 import React from 'react';
-import { 
-  Check, 
-  X, 
+import {
+  Check,
+  X,
   Info,
   GraduationCap,
   Users,
@@ -17,8 +17,8 @@ const referralSteps = [
     time: "10月12日",
     status: "completed",
     icon: GraduationCap,
-    iconColor: "text-[var(--md-sys-color-primary)]",
-    iconBg: "bg-[var(--md-sys-color-primary-container)]"
+    iconColor: "text-[var(--md-sys-color-secondary)]",
+    iconBg: "bg-[var(--md-sys-color-secondary-container)]"
   },
   {
     id: 2,
@@ -47,8 +47,8 @@ const referralSteps = [
     time: "待处理",
     status: "pending",
     icon: Stethoscope,
-    iconColor: "text-[var(--md-sys-color-tertiary)]",
-    iconBg: "bg-[var(--md-sys-color-tertiary-container)]"
+    iconColor: "text-[var(--md-sys-color-secondary)]",
+    iconBg: "bg-[var(--md-sys-color-secondary-container)]"
   }
 ];
 
@@ -56,14 +56,14 @@ const getCardStyles = (status: string) => {
   switch (status) {
     case 'completed':
       return {
-        bg: "bg-[var(--md-sys-color-surface-container)]",
+        bg: "bg-[var(--md-sys-color-surface-container-low)]",
         titleText: "text-[var(--md-sys-color-on-surface-variant)] line-through decoration-[var(--md-sys-color-on-surface-variant)]/40",
         subText: "text-[var(--md-sys-color-on-surface-variant)] opacity-70",
         timeText: "text-[var(--md-sys-color-on-surface-variant)] opacity-70"
       };
     case 'issue':
       return {
-        bg: "bg-[var(--md-sys-color-error-container)] border border-[var(--md-sys-color-error)]/20",
+        bg: "bg-[var(--md-sys-color-error-container)]/20",
         titleText: "text-[var(--md-sys-color-on-error-container)] line-through decoration-[var(--md-sys-color-on-error-container)]/40",
         subText: "text-[var(--md-sys-color-on-error-container)] opacity-80",
         timeText: "text-[var(--md-sys-color-on-error-container)] opacity-80"
@@ -88,11 +88,11 @@ export function ReferralTracker() {
             const isLast = index === referralSteps.length - 1;
             const styles = getCardStyles(step.status);
             const IconComponent = step.icon;
-            
+
             // Determine the line color connecting to the NEXT node
             const nextStep = referralSteps[index + 1];
             let lineColor = "bg-[var(--md-sys-color-outline-variant)]"; // Default
-            
+
             // Note: Use style prop for gradients with CSS variables if arbitrary values have parsing issues
             let customLineStyle = {};
             if (step.status === 'completed' && nextStep?.status === 'completed') {
@@ -104,10 +104,10 @@ export function ReferralTracker() {
 
             return (
               <div key={step.id} className="flex items-stretch gap-6 relative group z-10">
-                
+
                 {/* Left Side: The Card */}
                 <div className={`flex-1 rounded-[32px] p-5 pl-6 pr-5 flex items-start gap-4 transition-all duration-300 ${styles.bg}`}>
-                  
+
                   {/* Card Icon */}
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${step.iconBg}`}>
                     <IconComponent size={20} className={step.iconColor} />
@@ -123,7 +123,7 @@ export function ReferralTracker() {
                         {step.time}
                       </span>
                     </div>
-                    
+
                     <div className="flex items-start gap-1.5">
                       <Info size={14} className={`mt-0.5 shrink-0 ${styles.subText}`} />
                       <p className={`text-[13px] leading-relaxed ${styles.subText}`}>
@@ -135,7 +135,7 @@ export function ReferralTracker() {
 
                 {/* Right Side: Timeline Track & Indicator */}
                 <div className="w-8 flex flex-col items-center pt-8 relative shrink-0">
-                  
+
                   {/* Status Circle */}
                   <div className="relative z-10 flex items-center justify-center bg-[var(--md-sys-color-surface)]">
                     {step.status === 'completed' && (
@@ -157,8 +157,8 @@ export function ReferralTracker() {
 
                   {/* Connecting Line (drawn below the circle to the next item) */}
                   {!isLast && (
-                    <div 
-                      className={`absolute top-[44px] bottom-[-32px] left-1/2 -translate-x-1/2 w-[1.5px] z-0 ${lineColor}`} 
+                    <div
+                      className={`absolute top-[44px] bottom-[-32px] left-1/2 -translate-x-1/2 w-[1.5px] z-0 ${lineColor}`}
                       style={customLineStyle}
                     />
                   )}

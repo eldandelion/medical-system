@@ -14,6 +14,8 @@ interface CreationContextProps {
   expandToFullscreen: () => void;
   collapseToStandard: () => void;
   closeCreation: () => void;
+  requestClose: () => void;
+  setOnCloseInterceptor: React.Dispatch<React.SetStateAction<(() => boolean) | null>>;
 }
 
 const CreationContext = React.createContext<CreationContextProps | undefined>(undefined);
@@ -23,6 +25,7 @@ export function CreationOverlayProvider({ children }: { children: React.ReactNod
   const [title, setTitle] = React.useState<string | null>(null);
   const [activePayload, setActivePayload] = React.useState<React.ReactNode | null>(null);
   const [headerActions, setHeaderActions] = React.useState<React.ReactNode | null>(null);
+  const [onCloseInterceptor, setOnCloseInterceptor] = React.useState<(() => boolean) | null>(null);
 
   const openCreation = React.useCallback((newTitle: string, payload: React.ReactNode) => {
     setTitle(newTitle);
@@ -53,8 +56,17 @@ export function CreationOverlayProvider({ children }: { children: React.ReactNod
       setActivePayload(null);
       setTitle(null);
       setHeaderActions(null);
+      setOnCloseInterceptor(null);
     }, 400); 
   }, []);
+
+  const requestClose = React.useCallback(() => {
+    if (onCloseInterceptor) {
+      const shouldClose = onCloseInterceptor();
+      if (!shouldClose) return; // intercepted and prevented
+    }
+    closeCreation();
+  }, [closeCreation, onCloseInterceptor]);
 
   return (
     <CreationContext.Provider
@@ -70,6 +82,8 @@ export function CreationOverlayProvider({ children }: { children: React.ReactNod
         expandToFullscreen,
         collapseToStandard,
         closeCreation,
+        requestClose,
+        setOnCloseInterceptor,
       }}
     >
       {children}

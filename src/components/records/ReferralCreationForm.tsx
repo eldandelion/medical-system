@@ -3,13 +3,16 @@ import * as ReactDOM from 'react-dom';
 import { SecondaryButton, PrimaryButton } from '../common/Buttons';
 import { useCreationOverlay } from '../../contexts/CreationContext';
 import { useSnackbar } from '../../contexts/SnackbarContext';
+import { GenericDialog } from '../common/GenericDialog';
 import { Student } from '../../types';
 import { AttachmentList } from '../common/AttachmentList';
 
 export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
-  const { viewState, setHeaderActions } = useCreationOverlay();
+  const { viewState, setHeaderActions, setOnCloseInterceptor } = useCreationOverlay();
   const { showSnackbar } = useSnackbar();
   const isFullscreen = viewState === 'FULLSCREEN';
+
+  const [isCloseWarningOpen, setIsCloseWarningOpen] = React.useState(false);
 
   const [students, setStudents] = React.useState<Student[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -81,6 +84,18 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
   }, []);
 
   React.useEffect(() => {
+    setOnCloseInterceptor(() => () => {
+      const isDirty = formData.studentId !== '' || formData.title.trim() !== '' || formData.reason.trim() !== '';
+      if (isDirty) {
+        setIsCloseWarningOpen(true);
+        return false; // intercept close
+      }
+      return true; // allow close
+    });
+    return () => setOnCloseInterceptor(null);
+  }, [formData, setOnCloseInterceptor]);
+
+  React.useEffect(() => {
     if (isFullscreen) {
       setHeaderActions(
         <div className="flex items-center gap-3 mr-4">
@@ -101,8 +116,9 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
   const progressSlot = document.getElementById('creation-progress-slot');
 
   return (
-    <div className="flex flex-col h-full bg-[var(--md-sys-color-surface)] relative">
-      {isSubmitting && progressSlot && ReactDOM.createPortal(
+    <>
+      <div className="flex flex-col h-full bg-[var(--md-sys-color-surface)] relative">
+        {isSubmitting && progressSlot && ReactDOM.createPortal(
         <md-linear-progress
           indeterminate
           className="w-full block"
@@ -304,5 +320,23 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
         </div>
       )}
     </div>
+    
+    <GenericDialog
+      open={isCloseWarningOpen}
+      onClose={() => setIsCloseWarningOpen(false)}
+      title="确认关闭？"
+      actions={
+        <>
+          <SecondaryButton label="取消" onClick={() => setIsCloseWarningOpen(false)} />
+          <PrimaryButton label="确认关闭" onClick={() => {
+            setIsCloseWarningOpen(false);
+            onClose();
+          }} />
+        </>
+      }
+    >
+      <p className="text-[var(--md-sys-color-on-surface-variant)]">您有未保存的数据，关闭后将丢失。是否确认关闭？</p>
+    </GenericDialog>
+    </>
   );
 }

@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { useCreationOverlay } from '../../contexts/CreationContext';
 
 export function CreationSheetTemplate() {
-  const { viewState, title, activePayload, headerActions, minimizeCreation, expandToFullscreen, collapseToStandard, closeCreation } = useCreationOverlay();
+  const { viewState, title, activePayload, headerActions, minimizeCreation, expandToFullscreen, collapseToStandard, requestClose } = useCreationOverlay();
   const isFullscreen = viewState === 'FULLSCREEN';
   const sheetRef = React.useRef<HTMLDivElement>(null);
 
@@ -70,6 +70,9 @@ export function CreationSheetTemplate() {
               )}
               <md-icon-button onClick={minimizeCreation}>
                 <md-icon>minimize</md-icon>
+              </md-icon-button>
+              <md-icon-button onClick={requestClose}>
+                <md-icon>close</md-icon>
               </md-icon-button>
             </div>
           </div>
