@@ -3,7 +3,7 @@ import { Referral } from '../../types';
 const baseReferrals: Referral[] = [
   {
     id: '1',
-    studentName: 'Daniil Petrov',
+    studentName: '张伟',
     type: '初次转诊',
     date: '2026年4月12日',
     reason: '期中考试后出现急性恐慌发作和睡眠剥夺',
@@ -13,7 +13,7 @@ const baseReferrals: Referral[] = [
   },
   {
     id: '2',
-    studentName: 'Alice Smith',
+    studentName: '李娜',
     type: '随访',
     date: '2026年4月20日',
     reason: '每周治疗随访；情绪持续低落',
@@ -23,7 +23,7 @@ const baseReferrals: Referral[] = [
   },
   {
     id: '3',
-    studentName: 'Bob Johnson',
+    studentName: '王强',
     type: '初次转诊',
     date: '2026年5月5日',
     reason: '因注意力问题和学业压力自愿转诊',
@@ -33,7 +33,7 @@ const baseReferrals: Referral[] = [
   },
   {
     id: '4',
-    studentName: 'Elena Gilbert',
+    studentName: '陈思宇',
     type: '紧急',
     date: '2026年4月18日',
     reason: '宿舍事故报告；提到自杀意念',
@@ -43,7 +43,7 @@ const baseReferrals: Referral[] = [
   },
   {
     id: '5',
-    studentName: 'Chris Evans',
+    studentName: '赵明',
     type: '随访',
     date: '2026年4月15日',
     reason: '药物复核；报告注意力集中情况有所改善',
@@ -53,7 +53,7 @@ const baseReferrals: Referral[] = [
   },
   {
     id: '6',
-    studentName: 'Sarah Connor',
+    studentName: '孙悦',
     type: '初次转诊',
     date: '2026年4月22日',
     reason: '持续疲劳并退出社交活动',
@@ -63,7 +63,7 @@ const baseReferrals: Referral[] = [
   },
   {
     id: '7',
-    studentName: 'James Bond',
+    studentName: '周杰',
     type: '转诊',
     date: '2026年4月10日',
     reason: '与工作相关的压力和创伤后症状',

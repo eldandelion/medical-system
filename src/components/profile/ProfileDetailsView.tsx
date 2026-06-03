@@ -24,7 +24,7 @@ export function ProfileDetailsView({ isOpen, onBack }: ProfileDetailsViewProps) 
         </div>
       )
     },
-    { icon: 'badge', title: '姓名', value: 'Daniil Petrov' },
+    { icon: 'badge', title: '姓名', value: '张伟' },
     { icon: 'person', title: '性别', value: '男' },
     { 
       icon: 'mail', 

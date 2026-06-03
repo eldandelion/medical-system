@@ -137,11 +137,11 @@ export function PsychometricsTabContent({ student }: PsychometricsTabContentProp
       )}
 
       <PsychometricTable scores={[
-        { name: 'PHQ-9 (抑郁)', value: student.name === 'Alice Smith' ? 21 : 12, max: 27, level: student.name === 'Alice Smith' ? '重度' : '中度', date: '5天前' },
-        { name: 'GAD-7 (焦虑)', value: student.name === 'Alice Smith' ? 18 : 15, max: 21, level: '重度', date: '5天前' },
-        { name: 'PCL-5 (PTSD症状)', value: 42, max: 80, level: '阳性', date: '1周前' },
-        { name: 'ASRS (ADHD自评)', value: 4, max: 6, level: '可能存在', date: '1周前' },
-        { name: 'PSQI (睡眠质量)', value: student.name === 'Alice Smith' ? 17 : 14, max: 21, level: '较差', date: '2周前' },
+        { name: 'PHQ-9 (抑郁)', value: student.name === '李娜' ? 21 : 12, max: 27, level: student.name === '李娜' ? '重度' : '中度', date: '5天前' },
+        { name: 'GAD-7 (焦虑)', value: student.name === '李娜' ? 18 : 15, max: 21, level: '重度', date: '5天前' },
+        { name: 'BDI-II (贝克抑郁)', value: 24, max: 63, level: '中度', date: '1个月前' },
+        { name: 'BAI (贝克焦虑)', value: 16, max: 63, level: '轻度', date: '1个月前' },
+        { name: 'PSQI (睡眠质量)', value: student.name === '李娜' ? 17 : 14, max: 21, level: '较差', date: '2周前' },
         { name: 'ISS (失眠严重程度)', value: 19, max: 28, level: '临床失眠', date: '2周前' },
         { name: 'ESS (白天嗜睡情况)', value: 11, max: 24, level: '轻度', date: '2周前' }
       ]} />

@@ -47,15 +47,15 @@ export function StaffDetailsView({ staff, hideHeader, activeTab: propsActiveTab,
 
   // Mock data for tabs
   const caseload = [
-    { id: 's1', name: 'Daniil Petrov', type: '高风险转诊', date: '2026年4月22日' },
-    { id: 's2', name: 'Alice Smith', type: '日常维护', date: '2026年4月20日' },
+    { id: 's1', name: '张伟', type: '高风险转诊', date: '2026年4月22日' },
+    { id: 's2', name: '李娜', type: '日常维护', date: '2026年4月20日' },
     { id: 's3', name: 'James Wilson', type: '初诊接诊', date: '2026年4月18日' }
   ];
 
   const auditLogs = [
     { id: 'l1', action: '导出了转诊列表', time: '2小时前', context: '医学院' },
     { id: 'l2', action: '查看了个人资料', time: '5小时前', context: 'ID: 987654321' },
-    { id: 'l3', action: '修改了知情同意状态', time: '昨天', context: '学生：Daniil Petrov' }
+    { id: 'l3', action: '修改了知情同意状态', time: '昨天', context: '学生：张伟' }
   ];
 
   const departments = ['医学', '工程', '经济', '艺术', '理学', '法学'];

@@ -3,7 +3,7 @@ import { Student } from '../../types';
 export const mockStudentsDb: Student[] = [
   {
     id: '1',
-    name: 'Daniil Petrov',
+    name: '张伟',
     major: '计算机科学',
     year: '大三',
     status: 'Active',
@@ -45,7 +45,7 @@ export const mockStudentsDb: Student[] = [
   },
   {
     id: '2',
-    name: 'Alice Smith',
+    name: '李娜',
     major: '心理学',
     year: '大四',
     status: 'Active',
@@ -86,7 +86,7 @@ export const mockStudentsDb: Student[] = [
   },
   {
     id: '3',
-    name: 'Bob Johnson',
+    name: '王强',
     major: '生物学',
     year: '大一',
     status: 'Inactive',
@@ -126,7 +126,7 @@ export const mockStudentsDb: Student[] = [
   },
   {
     id: '4',
-    name: 'Charlie Brown',
+    name: '刘洋',
     major: '艺术史',
     year: '大二',
     status: 'Active',
@@ -163,5 +163,100 @@ export const mockStudentsDb: Student[] = [
     history: [
       { date: '2026-03-05', type: '压力辅导', description: '进行了学业时间线整理与认知重构指导。' }
     ]
+  },
+  {
+    id: '5',
+    name: '陈思宇',
+    major: '文学',
+    year: '大二',
+    status: 'Active',
+    riskLevel: 'High',
+    riskReason: '宿舍事故报告提及自杀意念',
+    referralReason: '紧急事件',
+    scidDiagnosis: '待评估',
+    riskFlags: [
+      { label: '自杀意念终身', value: true, severity: 'high' },
+      { label: '自杀尝试终身', value: false, severity: 'none' },
+      { label: '自伤行为终身', value: false, severity: 'none' }
+    ],
+    demographics: { age: 20, gender: '女', studentId: 'CSU-550111', emergencyContact: '+86 138-0000-1111' },
+    psychometrics: { scores: [], radarData: [] },
+    history: []
+  },
+  {
+    id: '6',
+    name: '赵明',
+    major: '物理',
+    year: '大四',
+    status: 'Active',
+    riskLevel: 'Low',
+    riskReason: '正在药物治疗中，情况改善',
+    referralReason: '复诊复核',
+    scidDiagnosis: 'ADHD',
+    riskFlags: [
+      { label: '自杀意念终身', value: false, severity: 'none' },
+      { label: '自杀尝试终身', value: false, severity: 'none' },
+      { label: '自伤行为终身', value: false, severity: 'none' }
+    ],
+    demographics: { age: 22, gender: '男', studentId: 'CSU-660222', emergencyContact: '+86 138-0000-2222' },
+    psychometrics: { scores: [], radarData: [] },
+    history: []
+  },
+  {
+    id: '7',
+    name: '孙悦',
+    major: '化学',
+    year: '大三',
+    status: 'Active',
+    riskLevel: 'Moderate',
+    riskReason: '持续疲劳，社交退缩',
+    referralReason: '疑似轻度抑郁',
+    scidDiagnosis: '待评估',
+    riskFlags: [
+      { label: '自杀意念终身', value: false, severity: 'none' },
+      { label: '自杀尝试终身', value: false, severity: 'none' },
+      { label: '自伤行为终身', value: false, severity: 'none' }
+    ],
+    demographics: { age: 21, gender: '女', studentId: 'CSU-770333', emergencyContact: '+86 138-0000-3333' },
+    psychometrics: { scores: [], radarData: [] },
+    history: []
+  },
+  {
+    id: '8',
+    name: '周杰',
+    major: '计算机科学',
+    year: '研究生',
+    status: 'Active',
+    riskLevel: 'High',
+    riskReason: '压力过大伴随创伤后症状',
+    referralReason: '转诊',
+    scidDiagnosis: 'PTSD倾向',
+    riskFlags: [
+      { label: '自杀意念终身', value: false, severity: 'none' },
+      { label: '自杀尝试终身', value: false, severity: 'none' },
+      { label: '自伤行为终身', value: false, severity: 'none' }
+    ],
+    demographics: { age: 24, gender: '男', studentId: 'CSU-880444', emergencyContact: '+86 138-0000-4444' },
+    psychometrics: { scores: [], radarData: [] },
+    history: []
+  },
+  {
+    id: '9',
+    name: '王小明',
+    major: '工程学',
+    year: '大一',
+    status: 'Active',
+    riskLevel: 'Moderate',
+    riskReason: '学业压力，睡眠障碍',
+    referralReason: '初次申请干预',
+    scidDiagnosis: '待评估',
+    riskFlags: [
+      { label: '自杀意念终身', value: false, severity: 'none' },
+      { label: '自杀尝试终身', value: false, severity: 'none' },
+      { label: '自伤行为终身', value: false, severity: 'none' }
+    ],
+    demographics: { age: 19, gender: '男', studentId: 'CSU-990555', emergencyContact: '+86 138-0000-5555' },
+    psychometrics: { scores: [], radarData: [] },
+    history: []
   }
 ];
