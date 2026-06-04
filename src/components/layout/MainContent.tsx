@@ -1,4 +1,5 @@
 import React from 'react';
+import { LAYOUT_CONSTANTS } from '../../config/layoutConstants';
 
 interface MainContentProps {
   children?: React.ReactNode;
@@ -14,18 +15,18 @@ export function MainContent({ children, sidePanel, isSidePanelOpen }: MainConten
 
   const calculateMinWidth = React.useCallback(() => {
     let minW = 400;
-    const sidePanelContainer = document.getElementById('side-panel-wrapper');
+    const sidePanelContainer = document.getElementById(LAYOUT_CONSTANTS.SIDE_PANEL_WRAPPER_ID);
     if (!sidePanelContainer) return minW;
 
     // 1. Check Action Footer buttons
-    const footerContent = sidePanelContainer.querySelector('.action-footer-content-wrapper');
+    const footerContent = sidePanelContainer.querySelector(`.${LAYOUT_CONSTANTS.ACTION_FOOTER_CLASS}`);
     if (footerContent) {
       const intrinsicWidth = footerContent.scrollWidth + 32;
       minW = Math.max(minW, Math.ceil(intrinsicWidth));
     }
 
     // 2. Check Tabs row
-    const tabsContent = sidePanelContainer.querySelector('.details-tabs-list');
+    const tabsContent = sidePanelContainer.querySelector(`.${LAYOUT_CONSTANTS.TABS_LIST_CLASS}`);
     if (tabsContent) {
       let intrinsicTabsWidth = 0;
       Array.from(tabsContent.children).forEach(child => {
@@ -36,12 +37,12 @@ export function MainContent({ children, sidePanel, isSidePanelOpen }: MainConten
     }
 
     // 3. Check dynamic minimum width anchors
-    const dynamicAnchors = sidePanelContainer.querySelectorAll('.dynamic-min-width-anchor');
+    const dynamicAnchors = sidePanelContainer.querySelectorAll(`.${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`);
     dynamicAnchors.forEach((el) => {
       const htmlEl = el as HTMLElement;
       const originalWidth = htmlEl.style.width;
       htmlEl.style.width = 'max-content';
-      const offset = parseInt(htmlEl.getAttribute('data-min-width-offset') || '0', 10);
+      const offset = parseInt(htmlEl.getAttribute(LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR) || '0', 10);
       const intrinsic = htmlEl.offsetWidth + offset;
       htmlEl.style.width = originalWidth;
       minW = Math.max(minW, intrinsic);
@@ -137,7 +138,7 @@ export function MainContent({ children, sidePanel, isSidePanelOpen }: MainConten
           </div>
 
           {/* Side Panel Container */}
-          <div id="side-panel-wrapper" style={{ width: sideWidth }} className="h-full flex flex-col shrink-0">
+          <div id={LAYOUT_CONSTANTS.SIDE_PANEL_WRAPPER_ID} style={{ width: sideWidth }} className="h-full flex flex-col shrink-0">
             {React.isValidElement(sidePanel)
               ? React.cloneElement(sidePanel as React.ReactElement<any>, { width: sideWidth })
               : sidePanel}

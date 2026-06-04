@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { LAYOUT_CONSTANTS } from '../../config/layoutConstants';
 import { createPortal } from 'react-dom';
 import { useDetails } from '../../contexts/DetailsContext';
 
@@ -25,7 +26,7 @@ export function ActionFooter({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="action-footer-anchor p-4 bg-[var(--md-sys-color-surface-container-high)] shrink-0 overflow-hidden">
-      <div className="action-footer-content-wrapper flex flex-row items-center justify-start gap-2 w-fit">
+      <div className={`${LAYOUT_CONSTANTS.ACTION_FOOTER_CLASS} flex flex-row items-center justify-start gap-2 w-fit`}>
         {children}
       </div>
     </div>

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { LAYOUT_CONSTANTS } from '../../config/layoutConstants';
 
 export interface TabItem {
   id: string;
@@ -28,7 +29,7 @@ export function PrimaryTabs({ tabs, activeTab, onTabChange, className = "" }: Pr
   }, [activeIndex]);
 
   return (
-    <div className={`sticky top-0 z-20 bg-[var(--md-sys-color-surface)] border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 shrink-0 ${className}`}>
+    <div className={`sticky top-0 z-20 bg-[var(--md-sys-color-surface)] border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 shrink-0 ${LAYOUT_CONSTANTS.TABS_LIST_CLASS} ${className}`}>
       {/* @ts-ignore */}
       <md-tabs 
         ref={tabsRef}

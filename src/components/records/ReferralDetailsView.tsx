@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { LAYOUT_CONSTANTS } from '../../config/layoutConstants';
 import { motion, AnimatePresence } from 'motion/react';
 import { DetailsSection, DetailItem, MetricCard, ScrollableDetailsLayout } from '../common/DetailsPanel';
 import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
@@ -181,7 +182,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
             <DetailsSection title="分诊基本信息" className="border-t-0 pt-0 mt-0">
               <div className="flex flex-col gap-6">
                 {/* 3-Column Metrics Grid */}
-                <div className="grid grid-cols-3 gap-4 dynamic-min-width-anchor" data-min-width-offset="40">
+                <div className={`grid grid-cols-3 gap-4 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: "40" }}>
                   <MetricCard
                     label="是否初诊"
                     icon="person_add"
@@ -226,7 +227,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                 </div>
 
                 {/* 3-Column Risk Grid */}
-                <div className="grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 dynamic-min-width-anchor" data-min-width-offset="40">
+                <div className={`grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: "40" }}>
                   <MetricCard
                     label="自杀意念"
                     icon="psychology"
