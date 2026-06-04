@@ -263,13 +263,25 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                 </div>
 
                 {/* Referral Full Description Card (Watermarked elegant quote) */}
-                <div className="relative p-6 rounded-[28px] bg-[var(--md-sys-color-surface-container-low)] border-opacity-10 overflow-hidden flex flex-col gap-3">
+                <div className="relative p-6 rounded-[28px] bg-[var(--md-sys-color-surface-container-low)] border-opacity-10 overflow-hidden flex flex-col gap-4">
                   <span className="text-[14px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-85">转诊详细说明</span>
                   <p className="text-[15px] leading-relaxed text-[var(--md-sys-color-on-surface)] font-normal z-10 pr-6">
                     "{extendedData.triage.fullDescription}"
                   </p>
+
+                  {/* Referrer Pill */}
+                  <div className="flex items-center gap-1 ps-1.5 pe-3 py-1.5 w-fit self-end rounded-full border border-[var(--md-sys-color-outline-variant)] border-opacity-50 bg-transparent mt-1">
+                    <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-xs font-medium shrink-0">
+                      {referral.referredBy.name.charAt(0)}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[13px] font-medium leading-[1.2] text-[var(--md-sys-color-on-surface)]">{referral.referredBy.name}</span>
+                      <span className="text-[11px] font-normal leading-[1.2] text-[var(--md-sys-color-on-surface-variant)] opacity-80">转诊发起人</span>
+                    </div>
+                  </div>
+
                   {/* Large elegant watermark quote mark */}
-                  <Quote className="absolute top-6 right-6 text-[#6750A4] opacity-10" size={30} />
+                  <Quote className="absolute top-6 right-6 text-[var(--md-sys-color-primary)] opacity-10" size={30} />
                 </div>
 
                 {/* Attachment List */}

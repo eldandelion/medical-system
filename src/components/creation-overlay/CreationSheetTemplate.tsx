@@ -41,11 +41,10 @@ export function CreationSheetTemplate() {
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', bounce: 0, duration: 0.5 }}
-        className={`fixed bottom-0 left-0 right-0 z-[100] flex flex-col overflow-hidden ${
-          isFullscreen 
-            ? 'top-0 w-full rounded-none bg-[var(--md-sys-color-surface)]' 
-            : 'h-[75dvh] w-full max-w-4xl mx-auto rounded-t-[32px] bg-[var(--md-sys-color-surface-container-low)] shadow-[0px_-2px_8px_rgba(0,0,0,0.1)]'
-        }`}
+        className={`fixed bottom-0 left-0 right-0 z-[100] flex flex-col overflow-hidden ${isFullscreen
+          ? 'top-0 w-full rounded-none bg-[var(--md-sys-color-surface)]'
+          : 'h-[75dvh] w-full max-w-4xl mx-auto rounded-t-[32px] bg-[var(--md-sys-color-surface-container-low)] shadow-[0px_-2px_8px_rgba(0,0,0,0.1)]'
+          }`}
       >
         {/* Header Architecture */}
         <div className="flex-none flex flex-col relative">
@@ -65,7 +64,7 @@ export function CreationSheetTemplate() {
                 </md-icon-button>
               ) : (
                 <md-icon-button onClick={expandToFullscreen}>
-                  <md-icon>fullscreen</md-icon>
+                  <md-icon>open_in_full</md-icon>
                 </md-icon-button>
               )}
               <md-icon-button onClick={minimizeCreation}>
