@@ -13,11 +13,16 @@ interface Student {
 interface StudentsViewProps {
   onStudentSelect?: (student: Student) => void;
   selectedStudentId?: string;
+  onLoadingChange?: (loading: boolean) => void;
 }
 
-export function StudentsView({ onStudentSelect, selectedStudentId }: StudentsViewProps) {
+export function StudentsView({ onStudentSelect, selectedStudentId, onLoadingChange }: StudentsViewProps) {
   const [students, setStudents] = React.useState<Student[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
+
+  React.useEffect(() => {
+    onLoadingChange?.(loading);
+  }, [loading, onLoadingChange]);
 
   React.useEffect(() => {
     let active = true;
@@ -101,10 +106,8 @@ export function StudentsView({ onStudentSelect, selectedStudentId }: StudentsVie
       
       <div className="mt-2">
         {loading ? (
-          <div className="py-12 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)]">
-            {/* @ts-ignore */}
-            <md-linear-progress indeterminate className="w-full max-w-xs mb-4"></md-linear-progress>
-            <span className="text-[14px] opacity-75">正在获取学生档案...</span>
+          <div className="py-12 flex flex-col items-center justify-center min-h-[200px]">
+            {/* Loading state is handled by parent CanvasHeader */}
           </div>
         ) : (
           <DataTable columns={columns} data={students} onRowClick={onStudentSelect} selectedId={selectedStudentId} />

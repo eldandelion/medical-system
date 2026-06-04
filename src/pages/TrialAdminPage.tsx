@@ -41,6 +41,7 @@ export function TrialAdminPage() {
   const [activePage, setActivePage] = React.useState<TrialAdminPageName>(TrialAdminTabs.DASHBOARD);
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
+  const [isPageLoading, setIsPageLoading] = React.useState(false);
   const [dashboardData, setDashboardData] = React.useState<any>(null);
   const [dashboardLoading, setDashboardLoading] = React.useState(true);
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
@@ -114,6 +115,10 @@ export function TrialAdminPage() {
     />
   );
 
+  const handleLoadingChange = React.useCallback((loading: boolean) => {
+    setIsPageLoading(loading);
+  }, []);
+
   const renderActiveContent = () => {
     switch (activePage) {
       case TrialAdminTabs.NOTIFICATIONS:
@@ -121,7 +126,7 @@ export function TrialAdminPage() {
       case TrialAdminTabs.STAFF:
         return <StaffManagementView onStaffSelect={setSelectedItem} selectedStaffId={selectedItem?.id} />;
       case TrialAdminTabs.REFERRAL_MANAGEMENT:
-        return <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} />;
+        return <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} onLoadingChange={handleLoadingChange} />;
       case TrialAdminTabs.SECURITY:
         return <SecurityConsentView />;
       case TrialAdminTabs.DASHBOARD:
@@ -220,7 +225,7 @@ export function TrialAdminPage() {
               )}
             </DetailsPanel>
           }>
-          <CanvasHeader title={TRIAL_ADMIN_TAB_TITLES[activePage] || activePage} />
+          <CanvasHeader title={TRIAL_ADMIN_TAB_TITLES[activePage] || activePage} isLoading={isPageLoading} />
 
           {renderActiveContent()}
         </MainContent>

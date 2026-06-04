@@ -8,12 +8,17 @@ import { Referral } from '../../types';
 interface ReferralManagementViewProps {
   onReferralSelect?: (referral: Referral) => void;
   selectedReferralId?: string;
+  onLoadingChange?: (loading: boolean) => void;
 }
 
-export function ReferralManagementView({ onReferralSelect, selectedReferralId }: ReferralManagementViewProps) {
+export function ReferralManagementView({ onReferralSelect, selectedReferralId, onLoadingChange }: ReferralManagementViewProps) {
   const [referrals, setReferrals] = React.useState<Referral[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { session } = useAuth();
+
+  React.useEffect(() => {
+    onLoadingChange?.(loading);
+  }, [loading, onLoadingChange]);
 
   React.useEffect(() => {
     let active = true;
@@ -144,10 +149,8 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId }:
         ]}
       />
       {loading ? (
-        <div className="py-12 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)]">
-          {/* @ts-ignore */}
-          <md-linear-progress indeterminate className="w-full max-w-xs mb-4"></md-linear-progress>
-          <span className="text-[14px] opacity-75">正在获取转诊记录...</span>
+        <div className="py-12 flex flex-col items-center justify-center min-h-[200px]">
+          {/* Loading state is handled by parent CanvasHeader */}
         </div>
       ) : (
         <DataTable columns={columns} data={referrals} onRowClick={onReferralSelect} selectedId={selectedReferralId} />

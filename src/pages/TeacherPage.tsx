@@ -42,6 +42,7 @@ export function TeacherPage() {
   const [activePage, setActivePage] = React.useState<TeacherPageName>(TeacherTabs.DASHBOARD);
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
+  const [isPageLoading, setIsPageLoading] = React.useState(false);
   const [dashboardData, setDashboardData] = React.useState<any>(null);
   const [dashboardLoading, setDashboardLoading] = React.useState(true);
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
@@ -116,14 +117,18 @@ export function TeacherPage() {
     />
   );
 
+  const handleLoadingChange = React.useCallback((loading: boolean) => {
+    setIsPageLoading(loading);
+  }, []);
+
   const renderActiveContent = () => {
     switch (activePage) {
       case TeacherTabs.NOTIFICATIONS:
         return <NotificationsView />;
       case TeacherTabs.STUDENTS:
-        return <StudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} />;
+        return <StudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} onLoadingChange={handleLoadingChange} />;
       case TeacherTabs.REFERRAL_MANAGEMENT:
-        return <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} />;
+        return <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} onLoadingChange={handleLoadingChange} />;
       case TeacherTabs.SECURITY:
         return <SecurityConsentView />;
       case TeacherTabs.DASHBOARD:
@@ -221,7 +226,7 @@ export function TeacherPage() {
               )}
             </DetailsPanel>
           }>
-          <CanvasHeader title={TEACHER_TAB_TITLES[activePage] || activePage} />
+          <CanvasHeader title={TEACHER_TAB_TITLES[activePage] || activePage} isLoading={isPageLoading} />
 
           {renderActiveContent()}
         </MainContent>

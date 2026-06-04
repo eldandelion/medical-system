@@ -46,6 +46,7 @@ export function HeadCouncillorPage() {
   const [activePage, setActivePage] = React.useState<HeadCouncillorPageName>(HeadCouncillorTabs.DASHBOARD);
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
+  const [isPageLoading, setIsPageLoading] = React.useState(false);
   const [dashboardData, setDashboardData] = React.useState<any>(null);
   const [dashboardLoading, setDashboardLoading] = React.useState(true);
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
@@ -122,16 +123,20 @@ export function HeadCouncillorPage() {
     }
   }, [tabs, activeTab]);
 
+  const handleLoadingChange = React.useCallback((loading: boolean) => {
+    setIsPageLoading(loading);
+  }, []);
+
   const renderActiveContent = () => {
     switch (activePage) {
       case HeadCouncillorTabs.NOTIFICATIONS:
         return <NotificationsView />;
       case HeadCouncillorTabs.STUDENTS:
-        return <StudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} />;
+        return <StudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} onLoadingChange={handleLoadingChange} />;
       case HeadCouncillorTabs.STAFF:
         return <StaffManagementView onStaffSelect={setSelectedItem} selectedStaffId={selectedItem?.id} />;
       case HeadCouncillorTabs.REFERRAL_MANAGEMENT:
-        return <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} />;
+        return <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} onLoadingChange={handleLoadingChange} />;
       case HeadCouncillorTabs.SECURITY:
         return <SecurityConsentView />;
       case HeadCouncillorTabs.DASHBOARD:
@@ -233,7 +238,7 @@ export function HeadCouncillorPage() {
               )}
             </DetailsPanel>
           }>
-          <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage] || activePage} />
+          <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage] || activePage} isLoading={isPageLoading} />
 
           {renderActiveContent()}
         </MainContent>
