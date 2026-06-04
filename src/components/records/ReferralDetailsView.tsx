@@ -181,7 +181,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
             <DetailsSection title="分诊基本信息" className="border-t-0 pt-0 mt-0">
               <div className="flex flex-col gap-6">
                 {/* 3-Column Metrics Grid */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-4 dynamic-min-width-anchor" data-min-width-offset="40">
                   <MetricCard
                     label="是否初诊"
                     icon="person_add"
@@ -226,12 +226,11 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                 </div>
 
                 {/* 3-Column Risk Grid */}
-                <div className="grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 dynamic-min-width-anchor" data-min-width-offset="40">
                   <MetricCard
                     label="自杀意念"
                     icon="psychology"
                     className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]"
-                    labelClassName="text-[var(--md-sys-color-on-error-container)] opacity-90"
                     value={
                       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
                         <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
@@ -243,7 +242,6 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                     label="自杀企图"
                     icon="personal_injury"
                     className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]"
-                    labelClassName="text-[var(--md-sys-color-on-error-container)] opacity-90"
                     value={
                       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
                         <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
@@ -255,7 +253,6 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                     label="自残行为"
                     icon="healing"
                     className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]"
-                    labelClassName="text-[var(--md-sys-color-on-error-container)] opacity-90"
                     value={
                       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
                         <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
@@ -293,7 +290,9 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
             transition={{ duration: 0.2 }}
             className="flex flex-col gap-6"
           >
-            <ReferralTracker />
+            <DetailsSection title="流程记录" className="border-t-0 pt-0 mt-0">
+              <ReferralTracker />
+            </DetailsSection>
 
             {/* Referral Destination Card - Surface Container High with Tonal Icons */}
             <div className="p-5 rounded-2xl bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface)] flex flex-col gap-4 border border-[var(--md-sys-color-outline-variant)] border-opacity-30">

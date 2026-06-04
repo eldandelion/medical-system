@@ -10,11 +10,51 @@ export function MainContent({ children, sidePanel, isSidePanelOpen }: MainConten
   const [sideWidth, setSideWidth] = React.useState(400);
   const [isResizing, setIsResizing] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const dragMinWidthRef = React.useRef<number>(400);
+
+  const calculateMinWidth = React.useCallback(() => {
+    let minW = 400;
+    const sidePanelContainer = document.getElementById('side-panel-wrapper');
+    if (!sidePanelContainer) return minW;
+
+    // 1. Check Action Footer buttons
+    const footerContent = sidePanelContainer.querySelector('.action-footer-content-wrapper');
+    if (footerContent) {
+      const intrinsicWidth = footerContent.scrollWidth + 32;
+      minW = Math.max(minW, Math.ceil(intrinsicWidth));
+    }
+
+    // 2. Check Tabs row
+    const tabsContent = sidePanelContainer.querySelector('.details-tabs-list');
+    if (tabsContent) {
+      let intrinsicTabsWidth = 0;
+      Array.from(tabsContent.children).forEach(child => {
+        const style = window.getComputedStyle(child);
+        intrinsicTabsWidth += parseFloat(style.minWidth) || 0;
+      });
+      minW = Math.max(minW, Math.ceil(intrinsicTabsWidth + 16));
+    }
+
+    // 3. Check dynamic minimum width anchors
+    const dynamicAnchors = sidePanelContainer.querySelectorAll('.dynamic-min-width-anchor');
+    dynamicAnchors.forEach((el) => {
+      const htmlEl = el as HTMLElement;
+      const originalWidth = htmlEl.style.width;
+      htmlEl.style.width = 'max-content';
+      const offset = parseInt(htmlEl.getAttribute('data-min-width-offset') || '0', 10);
+      const intrinsic = htmlEl.offsetWidth + offset;
+      htmlEl.style.width = originalWidth;
+      minW = Math.max(minW, intrinsic);
+    });
+
+    return minW;
+  }, []);
 
   const startResizing = React.useCallback((e: React.MouseEvent) => {
     e.preventDefault();
+    dragMinWidthRef.current = calculateMinWidth();
     setIsResizing(true);
-  }, []);
+  }, [calculateMinWidth]);
 
   const stopResizing = React.useCallback(() => {
     setIsResizing(false);
@@ -26,35 +66,7 @@ export function MainContent({ children, sidePanel, isSidePanelOpen }: MainConten
     const containerRect = containerRef.current.getBoundingClientRect();
     const newWidth = containerRect.right - e.clientX;
 
-    // Constraints: min 400px, max 800px or 60% of container
-    let minWidth = 400;
-
-    // Use the action footer and tabs as dynamic stopping anchors to prevent squishing content
-    const sidePanelContainer = document.getElementById('side-panel-wrapper');
-    if (sidePanelContainer) {
-      // 1. Check Action Footer buttons
-      const footerContent = sidePanelContainer.querySelector('.action-footer-content-wrapper');
-      if (footerContent) {
-        // scrollWidth of the w-fit content wrapper gives the true intrinsic size of buttons + gaps
-        // We add 32px for the parent footer's p-4 (16px left + 16px right)
-        const intrinsicWidth = footerContent.scrollWidth + 32;
-        minWidth = Math.max(minWidth, Math.ceil(intrinsicWidth));
-      }
-
-      // 2. Check Tabs row
-      const tabsContent = sidePanelContainer.querySelector('.details-tabs-list');
-      if (tabsContent) {
-        // Measure the cumulative minimum width of all tabs to find the true unbreakable boundary
-        let intrinsicTabsWidth = 0;
-        Array.from(tabsContent.children).forEach(child => {
-          const style = window.getComputedStyle(child);
-          intrinsicTabsWidth += parseFloat(style.minWidth) || 0;
-        });
-        // Add container padding (px-2 = 16px)
-        minWidth = Math.max(minWidth, Math.ceil(intrinsicTabsWidth + 16));
-      }
-    }
-
+    const minWidth = dragMinWidthRef.current;
     const maxWidth = Math.min(800, containerRect.width * 0.6);
 
     if (newWidth >= minWidth && newWidth <= maxWidth) {
@@ -92,39 +104,17 @@ export function MainContent({ children, sidePanel, isSidePanelOpen }: MainConten
     if (showSide) {
       // Use requestAnimationFrame to let the DOM settle before measuring
       requestAnimationFrame(() => {
-        const sidePanelContainer = document.getElementById('side-panel-wrapper');
-        if (sidePanelContainer) {
-          let calculatedMinWidth = 400;
-
-          // Measure Footer
-          const footerContent = sidePanelContainer.querySelector('.action-footer-content-wrapper');
-          if (footerContent) {
-            const intrinsicWidth = footerContent.scrollWidth + 32; // 32px for wrapper p-4 margins
-            calculatedMinWidth = Math.max(calculatedMinWidth, Math.ceil(intrinsicWidth));
+        const calculatedMinWidth = calculateMinWidth();
+        setSideWidth(prevWidth => {
+          // Only override if the current width is too small to fit the content
+          if (prevWidth < calculatedMinWidth) {
+            return calculatedMinWidth;
           }
-
-          // Measure Tabs
-          const tabsContent = sidePanelContainer.querySelector('.details-tabs-list');
-          if (tabsContent) {
-            let intrinsicTabsWidth = 0;
-            Array.from(tabsContent.children).forEach(child => {
-              const style = window.getComputedStyle(child);
-              intrinsicTabsWidth += parseFloat(style.minWidth) || 0;
-            });
-            calculatedMinWidth = Math.max(calculatedMinWidth, Math.ceil(intrinsicTabsWidth + 16));
-          }
-
-          setSideWidth(prevWidth => {
-            // Only override if the current width is too small to fit the content
-            if (prevWidth < calculatedMinWidth) {
-              return calculatedMinWidth;
-            }
-            return prevWidth;
-          });
-        }
+          return prevWidth;
+        });
       });
     }
-  }, [showSide, sidePanel]);
+  }, [showSide, sidePanel, calculateMinWidth]);
 
   return (
     <div ref={containerRef} className="flex-1 pr-2 pb-2 flex h-full overflow-hidden relative">

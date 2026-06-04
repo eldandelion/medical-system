@@ -120,7 +120,7 @@ export function DetailsSection({ title, children, icon, className = "" }: { titl
       {title && (
         <div className="flex items-center gap-3">
           {icon && <span className="material-symbols-outlined text-[var(--md-sys-color-on-surface)]">{icon}</span>}
-          <h3 className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)]">{title}</h3>
+          <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)]">{title}</h3>
         </div>
       )}
       {children}
@@ -147,14 +147,14 @@ export function MetricCard({
   badgeClassName?: string;
 }) {
   return (
-    <div className={`p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3 ${className}`}>
+    <div className={`py-4 px-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3 ${className}`}>
       <div className={`flex items-center gap-2 ${labelClassName}`}>
         <span className="material-symbols-outlined text-[20px]">{icon}</span>
-        <span className="text-[14px] font-bold">{label}</span>
+        <span className="text-[14px] font-bold whitespace-nowrap">{label}</span>
       </div>
       <div className="flex">
         {typeof value === 'string' ? (
-          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold ${badgeClassName}`}>
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold whitespace-nowrap ${badgeClassName}`}>
             {value}
           </span>
         ) : (
