@@ -76,7 +76,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
     <ScrollableDetailsLayout
       title={referral.studentName}
       header={!hideHeader && !isFullScreen ? (
-        <div className="flex items-center justify-between gap-4 flex-nowrap overflow-hidden">
+        <div className={`flex items-center justify-between gap-4 flex-nowrap overflow-hidden ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: "48" }}>
           <div className="flex items-center gap-4 min-w-0">
             {/* Primary Anchor: First Letter Avatar */}
             <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium shrink-0 animate-in fade-in zoom-in duration-300">
@@ -86,7 +86,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
               <h1 className="text-[24px] font-medium leading-[32px] text-[var(--md-sys-color-on-surface)] tracking-tight truncate">
                 {referral.studentName}
               </h1>
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-3 flex-nowrap whitespace-nowrap">
                 <span className="font-mono text-[13px] tracking-tight text-[var(--md-sys-color-primary)] font-bold">
                   {extendedData.studentId || 'N/A'}
                 </span>
