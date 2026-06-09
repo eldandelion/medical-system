@@ -1,14 +1,14 @@
 import * as React from 'react';
 import { LAYOUT_CONSTANTS } from '../../config/layoutConstants';
 import { motion, AnimatePresence } from 'motion/react';
-import { DetailsSection, DetailItem, MetricCard, ScrollableDetailsLayout } from '../common/DetailsPanel';
+import { ScrollableDetailsLayout } from '../common/DetailsPanel';
 import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
 import { PrimaryTabs } from '../common/Tabs';
 import { PsychometricsTabContent } from '../assessments/PsychometricsTabContent';
-import { ReferralTracker } from './ReferralTracker';
-import { AttachmentList } from '../common/AttachmentList';
-import { Quote } from 'lucide-react';
+import { ReferralOverviewTab } from './ReferralOverviewTab';
+import { ReferralTrackerTab } from './ReferralTrackerTab';
+import { ReferralFeedbackTab } from './ReferralFeedbackTab';
 
 import { useDetails } from '../../contexts/DetailsContext';
 import { GenericDialog } from '../common/GenericDialog';
@@ -168,185 +168,11 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
     >
       <AnimatePresence mode="wait">
         {activeTab === 'overview' && (
-          <motion.div
-            key="overview"
-            initial={{ opacity: 0, x: isFullScreen ? 0 : 10, y: isFullScreen ? 10 : 0 }}
-            animate={{ opacity: 1, x: 0, y: 0 }}
-            exit={{ opacity: 0, x: isFullScreen ? 0 : -10, y: isFullScreen ? -10 : 0 }}
-            transition={{ duration: 0.2 }}
-            className="flex flex-col gap-6"
-          >
-
-
-            {/* Triage Basics Redesigned Container */}
-            <DetailsSection title="分诊基本信息" className="border-t-0 pt-0 mt-0">
-              <div className="flex flex-col gap-6">
-                {/* 3-Column Metrics Grid */}
-                <div className={`grid grid-cols-3 gap-4 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: "40" }}>
-                  <MetricCard
-                    label="是否初诊"
-                    icon="person_add"
-                    value={extendedData.triage.isFirstVisit ? (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]">
-                        <span className="material-symbols-outlined text-[16px] font-bold">check</span>是
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
-                        <span className="material-symbols-outlined text-[16px] font-bold">close</span>否
-                      </span>
-                    )}
-                  />
-
-                  <MetricCard
-                    label="是否服药"
-                    icon="medication"
-                    value={extendedData.triage.isMedicated ? (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
-                        <span className="material-symbols-outlined text-[16px] font-bold">check</span>是
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
-                        <span className="material-symbols-outlined text-[16px] font-bold">close</span>否
-                      </span>
-                    )}
-                  />
-
-                  <MetricCard
-                    label="心理治疗"
-                    icon="monitoring"
-                    value={extendedData.triage.priorTherapy === '无' ? (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
-                        <span className="material-symbols-outlined text-[16px] font-bold">remove</span>无
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
-                        <span className="material-symbols-outlined text-[16px] font-bold">check</span>{extendedData.triage.priorTherapy}
-                      </span>
-                    )}
-                  />
-                </div>
-
-                {/* 3-Column Risk Grid */}
-                <div className={`grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: "40" }}>
-                  <MetricCard
-                    label="自杀意念"
-                    icon="psychology"
-                    className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]"
-                    value={
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
-                        <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
-                      </span>
-                    }
-                  />
-
-                  <MetricCard
-                    label="自杀企图"
-                    icon="personal_injury"
-                    className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]"
-                    value={
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
-                        <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
-                      </span>
-                    }
-                  />
-
-                  <MetricCard
-                    label="自残行为"
-                    icon="healing"
-                    className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]"
-                    value={
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
-                        <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
-                      </span>
-                    }
-                  />
-                </div>
-
-                {/* Referral Full Description Card (Watermarked elegant quote) */}
-                <div className="relative p-6 rounded-[28px] bg-[var(--md-sys-color-surface-container-low)] border-opacity-10 overflow-hidden flex flex-col gap-3">
-                  {/* Referrer Pill */}
-                  <div className="flex items-center gap-1 pe-3  w-fit self-start rounded-full bg-transparent mt-1">
-                    <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-xs font-medium shrink-0 me-1">
-                      {referral.referredBy.name.charAt(0)}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[13px] font-medium leading-[1.2] text-[var(--md-sys-color-on-surface)]">{referral.referredBy.name}</span>
-                      <span className="text-[11px] font-normal leading-[1.2] text-[var(--md-sys-color-on-surface-variant)] opacity-80">转诊发起人</span>
-                    </div>
-                  </div>
-                  <span className="text-[16px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-85 mt-4">转诊详细说明</span>
-                  <p className="text-[15px] leading-relaxed text-[var(--md-sys-color-on-surface)] font-normal z-10 pr-6">
-                    {extendedData.triage.fullDescription}
-                  </p>
-
-
-
-                  {/* Large elegant watermark quote mark */}
-                  <Quote className="absolute top-6 right-6 text-[var(--md-sys-color-primary)] opacity-10" size={30} />
-                </div>
-
-                {/* Attachment List */}
-                <AttachmentList
-                  attachments={extendedData.feedback.attachments}
-                  title="转诊附件"
-                />
-              </div>
-            </DetailsSection>
-          </motion.div>
+          <ReferralOverviewTab referral={referral} extendedData={extendedData} />
         )}
 
         {activeTab === 'tracker' && (
-          <motion.div
-            key="tracker"
-            initial={{ opacity: 0, x: isFullScreen ? 0 : 10, y: isFullScreen ? 10 : 0 }}
-            animate={{ opacity: 1, x: 0, y: 0 }}
-            exit={{ opacity: 0, x: isFullScreen ? 0 : -10, y: isFullScreen ? -10 : 0 }}
-            transition={{ duration: 0.2 }}
-            className="flex flex-col gap-6"
-          >
-            <DetailsSection title="流程记录" className="border-t-0 pt-0 mt-0">
-              <ReferralTracker />
-            </DetailsSection>
-
-            {/* Referral Destination Card - Surface Container High with Tonal Icons */}
-            <div className="p-5 rounded-2xl bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface)] flex flex-col gap-4 border border-[var(--md-sys-color-outline-variant)] border-opacity-30">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface)]">
-                  <span className="material-symbols-outlined text-xl">output_circle</span>
-                  <span className="text-sm font-bold uppercase tracking-widest">转诊去向</span>
-                </div>
-                <div className="px-3 py-1 bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] rounded-full text-[10px] font-bold uppercase tracking-tighter">
-                  活跃路由
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                {[
-                  { icon: 'local_hospital', label: '接收医院', value: extendedData.destination.hospital, clickable: true },
-                  { icon: 'account_tree', label: '接收科室', value: extendedData.destination.department, clickable: true },
-                  { icon: 'badge', label: '接诊医生', value: extendedData.destination.doctor, clickable: true },
-                  { icon: 'verified_user', label: '分诊管理员', value: extendedData.destination.admin, clickable: true },
-                  { icon: 'calendar_today', label: '转诊日期', value: extendedData.destination.transferDate, clickable: false },
-                ].map((item, idx) => (
-                  <div key={idx} className={`flex items-center gap-4 py-3 border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 last:border-0 group ${item.clickable ? 'cursor-pointer hover:bg-[var(--md-sys-color-surface-variant)] px-3 -mx-3 rounded-xl transition-colors' : 'px-3 -mx-3'}`}>
-                    <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105">
-                      <span className="material-symbols-outlined text-xl">{item.icon}</span>
-                    </div>
-                    <div className="flex flex-col flex-1">
-                      <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-70 uppercase tracking-tight">{item.label}</span>
-                      <span className="text-[15px] font-medium leading-tight mt-0.5">{item.value}</span>
-                    </div>
-                    {item.clickable && (
-                      <md-icon-button class="w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                        {/* @ts-ignore */}
-                        <md-icon style={{ fontSize: '18px' }}>chevron_right</md-icon>
-                      </md-icon-button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
+          <ReferralTrackerTab extendedData={extendedData} />
         )}
 
 
@@ -372,38 +198,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
         )}
 
         {activeTab === 'feedback' && (
-          <motion.div
-            key="feedback"
-            initial={{ opacity: 0, x: isFullScreen ? 0 : 10, y: isFullScreen ? 10 : 0 }}
-            animate={{ opacity: 1, x: 0, y: 0 }}
-            exit={{ opacity: 0, x: isFullScreen ? 0 : -10, y: isFullScreen ? -10 : 0 }}
-            transition={{ duration: 0.2 }}
-            className="flex flex-col gap-8"
-          >
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-col gap-2">
-                <h4 className="text-sm font-bold text-[var(--md-sys-color-primary)] uppercase tracking-widest">医院诊断结果</h4>
-                <p className="text-[15px] leading-relaxed text-[var(--md-sys-color-on-surface)] font-normal">
-                  {extendedData.feedback.summary}
-                </p>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-[var(--md-sys-color-surface-container-lowest)] border-l-4 border-[var(--md-sys-color-tertiary)] flex flex-col gap-2">
-                <h4 className="text-[11px] font-bold text-[var(--md-sys-color-tertiary)] uppercase flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[16px]">repeat</span>
-                  随访计划
-                </h4>
-                <p className="text-[14px] text-[var(--md-sys-color-on-surface)] font-medium">
-                  {extendedData.feedback.followUp}
-                </p>
-              </div>
-            </div>
-
-            <AttachmentList
-              attachments={extendedData.feedback.attachments}
-              title="附件"
-            />
-          </motion.div>
+          <ReferralFeedbackTab extendedData={extendedData} />
         )}
       </AnimatePresence>
 
