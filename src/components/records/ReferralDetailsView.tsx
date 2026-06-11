@@ -32,6 +32,7 @@ export const REFERRAL_DETAILS_TABS = [
   { id: 'feedback', label: '诊疗反馈', icon: 'history_edu' },
 ];
 
+
 export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab: propsActiveTab, onTabChange }: ReferralDetailsViewProps) {
   const { isFullScreen } = useDetails();
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
@@ -62,15 +63,30 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
     };
   }, [referral.studentName]);
 
-  const setActiveTab = (tab: TabType) => {
+  const setActiveTab = React.useCallback((tab: TabType) => {
     setInternalActiveTab(tab);
     onTabChange?.(tab);
-  };
+  }, [onTabChange]);
 
   const extendedData = referral.extendedData;
+
+  const isFeedbackAvailable = React.useMemo(() => {
+    return extendedData?.steps?.some(
+      step => step.type === 'feedback' && step.status === 'completed'
+    ) || referral.status === 'Closed';
+  }, [extendedData, referral.status]);
+
+  React.useEffect(() => {
+    if (internalActiveTab === 'feedback' && !isFeedbackAvailable) {
+      setActiveTab('overview');
+    }
+  }, [internalActiveTab, isFeedbackAvailable, setActiveTab]);
+
   if (!extendedData) return null;
 
-  const tabs = REFERRAL_DETAILS_TABS;
+  const tabs = REFERRAL_DETAILS_TABS.filter(
+    tab => tab.id !== 'feedback' || isFeedbackAvailable
+  );
 
   return (
     <ScrollableDetailsLayout
