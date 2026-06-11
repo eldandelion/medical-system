@@ -79,7 +79,7 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
       render: (item, isSelected) => (
         <div className="flex flex-col justify-center">
           <span className={`text-[14px] font-medium truncate max-w-[400px] ${isSelected ? '' : 'text-[var(--md-sys-color-on-surface)]'}`}>
-            {item.reason}
+            {item.title}
           </span>
           <div className={`text-[12px] mt-0.5 flex items-center gap-2 ${isSelected ? 'opacity-90' : 'text-[var(--md-sys-color-on-surface-variant)] opacity-70'}`}>
             <span className="shrink-0">{item.date} • {item.type}</span>

@@ -1,9 +1,25 @@
+export type ReferralStepStatus = 'completed' | 'issue' | 'pending' | 'active';
+export type ReferralStepType = 'initiation' | 'review' | 'triage' | 'evaluation' | 'feedback';
+
+export type ClinicalStatusType = 'FirstVisit' | 'Medicated' | 'PriorTherapy';
+export type SevereRiskFactorType = 'Ideation' | 'Attempt' | 'SelfHarm';
+
+export interface ReferralStep {
+  id: string | number;
+  type: ReferralStepType;
+  title: string;
+  subtitle: string;
+  time: string;
+  status: ReferralStepStatus;
+}
+
 export interface Referral {
   id: string;
   studentName: string;
   type: string;
   date: string;
-  reason: string;
+  title: string;
+  description: string;
   riskLevel: 'High' | 'Medium' | 'Low';
   status: 'Draft' | 'Closed' | 'Pending' | 'Approved' | 'AwaitingApproval';
   referredBy?: {
@@ -51,6 +67,7 @@ export interface Referral {
         size: string;
       }[];
     };
+    steps?: ReferralStep[];
   };
 }
 

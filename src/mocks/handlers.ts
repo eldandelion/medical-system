@@ -89,7 +89,8 @@ export const handlers = [
       studentName,
       type: '初次转诊',
       date: new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }),
-      reason: title ? `${title} - ${reason}` : reason,
+      title: title || '无标题',
+      description: reason,
       riskLevel: riskLevel,
       status: actionType === 'draft' ? 'Draft' : 'AwaitingApproval',
       referredBy: { name: creatorName },
@@ -101,9 +102,9 @@ export const handlers = [
         grade: '未知',
         phone: '未知',
         triage: {
-          isFirstVisit: clinicalStatus?.includes('初诊') || false,
-          isMedicated: clinicalStatus?.includes('正在服药') || false,
-          priorTherapy: clinicalStatus?.includes('既往心理治疗') ? '有' : '无',
+          isFirstVisit: clinicalStatus?.includes('FirstVisit') || false,
+          isMedicated: clinicalStatus?.includes('Medicated') || false,
+          priorTherapy: clinicalStatus?.includes('PriorTherapy') ? '有' : '无',
           scidDiagnosis: '',
           fullDescription: reason
         },
@@ -115,9 +116,9 @@ export const handlers = [
           transferDate: ''
         },
         risk: {
-          ideation: severeRiskFactors?.includes('自杀意念') || false,
-          attempt: severeRiskFactors?.includes('自杀企图') || false,
-          selfHarm: severeRiskFactors?.includes('自残行为') || false,
+          ideation: severeRiskFactors?.includes('Ideation') || false,
+          attempt: severeRiskFactors?.includes('Attempt') || false,
+          selfHarm: severeRiskFactors?.includes('SelfHarm') || false,
           notes: severeRiskFactors?.join('、') || '无'
         },
         scores: [],

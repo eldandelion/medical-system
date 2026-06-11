@@ -6,7 +6,8 @@ const baseReferrals: Referral[] = [
     studentName: '张伟',
     type: '初次转诊',
     date: '2026年4月12日',
-    reason: '期中考试后出现急性恐慌发作和睡眠剥夺',
+    title: '期中考试后急性焦虑',
+    description: '期中考试后出现急性恐慌发作和睡眠剥夺',
     riskLevel: 'High',
     status: 'Approved',
     referredBy: { name: '张教授' }
@@ -16,7 +17,8 @@ const baseReferrals: Referral[] = [
     studentName: '李娜',
     type: '随访',
     date: '2026年4月20日',
-    reason: '每周治疗随访；情绪持续低落',
+    title: '每周治疗随访',
+    description: '情绪持续低落',
     riskLevel: 'Medium',
     status: 'Pending',
     referredBy: { name: '李医生' }
@@ -26,7 +28,8 @@ const baseReferrals: Referral[] = [
     studentName: '王强',
     type: '初次转诊',
     date: '2026年5月5日',
-    reason: '因注意力问题和学业压力自愿转诊',
+    title: '自愿转诊',
+    description: '因注意力问题和学业压力自愿转诊',
     riskLevel: 'Low',
     status: 'Draft',
     referredBy: { name: '王老师' }
@@ -36,7 +39,8 @@ const baseReferrals: Referral[] = [
     studentName: '陈思宇',
     type: '紧急',
     date: '2026年4月18日',
-    reason: '宿舍事故报告；提到自杀意念',
+    title: '宿舍事故报告',
+    description: '提到自杀意念',
     riskLevel: 'High',
     status: 'Approved',
     referredBy: { name: '宿舍管理员' }
@@ -46,7 +50,8 @@ const baseReferrals: Referral[] = [
     studentName: '赵明',
     type: '随访',
     date: '2026年4月15日',
-    reason: '药物复核；报告注意力集中情况有所改善',
+    title: '药物复核',
+    description: '报告注意力集中情况有所改善',
     riskLevel: 'Low',
     status: 'Closed',
     referredBy: { name: '李医生' }
@@ -56,7 +61,8 @@ const baseReferrals: Referral[] = [
     studentName: '孙悦',
     type: '初次转诊',
     date: '2026年4月22日',
-    reason: '持续疲劳并退出社交活动',
+    title: '退出社交活动',
+    description: '持续疲劳并退出社交活动',
     riskLevel: 'Medium',
     status: 'Pending',
     referredBy: { name: '张教授' }
@@ -66,7 +72,8 @@ const baseReferrals: Referral[] = [
     studentName: '周杰',
     type: '转诊',
     date: '2026年4月10日',
-    reason: '与工作相关的压力和创伤后症状',
+    title: '工作压力',
+    description: '与工作相关的压力和创伤后症状',
     riskLevel: 'High',
     status: 'Closed',
     referredBy: { name: '心理咨询中心' }
@@ -76,7 +83,8 @@ const baseReferrals: Referral[] = [
     studentName: '王小明',
     type: '初次转诊',
     date: '2026年4月28日',
-    reason: '由于学业压力导致严重的睡眠障碍 and 情绪波动',
+    title: '严重睡眠障碍',
+    description: '由于学业压力导致严重的睡眠障碍和情绪波动',
     riskLevel: 'Medium',
     status: 'AwaitingApproval',
     referredBy: { name: '陈老师' }
@@ -161,7 +169,7 @@ export const mockReferralsDb: Referral[] = baseReferrals.map(referral => ({
       isMedicated: false,
       priorTherapy: '无',
       scidDiagnosis: 'F41.1 广泛性焦虑障碍',
-      fullDescription: referral.reason + '。补充背景：该学生在维持全额课程负荷的同时，每周在实验室工作20小时以上。入睡潜伏期超过90分钟。初步临床访谈显示存在继发性焦虑症状，且面临中度学业倦怠风险。'
+      fullDescription: referral.description + '。补充背景：该学生在维持全额课程负荷的同时，每周在实验室工作20小时以上。入睡潜伏期超过90分钟。初步临床访谈显示存在继发性焦虑症状，且面临中度学业倦怠风险。'
     },
     destination: {
       hospital: '中央大学医学中心',

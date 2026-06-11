@@ -22,7 +22,7 @@ export function ReferralTrackerTab({ extendedData }: ReferralTrackerTabProps) {
       className="flex flex-col gap-6"
     >
       <DetailsSection title="流程记录" className="border-t-0 pt-0 mt-0">
-        <ReferralTracker />
+        <ReferralTracker steps={extendedData.steps || []} />
       </DetailsSection>
 
       {/* Referral Destination Card - Surface Container High with Tonal Icons */}

@@ -5,7 +5,8 @@ import { useCreationOverlay } from '../../contexts/CreationContext';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { GenericDialog } from '../common/GenericDialog';
-import { Student } from '../../types';
+import { Student, ClinicalStatusType, SevereRiskFactorType } from '../../types';
+import { CLINICAL_STATUS_OPTIONS, RISK_FACTOR_OPTIONS } from '../../config/referralConstants';
 import { AttachmentList } from '../common/AttachmentList';
 
 export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
@@ -25,8 +26,8 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
     title: '',
     reason: '',
     riskLevel: 'Low',
-    clinicalStatus: ['Current Medication', 'Prior Therapy'],
-    severeRiskFactors: [] as string[],
+    clinicalStatus: ['Medicated', 'PriorTherapy'] as ClinicalStatusType[],
+    severeRiskFactors: [] as SevereRiskFactorType[],
     attachments: [
       { name: 'Patient_Intake_Scan_v2.pdf', size: '2.4 MB' },
       { name: 'Hospital_Release_Form.png', size: '1.1 MB' },
@@ -294,18 +295,44 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
             <div className="flex flex-col gap-3 mt-2">
               <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">临床就诊状态</span>
               <md-chip-set>
-                <md-filter-chip label="初诊" disabled={isSubmitting}></md-filter-chip>
-                <md-filter-chip label="正在服药" selected disabled={isSubmitting}></md-filter-chip>
-                <md-filter-chip label="既往心理治疗" selected disabled={isSubmitting}></md-filter-chip>
+                {CLINICAL_STATUS_OPTIONS.map(status => (
+                  <md-filter-chip
+                    key={status.value}
+                    label={status.label}
+                    selected={formData.clinicalStatus.includes(status.value) ? true : undefined}
+                    disabled={isSubmitting}
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        clinicalStatus: prev.clinicalStatus.includes(status.value)
+                          ? prev.clinicalStatus.filter(s => s !== status.value)
+                          : [...prev.clinicalStatus, status.value]
+                      }));
+                    }}
+                  ></md-filter-chip>
+                ))}
               </md-chip-set>
             </div>
 
             <div className="flex flex-col gap-3 pt-2">
               <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)]">严重风险因素</span>
               <md-chip-set>
-                <md-filter-chip label="自杀意念" disabled={isSubmitting}></md-filter-chip>
-                <md-filter-chip label="自杀企图" disabled={isSubmitting}></md-filter-chip>
-                <md-filter-chip label="自残行为" disabled={isSubmitting}></md-filter-chip>
+                {RISK_FACTOR_OPTIONS.map(factor => (
+                  <md-filter-chip
+                    key={factor.value}
+                    label={factor.label}
+                    selected={formData.severeRiskFactors.includes(factor.value) ? true : undefined}
+                    disabled={isSubmitting}
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        severeRiskFactors: prev.severeRiskFactors.includes(factor.value)
+                          ? prev.severeRiskFactors.filter(f => f !== factor.value)
+                          : [...prev.severeRiskFactors, factor.value]
+                      }));
+                    }}
+                  ></md-filter-chip>
+                ))}
               </md-chip-set>
             </div>
           </section>

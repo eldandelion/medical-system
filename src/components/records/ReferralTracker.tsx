@@ -6,53 +6,12 @@ import {
   GraduationCap,
   Users,
   Building2,
-  Stethoscope
+  Stethoscope,
+  MessageSquare
 } from 'lucide-react';
+import { ReferralStep, ReferralStepStatus, ReferralStepType } from '../../types';
 
-const referralSteps = [
-  {
-    id: 1,
-    title: "发起转诊",
-    subtitle: "教师：王老师。备注：表现出严重的学业倦怠。",
-    time: "10月12日",
-    status: "completed",
-    icon: GraduationCap,
-    iconColor: "text-[var(--md-sys-color-secondary)]",
-    iconBg: "bg-[var(--md-sys-color-secondary-container)]"
-  },
-  {
-    id: 2,
-    title: "学校咨询师审核",
-    subtitle: "已批准进行临床评估。优先级：高。",
-    time: "10月14日",
-    status: "completed",
-    icon: Users,
-    iconColor: "text-[var(--md-sys-color-secondary)]",
-    iconBg: "bg-[var(--md-sys-color-secondary-container)]"
-  },
-  {
-    id: 3,
-    title: "医院分诊",
-    subtitle: "等待签署家长知情同意书，随后分配医生。",
-    time: "10月15日",
-    status: "issue",
-    icon: Building2,
-    iconColor: "text-[var(--md-sys-color-error)]",
-    iconBg: "bg-[var(--md-sys-color-error-container)]"
-  },
-  {
-    id: 4,
-    title: "精神科评估",
-    subtitle: "医生将对学生进行临床评估并提交最终报告。",
-    time: "待处理",
-    status: "pending",
-    icon: Stethoscope,
-    iconColor: "text-[var(--md-sys-color-secondary)]",
-    iconBg: "bg-[var(--md-sys-color-secondary-container)]"
-  }
-];
-
-const getCardStyles = (status: string) => {
+const getCardStyles = (status: ReferralStepStatus) => {
   switch (status) {
     case 'completed':
       return {
@@ -68,6 +27,13 @@ const getCardStyles = (status: string) => {
         subText: "text-[var(--md-sys-color-on-error-container)] opacity-80",
         timeText: "text-[var(--md-sys-color-on-error-container)] opacity-80"
       };
+    case 'active':
+      return {
+        bg: "bg-[var(--md-sys-color-primary-container)] shadow-sm",
+        titleText: "text-[var(--md-sys-color-on-primary-container)] font-bold",
+        subText: "text-[var(--md-sys-color-on-primary-container)] opacity-90",
+        timeText: "text-[var(--md-sys-color-on-primary-container)] font-semibold"
+      };
     case 'pending':
     default:
       return {
@@ -79,23 +45,66 @@ const getCardStyles = (status: string) => {
   }
 };
 
-export function ReferralTracker() {
+const getIconForType = (type: ReferralStepType) => {
+  switch (type) {
+    case 'initiation': return GraduationCap;
+    case 'review': return Users;
+    case 'triage': return Building2;
+    case 'evaluation': return Stethoscope;
+    case 'feedback': return MessageSquare;
+    default: return null;
+  }
+};
+
+const getIconStyles = (status: ReferralStepStatus) => {
+  if (status === 'issue') {
+    return {
+      color: "text-[var(--md-sys-color-error)]",
+      bg: "bg-[var(--md-sys-color-error-container)]"
+    };
+  }
+  if (status === 'active') {
+    return {
+      color: "text-[var(--md-sys-color-on-primary)]",
+      bg: "bg-[var(--md-sys-color-primary)]"
+    };
+  }
+  return {
+    color: "text-[var(--md-sys-color-secondary)]",
+    bg: "bg-[var(--md-sys-color-secondary-container)]"
+  };
+};
+
+interface ReferralTrackerProps {
+  steps: ReferralStep[];
+}
+
+export function ReferralTracker({ steps }: ReferralTrackerProps) {
+  if (!steps || steps.length === 0) {
+    return (
+      <div className="flex justify-center p-8 text-[var(--md-sys-color-on-surface-variant)]">
+        暂无进度数据
+      </div>
+    );
+  }
+
   return (
     <div className="flex justify-center font-sans">
       <div className="w-full relative">
         <div className="flex flex-col gap-4 relative">
-          {referralSteps.map((step, index) => {
-            const isLast = index === referralSteps.length - 1;
+          {steps.map((step, index) => {
+            const isLast = index === steps.length - 1;
             const styles = getCardStyles(step.status);
-            const IconComponent = step.icon;
+            const IconComponent = getIconForType(step.type);
+            const iconStyles = getIconStyles(step.status);
 
             // Determine the line color connecting to the NEXT node
-            const nextStep = referralSteps[index + 1];
+            const nextStep = steps[index + 1];
             let lineColor = "bg-[var(--md-sys-color-outline-variant)]"; // Default
 
             // Note: Use style prop for gradients with CSS variables if arbitrary values have parsing issues
             let customLineStyle = {};
-            if (step.status === 'completed' && nextStep?.status === 'completed') {
+            if (step.status === 'completed' && (nextStep?.status === 'completed' || nextStep?.status === 'active')) {
               lineColor = "bg-[var(--md-sys-color-primary)]";
             } else if (step.status === 'completed' && nextStep?.status === 'issue') {
               lineColor = ""; // Will use inline style
@@ -109,9 +118,11 @@ export function ReferralTracker() {
                 <div className={`flex-1 rounded-[32px] p-5 pl-6 pr-5 flex items-start gap-4 transition-all duration-300 ${styles.bg}`}>
 
                   {/* Card Icon */}
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${step.iconBg}`}>
-                    <IconComponent size={20} className={step.iconColor} />
-                  </div>
+                  {IconComponent && (
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${iconStyles.bg}`}>
+                      <IconComponent size={20} className={iconStyles.color} />
+                    </div>
+                  )}
 
                   {/* Card Content */}
                   <div className="flex-1 pt-1.5">
@@ -146,6 +157,11 @@ export function ReferralTracker() {
                     {step.status === 'issue' && (
                       <div className="w-[26px] h-[26px] rounded-full bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] flex items-center justify-center shadow-sm">
                         <X size={14} strokeWidth={3} />
+                      </div>
+                    )}
+                    {step.status === 'active' && (
+                      <div className="w-[26px] h-[26px] rounded-full border-2 border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-surface)] flex items-center justify-center">
+                         <div className="w-2.5 h-2.5 rounded-full bg-[var(--md-sys-color-primary)] animate-pulse" />
                       </div>
                     )}
                     {step.status === 'pending' && (
