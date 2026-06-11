@@ -3,6 +3,7 @@ import * as ReactDOM from 'react-dom';
 import { SecondaryButton, PrimaryButton } from '../common/Buttons';
 import { useCreationOverlay } from '../../contexts/CreationContext';
 import { useSnackbar } from '../../contexts/SnackbarContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { GenericDialog } from '../common/GenericDialog';
 import { Student } from '../../types';
 import { AttachmentList } from '../common/AttachmentList';
@@ -10,6 +11,7 @@ import { AttachmentList } from '../common/AttachmentList';
 export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
   const { viewState, setHeaderActions, setOnCloseInterceptor } = useCreationOverlay();
   const { showSnackbar } = useSnackbar();
+  const { session } = useAuth();
   const isFullscreen = viewState === 'FULLSCREEN';
 
   const [isCloseWarningOpen, setIsCloseWarningOpen] = React.useState(false);
@@ -38,7 +40,7 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
     riskLevel: false
   });
 
-  const handleSubmit = (actionType: 'draft' | 'submit') => {
+  const handleSubmit = async (actionType: 'draft' | 'submit') => {
     if (actionType === 'submit') {
       const newErrors = {
         studentId: !formData.studentId,
@@ -56,14 +58,37 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
+    
+    try {
+      const res = await fetch('/api/referrals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.token || ''}`
+        },
+        body: JSON.stringify({ ...formData, actionType })
+      });
+
       setIsSubmitting(false);
+
+      if (res.status === 403 || res.status === 401) {
+        showSnackbar({ message: '权限不足', duration: 3000 });
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error('API Error');
+      }
+
       onClose();
       showSnackbar({
         message: actionType === 'draft' ? '草稿已保存' : '转诊申请已成功提交',
         duration: 4000
       });
-    }, 1500);
+    } catch (error) {
+      setIsSubmitting(false);
+      showSnackbar({ message: '提交失败，请稍后重试', duration: 3000 });
+    }
   };
 
   React.useEffect(() => {

@@ -64,5 +64,91 @@ export const handlers = [
       return new HttpResponse(null, { status: 404 });
     }
     return HttpResponse.json(referral);
+  }),
+
+  http.post('/api/referrals', async ({ request }) => {
+    const authHeader = request.headers.get('Authorization') || '';
+    
+    let creatorName = '';
+    if (authHeader.includes('teacher_token_zhang')) {
+      creatorName = '张教授';
+    } else if (authHeader.includes('head_councillor')) {
+      creatorName = '总辅导员';
+    } else {
+      return new HttpResponse(null, { status: 403, statusText: 'Forbidden' });
+    }
+
+    const data = await request.json() as any;
+    const { actionType, studentId, title, reason, riskLevel, clinicalStatus, severeRiskFactors, attachments } = data;
+
+    const student = mockStudentsDb.find(s => s.id === studentId);
+    const studentName = student ? student.name : '未知学生';
+
+    const newReferral = {
+      id: Math.random().toString(36).substring(7),
+      studentName,
+      type: '初次转诊',
+      date: new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }),
+      reason: title ? `${title} - ${reason}` : reason,
+      riskLevel: riskLevel,
+      status: actionType === 'draft' ? 'Draft' : 'AwaitingApproval',
+      referredBy: { name: creatorName },
+      extendedData: {
+        age: 20,
+        gender: '未知',
+        studentId: student?.demographics?.studentId || studentId,
+        school: student?.major || '未知',
+        grade: '未知',
+        phone: '未知',
+        triage: {
+          isFirstVisit: clinicalStatus?.includes('初诊') || false,
+          isMedicated: clinicalStatus?.includes('正在服药') || false,
+          priorTherapy: clinicalStatus?.includes('既往心理治疗') ? '有' : '无',
+          scidDiagnosis: '',
+          fullDescription: reason
+        },
+        destination: {
+          hospital: '待分配',
+          department: '待分配',
+          doctor: '待分配',
+          admin: '待分配',
+          transferDate: ''
+        },
+        risk: {
+          ideation: severeRiskFactors?.includes('自杀意念') || false,
+          attempt: severeRiskFactors?.includes('自杀企图') || false,
+          selfHarm: severeRiskFactors?.includes('自残行为') || false,
+          notes: severeRiskFactors?.join('、') || '无'
+        },
+        scores: [],
+        feedback: {
+          summary: '',
+          followUp: '',
+          attachments: attachments || []
+        },
+        steps: [
+          {
+            id: `step-1`,
+            type: 'initiation',
+            title: '发起转诊',
+            subtitle: `${creatorName} 提交了转诊申请`,
+            time: new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }),
+            status: actionType === 'draft' ? 'active' : 'completed'
+          },
+          {
+            id: `step-2`,
+            type: 'review',
+            title: '辅导员审核',
+            subtitle: actionType === 'draft' ? '等待提交申请' : '等待辅导员审核中',
+            time: actionType === 'draft' ? '' : '等待中',
+            status: actionType === 'draft' ? 'pending' : 'active'
+          }
+        ]
+      }
+    };
+
+    mockReferralsDb.push(newReferral as any);
+
+    return HttpResponse.json({ success: true, id: newReferral.id }, { status: 201 });
   })
 ];
