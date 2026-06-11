@@ -1,4 +1,4 @@
-import { Referral } from '../../types';
+import { Referral, ReferralStep } from '../../types';
 
 const baseReferrals: Referral[] = [
   {
@@ -83,6 +83,70 @@ const baseReferrals: Referral[] = [
   }
 ];
 
+const generateTrackerSteps = (referral: Referral): ReferralStep[] => {
+  const isDraft = referral.status === 'Draft';
+  const isAwaiting = referral.status === 'AwaitingApproval';
+  const isPending = referral.status === 'Pending';
+  const isApproved = referral.status === 'Approved';
+  const isClosed = referral.status === 'Closed';
+
+  const steps: ReferralStep[] = [
+    {
+      id: `${referral.id}-1`,
+      type: 'initiation',
+      title: '发起转诊',
+      subtitle: `${referral.referredBy?.name || '未知系统'} 提交了转诊申请`,
+      time: referral.date,
+      status: isDraft ? 'active' : 'completed'
+    },
+    {
+      id: `${referral.id}-2`,
+      type: 'review',
+      title: '辅导员审核',
+      subtitle: isDraft ? '等待提交申请' : (isAwaiting ? '等待辅导员审核中' : '审核已通过'),
+      time: isDraft ? '' : (isAwaiting ? '等待中' : '2026年4月29日'),
+      status: isDraft ? 'pending' : (isAwaiting ? 'active' : 'completed')
+    },
+    {
+      id: `${referral.id}-3`,
+      type: 'triage',
+      title: '心理中心分诊',
+      subtitle: (isDraft || isAwaiting) ? '等待审核完成' : (isPending ? '正在处理分诊信息...' : '分诊已完成，已分配对应科室'),
+      time: (isDraft || isAwaiting) ? '' : (isPending ? '进行中' : '2026年4月30日'),
+      status: (isDraft || isAwaiting) ? 'pending' : (isPending ? 'active' : 'completed')
+    },
+    {
+      id: `${referral.id}-4`,
+      type: 'evaluation',
+      title: '医生评估',
+      subtitle: (isDraft || isAwaiting || isPending) ? '等待分诊分配' : (isApproved ? '等待医生接诊' : '医生已完成初步评估'),
+      time: (isDraft || isAwaiting || isPending) ? '' : (isApproved ? '待定' : '2026年5月1日'),
+      status: (isDraft || isAwaiting || isPending) ? 'pending' : (isApproved ? 'active' : 'completed')
+    },
+    {
+      id: `${referral.id}-5`,
+      type: 'feedback',
+      title: '评估反馈与随访计划',
+      subtitle: isClosed ? '已出具随访计划并反馈' : '等待医生评估完成',
+      time: isClosed ? '2026年5月2日' : '',
+      status: isClosed ? 'completed' : 'pending'
+    }
+  ];
+
+  // Add a specific mock issue for Chen Siyu to showcase the "issue" status
+  if (referral.id === '4') {
+    steps[2].status = 'issue';
+    steps[2].subtitle = '需要进一步确认风险情况';
+    steps[2].time = '2026年4月19日';
+    
+    steps[3].status = 'active';
+    steps[3].subtitle = '由于高风险状态正在加速安排医生接诊';
+    steps[3].time = '待定';
+  }
+
+  return steps;
+};
+
 export const mockReferralsDb: Referral[] = baseReferrals.map(referral => ({
   ...referral,
   extendedData: {
@@ -126,6 +190,8 @@ export const mockReferralsDb: Referral[] = baseReferrals.map(referral => ({
         { name: '医院出院摘要.pdf', size: '840 KB' },
         { name: '处方复印件.jpg', size: '2.1 MB' }
       ]
-    }
+    },
+    steps: generateTrackerSteps(referral)
   }
 }));
+
