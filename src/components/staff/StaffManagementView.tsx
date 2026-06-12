@@ -112,12 +112,12 @@ export function StaffManagementView({ onStaffSelect, selectedStaffId }: StaffMan
   ];
 
   return (
-    <div className="w-full h-full flex flex-col pt-4 overflow-hidden">
-      <div className="px-6 mb-2">
+    <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
+      <div className="px-6 mb-2 shrink-0 z-10 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4">
         <h2 className="text-[22px] font-normal text-[var(--md-sys-color-on-surface)]">咨询师登记表</h2>
         <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)]">管理人员授权与工作负荷分配</p>
       </div>
-      <div className="flex-1 overflow-hidden mt-4">
+      <div className="flex-1 overflow-hidden mt-2 flex flex-col min-h-0 relative">
         <DataTable 
           columns={columns} 
           data={counselors} 

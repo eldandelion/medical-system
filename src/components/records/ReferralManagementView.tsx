@@ -168,21 +168,25 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
   ];
 
   return (
-    <div className="w-full flex flex-col pt-4">
-      <FilterChipSet
-        chips={[
-          { label: '状态', options: ['进行中', '已批准', '已拒绝', '审核中'] },
-          { label: '类型', options: ['初次转诊', '随访', '紧急', '结业'] },
-          { label: '优先级', options: ['高', '中', '低'] },
-          { label: '指派至', options: ['教职工', '部门负责人', '顾问'] }
-        ]}
-      />
+    <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
+      <div className="shrink-0 z-10 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4">
+        <FilterChipSet
+          chips={[
+            { label: '状态', options: ['进行中', '已批准', '已拒绝', '审核中'] },
+            { label: '类型', options: ['初次转诊', '随访', '紧急', '结业'] },
+            { label: '优先级', options: ['高', '中', '低'] },
+            { label: '指派至', options: ['教职工', '部门负责人', '顾问'] }
+          ]}
+        />
+      </div>
       {loading ? (
-        <div className="py-12 flex flex-col items-center justify-center min-h-[200px]">
+        <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
           {/* Loading state is handled by parent CanvasHeader */}
         </div>
       ) : (
-        <DataTable columns={columns} data={referrals} onRowClick={onReferralSelect} selectedId={selectedReferralId} />
+        <div className="flex-1 min-h-0 flex flex-col relative">
+          <DataTable columns={columns} data={referrals} onRowClick={onReferralSelect} selectedId={selectedReferralId} />
+        </div>
       )}
     </div>
   );

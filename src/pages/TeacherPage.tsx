@@ -238,7 +238,9 @@ export function TeacherPage() {
           }>
           <CanvasHeader title={TEACHER_TAB_TITLES[activePage] || activePage} isLoading={isPageLoading} />
 
-          {renderActiveContent()}
+          <div className="flex-1 min-h-0 flex flex-col relative w-full h-full">
+            {renderActiveContent()}
+          </div>
         </MainContent>
       </div>
 

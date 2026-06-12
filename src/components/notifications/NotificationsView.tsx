@@ -4,7 +4,7 @@ import { NotificationItem } from './NotificationItem';
 
 export function NotificationsView() {
   return (
-    <div className="flex-1 flex flex-col items-stretch px-6 md:px-12 lg:px-24 pb-20 pt-8 min-h-[500px]">
+    <div className="flex-1 flex flex-col items-stretch overflow-y-auto px-6 md:px-12 lg:px-24 pb-20 pt-8">
       <div className="max-w-3xl w-full flex flex-col mx-auto">
         
         {/* Needs attention section */}

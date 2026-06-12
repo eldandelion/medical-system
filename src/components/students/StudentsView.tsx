@@ -94,19 +94,21 @@ export function StudentsView({ onStudentSelect, selectedStudentId, onLoadingChan
   ];
 
   return (
-    <div className="w-full flex flex-col pt-4">
-      <FilterChipSet
-        chips={[
-          { label: '专业', options: ['计算机科学', '心理学', '生物学', '艺术史'] },
-          { label: '年级', options: ['大一', '大二', '大三', '大四'] },
-          { label: '状态', options: ['在籍', '休学'] },
-          { label: '导师', options: ['Dr. Watson', 'Dr. Smith', 'Prof. Miller'] }
-        ]}
-      />
+    <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
+      <div className="shrink-0 z-10 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4">
+        <FilterChipSet
+          chips={[
+            { label: '专业', options: ['计算机科学', '心理学', '生物学', '艺术史'] },
+            { label: '年级', options: ['大一', '大二', '大三', '大四'] },
+            { label: '状态', options: ['在籍', '休学'] },
+            { label: '导师', options: ['Dr. Watson', 'Dr. Smith', 'Prof. Miller'] }
+          ]}
+        />
+      </div>
       
-      <div className="mt-2">
+      <div className="flex-1 min-h-0 flex flex-col mt-2 relative">
         {loading ? (
-          <div className="py-12 flex flex-col items-center justify-center min-h-[200px]">
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
             {/* Loading state is handled by parent CanvasHeader */}
           </div>
         ) : (

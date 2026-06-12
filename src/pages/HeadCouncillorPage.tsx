@@ -250,7 +250,9 @@ export function HeadCouncillorPage() {
           }>
           <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage] || activePage} isLoading={isPageLoading} />
 
-          {renderActiveContent()}
+          <div className="flex-1 min-h-0 flex flex-col relative w-full h-full">
+            {renderActiveContent()}
+          </div>
         </MainContent>
       </div>
 

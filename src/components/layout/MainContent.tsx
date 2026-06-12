@@ -121,7 +121,7 @@ export function MainContent({ children, sidePanel, isSidePanelOpen }: MainConten
     <div ref={containerRef} className="flex-1 pr-2 pb-2 flex h-full overflow-hidden relative">
       {/* Main Container strict boundary */}
       <main className="flex-1 h-full relative bg-[var(--md-sys-color-surface)] rounded-3xl overflow-hidden outline-none border-none ring-0">
-        <div className="absolute inset-0 w-full h-full flex flex-col overflow-y-auto overflow-x-hidden custom-scrollbar outline-none border-none">
+        <div className="absolute inset-0 w-full h-full flex flex-col overflow-hidden outline-none border-none">
           {children}
         </div>
       </main>
