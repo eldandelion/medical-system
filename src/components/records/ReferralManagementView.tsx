@@ -125,14 +125,17 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
               ? 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]'
               : item.status === 'Closed'
                 ? 'bg-[#f0fdf4] text-[#166534]' // Green for Closed
-                : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]'
+                : item.status === 'Recalled'
+                  ? 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]'
+                  : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]'
           }`}>
           {item.status === 'Approved' ? '已批准' :
             item.status === 'AwaitingApproval' ? '待审批' :
               item.status === 'Pending' ? '进行中' :
                 item.status === 'Closed' ? '已结案' :
                   item.status === 'Draft' ? '草案' :
-                    item.status}
+                    item.status === 'Recalled' ? '已撤回' :
+                      item.status}
         </span>
       )
     }

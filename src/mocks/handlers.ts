@@ -151,5 +151,28 @@ export const handlers = [
     mockReferralsDb.push(newReferral as any);
 
     return HttpResponse.json({ success: true, id: newReferral.id }, { status: 201 });
+  }),
+
+  http.post('/api/referrals/:id/recall', async ({ request, params }) => {
+    const { id } = params;
+    const authHeader = request.headers.get('Authorization') || '';
+    
+    // According to feedback, we just verify it's a teacher token.
+    if (!authHeader.includes('teacher')) {
+      return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Only teachers can recall' });
+    }
+
+    const referral = mockReferralsDb.find((r) => r.id === id);
+    if (!referral) {
+      return new HttpResponse(null, { status: 404 });
+    }
+
+    if (referral.status !== 'AwaitingApproval') {
+      return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting approval referrals can be recalled' });
+    }
+
+    referral.status = 'Recalled';
+
+    return HttpResponse.json({ success: true });
   })
 ];

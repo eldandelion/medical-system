@@ -9,7 +9,15 @@ import { Student, ClinicalStatusType, SevereRiskFactorType } from '../../types';
 import { CLINICAL_STATUS_OPTIONS, RISK_FACTOR_OPTIONS } from '../../config/referralConstants';
 import { AttachmentList } from '../common/AttachmentList';
 
-export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
+export function ReferralCreationForm({ onClose, initialData }: { onClose: () => void; initialData?: Partial<{
+  studentId: string;
+  title: string;
+  reason: string;
+  riskLevel: string;
+  clinicalStatus: ClinicalStatusType[];
+  severeRiskFactors: SevereRiskFactorType[];
+  attachments: { name: string; size: string }[];
+}> }) {
   const { viewState, setHeaderActions, setOnCloseInterceptor } = useCreationOverlay();
   const { showSnackbar } = useSnackbar();
   const { session } = useAuth();
@@ -22,13 +30,13 @@ export function ReferralCreationForm({ onClose }: { onClose: () => void }) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const [formData, setFormData] = React.useState({
-    studentId: '',
-    title: '',
-    reason: '',
-    riskLevel: 'Low',
-    clinicalStatus: ['Medicated', 'PriorTherapy'] as ClinicalStatusType[],
-    severeRiskFactors: [] as SevereRiskFactorType[],
-    attachments: [
+    studentId: initialData?.studentId || '',
+    title: initialData?.title || '',
+    reason: initialData?.reason || '',
+    riskLevel: initialData?.riskLevel || 'Low',
+    clinicalStatus: initialData?.clinicalStatus || (['Medicated', 'PriorTherapy'] as ClinicalStatusType[]),
+    severeRiskFactors: initialData?.severeRiskFactors || ([] as SevereRiskFactorType[]),
+    attachments: initialData?.attachments || [
       { name: 'Patient_Intake_Scan_v2.pdf', size: '2.4 MB' },
       { name: 'Hospital_Release_Form.png', size: '1.1 MB' },
     ]

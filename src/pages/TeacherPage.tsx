@@ -45,6 +45,7 @@ export function TeacherPage() {
   const [isPageLoading, setIsPageLoading] = React.useState(false);
   const [dashboardData, setDashboardData] = React.useState<any>(null);
   const [dashboardLoading, setDashboardLoading] = React.useState(true);
+  const [refreshKey, setRefreshKey] = React.useState(0);
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
 
 
@@ -128,7 +129,7 @@ export function TeacherPage() {
       case TeacherTabs.STUDENTS:
         return <StudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} onLoadingChange={handleLoadingChange} />;
       case TeacherTabs.REFERRAL_MANAGEMENT:
-        return <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} onLoadingChange={handleLoadingChange} />;
+        return <ReferralManagementView key={`rmv-${refreshKey}`} onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} onLoadingChange={handleLoadingChange} />;
       case TeacherTabs.SECURITY:
         return <SecurityConsentView />;
       case TeacherTabs.DASHBOARD:
@@ -220,7 +221,16 @@ export function TeacherPage() {
                     <StudentDetailsView student={selectedItem} activeTab={activeTab} onTabChange={setActiveTab} />
                   )}
                   {activePage === TeacherTabs.REFERRAL_MANAGEMENT && (
-                    <ReferralDetailsView referral={selectedItem} userRole="teacher" activeTab={activeTab} onTabChange={setActiveTab} />
+                    <ReferralDetailsView 
+                      referral={selectedItem} 
+                      userRole="teacher" 
+                      activeTab={activeTab} 
+                      onTabChange={setActiveTab} 
+                      onUpdate={() => {
+                        setSelectedItem(null);
+                        setRefreshKey(k => k + 1);
+                      }}
+                    />
                   )}
                 </>
               )}

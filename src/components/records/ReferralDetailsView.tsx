@@ -11,6 +11,9 @@ import { ReferralTrackerTab } from './ReferralTrackerTab';
 import { ReferralFeedbackTab } from './ReferralFeedbackTab';
 
 import { useDetails } from '../../contexts/DetailsContext';
+import { useCreationOverlay } from '../../contexts/CreationContext';
+import { useSnackbar } from '../../contexts/SnackbarContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { GenericDialog } from '../common/GenericDialog';
 
 import { Referral } from '../../types';
@@ -21,6 +24,7 @@ interface ReferralDetailsViewProps {
   hideHeader?: boolean;
   activeTab?: string;
   onTabChange?: (tabId: string) => void;
+  onUpdate?: () => void;
 }
 
 type TabType = 'overview' | 'tracker' | 'psychometrics' | 'feedback';
@@ -33,12 +37,17 @@ export const REFERRAL_DETAILS_TABS = [
 ];
 
 
-export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab: propsActiveTab, onTabChange }: ReferralDetailsViewProps) {
+export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab: propsActiveTab, onTabChange, onUpdate }: ReferralDetailsViewProps) {
   const { isFullScreen } = useDetails();
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
   const [isRejectionDialogOpen, setIsRejectionDialogOpen] = React.useState(false);
+  const [isRecallDialogOpen, setIsRecallDialogOpen] = React.useState(false);
   const [rejectionReason, setRejectionReason] = React.useState('');
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
+
+  const { openCreation, closeCreation } = useCreationOverlay();
+  const { showSnackbar } = useSnackbar();
+  const { session } = useAuth();
 
   const [studentData, setStudentData] = React.useState<any>(null);
 
@@ -87,6 +96,49 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
   const tabs = REFERRAL_DETAILS_TABS.filter(
     tab => tab.id !== 'feedback' || isFeedbackAvailable
   );
+
+  const handleRecall = async () => {
+    setIsRecallDialogOpen(false);
+    try {
+      const res = await fetch(`/api/referrals/${referral.id}/recall`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.token || ''}`
+        }
+      });
+      if (res.ok) {
+        showSnackbar({ message: '转诊申请已撤回', duration: 3000 });
+        onUpdate?.();
+      } else {
+        throw new Error('Failed to recall');
+      }
+    } catch (e) {
+      showSnackbar({ message: '撤回失败，请稍后重试', duration: 3000 });
+    }
+  };
+
+  const handleResubmit = () => {
+    // Map existing data to CreationForm format
+    const initialData = {
+      title: referral.title,
+      reason: referral.description,
+      riskLevel: referral.riskLevel,
+      clinicalStatus: [
+        ...(extendedData.triage.isFirstVisit ? ['FirstVisit' as any] : []),
+        ...(extendedData.triage.isMedicated ? ['Medicated' as any] : []),
+        ...(extendedData.triage.priorTherapy === '有' ? ['PriorTherapy' as any] : [])
+      ],
+      severeRiskFactors: [
+        ...(extendedData.risk.ideation ? ['Ideation' as any] : []),
+        ...(extendedData.risk.attempt ? ['Attempt' as any] : []),
+        ...(extendedData.risk.selfHarm ? ['SelfHarm' as any] : [])
+      ],
+      attachments: extendedData.feedback.attachments || []
+    };
+
+    // Need to dynamically import ReferralCreationForm to avoid circular dependencies if any, but since it's already used in pages, we can just import it.
+    // Wait, ReferralDetailsView doesn't import ReferralCreationForm yet. Let's add it to imports.
+  };
 
   return (
     <ScrollableDetailsLayout
@@ -141,45 +193,73 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
         />
       ) : undefined}
       footer={
-        <ActionFooter>
-          {referral.status === 'AwaitingApproval' ? (
-            userRole === 'head-councillor' ? (
-              <>
-                <PrimaryButton icon="check" label="批准转诊" />
-                <SecondaryButton
-                  icon="close"
-                  label="拒绝申请"
-                  onClick={() => setIsRejectionDialogOpen(true)}
-                  style={{
-                    color: 'var(--md-sys-color-error)',
-                    '--md-outlined-button-label-text-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-with-icon-icon-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-hover-label-text-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-hover-state-layer-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-with-icon-hover-icon-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-pressed-label-text-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-pressed-state-layer-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-with-icon-pressed-icon-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-focus-label-text-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-with-icon-focus-icon-color': 'var(--md-sys-color-error)',
-                  } as React.CSSProperties}
-                />
-              </>
-            ) : userRole === 'teacher' ? (
-              <SecondaryButton icon="undo" label="撤回申请" />
+        referral.status === 'Recalled' && userRole === 'head-councillor' ? undefined : (
+          <ActionFooter>
+            {referral.status === 'Recalled' ? (
+              userRole === 'teacher' ? (
+                <>
+                  <PrimaryButton icon="restart_alt" label="基于此重新创建" onClick={() => {
+                    import('./ReferralCreationForm').then(({ ReferralCreationForm }) => {
+                      const initialData = {
+                        title: referral.title,
+                        reason: referral.description,
+                        riskLevel: referral.riskLevel,
+                        clinicalStatus: [
+                          ...(extendedData.triage.isFirstVisit ? ['FirstVisit' as any] : []),
+                          ...(extendedData.triage.isMedicated ? ['Medicated' as any] : []),
+                          ...(extendedData.triage.priorTherapy === '有' ? ['PriorTherapy' as any] : [])
+                        ],
+                        severeRiskFactors: [
+                          ...(extendedData.risk.ideation ? ['Ideation' as any] : []),
+                          ...(extendedData.risk.attempt ? ['Attempt' as any] : []),
+                          ...(extendedData.risk.selfHarm ? ['SelfHarm' as any] : [])
+                        ],
+                        attachments: extendedData.feedback.attachments || []
+                      };
+                      openCreation('重新发起转诊', <ReferralCreationForm onClose={closeCreation} initialData={initialData} />);
+                    });
+                  }} />
+                </>
+              ) : null
+            ) : referral.status === 'AwaitingApproval' ? (
+              userRole === 'head-councillor' ? (
+                <>
+                  <PrimaryButton icon="check" label="批准转诊" />
+                  <SecondaryButton
+                    icon="close"
+                    label="拒绝申请"
+                    onClick={() => setIsRejectionDialogOpen(true)}
+                    style={{
+                      color: 'var(--md-sys-color-error)',
+                      '--md-outlined-button-label-text-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-with-icon-icon-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-hover-label-text-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-hover-state-layer-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-with-icon-hover-icon-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-pressed-label-text-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-pressed-state-layer-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-with-icon-pressed-icon-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-focus-label-text-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-with-icon-focus-icon-color': 'var(--md-sys-color-error)',
+                    } as React.CSSProperties}
+                  />
+                </>
+              ) : userRole === 'teacher' ? (
+                <SecondaryButton icon="undo" label="撤回申请" onClick={() => setIsRecallDialogOpen(true)} />
+              ) : (
+                <>
+                  <PrimaryButton icon="upload_file" label="上传文件" />
+                  <SecondaryButton icon="check" label="确认反馈" />
+                </>
+              )
             ) : (
               <>
                 <PrimaryButton icon="upload_file" label="上传文件" />
                 <SecondaryButton icon="check" label="确认反馈" />
               </>
-            )
-          ) : (
-            <>
-              <PrimaryButton icon="upload_file" label="上传文件" />
-              <SecondaryButton icon="check" label="确认反馈" />
-            </>
-          )}
-        </ActionFooter>
+            )}
+          </ActionFooter>
+        )
       }
     >
       <AnimatePresence mode="wait">
@@ -257,6 +337,21 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
             onChange={(e) => setRejectionReason(e.target.value)}
           />
         </div>
+      </GenericDialog>
+
+      {/* Recall Confirmation Dialog */}
+      <GenericDialog
+        open={isRecallDialogOpen}
+        onClose={() => setIsRecallDialogOpen(false)}
+        title="确认撤回申请？"
+        actions={
+          <>
+            <SecondaryButton label="取消" onClick={() => setIsRecallDialogOpen(false)} />
+            <PrimaryButton label="确认撤回" onClick={handleRecall} />
+          </>
+        }
+      >
+        <p className="text-[var(--md-sys-color-on-surface-variant)]">撤回后，该转诊将变为“已撤回”状态。您可以在之后基于此记录重新提交。是否确认撤回？</p>
       </GenericDialog>
 
     </ScrollableDetailsLayout>
