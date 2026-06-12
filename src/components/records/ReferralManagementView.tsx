@@ -36,7 +36,18 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
           const sorted = (data as Referral[]).sort((a, b) => {
             if (a.status === 'AwaitingApproval' && b.status !== 'AwaitingApproval') return -1;
             if (a.status !== 'AwaitingApproval' && b.status === 'AwaitingApproval') return 1;
-            return 0;
+            
+            const parseDate = (dStr: string) => {
+              const match = dStr.match(/(\d+)年(\d+)月(\d+)日/);
+              if (match) {
+                return new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3])).getTime();
+              }
+              return 0;
+            };
+            
+            const dateA = parseDate(a.date);
+            const dateB = parseDate(b.date);
+            return dateB - dateA; // Descending (newest first)
           });
           setReferrals(sorted);
           setLoading(false);
