@@ -182,9 +182,13 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
                 error-text="此项为必填项"
               >
                 {students.map((student) => {
+                  const displayId = student.demographics?.studentId || student.id;
                   return (
                     <md-select-option key={student.id} value={student.id}>
                       <div slot="headline">{student.name}</div>
+                      <div slot="supporting-text" className="text-[12px] opacity-70">
+                        {displayId} • {student.major}
+                      </div>
                     </md-select-option>
                   );
                 })}
