@@ -120,9 +120,9 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
         let displayStatus = item.status;
         const steps = item.extendedData?.steps;
         if (steps) {
-          if (steps.some(s => s.status === 'issue')) {
+          if (steps.some(s => s.status === 'issue') && item.status !== 'Rejected') {
             displayStatus = 'Error';
-          } else {
+          } else if (item.status !== 'Rejected') {
             const activeStep = steps.find(s => s.status === 'active');
             if (activeStep) {
               if (activeStep.type === 'triage' || activeStep.type === 'evaluation') {
@@ -145,7 +145,7 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
                   ? 'bg-[#f0fdf4] text-[#166534]' // Green for Closed
                   : displayStatus === 'Recalled'
                     ? 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]'
-                    : displayStatus === 'Error'
+                    : displayStatus === 'Error' || displayStatus === 'Rejected'
                       ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
                       : displayStatus === 'AwaitingFeedbackApproval'
                         ? 'bg-[#fef9c3] text-[#854d0e]' // Yellowish for awaiting feedback
@@ -158,8 +158,9 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
                     displayStatus === 'Draft' ? '草案' :
                       displayStatus === 'Recalled' ? '已撤回' :
                         displayStatus === 'Error' ? '异常' :
-                          displayStatus === 'AwaitingFeedbackApproval' ? '待反馈审批' :
-                            displayStatus}
+                          displayStatus === 'Rejected' ? '被拒绝' :
+                            displayStatus === 'AwaitingFeedbackApproval' ? '待反馈审批' :
+                              displayStatus}
           </span>
         );
       }

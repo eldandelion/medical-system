@@ -81,6 +81,12 @@ export const handlers = [
     const data = await request.json() as any;
     const { actionType, studentId, title, reason, riskLevel, clinicalStatus, severeRiskFactors, attachments } = data;
 
+    if (actionType !== 'draft') {
+      if (!studentId || !title?.trim() || !reason?.trim() || !riskLevel) {
+        return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Missing required fields for submission' });
+      }
+    }
+
     const student = mockStudentsDb.find(s => s.id === studentId);
     const studentName = student ? student.name : '未知学生';
 
@@ -132,9 +138,9 @@ export const handlers = [
             id: `step-1`,
             type: 'initiation',
             title: '发起转诊',
-            subtitle: `${creatorName} 提交了转诊申请`,
-            time: new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }),
-            status: actionType === 'draft' ? 'active' : 'completed'
+            subtitle: actionType === 'draft' ? '等待提交' : `${creatorName} 提交了转诊申请`,
+            time: actionType === 'draft' ? '' : new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }),
+            status: actionType === 'draft' ? 'pending' : 'completed'
           },
           {
             id: `step-2`,
@@ -143,6 +149,30 @@ export const handlers = [
             subtitle: actionType === 'draft' ? '等待提交申请' : '等待辅导员审核中',
             time: actionType === 'draft' ? '' : '等待中',
             status: actionType === 'draft' ? 'pending' : 'active'
+          },
+          {
+            id: `step-3`,
+            type: 'triage',
+            title: '心理中心分诊',
+            subtitle: '等待审核完成',
+            time: '',
+            status: 'pending'
+          },
+          {
+            id: `step-4`,
+            type: 'evaluation',
+            title: '医生评估',
+            subtitle: '等待分诊分配',
+            time: '',
+            status: 'pending'
+          },
+          {
+            id: `step-5`,
+            type: 'feedback',
+            title: '评估反馈与随访计划',
+            subtitle: '等待医生评估完成',
+            time: '',
+            status: 'pending'
           }
         ]
       }
@@ -172,6 +202,97 @@ export const handlers = [
     }
 
     referral.status = 'Recalled';
+
+    return HttpResponse.json({ success: true });
+  }),
+
+  http.delete('/api/referrals/:id', async ({ request, params }) => {
+    const { id } = params;
+    const authHeader = request.headers.get('Authorization') || '';
+    
+    if (!authHeader.includes('teacher') && !authHeader.includes('head_councillor')) {
+      return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Only teachers and head councillors can delete drafts' });
+    }
+
+    const index = mockReferralsDb.findIndex((r) => r.id === id);
+    if (index === -1) {
+      return new HttpResponse(null, { status: 404 });
+    }
+
+    if (mockReferralsDb[index].status !== 'Draft') {
+      return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only draft referrals can be deleted' });
+    }
+
+    mockReferralsDb.splice(index, 1);
+
+    return HttpResponse.json({ success: true });
+  }),
+
+  http.post('/api/referrals/:id/approve', async ({ request, params }) => {
+    const { id } = params;
+    const authHeader = request.headers.get('Authorization') || '';
+    
+    if (!authHeader.includes('head_councillor')) {
+      return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Only head councillors can approve referrals' });
+    }
+
+    const referral = mockReferralsDb.find((r) => r.id === id);
+    if (!referral) {
+      return new HttpResponse(null, { status: 404 });
+    }
+
+    if (referral.status !== 'AwaitingApproval') {
+      return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting approval referrals can be approved' });
+    }
+
+    referral.status = 'Approved';
+    if (referral.extendedData?.steps) {
+      const reviewStep = referral.extendedData.steps.find(s => s.type === 'review');
+      if (reviewStep) {
+        reviewStep.status = 'completed';
+        reviewStep.subtitle = '审核已通过';
+        reviewStep.time = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+      }
+      const triageStep = referral.extendedData.steps.find(s => s.type === 'triage');
+      if (triageStep) {
+        triageStep.status = 'active';
+        triageStep.subtitle = '正在处理分诊信息...';
+        triageStep.time = '进行中';
+      }
+    }
+
+    return HttpResponse.json({ success: true });
+  }),
+
+  http.post('/api/referrals/:id/reject', async ({ request, params }) => {
+    const { id } = params;
+    const authHeader = request.headers.get('Authorization') || '';
+    
+    if (!authHeader.includes('head_councillor')) {
+      return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Only head councillors can reject referrals' });
+    }
+
+    const referral = mockReferralsDb.find((r) => r.id === id);
+    if (!referral) {
+      return new HttpResponse(null, { status: 404 });
+    }
+
+    if (referral.status !== 'AwaitingApproval') {
+      return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting approval referrals can be rejected' });
+    }
+
+    const data = await request.json() as any;
+    const reason = data?.reason || '无拒绝原因';
+
+    referral.status = 'Rejected';
+    if (referral.extendedData?.steps) {
+      const reviewStep = referral.extendedData.steps.find(s => s.type === 'review');
+      if (reviewStep) {
+        reviewStep.status = 'issue';
+        reviewStep.subtitle = `申请被拒绝: ${reason}`;
+        reviewStep.time = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+      }
+    }
 
     return HttpResponse.json({ success: true });
   })

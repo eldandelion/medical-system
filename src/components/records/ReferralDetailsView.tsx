@@ -41,7 +41,9 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
   const { isFullScreen } = useDetails();
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
   const [isRejectionDialogOpen, setIsRejectionDialogOpen] = React.useState(false);
+  const [isApprovalDialogOpen, setIsApprovalDialogOpen] = React.useState(false);
   const [isRecallDialogOpen, setIsRecallDialogOpen] = React.useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [rejectionReason, setRejectionReason] = React.useState('');
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
 
@@ -131,6 +133,69 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
       }
     } catch (e) {
       showSnackbar({ message: '撤回失败，请稍后重试', duration: 3000 });
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleteDialogOpen(false);
+    try {
+      const res = await fetch(`/api/referrals/${referral.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session?.token || ''}`
+        }
+      });
+      if (res.ok) {
+        showSnackbar({ message: '草案已删除', duration: 3000 });
+        onUpdate?.();
+      } else {
+        throw new Error('Failed to delete');
+      }
+    } catch (e) {
+      showSnackbar({ message: '删除失败，请稍后重试', duration: 3000 });
+    }
+  };
+
+  const handleApprove = async () => {
+    setIsApprovalDialogOpen(false);
+    try {
+      const res = await fetch(`/api/referrals/${referral.id}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.token || ''}`
+        }
+      });
+      if (res.ok) {
+        showSnackbar({ message: '转诊已批准', duration: 3000 });
+        onUpdate?.();
+      } else {
+        throw new Error('Failed to approve');
+      }
+    } catch (e) {
+      showSnackbar({ message: '批准失败，请稍后重试', duration: 3000 });
+    }
+  };
+
+  const handleReject = async () => {
+    setIsRejectionDialogOpen(false);
+    try {
+      const res = await fetch(`/api/referrals/${referral.id}/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.token || ''}`
+        },
+        body: JSON.stringify({ reason: rejectionReason })
+      });
+      if (res.ok) {
+        showSnackbar({ message: '转诊已拒绝', duration: 3000 });
+        setRejectionReason('');
+        onUpdate?.();
+      } else {
+        throw new Error('Failed to reject');
+      }
+    } catch (e) {
+      showSnackbar({ message: '操作失败，请稍后重试', duration: 3000 });
     }
   };
 
@@ -241,7 +306,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
             ) : displayStatus === 'AwaitingApproval' ? (
               userRole === 'head-councillor' ? (
                 <>
-                  <PrimaryButton icon="check" label="批准转诊" />
+                  <PrimaryButton icon="check" label="批准转诊" onClick={() => setIsApprovalDialogOpen(true)} />
                   <SecondaryButton
                     icon="close"
                     label="拒绝申请"
@@ -264,6 +329,48 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
               ) : userRole === 'teacher' ? (
                 <SecondaryButton icon="undo" label="撤回申请" onClick={() => setIsRecallDialogOpen(true)} />
               ) : null
+            ) : displayStatus === 'Draft' && (userRole === 'teacher' || userRole === 'head-councillor') ? (
+              <>
+                <PrimaryButton icon="edit_document" label="编辑草案" onClick={() => {
+                  import('./ReferralCreationForm').then(({ ReferralCreationForm }) => {
+                    const initialData = {
+                      title: referral.title,
+                      reason: referral.description,
+                      riskLevel: referral.riskLevel,
+                      clinicalStatus: [
+                        ...(extendedData.triage.isFirstVisit ? ['FirstVisit' as any] : []),
+                        ...(extendedData.triage.isMedicated ? ['Medicated' as any] : []),
+                        ...(extendedData.triage.priorTherapy === '有' ? ['PriorTherapy' as any] : [])
+                      ],
+                      severeRiskFactors: [
+                        ...(extendedData.risk.ideation ? ['Ideation' as any] : []),
+                        ...(extendedData.risk.attempt ? ['Attempt' as any] : []),
+                        ...(extendedData.risk.selfHarm ? ['SelfHarm' as any] : [])
+                      ],
+                      attachments: extendedData.feedback.attachments || []
+                    };
+                    openCreation('重新发起转诊', <ReferralCreationForm onClose={closeCreation} initialData={initialData} />);
+                  });
+                }} />
+                <SecondaryButton
+                  icon="delete"
+                  label="删除草案"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  style={{
+                    color: 'var(--md-sys-color-error)',
+                    '--md-outlined-button-label-text-color': 'var(--md-sys-color-error)',
+                    '--md-outlined-button-with-icon-icon-color': 'var(--md-sys-color-error)',
+                    '--md-outlined-button-hover-label-text-color': 'var(--md-sys-color-error)',
+                    '--md-outlined-button-hover-state-layer-color': 'var(--md-sys-color-error)',
+                    '--md-outlined-button-with-icon-hover-icon-color': 'var(--md-sys-color-error)',
+                    '--md-outlined-button-pressed-label-text-color': 'var(--md-sys-color-error)',
+                    '--md-outlined-button-pressed-state-layer-color': 'var(--md-sys-color-error)',
+                    '--md-outlined-button-with-icon-pressed-icon-color': 'var(--md-sys-color-error)',
+                    '--md-outlined-button-focus-label-text-color': 'var(--md-sys-color-error)',
+                    '--md-outlined-button-with-icon-focus-icon-color': 'var(--md-sys-color-error)',
+                  } as React.CSSProperties}
+                />
+              </>
             ) : displayStatus === 'AwaitingFeedbackApproval' ? (
               <>
                 <PrimaryButton icon="check" label="确认反馈" />
@@ -320,10 +427,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
             <TertiaryButton label="取消" onClick={() => setIsRejectionDialogOpen(false)} />
             <TertiaryButton
               label="确认拒绝"
-              onClick={() => {
-                console.log('Rejected with reason:', rejectionReason);
-                setIsRejectionDialogOpen(false);
-              }}
+              onClick={handleReject}
               style={{
                 '--md-text-button-label-text-color': 'var(--md-sys-color-error)',
                 '--md-text-button-hover-label-text-color': 'var(--md-sys-color-error)',
@@ -363,6 +467,45 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
         }
       >
         <p className="text-[var(--md-sys-color-on-surface-variant)]">撤回后，该转诊将变为“已撤回”状态。您可以在之后基于此记录重新提交。是否确认撤回？</p>
+      </GenericDialog>
+
+      {/* Approval Confirmation Dialog */}
+      <GenericDialog
+        open={isApprovalDialogOpen}
+        onClose={() => setIsApprovalDialogOpen(false)}
+        title="确认批准转诊？"
+        actions={
+          <>
+            <SecondaryButton label="取消" onClick={() => setIsApprovalDialogOpen(false)} />
+            <PrimaryButton label="确认批准" onClick={handleApprove} />
+          </>
+        }
+      >
+        <p className="text-[var(--md-sys-color-on-surface-variant)]">批准后，该转诊将自动进入心理中心分诊环节。是否确认批准？</p>
+      </GenericDialog>
+
+      {/* Delete Draft Dialog */}
+      <GenericDialog
+        open={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        title="确认删除草案？"
+        actions={
+          <>
+            <SecondaryButton label="取消" onClick={() => setIsDeleteDialogOpen(false)} />
+            <PrimaryButton 
+              label="确认删除" 
+              onClick={handleDelete}
+              style={{
+                '--md-filled-button-container-color': 'var(--md-sys-color-error)',
+                '--md-filled-button-label-text-color': 'var(--md-sys-color-on-error)',
+                '--md-filled-button-hover-container-color': 'var(--md-sys-color-error)',
+                '--md-filled-button-pressed-container-color': 'var(--md-sys-color-error)',
+              } as React.CSSProperties}
+            />
+          </>
+        }
+      >
+        <p className="text-[var(--md-sys-color-on-surface-variant)]">删除后，该草案将永久失效且无法恢复。是否确认删除？</p>
       </GenericDialog>
 
     </ScrollableDetailsLayout>

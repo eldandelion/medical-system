@@ -46,6 +46,7 @@ export function HeadCouncillorPage() {
   const [activePage, setActivePage] = React.useState<HeadCouncillorPageName>(HeadCouncillorTabs.DASHBOARD);
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
+  const [refreshKey, setRefreshKey] = React.useState(0);
   const [isPageLoading, setIsPageLoading] = React.useState(false);
   const [dashboardData, setDashboardData] = React.useState<any>(null);
   const [dashboardLoading, setDashboardLoading] = React.useState(true);
@@ -136,7 +137,7 @@ export function HeadCouncillorPage() {
       case HeadCouncillorTabs.STAFF:
         return <StaffManagementView onStaffSelect={setSelectedItem} selectedStaffId={selectedItem?.id} />;
       case HeadCouncillorTabs.REFERRAL_MANAGEMENT:
-        return <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} onLoadingChange={handleLoadingChange} />;
+        return <ReferralManagementView key={`rmv-${refreshKey}`} onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} onLoadingChange={handleLoadingChange} />;
       case HeadCouncillorTabs.SECURITY:
         return <SecurityConsentView />;
       case HeadCouncillorTabs.DASHBOARD:
@@ -232,7 +233,16 @@ export function HeadCouncillorPage() {
                     <StaffDetailsView staff={selectedItem} activeTab={activeTab} onTabChange={setActiveTab} />
                   )}
                   {activePage === HeadCouncillorTabs.REFERRAL_MANAGEMENT && (
-                    <ReferralDetailsView referral={selectedItem} userRole="head-councillor" activeTab={activeTab} onTabChange={setActiveTab} />
+                    <ReferralDetailsView 
+                      referral={selectedItem} 
+                      userRole="head-councillor" 
+                      activeTab={activeTab} 
+                      onTabChange={setActiveTab} 
+                      onUpdate={() => {
+                        setSelectedItem(null);
+                        setRefreshKey(k => k + 1);
+                      }}
+                    />
                   )}
                 </>
               )}
