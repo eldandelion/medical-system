@@ -122,6 +122,12 @@ export function TeacherPage() {
     setIsPageLoading(loading);
   }, []);
 
+  React.useEffect(() => {
+    if (activePage === TeacherTabs.DASHBOARD) {
+      setIsPageLoading(dashboardLoading);
+    }
+  }, [activePage, dashboardLoading]);
+
   const renderActiveContent = () => {
     switch (activePage) {
       case TeacherTabs.NOTIFICATIONS:
@@ -135,10 +141,8 @@ export function TeacherPage() {
       case TeacherTabs.DASHBOARD:
         if (dashboardLoading) {
           return (
-            <div className="flex-1 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
-              {/* @ts-ignore */}
-              <md-linear-progress indeterminate className="w-full max-w-xs mb-4"></md-linear-progress>
-              <span className="text-[14px] opacity-75">正在加载控制面板...</span>
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
+              {/* Loading state is handled by parent CanvasHeader */}
             </div>
           );
         }

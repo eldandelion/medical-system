@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse, delay } from 'msw';
 import { mockAssessmentsDb, mockPsychiatricRecordsDb, mockDashboardDb, mockStudentsDb, mockReferralsDb } from './db';
 
 export const handlers = [
@@ -28,7 +28,8 @@ export const handlers = [
     return HttpResponse.json(record);
   }),
 
-  http.get('/api/dashboard/:role', ({ params }) => {
+  http.get('/api/dashboard/:role', async ({ params }) => {
+    await delay(3000);
     const { role } = params;
     const dashboardData = mockDashboardDb[role as string];
     if (!dashboardData) {
@@ -37,11 +38,13 @@ export const handlers = [
     return HttpResponse.json(dashboardData);
   }),
 
-  http.get('/api/students', () => {
+  http.get('/api/students', async () => {
+    await delay(3000);
     return HttpResponse.json(mockStudentsDb);
   }),
 
-  http.get('/api/referrals', ({ request }) => {
+  http.get('/api/referrals', async ({ request }) => {
+    await delay(3000);
     const authHeader = request.headers.get('Authorization') || '';
     let filteredReferrals = [...mockReferralsDb];
 
