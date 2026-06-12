@@ -116,28 +116,53 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
       key: 'status',
       label: '状态',
       width: 'w-[15%]',
-      render: (item) => (
-        <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${item.status === 'Approved'
-          ? 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]'
-          : item.status === 'AwaitingApproval'
-            ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-            : item.status === 'Pending'
-              ? 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]'
-              : item.status === 'Closed'
-                ? 'bg-[#f0fdf4] text-[#166534]' // Green for Closed
-                : item.status === 'Recalled'
-                  ? 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]'
-                  : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]'
-          }`}>
-          {item.status === 'Approved' ? '已批准' :
-            item.status === 'AwaitingApproval' ? '待审批' :
-              item.status === 'Pending' ? '进行中' :
-                item.status === 'Closed' ? '已结案' :
-                  item.status === 'Draft' ? '草案' :
-                    item.status === 'Recalled' ? '已撤回' :
-                      item.status}
-        </span>
-      )
+      render: (item) => {
+        let displayStatus = item.status;
+        const steps = item.extendedData?.steps;
+        if (steps) {
+          if (steps.some(s => s.status === 'issue')) {
+            displayStatus = 'Error';
+          } else {
+            const activeStep = steps.find(s => s.status === 'active');
+            if (activeStep) {
+              if (activeStep.type === 'triage' || activeStep.type === 'evaluation') {
+                displayStatus = 'Pending';
+              } else if (activeStep.type === 'feedback') {
+                displayStatus = 'AwaitingFeedbackApproval';
+              }
+            }
+          }
+        }
+
+        return (
+          <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${displayStatus === 'Approved'
+            ? 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]'
+            : displayStatus === 'AwaitingApproval'
+              ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+              : displayStatus === 'Pending'
+                ? 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]'
+                : displayStatus === 'Closed'
+                  ? 'bg-[#f0fdf4] text-[#166534]' // Green for Closed
+                  : displayStatus === 'Recalled'
+                    ? 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]'
+                    : displayStatus === 'Error'
+                      ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
+                      : displayStatus === 'AwaitingFeedbackApproval'
+                        ? 'bg-[#fef9c3] text-[#854d0e]' // Yellowish for awaiting feedback
+                        : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]'
+            }`}>
+            {displayStatus === 'Approved' ? '已批准' :
+              displayStatus === 'AwaitingApproval' ? '待审批' :
+                displayStatus === 'Pending' ? '进行中' :
+                  displayStatus === 'Closed' ? '已结案' :
+                    displayStatus === 'Draft' ? '草案' :
+                      displayStatus === 'Recalled' ? '已撤回' :
+                        displayStatus === 'Error' ? '异常' :
+                          displayStatus === 'AwaitingFeedbackApproval' ? '待反馈审批' :
+                            displayStatus}
+          </span>
+        );
+      }
     }
   ];
 

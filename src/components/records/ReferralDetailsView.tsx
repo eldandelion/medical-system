@@ -97,6 +97,23 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
     tab => tab.id !== 'feedback' || isFeedbackAvailable
   );
 
+  let displayStatus = referral.status;
+  const steps = extendedData.steps;
+  if (steps) {
+    if (steps.some(s => s.status === 'issue')) {
+      displayStatus = 'Error';
+    } else {
+      const activeStep = steps.find(s => s.status === 'active');
+      if (activeStep) {
+        if (activeStep.type === 'triage' || activeStep.type === 'evaluation') {
+          displayStatus = 'Pending';
+        } else if (activeStep.type === 'feedback') {
+          displayStatus = 'AwaitingFeedbackApproval';
+        }
+      }
+    }
+  }
+
   const handleRecall = async () => {
     setIsRecallDialogOpen(false);
     try {
@@ -193,9 +210,9 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
         />
       ) : undefined}
       footer={
-        referral.status === 'Recalled' && userRole === 'head-councillor' ? undefined : (
+        (displayStatus === 'Recalled' && userRole === 'head-councillor') || displayStatus === 'Pending' || displayStatus === 'Closed' || displayStatus === 'Error' ? undefined : (
           <ActionFooter>
-            {referral.status === 'Recalled' ? (
+            {displayStatus === 'Recalled' ? (
               userRole === 'teacher' ? (
                 <>
                   <PrimaryButton icon="restart_alt" label="基于此重新创建" onClick={() => {
@@ -221,7 +238,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                   }} />
                 </>
               ) : null
-            ) : referral.status === 'AwaitingApproval' ? (
+            ) : displayStatus === 'AwaitingApproval' ? (
               userRole === 'head-councillor' ? (
                 <>
                   <PrimaryButton icon="check" label="批准转诊" />
@@ -246,18 +263,12 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                 </>
               ) : userRole === 'teacher' ? (
                 <SecondaryButton icon="undo" label="撤回申请" onClick={() => setIsRecallDialogOpen(true)} />
-              ) : (
-                <>
-                  <PrimaryButton icon="upload_file" label="上传文件" />
-                  <SecondaryButton icon="check" label="确认反馈" />
-                </>
-              )
-            ) : (
+              ) : null
+            ) : displayStatus === 'AwaitingFeedbackApproval' ? (
               <>
-                <PrimaryButton icon="upload_file" label="上传文件" />
-                <SecondaryButton icon="check" label="确认反馈" />
+                <PrimaryButton icon="check" label="确认反馈" />
               </>
-            )}
+            ) : null}
           </ActionFooter>
         )
       }

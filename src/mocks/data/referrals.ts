@@ -103,9 +103,9 @@ const generateTrackerSteps = (referral: Referral): ReferralStep[] => {
       id: `${referral.id}-1`,
       type: 'initiation',
       title: '发起转诊',
-      subtitle: `${referral.referredBy?.name || '未知系统'} 提交了转诊申请`,
-      time: referral.date,
-      status: isDraft ? 'active' : 'completed'
+      subtitle: isDraft ? '等待提交' : `${referral.referredBy?.name || '未知系统'} 提交了转诊申请`,
+      time: isDraft ? '' : referral.date,
+      status: isDraft ? 'pending' : 'completed'
     },
     {
       id: `${referral.id}-2`,
@@ -147,9 +147,10 @@ const generateTrackerSteps = (referral: Referral): ReferralStep[] => {
     steps[2].subtitle = '需要进一步确认风险情况';
     steps[2].time = '2026年4月19日';
     
-    steps[3].status = 'active';
-    steps[3].subtitle = '由于高风险状态正在加速安排医生接诊';
-    steps[3].time = '待定';
+    // Ensure subsequent steps remain pending/empty
+    steps[3].status = 'pending';
+    steps[3].subtitle = '等待分诊问题解决';
+    steps[3].time = '';
   }
 
   return steps;

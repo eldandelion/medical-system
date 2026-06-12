@@ -21,7 +21,7 @@ export interface Referral {
   title: string;
   description: string;
   riskLevel: 'High' | 'Medium' | 'Low';
-  status: 'Draft' | 'Closed' | 'Pending' | 'Approved' | 'AwaitingApproval' | 'Recalled';
+  status: 'Draft' | 'Closed' | 'Pending' | 'Approved' | 'AwaitingApproval' | 'Recalled' | 'AwaitingFeedbackApproval' | 'Error';
   referredBy?: {
     name: string;
     avatar?: string;
