@@ -103,21 +103,6 @@ export function TrialAdminPage() {
     }
   }, [tabs, activeTab]);
 
-  const handleCompose = () => {
-    openCreation(
-      '发起转诊',
-      <ReferralCreationForm onClose={closeCreation} />
-    );
-    setTimeout(expandToFullscreen, 10);
-  };
-
-  const composeButton = (
-    <TertiaryFab
-      icon="edit"
-      label="发起转诊"
-      onClick={handleCompose}
-    />
-  );
 
   const handleLoadingChange = React.useCallback((loading: boolean) => {
     setIsPageLoading(loading);
@@ -188,7 +173,7 @@ export function TrialAdminPage() {
         fontFamily: "'Roboto', sans-serif"
       }}
     >
-      <Sidebar composeButton={composeButton}>
+      <Sidebar>
         <NavItem icon="dashboard" label="控制面板" active={activePage === TrialAdminTabs.DASHBOARD} onClick={() => handlePageChange(TrialAdminTabs.DASHBOARD)} />
         <NavItem icon="notifications" label="通知中心" active={activePage === TrialAdminTabs.NOTIFICATIONS} onClick={() => handlePageChange(TrialAdminTabs.NOTIFICATIONS)} badge={true} />
 
