@@ -15,7 +15,8 @@ export function useDataFetch<T>(url: string, processData?: (data: any) => T, opt
     let active = true;
     setLoading(true);
 
-    fetch(url, options)
+    const fetchUrl = url.startsWith('/') ? `${import.meta.env.BASE_URL}${url.slice(1)}` : url;
+    fetch(fetchUrl, options)
       .then(res => {
         if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
         return res.json();

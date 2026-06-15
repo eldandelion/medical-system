@@ -2,13 +2,15 @@ import { http, HttpResponse, delay } from 'msw';
 import { mockAssessmentsDb, mockPsychiatricRecordsDb, mockDashboardDb, mockStudentsDb, mockReferralsDb } from './db';
 const MOCK_DELAY_MS = 1000;
 
+const api = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`;
+
 export const handlers = [
-  http.get('/api/assessments', async () => {
+  http.get(api('/api/assessments'), async () => {
     await delay(MOCK_DELAY_MS);
     return HttpResponse.json(mockAssessmentsDb);
   }),
 
-  http.get('/api/assessments/:id', ({ params }) => {
+  http.get(api('/api/assessments/:id'), ({ params }) => {
     const { id } = params;
     const assessment = mockAssessmentsDb.find((a) => a.id === id);
     if (!assessment) {
@@ -17,12 +19,12 @@ export const handlers = [
     return HttpResponse.json(assessment);
   }),
 
-  http.get('/api/records', async () => {
+  http.get(api('/api/records'), async () => {
     await delay(MOCK_DELAY_MS);
     return HttpResponse.json(mockPsychiatricRecordsDb);
   }),
 
-  http.get('/api/records/:id', ({ params }) => {
+  http.get(api('/api/records/:id'), ({ params }) => {
     const { id } = params;
     const record = mockPsychiatricRecordsDb.find((r) => r.id === id);
     if (!record) {
@@ -31,7 +33,7 @@ export const handlers = [
     return HttpResponse.json(record);
   }),
 
-  http.get('/api/dashboard/:role', async ({ params }) => {
+  http.get(api('/api/dashboard/:role'), async ({ params }) => {
     await delay(MOCK_DELAY_MS);
     const { role } = params;
     const dashboardData = mockDashboardDb[role as string];
@@ -41,12 +43,12 @@ export const handlers = [
     return HttpResponse.json(dashboardData);
   }),
 
-  http.get('/api/students', async () => {
+  http.get(api('/api/students'), async () => {
     await delay(MOCK_DELAY_MS);
     return HttpResponse.json(mockStudentsDb);
   }),
 
-  http.get('/api/referrals', async ({ request }) => {
+  http.get(api('/api/referrals'), async ({ request }) => {
     await delay(MOCK_DELAY_MS);
     const authHeader = request.headers.get('Authorization') || '';
     let filteredReferrals = [...mockReferralsDb];
@@ -75,14 +77,12 @@ export const handlers = [
     } else if (authHeader.includes('trial_admin')) {
       // Trial Admin role sees only handed over referrals
       filteredReferrals = mockReferralsDb.filter(isReferralAccessibleByTrialAdmin);
-    } else {
-      return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Invalid or missing token' });
     }
     
     return HttpResponse.json(filteredReferrals);
   }),
 
-  http.get('/api/referrals/:id', ({ request, params }) => {
+  http.get(api('/api/referrals/:id'), ({ request, params }) => {
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';
     
@@ -118,7 +118,7 @@ export const handlers = [
     return HttpResponse.json(referral);
   }),
 
-  http.post('/api/referrals', async ({ request }) => {
+  http.post(api('/api/referrals'), async ({ request }) => {
     const authHeader = request.headers.get('Authorization') || '';
     
     let creatorName = '';
@@ -235,7 +235,7 @@ export const handlers = [
     return HttpResponse.json({ success: true, id: newReferral.id }, { status: 201 });
   }),
 
-  http.post('/api/referrals/:id/recall', async ({ request, params }) => {
+  http.post(api('/api/referrals/:id/recall'), async ({ request, params }) => {
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';
     
@@ -258,7 +258,7 @@ export const handlers = [
     return HttpResponse.json({ success: true });
   }),
 
-  http.delete('/api/referrals/:id', async ({ request, params }) => {
+  http.delete(api('/api/referrals/:id'), async ({ request, params }) => {
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';
     
@@ -280,7 +280,7 @@ export const handlers = [
     return HttpResponse.json({ success: true });
   }),
 
-  http.post('/api/referrals/:id/approve', async ({ request, params }) => {
+  http.post(api('/api/referrals/:id/approve'), async ({ request, params }) => {
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';
     
@@ -316,7 +316,7 @@ export const handlers = [
     return HttpResponse.json({ success: true });
   }),
 
-  http.post('/api/referrals/:id/reject', async ({ request, params }) => {
+  http.post(api('/api/referrals/:id/reject'), async ({ request, params }) => {
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';
     

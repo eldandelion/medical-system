@@ -1,6 +1,7 @@
 export async function fetchWithRetry(url: string, options: RequestInit = {}, retries = 3, backoff = 300): Promise<Response> {
   try {
-    const response = await fetch(url, options);
+    const fetchUrl = url.startsWith('/') ? `${import.meta.env.BASE_URL}${url.slice(1)}` : url;
+    const response = await fetch(fetchUrl, options);
     if (!response.ok) {
       if (retries > 0) {
         await new Promise(resolve => setTimeout(resolve, backoff));

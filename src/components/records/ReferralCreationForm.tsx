@@ -69,7 +69,7 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
     setIsSubmitting(true);
     
     try {
-      const res = await fetch('/api/referrals', {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals`.replace('//api', 'api')), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +102,7 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
 
   React.useEffect(() => {
     const controller = new AbortController();
-    fetch('/api/students', { signal: controller.signal })
+    fetch(`${import.meta.env.BASE_URL}/api/students`.replace('//api', 'api')), { signal: controller.signal })
       .then(res => res.json())
       .then(data => {
         setStudents(data);

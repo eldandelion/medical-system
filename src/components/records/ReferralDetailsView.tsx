@@ -55,7 +55,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
 
   React.useEffect(() => {
     let active = true;
-    fetch('/api/students')
+    fetch(`${import.meta.env.BASE_URL}/api/students`.replace('//api', 'api')))
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch students');
         return res.json();
@@ -119,7 +119,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
   const handleRecall = async () => {
     setIsRecallDialogOpen(false);
     try {
-      const res = await fetch(`/api/referrals/${referral.id}/recall`, {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${referral.id}/recall`.replace('//api', 'api')), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session?.token || ''}`
@@ -139,7 +139,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
   const handleDelete = async () => {
     setIsDeleteDialogOpen(false);
     try {
-      const res = await fetch(`/api/referrals/${referral.id}`, {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${referral.id}`.replace('//api', 'api')), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${session?.token || ''}`
@@ -159,7 +159,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
   const handleApprove = async () => {
     setIsApprovalDialogOpen(false);
     try {
-      const res = await fetch(`/api/referrals/${referral.id}/approve`, {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${referral.id}/approve`.replace('//api', 'api')), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session?.token || ''}`
@@ -179,7 +179,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
   const handleReject = async () => {
     setIsRejectionDialogOpen(false);
     try {
-      const res = await fetch(`/api/referrals/${referral.id}/reject`, {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${referral.id}/reject`.replace('//api', 'api')), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -45,7 +45,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
 
       if (assessmentId) {
         setLoading(true);
-        fetch(`/api/assessments/${assessmentId}`)
+        fetch(`${import.meta.env.BASE_URL}/api/assessments/${assessmentId}`.replace('//api', 'api')))
           .then((res) => {
             if (!res.ok) throw new Error('Failed to fetch assessment');
             return res.json();
