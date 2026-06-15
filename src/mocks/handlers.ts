@@ -1,8 +1,10 @@
 import { http, HttpResponse, delay } from 'msw';
 import { mockAssessmentsDb, mockPsychiatricRecordsDb, mockDashboardDb, mockStudentsDb, mockReferralsDb } from './db';
+const MOCK_DELAY_MS = 1000;
 
 export const handlers = [
-  http.get('/api/assessments', () => {
+  http.get('/api/assessments', async () => {
+    await delay(MOCK_DELAY_MS);
     return HttpResponse.json(mockAssessmentsDb);
   }),
 
@@ -15,7 +17,8 @@ export const handlers = [
     return HttpResponse.json(assessment);
   }),
 
-  http.get('/api/records', () => {
+  http.get('/api/records', async () => {
+    await delay(MOCK_DELAY_MS);
     return HttpResponse.json(mockPsychiatricRecordsDb);
   }),
 
@@ -29,7 +32,7 @@ export const handlers = [
   }),
 
   http.get('/api/dashboard/:role', async ({ params }) => {
-    await delay(3000);
+    await delay(MOCK_DELAY_MS);
     const { role } = params;
     const dashboardData = mockDashboardDb[role as string];
     if (!dashboardData) {
@@ -39,12 +42,12 @@ export const handlers = [
   }),
 
   http.get('/api/students', async () => {
-    await delay(3000);
+    await delay(MOCK_DELAY_MS);
     return HttpResponse.json(mockStudentsDb);
   }),
 
   http.get('/api/referrals', async ({ request }) => {
-    await delay(3000);
+    await delay(MOCK_DELAY_MS);
     const authHeader = request.headers.get('Authorization') || '';
     let filteredReferrals = [...mockReferralsDb];
 

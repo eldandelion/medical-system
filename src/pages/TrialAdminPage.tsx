@@ -16,6 +16,7 @@ import { StaffDetailsView, STAFF_DETAILS_TABS } from '../components/staff/StaffD
 import { useCreationOverlay } from '../contexts/CreationContext';
 import { ReferralCreationForm } from '../components/records/ReferralCreationForm';
 import { TertiaryFab } from '../components/common/Buttons';
+import { fetchWithRetry } from '../utils/api';
 
 import { TRIAL_ADMIN_METRICS_CONFIG } from '../config/dashboardConfig';
 
@@ -49,7 +50,7 @@ export function TrialAdminPage() {
 
   React.useEffect(() => {
     let active = true;
-    fetch('/api/dashboard/trial-admin')
+    fetchWithRetry('/api/dashboard/trial-admin')
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch dashboard');
         return res.json();

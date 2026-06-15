@@ -13,6 +13,7 @@ import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/D
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { RecordDetailsView } from '../components/records/RecordDetailsView';
 import { STUDENT_METRICS_CONFIG } from '../config/dashboardConfig';
+import { fetchWithRetry } from '../utils/api';
 
 export const StudentTabs = {
   DASHBOARD: 'Dashboard',
@@ -38,11 +39,20 @@ export function StudentPage() {
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
   const [dashboardData, setDashboardData] = React.useState<any>(null);
   const [dashboardLoading, setDashboardLoading] = React.useState(true);
+  const [isPageLoading, setIsPageLoading] = React.useState(false);
 
+  const handleLoadingChange = React.useCallback((loading: boolean) => {
+    setIsPageLoading(loading);
+  }, []);
 
   React.useEffect(() => {
+    if (activePage === StudentTabs.DASHBOARD) {
+      setIsPageLoading(dashboardLoading);
+    }
+  }, [activePage, dashboardLoading]);
+  React.useEffect(() => {
     let active = true;
-    fetch('/api/dashboard/student')
+    fetchWithRetry('/api/dashboard/student')
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch dashboard');
         return res.json();
@@ -75,16 +85,14 @@ export function StudentPage() {
       case StudentTabs.NOTIFICATIONS:
         return <NotificationsView />;
       case StudentTabs.ASSESSMENTS:
-        return <AssessmentsView />;
+        return <AssessmentsView onLoadingChange={handleLoadingChange} />;
       case StudentTabs.MY_RECORDS:
-        return <RecordsView onRecordSelect={setSelectedRecord} selectedRecordId={selectedRecord?.id} />;
+        return <RecordsView onRecordSelect={setSelectedRecord} selectedRecordId={selectedRecord?.id} onLoadingChange={handleLoadingChange} />;
       case StudentTabs.DASHBOARD:
         if (dashboardLoading) {
           return (
-            <div className="flex-1 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
-              {/* @ts-ignore */}
-              <md-linear-progress indeterminate className="w-full max-w-xs mb-4"></md-linear-progress>
-              <span className="text-[14px] opacity-75">正在加载控制面板...</span>
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
+              {/* Loading state is handled by parent CanvasHeader */}
             </div>
           );
         }
@@ -152,7 +160,7 @@ export function StudentPage() {
               <RecordDetailsView record={selectedRecord} />
             </DetailsPanel>
           }>
-          <CanvasHeader title={STUDENT_TAB_TITLES[activePage] || activePage} />
+          <CanvasHeader title={STUDENT_TAB_TITLES[activePage] || activePage} isLoading={isPageLoading} />
 
           {renderActiveContent()}
         </MainContent>

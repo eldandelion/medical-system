@@ -17,6 +17,7 @@ import { ReferralDetailsView, REFERRAL_DETAILS_TABS } from '../components/record
 import { useCreationOverlay } from '../contexts/CreationContext';
 import { ReferralCreationForm } from '../components/records/ReferralCreationForm';
 import { TertiaryFab } from '../components/common/Buttons';
+import { fetchWithRetry } from '../utils/api';
 
 import { TEACHER_METRICS_CONFIG } from '../config/dashboardConfig';
 
@@ -51,7 +52,7 @@ export function TeacherPage() {
 
   React.useEffect(() => {
     let active = true;
-    fetch('/api/dashboard/teacher')
+    fetchWithRetry('/api/dashboard/teacher')
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch dashboard');
         return res.json();

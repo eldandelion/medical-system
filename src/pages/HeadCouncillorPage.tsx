@@ -19,6 +19,7 @@ import { StaffDetailsView, STAFF_DETAILS_TABS } from '../components/staff/StaffD
 import { useCreationOverlay } from '../contexts/CreationContext';
 import { ReferralCreationForm } from '../components/records/ReferralCreationForm';
 import { TertiaryFab } from '../components/common/Buttons';
+import { fetchWithRetry } from '../utils/api';
 
 import { HEAD_COUNCILLOR_METRICS_CONFIG } from '../config/dashboardConfig';
 
@@ -55,7 +56,7 @@ export function HeadCouncillorPage() {
 
   React.useEffect(() => {
     let active = true;
-    fetch('/api/dashboard/head-councillor')
+    fetchWithRetry('/api/dashboard/head-councillor')
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch dashboard');
         return res.json();

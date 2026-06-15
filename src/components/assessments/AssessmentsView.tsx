@@ -22,7 +22,11 @@ interface Assessment {
 // Module-level variable to persist filter state across component remounts (tab switches)
 let persistentFilter = '全部';
 
-function AssessmentsContent() {
+export interface AssessmentsViewProps {
+  onLoadingChange?: (loading: boolean) => void;
+}
+
+function AssessmentsContent({ onLoadingChange }: AssessmentsViewProps) {
   const [selectedFilter, setSelectedFilter] = React.useState(persistentFilter);
   const [assessments, setAssessments] = React.useState<Assessment[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -35,6 +39,7 @@ function AssessmentsContent() {
 
   React.useEffect(() => {
     let active = true;
+    onLoadingChange?.(true);
     fetch('/api/assessments')
       .then((res) => {
         if (!res.ok) {
@@ -46,12 +51,14 @@ function AssessmentsContent() {
         if (active) {
           setAssessments(data);
           setLoading(false);
+          onLoadingChange?.(false);
         }
       })
       .catch((err) => {
         console.error('Failed to fetch assessments:', err);
         if (active) {
           setLoading(false);
+          onLoadingChange?.(false);
         }
       });
     return () => {
@@ -79,11 +86,17 @@ function AssessmentsContent() {
       {/* Assessments List */}
       <div className="max-w-3xl w-full flex flex-col mx-auto mt-2 gap-4 px-6 pb-20">
         {loading ? (
-          <div className="py-12 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)]">
-            {/* @ts-ignore */}
-            <md-linear-progress indeterminate className="w-48 mb-4"></md-linear-progress>
-            <span className="text-[14px] opacity-75">正在获取评估列表...</span>
-          </div>
+          onLoadingChange ? (
+            <div className="py-12 flex flex-col items-center justify-center min-h-[200px]">
+              {/* Loading state handled by parent */}
+            </div>
+          ) : (
+            <div className="py-12 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)]">
+              {/* @ts-ignore */}
+              <md-circular-progress indeterminate></md-circular-progress>
+              <span className="text-[14px] mt-4 opacity-75">正在加载测评数据...</span>
+            </div>
+          )
         ) : filteredAssessments.length > 0 ? (
           filteredAssessments.map((assessment) => (
             <AssessmentCard
@@ -115,10 +128,10 @@ function AssessmentsContent() {
   );
 }
 
-export function AssessmentsView() {
+export function AssessmentsView({ onLoadingChange }: AssessmentsViewProps) {
   return (
     <AssessmentDialogProvider>
-      <AssessmentsContent />
+      <AssessmentsContent onLoadingChange={onLoadingChange} />
     </AssessmentDialogProvider>
   );
 }

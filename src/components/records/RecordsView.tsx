@@ -23,35 +23,41 @@ export const getRecordIcon = (type: PsychiatricRecordType): string => {
       return 'clinical_notes';
     case '随访':
       return 'forum';
+    default:
+      return 'description';
   }
 };
 
 interface RecordsViewProps {
   onRecordSelect?: (record: PsychiatricRecord) => void;
   selectedRecordId?: string;
+  onLoadingChange?: (loading: boolean) => void;
 }
 
-export function RecordsView({ onRecordSelect, selectedRecordId }: RecordsViewProps) {
+export function RecordsView({ onRecordSelect, selectedRecordId, onLoadingChange }: RecordsViewProps) {
   const [records, setRecords] = React.useState<PsychiatricRecord[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     let active = true;
+    onLoadingChange?.(true);
     fetch('/api/records')
       .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch records');
+        if (!res.ok) throw new Error('Failed to fetch psychiatric records');
         return res.json();
       })
       .then((data) => {
         if (active) {
           setRecords(data);
           setLoading(false);
+          onLoadingChange?.(false);
         }
       })
       .catch((err) => {
         console.error('Failed to load psychiatric records:', err);
         if (active) {
           setLoading(false);
+          onLoadingChange?.(false);
         }
       });
     return () => {
@@ -132,11 +138,17 @@ export function RecordsView({ onRecordSelect, selectedRecordId }: RecordsViewPro
       
       <div className="mt-2">
         {loading ? (
-          <div className="py-12 flex flex-col items-center justify-center text-[var(--md-sys-color-on-surface-variant)]">
-            {/* @ts-ignore */}
-            <md-linear-progress indeterminate className="w-full max-w-xs mb-4"></md-linear-progress>
-            <span className="text-[14px] opacity-75">正在获取医学记录...</span>
-          </div>
+          onLoadingChange ? (
+            <div className="py-12 flex flex-col items-center justify-center min-h-[200px]">
+              {/* Loading state handled by parent */}
+            </div>
+          ) : (
+            <div className="py-12 flex flex-col items-center justify-center min-h-[200px]">
+              {/* @ts-ignore */}
+              <md-circular-progress indeterminate></md-circular-progress>
+              <span className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] mt-4">正在加载记录...</span>
+            </div>
+          )
         ) : (
           <DataTable 
             columns={columns} 
