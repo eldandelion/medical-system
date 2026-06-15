@@ -33,10 +33,6 @@ import '@material/web/tabs/tabs.js';
 import '@material/web/tabs/primary-tab.js';
 
 async function enableMocking() {
-  if (!import.meta.env.DEV) {
-    return;
-  }
-
   const { worker } = await import('./mocks/browser');
 
   // `worker.start()` returns a Promise that resolves
@@ -44,7 +40,7 @@ async function enableMocking() {
   return worker.start({
     onUnhandledRequest: 'bypass',
     serviceWorker: {
-      url: '/medical-system/mockServiceWorker.js',
+      url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
     },
   });
 }
