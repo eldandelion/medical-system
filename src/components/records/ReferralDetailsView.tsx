@@ -44,7 +44,9 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = React.useState(false);
   const [isRecallDialogOpen, setIsRecallDialogOpen] = React.useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = React.useState(false);
   const [rejectionReason, setRejectionReason] = React.useState('');
+  const [selectedDoctorId, setSelectedDoctorId] = React.useState('张伟医生');
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
 
   const { openCreation, closeCreation } = useCreationOverlay();
@@ -107,7 +109,9 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
     } else {
       const activeStep = steps.find(s => s.status === 'active');
       if (activeStep) {
-        if (activeStep.type === 'triage' || activeStep.type === 'evaluation') {
+        if (activeStep.type === 'triage') {
+          displayStatus = 'AwaitingTriage';
+        } else if (activeStep.type === 'evaluation') {
           displayStatus = 'Pending';
         } else if (activeStep.type === 'feedback') {
           displayStatus = 'AwaitingFeedbackApproval';
@@ -196,6 +200,28 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
       }
     } catch (e) {
       showSnackbar({ message: '操作失败，请稍后重试', duration: 3000 });
+    }
+  };
+
+  const handleAssign = async () => {
+    setIsAssignDialogOpen(false);
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${referral.id}/assign`.replace('//api', '/api'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.token || ''}`
+        },
+        body: JSON.stringify({ doctorId: selectedDoctorId })
+      });
+      if (res.ok) {
+        showSnackbar({ message: '转诊已分配', duration: 3000 });
+        onUpdate?.();
+      } else {
+        throw new Error('Failed to assign');
+      }
+    } catch (e) {
+      showSnackbar({ message: '分配失败，请稍后重试', duration: 3000 });
     }
   };
 
@@ -329,6 +355,30 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
               ) : userRole === 'teacher' ? (
                 <SecondaryButton icon="undo" label="撤回申请" onClick={() => setIsRecallDialogOpen(true)} />
               ) : null
+            ) : displayStatus === 'AwaitingTriage' ? (
+              userRole === 'trial-admin' ? (
+                <>
+                  <PrimaryButton icon="assignment_ind" label="分配医生" onClick={() => setIsAssignDialogOpen(true)} />
+                  <SecondaryButton
+                    icon="close"
+                    label="拒绝申请"
+                    onClick={() => setIsRejectionDialogOpen(true)}
+                    style={{
+                      color: 'var(--md-sys-color-error)',
+                      '--md-outlined-button-label-text-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-with-icon-icon-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-hover-label-text-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-hover-state-layer-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-with-icon-hover-icon-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-pressed-label-text-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-pressed-state-layer-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-with-icon-pressed-icon-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-focus-label-text-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-with-icon-focus-icon-color': 'var(--md-sys-color-error)',
+                    } as React.CSSProperties}
+                  />
+                </>
+              ) : null
             ) : displayStatus === 'Draft' && (userRole === 'teacher' || userRole === 'head-councillor') ? (
               <>
                 <PrimaryButton icon="edit_document" label="编辑草案" onClick={() => {
@@ -444,13 +494,17 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
           <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
             请提供拒绝该转诊申请的具体原因。此信息将通过通知发送给发起人。
           </p>
-          <textarea
-            autoFocus
-            className="w-full min-h-[120px] p-4 rounded-xl bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)] text-[15px] focus:outline-none focus:border-[var(--md-sys-color-primary)] transition-colors placeholder:opacity-50 resize-none"
-            placeholder="输入拒绝原因..."
+          {/* @ts-ignore */}
+          <md-outlined-text-field
+            type="textarea"
+            rows={4}
+            label="拒绝原因"
+            className="w-full"
             value={rejectionReason}
-            onChange={(e) => setRejectionReason(e.target.value)}
-          />
+            onInput={(e: any) => setRejectionReason(e.target.value)}
+          >
+          {/* @ts-ignore */}
+          </md-outlined-text-field>
         </div>
       </GenericDialog>
 
@@ -506,6 +560,60 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
         }
       >
         <p className="text-[var(--md-sys-color-on-surface-variant)]">删除后，该草案将永久失效且无法恢复。是否确认删除？</p>
+      </GenericDialog>
+
+      {/* Assign Doctor Dialog */}
+      <GenericDialog
+        open={isAssignDialogOpen}
+        onClose={() => setIsAssignDialogOpen(false)}
+        title="分配医生"
+        actions={
+          <>
+            <SecondaryButton label="取消" onClick={() => setIsAssignDialogOpen(false)} />
+            <PrimaryButton label="确认分配" onClick={handleAssign} />
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
+            请选择接诊的心理医生。分配后，该转诊将进入医生评估阶段。
+          </p>
+          <div className="relative mt-2">
+            {/* @ts-ignore */}
+            <md-outlined-select
+              label="选择接诊医生"
+              className="w-full relative"
+              value={selectedDoctorId}
+              onChange={(e: any) => setSelectedDoctorId(e.target.value)}
+            >
+              {/* @ts-ignore */}
+              <md-select-option value="张伟医生">
+                <div slot="headline">张伟医生</div>
+                <div slot="supporting-text" className="text-[12px] opacity-70">医学院</div>
+              {/* @ts-ignore */}
+              </md-select-option>
+              {/* @ts-ignore */}
+              <md-select-option value="李娜">
+                <div slot="headline">李娜</div>
+                <div slot="supporting-text" className="text-[12px] opacity-70">工学院</div>
+              {/* @ts-ignore */}
+              </md-select-option>
+              {/* @ts-ignore */}
+              <md-select-option value="王明">
+                <div slot="headline">王明</div>
+                <div slot="supporting-text" className="text-[12px] opacity-70">经济学院</div>
+              {/* @ts-ignore */}
+              </md-select-option>
+              {/* @ts-ignore */}
+              <md-select-option value="陈佳">
+                <div slot="headline">陈佳</div>
+                <div slot="supporting-text" className="text-[12px] opacity-70">艺术学院</div>
+              {/* @ts-ignore */}
+              </md-select-option>
+            {/* @ts-ignore */}
+            </md-outlined-select>
+          </div>
+        </div>
       </GenericDialog>
 
     </ScrollableDetailsLayout>

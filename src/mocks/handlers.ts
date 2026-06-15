@@ -320,17 +320,25 @@ export const handlers = [
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';
     
-    if (!authHeader.includes('head_councillor')) {
-      return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Only head councillors can reject referrals' });
-    }
-
     const referral = mockReferralsDb.find((r) => r.id === id);
     if (!referral) {
       return new HttpResponse(null, { status: 404 });
     }
 
-    if (referral.status !== 'AwaitingApproval') {
-      return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting approval referrals can be rejected' });
+    if (authHeader.includes('head_councillor')) {
+      if (referral.status !== 'AwaitingApproval') {
+        return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting approval referrals can be rejected by head councillor' });
+      }
+    } else if (authHeader.includes('trial_admin')) {
+      if (referral.status !== 'Approved' && referral.status !== 'Pending') {
+        return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only approved or pending referrals can be rejected by trial admin' });
+      }
+      const triageStep = referral.extendedData?.steps?.find(s => s.type === 'triage');
+      if (triageStep?.status !== 'active') {
+        return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Triage must be active' });
+      }
+    } else {
+      return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Only head councillors or trial admins can reject' });
     }
 
     const data = await request.json() as any;
@@ -338,11 +346,62 @@ export const handlers = [
 
     referral.status = 'Rejected';
     if (referral.extendedData?.steps) {
-      const reviewStep = referral.extendedData.steps.find(s => s.type === 'review');
-      if (reviewStep) {
-        reviewStep.status = 'issue';
-        reviewStep.subtitle = `申请被拒绝: ${reason}`;
-        reviewStep.time = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+      if (authHeader.includes('head_councillor')) {
+        const reviewStep = referral.extendedData.steps.find(s => s.type === 'review');
+        if (reviewStep) {
+          reviewStep.status = 'issue';
+          reviewStep.subtitle = `申请被拒绝: ${reason}`;
+          reviewStep.time = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+      } else if (authHeader.includes('trial_admin')) {
+        const triageStep = referral.extendedData.steps.find(s => s.type === 'triage');
+        if (triageStep) {
+          triageStep.status = 'issue';
+          triageStep.subtitle = `分诊被拒绝: ${reason}`;
+          triageStep.time = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+      }
+    }
+
+    return HttpResponse.json({ success: true });
+  }),
+
+  http.post(api('/api/referrals/:id/assign'), async ({ request, params }) => {
+    const { id } = params;
+    const authHeader = request.headers.get('Authorization') || '';
+    
+    if (!authHeader.includes('trial_admin')) {
+      return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Only trial admins can assign referrals' });
+    }
+
+    const referral = mockReferralsDb.find((r) => r.id === id);
+    if (!referral) {
+      return new HttpResponse(null, { status: 404 });
+    }
+
+    if (referral.status !== 'Approved' && referral.status !== 'Pending') {
+      return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only approved or pending referrals can be assigned' });
+    }
+
+    const data = await request.json() as any;
+    const doctorId = data?.doctorId;
+    
+    if (referral.extendedData?.steps) {
+      const triageStep = referral.extendedData.steps.find(s => s.type === 'triage');
+      if (triageStep && triageStep.status === 'active') {
+        triageStep.status = 'completed';
+        triageStep.subtitle = '已分诊';
+        triageStep.time = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+      }
+      const evaluationStep = referral.extendedData.steps.find(s => s.type === 'evaluation');
+      if (evaluationStep) {
+        evaluationStep.status = 'active';
+        evaluationStep.subtitle = '等待医生评估';
+        evaluationStep.time = '进行中';
+      }
+      
+      if (referral.extendedData.destination) {
+          referral.extendedData.destination.doctor = doctorId || '未知医生';
       }
     }
 

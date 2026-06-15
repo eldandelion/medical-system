@@ -136,7 +136,7 @@ export function TrialAdminPage() {
       case TrialAdminTabs.STAFF:
         return <StaffManagementView onStaffSelect={setSelectedItem} selectedStaffId={selectedItem?.id} />;
       case TrialAdminTabs.REFERRAL_MANAGEMENT:
-        return <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} onLoadingChange={handleLoadingChange} />;
+        return <ReferralManagementView userRole="trial-admin" onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} onLoadingChange={handleLoadingChange} />;
       case TrialAdminTabs.SECURITY:
         return <SecurityConsentView />;
       case TrialAdminTabs.DASHBOARD:

@@ -10,9 +10,10 @@ interface ReferralManagementViewProps {
   onReferralSelect?: (referral: Referral) => void;
   selectedReferralId?: string;
   onLoadingChange?: (loading: boolean) => void;
+  userRole?: 'student' | 'teacher' | 'head-councillor' | 'trial-admin';
 }
 
-export function ReferralManagementView({ onReferralSelect, selectedReferralId, onLoadingChange }: ReferralManagementViewProps) {
+export function ReferralManagementView({ onReferralSelect, selectedReferralId, onLoadingChange, userRole }: ReferralManagementViewProps) {
   const { session } = useAuth();
   
   const processReferrals = React.useCallback((data: any) => {
@@ -118,7 +119,9 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
           } else if (item.status !== 'Rejected') {
             const activeStep = steps.find(s => s.status === 'active');
             if (activeStep) {
-              if (activeStep.type === 'triage' || activeStep.type === 'evaluation') {
+              if (activeStep.type === 'triage') {
+                displayStatus = 'AwaitingTriage';
+              } else if (activeStep.type === 'evaluation') {
                 displayStatus = 'Pending';
               } else if (activeStep.type === 'feedback') {
                 displayStatus = 'AwaitingFeedbackApproval';
@@ -132,6 +135,8 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
             ? 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]'
             : displayStatus === 'AwaitingApproval'
               ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+              : displayStatus === 'AwaitingTriage'
+                ? 'bg-[#f3e8ff] text-[#6b21a8]' // Purple for Awaiting Assignment
               : displayStatus === 'Pending'
                 ? 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]'
                 : displayStatus === 'Closed'
@@ -146,6 +151,7 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
             }`}>
             {displayStatus === 'Approved' ? '已批准' :
               displayStatus === 'AwaitingApproval' ? '待审批' :
+                displayStatus === 'AwaitingTriage' ? '待分配' :
                 displayStatus === 'Pending' ? '进行中' :
                   displayStatus === 'Closed' ? '已结案' :
                     displayStatus === 'Draft' ? '草案' :
