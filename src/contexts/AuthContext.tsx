@@ -1,5 +1,7 @@
 import * as React from 'react';
 
+import { clearDataCache } from '../hooks/useDataFetch';
+
 export type Role = 'student' | 'teacher' | 'head-councillor' | 'trial-admin';
 
 export interface UserSession {
@@ -21,6 +23,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   const setRole = React.useCallback((role: Role) => {
+    // Clear any previously fetched data cache when switching users
+    clearDataCache();
+
     // Generate a mock token based on the role so the MSW backend can identify them
     let token = '';
     switch (role) {

@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 
 const globalCache = new Map<string, any>();
 
+export const clearDataCache = () => {
+  globalCache.clear();
+};
+
 export function useDataFetch<T>(url: string, processData?: (data: any) => T, options?: RequestInit) {
   const cached = globalCache.get(url) as T | undefined;
   const [data, setData] = useState<T | null>(cached || null);
