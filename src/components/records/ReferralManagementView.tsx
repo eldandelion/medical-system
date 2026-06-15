@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useDataFetch } from '../../hooks/useDataFetch';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { FilterChipSet } from '../common/FilterChip';
 import { useAuth } from '../../contexts/AuthContext';
@@ -12,57 +13,38 @@ interface ReferralManagementViewProps {
 }
 
 export function ReferralManagementView({ onReferralSelect, selectedReferralId, onLoadingChange }: ReferralManagementViewProps) {
-  const [referrals, setReferrals] = React.useState<Referral[]>([]);
-  const [loading, setLoading] = React.useState(true);
   const { session } = useAuth();
+  
+  const processReferrals = React.useCallback((data: any) => {
+    return (data as Referral[]).sort((a, b) => {
+      if (a.status === 'AwaitingApproval' && b.status !== 'AwaitingApproval') return -1;
+      if (a.status !== 'AwaitingApproval' && b.status === 'AwaitingApproval') return 1;
+      
+      const parseDate = (dStr: string) => {
+        const match = dStr.match(/(\d+)年(\d+)月(\d+)日/);
+        if (match) {
+          return new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3])).getTime();
+        }
+        return 0;
+      };
+      
+      const dateA = parseDate(a.date);
+      const dateB = parseDate(b.date);
+      return dateB - dateA;
+    });
+  }, []);
+
+  const { data: referralsData, loading } = useDataFetch<Referral[]>(
+    '/api/referrals', 
+    processReferrals, 
+    { headers: { 'Authorization': `Bearer ${session.token}` } }
+  );
+  
+  const referrals = referralsData || [];
 
   React.useEffect(() => {
     onLoadingChange?.(loading);
   }, [loading, onLoadingChange]);
-
-  React.useEffect(() => {
-    let active = true;
-    fetch('/api/referrals', {
-      headers: {
-        'Authorization': `Bearer ${session.token}`
-      }
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch referrals');
-        return res.json();
-      })
-      .then((data) => {
-        if (active) {
-          const sorted = (data as Referral[]).sort((a, b) => {
-            if (a.status === 'AwaitingApproval' && b.status !== 'AwaitingApproval') return -1;
-            if (a.status !== 'AwaitingApproval' && b.status === 'AwaitingApproval') return 1;
-            
-            const parseDate = (dStr: string) => {
-              const match = dStr.match(/(\d+)年(\d+)月(\d+)日/);
-              if (match) {
-                return new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3])).getTime();
-              }
-              return 0;
-            };
-            
-            const dateA = parseDate(a.date);
-            const dateB = parseDate(b.date);
-            return dateB - dateA; // Descending (newest first)
-          });
-          setReferrals(sorted);
-          setLoading(false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to load referrals:', err);
-        if (active) {
-          setLoading(false);
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const columns: ColumnDefinition<Referral>[] = [
     {
@@ -190,7 +172,7 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
           ]}
         />
       </div>
-      {loading ? (
+      {loading && referrals.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
           {/* Loading state is handled by parent CanvasHeader */}
         </div>

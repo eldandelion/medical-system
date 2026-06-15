@@ -55,7 +55,10 @@ export function HeadCouncillorPage() {
 
 
   React.useEffect(() => {
+    if (activePage !== HeadCouncillorTabs.DASHBOARD) return;
+    
     let active = true;
+    setDashboardLoading(true);
     fetchWithRetry('/api/dashboard/head-councillor')
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch dashboard');
@@ -65,18 +68,24 @@ export function HeadCouncillorPage() {
         if (active) {
           setDashboardData(data);
           setDashboardLoading(false);
+          if (activePage === HeadCouncillorTabs.DASHBOARD) {
+            setIsPageLoading(false);
+          }
         }
       })
       .catch((err) => {
         console.error('Failed to load head councillor dashboard:', err);
         if (active) {
           setDashboardLoading(false);
+          if (activePage === HeadCouncillorTabs.DASHBOARD) {
+            setIsPageLoading(false);
+          }
         }
       });
     return () => {
       active = false;
     };
-  }, []);
+  }, [activePage]);
 
   const handlePageChange = (page: HeadCouncillorPageName) => {
     setActivePage(page);
@@ -148,7 +157,7 @@ export function HeadCouncillorPage() {
       case HeadCouncillorTabs.SECURITY:
         return <SecurityConsentView />;
       case HeadCouncillorTabs.DASHBOARD:
-        if (dashboardLoading) {
+        if (dashboardLoading && !dashboardData) {
           return (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
               {/* Loading state is handled by parent CanvasHeader */}

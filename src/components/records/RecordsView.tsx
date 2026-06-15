@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useDataFetch } from '../../hooks/useDataFetch';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { RecordHeader } from './RecordHeader';
 
@@ -35,35 +36,12 @@ interface RecordsViewProps {
 }
 
 export function RecordsView({ onRecordSelect, selectedRecordId, onLoadingChange }: RecordsViewProps) {
-  const [records, setRecords] = React.useState<PsychiatricRecord[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const { data: recordsData, loading } = useDataFetch<PsychiatricRecord[]>('/api/records');
+  const records = recordsData || [];
 
   React.useEffect(() => {
-    let active = true;
-    onLoadingChange?.(true);
-    fetch('/api/records')
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch psychiatric records');
-        return res.json();
-      })
-      .then((data) => {
-        if (active) {
-          setRecords(data);
-          setLoading(false);
-          onLoadingChange?.(false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to load psychiatric records:', err);
-        if (active) {
-          setLoading(false);
-          onLoadingChange?.(false);
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
+    onLoadingChange?.(loading);
+  }, [loading, onLoadingChange]);
 
   const columns: ColumnDefinition<PsychiatricRecord>[] = [
     {
@@ -137,7 +115,7 @@ export function RecordsView({ onRecordSelect, selectedRecordId, onLoadingChange 
       </div>
       
       <div className="mt-2">
-        {loading ? (
+        {loading && records.length === 0 ? (
           onLoadingChange ? (
             <div className="py-12 flex flex-col items-center justify-center min-h-[200px]">
               {/* Loading state handled by parent */}
@@ -149,6 +127,11 @@ export function RecordsView({ onRecordSelect, selectedRecordId, onLoadingChange 
               <span className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] mt-4">正在加载记录...</span>
             </div>
           )
+        ) : records.length === 0 ? (
+          <div className="py-12 flex flex-col items-center justify-center min-h-[200px] text-[var(--md-sys-color-on-surface-variant)]">
+            <span className="material-symbols-outlined text-[48px] opacity-50">description</span>
+            <span className="text-[14px] mt-4">暂无记录</span>
+          </div>
         ) : (
           <DataTable 
             columns={columns} 

@@ -51,7 +51,10 @@ export function StudentPage() {
     }
   }, [activePage, dashboardLoading]);
   React.useEffect(() => {
+    if (activePage !== StudentTabs.DASHBOARD) return;
+    
     let active = true;
+    setDashboardLoading(true);
     fetchWithRetry('/api/dashboard/student')
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch dashboard');
@@ -72,7 +75,7 @@ export function StudentPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [activePage]);
 
   // Handle page change to clear selection
   const handlePageChange = (page: StudentTab) => {
@@ -89,7 +92,7 @@ export function StudentPage() {
       case StudentTabs.MY_RECORDS:
         return <RecordsView onRecordSelect={setSelectedRecord} selectedRecordId={selectedRecord?.id} onLoadingChange={handleLoadingChange} />;
       case StudentTabs.DASHBOARD:
-        if (dashboardLoading) {
+        if (dashboardLoading && !dashboardData) {
           return (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
               {/* Loading state is handled by parent CanvasHeader */}

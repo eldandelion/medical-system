@@ -49,7 +49,10 @@ export function TrialAdminPage() {
 
 
   React.useEffect(() => {
+    if (activePage !== TrialAdminTabs.DASHBOARD) return;
+    
     let active = true;
+    setDashboardLoading(true);
     fetchWithRetry('/api/dashboard/trial-admin')
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch dashboard');
@@ -70,7 +73,7 @@ export function TrialAdminPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [activePage]);
 
   const handlePageChange = (page: TrialAdminPageName) => {
     setActivePage(page);
@@ -137,7 +140,7 @@ export function TrialAdminPage() {
       case TrialAdminTabs.SECURITY:
         return <SecurityConsentView />;
       case TrialAdminTabs.DASHBOARD:
-        if (dashboardLoading) {
+        if (dashboardLoading && !dashboardData) {
           return (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
               {/* Loading state is handled by parent CanvasHeader */}

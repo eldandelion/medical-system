@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useDataFetch } from '../../hooks/useDataFetch';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { FilterChipSet } from '../common/FilterChip';
 
@@ -17,36 +18,12 @@ interface StudentsViewProps {
 }
 
 export function StudentsView({ onStudentSelect, selectedStudentId, onLoadingChange }: StudentsViewProps) {
-  const [students, setStudents] = React.useState<Student[]>([]);
-  const [loading, setLoading] = React.useState<boolean>(true);
+  const { data: studentsData, loading } = useDataFetch<Student[]>('/api/students');
+  const students = studentsData || [];
 
   React.useEffect(() => {
     onLoadingChange?.(loading);
   }, [loading, onLoadingChange]);
-
-  React.useEffect(() => {
-    let active = true;
-    fetch('/api/students')
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch students');
-        return res.json();
-      })
-      .then((data) => {
-        if (active) {
-          setStudents(data);
-          setLoading(false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to load mock students database:', err);
-        if (active) {
-          setLoading(false);
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const columns: ColumnDefinition<Student>[] = [
     {
@@ -107,7 +84,7 @@ export function StudentsView({ onStudentSelect, selectedStudentId, onLoadingChan
       </div>
       
       <div className="flex-1 min-h-0 flex flex-col mt-2 relative">
-        {loading ? (
+        {loading && students.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
             {/* Loading state is handled by parent CanvasHeader */}
           </div>

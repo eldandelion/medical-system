@@ -51,7 +51,10 @@ export function TeacherPage() {
 
 
   React.useEffect(() => {
+    if (activePage !== TeacherTabs.DASHBOARD) return;
+    
     let active = true;
+    setDashboardLoading(true);
     fetchWithRetry('/api/dashboard/teacher')
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch dashboard');
@@ -72,7 +75,7 @@ export function TeacherPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [activePage]);
 
   const handlePageChange = (page: TeacherPageName) => {
     setActivePage(page);
@@ -140,7 +143,7 @@ export function TeacherPage() {
       case TeacherTabs.SECURITY:
         return <SecurityConsentView />;
       case TeacherTabs.DASHBOARD:
-        if (dashboardLoading) {
+        if (dashboardLoading && !dashboardData) {
           return (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
               {/* Loading state is handled by parent CanvasHeader */}

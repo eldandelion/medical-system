@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useDataFetch } from '../../hooks/useDataFetch';
 import { AssessmentCard } from './AssessmentCard';
 import { SegmentedButton } from '../common/Buttons';
 import { AssessmentDialogProvider, useAssessmentDialog } from '../../contexts/AssessmentDialogContext';
@@ -28,43 +29,18 @@ export interface AssessmentsViewProps {
 
 function AssessmentsContent({ onLoadingChange }: AssessmentsViewProps) {
   const [selectedFilter, setSelectedFilter] = React.useState(persistentFilter);
-  const [assessments, setAssessments] = React.useState<Assessment[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const { data: assessmentsData, loading } = useDataFetch<Assessment[]>('/api/assessments');
+  const assessments = assessmentsData || [];
   const { openAssessment } = useAssessmentDialog();
+
+  React.useEffect(() => {
+    onLoadingChange?.(loading);
+  }, [loading, onLoadingChange]);
 
   const handleFilterChange = (filter: string) => {
     persistentFilter = filter;
     setSelectedFilter(filter);
   };
-
-  React.useEffect(() => {
-    let active = true;
-    onLoadingChange?.(true);
-    fetch('/api/assessments')
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (active) {
-          setAssessments(data);
-          setLoading(false);
-          onLoadingChange?.(false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch assessments:', err);
-        if (active) {
-          setLoading(false);
-          onLoadingChange?.(false);
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const filteredAssessments = assessments.filter(a =>
     selectedFilter === '全部' || (selectedFilter === '进行中' && a.status === 'In progress') || (selectedFilter === '已完成' && a.status === 'Completed')
@@ -85,7 +61,7 @@ function AssessmentsContent({ onLoadingChange }: AssessmentsViewProps) {
 
       {/* Assessments List */}
       <div className="max-w-3xl w-full flex flex-col mx-auto mt-2 gap-4 px-6 pb-20">
-        {loading ? (
+        {loading && assessments.length === 0 ? (
           onLoadingChange ? (
             <div className="py-12 flex flex-col items-center justify-center min-h-[200px]">
               {/* Loading state handled by parent */}
