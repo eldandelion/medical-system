@@ -51,6 +51,20 @@ export const handlers = [
     const authHeader = request.headers.get('Authorization') || '';
     let filteredReferrals = [...mockReferralsDb];
 
+    const isReferralAccessibleByTrialAdmin = (r: any) => {
+      if (r.status === 'Draft' || r.status === 'AwaitingApproval' || r.status === 'Recalled') {
+        return false;
+      }
+      if (r.status === 'Rejected') {
+        // If rejected before handover (e.g., during the 'review' step by head councillor)
+        const reviewStep = r.extendedData?.steps?.find((s: any) => s.type === 'review');
+        if (reviewStep?.status === 'issue') {
+          return false;
+        }
+      }
+      return true;
+    };
+
     // Decode mock token logic
     if (authHeader.includes('teacher_token_zhang')) {
       // Teacher role sees only referrals they created
@@ -58,17 +72,49 @@ export const handlers = [
     } else if (authHeader.includes('head_councillor')) {
       // Head Councillor role sees all referrals (no filtering)
       filteredReferrals = [...mockReferralsDb];
+    } else if (authHeader.includes('trial_admin')) {
+      // Trial Admin role sees only handed over referrals
+      filteredReferrals = mockReferralsDb.filter(isReferralAccessibleByTrialAdmin);
+    } else {
+      return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Invalid or missing token' });
     }
     
     return HttpResponse.json(filteredReferrals);
   }),
 
-  http.get('/api/referrals/:id', ({ params }) => {
+  http.get('/api/referrals/:id', ({ request, params }) => {
     const { id } = params;
+    const authHeader = request.headers.get('Authorization') || '';
+    
     const referral = mockReferralsDb.find((r) => r.id === id);
     if (!referral) {
       return new HttpResponse(null, { status: 404 });
     }
+
+    const isReferralAccessibleByTrialAdmin = (r: any) => {
+      if (r.status === 'Draft' || r.status === 'AwaitingApproval' || r.status === 'Recalled') {
+        return false;
+      }
+      if (r.status === 'Rejected') {
+        const reviewStep = r.extendedData?.steps?.find((s: any) => s.type === 'review');
+        if (reviewStep?.status === 'issue') {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    // Authorization checks
+    if (authHeader.includes('trial_admin')) {
+      if (!isReferralAccessibleByTrialAdmin(referral)) {
+        return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Trial Admin cannot access this referral' });
+      }
+    } else if (authHeader.includes('teacher_token_zhang')) {
+      if (referral.referredBy?.name !== '张教授') {
+        return new HttpResponse(null, { status: 403, statusText: 'Forbidden: You can only access your own referrals' });
+      }
+    }
+
     return HttpResponse.json(referral);
   }),
 
