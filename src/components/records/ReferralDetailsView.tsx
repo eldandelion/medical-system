@@ -105,7 +105,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
   const steps = extendedData.steps;
   if (steps) {
     if (steps.some(s => s.status === 'issue')) {
-      displayStatus = 'Error';
+      displayStatus = 'Rejected';
     } else {
       const activeStep = steps.find(s => s.status === 'active');
       if (activeStep) {
@@ -301,7 +301,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
         />
       ) : undefined}
       footer={
-        (displayStatus === 'Recalled' && userRole === 'head-councillor') || displayStatus === 'Pending' || displayStatus === 'Closed' || displayStatus === 'Error' ? undefined : (
+        (displayStatus === 'Recalled' && userRole === 'head-councillor') || displayStatus === 'Pending' || displayStatus === 'Closed' || displayStatus === 'Rejected' ? undefined : (
           <ActionFooter>
             {displayStatus === 'Recalled' ? (
               userRole === 'teacher' ? (
