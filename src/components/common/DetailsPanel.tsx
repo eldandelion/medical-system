@@ -273,7 +273,7 @@ export function ScrollableDetailsLayout({
         )}
 
         {/* Content Area */}
-        <div className="flex-1 p-6 pb-8 min-h-[75vh]">
+        <div className="flex-1 p-6 pb-8 min-h-[80vh]">
           {children}
         </div>
       </div>
