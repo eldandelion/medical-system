@@ -3,6 +3,7 @@ import { useDataFetch } from '../../hooks/useDataFetch';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { FilterChipSet } from '../common/FilterChip';
 import { useAuth } from '../../contexts/AuthContext';
+import { enrichReferralStatus } from '../../utils/referralUtils';
 
 import { Referral } from '../../types';
 
@@ -10,14 +11,15 @@ interface ReferralManagementViewProps {
   onReferralSelect?: (referral: Referral) => void;
   selectedReferralId?: string;
   onLoadingChange?: (loading: boolean) => void;
-  userRole?: 'student' | 'teacher' | 'head-councillor' | 'trial-admin';
+  userRole?: 'student' | 'teacher' | 'head-councillor' | 'trial-admin' | 'doctor';
 }
 
 export function ReferralManagementView({ onReferralSelect, selectedReferralId, onLoadingChange, userRole }: ReferralManagementViewProps) {
   const { session } = useAuth();
   
   const processReferrals = React.useCallback((data: any) => {
-    return (data as Referral[]).sort((a, b) => {
+    const enrichedData = (data as Referral[]).map(enrichReferralStatus);
+    return enrichedData.sort((a, b) => {
       if (a.status === 'AwaitingApproval' && b.status !== 'AwaitingApproval') return -1;
       if (a.status !== 'AwaitingApproval' && b.status === 'AwaitingApproval') return 1;
       
@@ -111,24 +113,7 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
       label: '状态',
       width: 'w-[15%]',
       render: (item) => {
-        let displayStatus = item.status;
-        const steps = item.extendedData?.steps;
-        if (steps) {
-          if (steps.some(s => s.status === 'issue') && item.status !== 'Rejected') {
-            displayStatus = 'Rejected';
-          } else if (item.status !== 'Rejected') {
-            const activeStep = steps.find(s => s.status === 'active');
-            if (activeStep) {
-              if (activeStep.type === 'triage') {
-                displayStatus = 'AwaitingTriage';
-              } else if (activeStep.type === 'evaluation') {
-                displayStatus = 'Pending';
-              } else if (activeStep.type === 'feedback') {
-                displayStatus = 'AwaitingFeedbackApproval';
-              }
-            }
-          }
-        }
+        const displayStatus = item.displayStatus || item.status;
 
         return (
           <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${displayStatus === 'Approved'
@@ -136,7 +121,7 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
             : displayStatus === 'AwaitingApproval'
               ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
               : displayStatus === 'AwaitingTriage'
-                ? 'bg-[#f3e8ff] text-[#6b21a8]' // Purple for Awaiting Assignment
+                ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]' // Purple for Awaiting Assignment
               : displayStatus === 'Pending'
                 ? 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]'
                 : displayStatus === 'Closed'

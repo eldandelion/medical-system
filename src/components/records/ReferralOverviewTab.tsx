@@ -148,7 +148,7 @@ export function ReferralOverviewTab({ referral, extendedData }: ReferralOverview
 
           {/* Attachment List */}
           <AttachmentList
-            attachments={extendedData.feedback.attachments}
+            attachments={extendedData.feedback?.attachments || []}
             title="转诊附件"
           />
         </div>

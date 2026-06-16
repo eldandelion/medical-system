@@ -10,7 +10,7 @@ const baseReferrals: Referral[] = [
     description: '期中考试后出现急性恐慌发作和睡眠剥夺',
     riskLevel: 'High',
     status: 'Approved',
-    referredBy: { name: '张教授' }
+    referredBy: { name: '艾米丽·沃森' }
   },
   {
     id: '2',
@@ -21,7 +21,7 @@ const baseReferrals: Referral[] = [
     description: '情绪持续低落',
     riskLevel: 'Medium',
     status: 'Pending',
-    referredBy: { name: '李医生' }
+    referredBy: { name: '艾米丽·沃森' }
   },
   {
     id: '3',
@@ -32,7 +32,7 @@ const baseReferrals: Referral[] = [
     description: '因注意力问题和学业压力自愿转诊',
     riskLevel: 'Low',
     status: 'Draft',
-    referredBy: { name: '王老师' }
+    referredBy: { name: '艾米丽·沃森' }
   },
   {
     id: '4',
@@ -43,7 +43,7 @@ const baseReferrals: Referral[] = [
     description: '提到自杀意念',
     riskLevel: 'High',
     status: 'Approved',
-    referredBy: { name: '宿舍管理员' }
+    referredBy: { name: '张明诚' }
   },
   {
     id: '5',
@@ -54,7 +54,7 @@ const baseReferrals: Referral[] = [
     description: '报告注意力集中情况有所改善',
     riskLevel: 'Low',
     status: 'Closed',
-    referredBy: { name: '李医生' }
+    referredBy: { name: '张明诚' }
   },
   {
     id: '6',
@@ -65,7 +65,7 @@ const baseReferrals: Referral[] = [
     description: '持续疲劳并退出社交活动',
     riskLevel: 'Medium',
     status: 'Pending',
-    referredBy: { name: '张教授' }
+    referredBy: { name: '艾米丽·沃森' }
   },
   {
     id: '7',
@@ -76,7 +76,7 @@ const baseReferrals: Referral[] = [
     description: '与工作相关的压力和创伤后症状',
     riskLevel: 'High',
     status: 'Closed',
-    referredBy: { name: '心理咨询中心' }
+    referredBy: { name: '张明诚' }
   },
   {
     id: '8',
@@ -87,7 +87,7 @@ const baseReferrals: Referral[] = [
     description: '由于学业压力导致严重的睡眠障碍和情绪波动',
     riskLevel: 'Medium',
     status: 'AwaitingApproval',
-    referredBy: { name: '陈老师' }
+    referredBy: { name: '艾米丽·沃森' }
   }
 ];
 
@@ -172,13 +172,13 @@ export const mockReferralsDb: Referral[] = baseReferrals.map(referral => ({
       scidDiagnosis: 'F41.1 广泛性焦虑障碍',
       fullDescription: referral.description + '。补充背景：该学生在维持全额课程负荷的同时，每周在实验室工作20小时以上。入睡潜伏期超过90分钟。初步临床访谈显示存在继发性焦虑症状，且面临中度学业倦怠风险。'
     },
-    destination: {
+    destination: ['Approved', 'AwaitingFeedbackApproval', 'Closed'].includes(referral.status) ? {
       hospital: '中央大学医学中心',
       department: '精神医学与行为科学科',
-      doctor: '张医生 (总住院医师)',
+      doctor: referral.id === '2' || referral.id === '5' ? '李医生' : '张医生 (总住院医师)',
       admin: '系统处理程序 (自动分配)',
       transferDate: referral.date
-    },
+    } : undefined,
     risk: {
       ideation: true,
       attempt: false,
@@ -191,7 +191,7 @@ export const mockReferralsDb: Referral[] = baseReferrals.map(referral => ({
       { name: 'ISI (失眠)', value: 19, max: 28, level: '中重度' },
       { name: 'SAS (焦虑自评)', value: 58, max: 80, level: '中度' },
     ],
-    feedback: {
+    feedback: referral.status === 'Closed' ? {
       summary: '患者呈现广泛性焦虑障碍（GAD）的临床症状。建议药物干预（来士普 10mg）并进行6次针对失眠的认知行为治疗（CBT-I）。',
       followUp: '每两周与咨询师进行一次面谈；1个月后重新进行精神科评估。',
       attachments: [
@@ -199,7 +199,7 @@ export const mockReferralsDb: Referral[] = baseReferrals.map(referral => ({
         { name: '医院出院摘要.pdf', size: '840 KB' },
         { name: '处方复印件.jpg', size: '2.1 MB' }
       ]
-    },
+    } : undefined,
     steps: generateTrackerSteps(referral)
   }
 }));

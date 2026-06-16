@@ -24,7 +24,7 @@ export function ReferralFeedbackTab({ extendedData }: ReferralFeedbackTabProps) 
         <div className="flex flex-col gap-2">
           <h4 className="text-sm font-bold text-[var(--md-sys-color-primary)] uppercase tracking-widest">医院诊断结果</h4>
           <p className="text-[15px] leading-relaxed text-[var(--md-sys-color-on-surface)] font-normal">
-            {extendedData.feedback.summary}
+            {extendedData.feedback?.summary || '暂无反馈数据'}
           </p>
         </div>
 
@@ -34,13 +34,13 @@ export function ReferralFeedbackTab({ extendedData }: ReferralFeedbackTabProps) 
             随访计划
           </h4>
           <p className="text-[14px] text-[var(--md-sys-color-on-surface)] font-medium">
-            {extendedData.feedback.followUp}
+            {extendedData.feedback?.followUp || '暂无随访计划'}
           </p>
         </div>
       </div>
 
       <AttachmentList
-        attachments={extendedData.feedback.attachments}
+        attachments={extendedData.feedback?.attachments || []}
         title="附件"
       />
     </motion.div>

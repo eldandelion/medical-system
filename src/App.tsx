@@ -3,6 +3,7 @@ import { StudentPage } from './pages/StudentPage';
 import { TeacherPage } from './pages/TeacherPage';
 import { HeadCouncillorPage } from './pages/HeadCouncillorPage';
 import { TrialAdminPage } from './pages/TrialAdminPage';
+import { DoctorPage } from './pages/DoctorPage';
 import { CreationOverlayProvider } from './contexts/CreationContext';
 import { CreationRoot } from './components/creation-overlay/CreationRoot';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -24,8 +25,10 @@ export default function App() {
           <TeacherPage />
         ) : role === 'head-councillor' ? (
           <HeadCouncillorPage />
-        ) : (
+        ) : role === 'trial-admin' ? (
           <TrialAdminPage />
+        ) : (
+          <DoctorPage />
         )}
         
         {/* Role Switcher for Demo */}
@@ -53,6 +56,12 @@ export default function App() {
             className={`px-4 py-2 rounded-full text-xs font-medium transition-colors ${role === 'trial-admin' ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]' : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]'}`}
           >
             Trial Admin
+          </button>
+          <button 
+            onClick={() => setRole('doctor')}
+            className={`px-4 py-2 rounded-full text-xs font-medium transition-colors ${role === 'doctor' ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]' : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]'}`}
+          >
+            Doctor
           </button>
         </div>
 

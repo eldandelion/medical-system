@@ -74,6 +74,23 @@ export const TRIAL_ADMIN_METRICS_CONFIG: MetricConfig[] = [
   }
 ];
 
+export const DOCTOR_METRICS_CONFIG: MetricConfig[] = [
+  {
+    icon: "assignment_late",
+    label: "待处理转诊",
+    containerColorClass: "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]",
+    targetPage: "Referral Management",
+    metricKey: "referralsCount"
+  },
+  {
+    icon: "notifications",
+    label: "未读通知",
+    containerColorClass: "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]",
+    targetPage: "Notifications",
+    metricKey: "notificationsCount"
+  }
+];
+
 export type ActivityStatusType = 'error' | 'warning' | 'info' | 'neutral' | 'success';
 
 export const STATUS_CHIP_COLORS: Record<ActivityStatusType, string> = {

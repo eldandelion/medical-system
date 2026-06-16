@@ -101,24 +101,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
     tab => tab.id !== 'feedback' || isFeedbackAvailable
   );
 
-  let displayStatus = referral.status;
-  const steps = extendedData.steps;
-  if (steps) {
-    if (steps.some(s => s.status === 'issue')) {
-      displayStatus = 'Rejected';
-    } else {
-      const activeStep = steps.find(s => s.status === 'active');
-      if (activeStep) {
-        if (activeStep.type === 'triage') {
-          displayStatus = 'AwaitingTriage';
-        } else if (activeStep.type === 'evaluation') {
-          displayStatus = 'Pending';
-        } else if (activeStep.type === 'feedback') {
-          displayStatus = 'AwaitingFeedbackApproval';
-        }
-      }
-    }
-  }
+  const displayStatus = referral.displayStatus || referral.status;
 
   const handleRecall = async () => {
     setIsRecallDialogOpen(false);
@@ -241,7 +224,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
         ...(extendedData.risk.attempt ? ['Attempt' as any] : []),
         ...(extendedData.risk.selfHarm ? ['SelfHarm' as any] : [])
       ],
-      attachments: extendedData.feedback.attachments || []
+      attachments: extendedData.feedback?.attachments || []
     };
 
     // Need to dynamically import ReferralCreationForm to avoid circular dependencies if any, but since it's already used in pages, we can just import it.
@@ -301,7 +284,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
         />
       ) : undefined}
       footer={
-        (displayStatus === 'Recalled' && userRole === 'head-councillor') || displayStatus === 'Pending' || displayStatus === 'Closed' || displayStatus === 'Rejected' ? undefined : (
+        (displayStatus === 'Recalled' && userRole === 'head-councillor') || displayStatus === 'Pending' || displayStatus === 'Closed' || displayStatus === 'Rejected' || (displayStatus === 'AwaitingTriage' && (userRole === 'teacher' || userRole === 'head-councillor')) ? undefined : (
           <ActionFooter>
             {displayStatus === 'Recalled' ? (
               userRole === 'teacher' ? (
@@ -322,7 +305,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                           ...(extendedData.risk.attempt ? ['Attempt' as any] : []),
                           ...(extendedData.risk.selfHarm ? ['SelfHarm' as any] : [])
                         ],
-                        attachments: extendedData.feedback.attachments || []
+                        attachments: extendedData.feedback?.attachments || []
                       };
                       openCreation('重新发起转诊', <ReferralCreationForm onClose={closeCreation} initialData={initialData} />);
                     });
@@ -397,7 +380,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                         ...(extendedData.risk.attempt ? ['Attempt' as any] : []),
                         ...(extendedData.risk.selfHarm ? ['SelfHarm' as any] : [])
                       ],
-                      attachments: extendedData.feedback.attachments || []
+                      attachments: extendedData.feedback?.attachments || []
                     };
                     openCreation('重新发起转诊', <ReferralCreationForm onClose={closeCreation} initialData={initialData} />);
                   });

@@ -39,11 +39,11 @@ export function ReferralTrackerTab({ extendedData }: ReferralTrackerTabProps) {
 
         <div className="flex flex-col gap-1">
           {[
-            { icon: 'local_hospital', label: '接收医院', value: extendedData.destination.hospital, clickable: true },
-            { icon: 'account_tree', label: '接收科室', value: extendedData.destination.department, clickable: true },
-            { icon: 'badge', label: '接诊医生', value: extendedData.destination.doctor, clickable: true },
-            { icon: 'verified_user', label: '分诊管理员', value: extendedData.destination.admin, clickable: true },
-            { icon: 'calendar_today', label: '转诊日期', value: extendedData.destination.transferDate, clickable: false },
+            { icon: 'local_hospital', label: '接收医院', value: extendedData.destination?.hospital || '暂无数据', clickable: true },
+            { icon: 'account_tree', label: '接收科室', value: extendedData.destination?.department || '暂无数据', clickable: true },
+            { icon: 'badge', label: '接诊医生', value: extendedData.destination?.doctor || '暂无数据', clickable: true },
+            { icon: 'verified_user', label: '分诊管理员', value: extendedData.destination?.admin || '暂无数据', clickable: true },
+            { icon: 'calendar_today', label: '转诊日期', value: extendedData.destination?.transferDate || '暂无数据', clickable: false },
           ].map((item, idx) => (
             <div key={idx} className={`flex items-center gap-4 py-3 border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 last:border-0 group ${item.clickable ? 'cursor-pointer hover:bg-[var(--md-sys-color-surface-variant)] px-3 -mx-3 rounded-xl transition-colors' : 'px-3 -mx-3'}`}>
               <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105">

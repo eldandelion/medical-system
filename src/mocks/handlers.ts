@@ -70,13 +70,24 @@ export const handlers = [
     // Decode mock token logic
     if (authHeader.includes('teacher_token_zhang')) {
       // Teacher role sees only referrals they created
-      filteredReferrals = mockReferralsDb.filter(r => r.referredBy?.name === '张教授');
+      filteredReferrals = mockReferralsDb.filter(r => r.referredBy?.name === '艾米丽·沃森');
     } else if (authHeader.includes('head_councillor')) {
       // Head Councillor role sees all referrals (no filtering)
       filteredReferrals = [...mockReferralsDb];
     } else if (authHeader.includes('trial_admin')) {
       // Trial Admin role sees only handed over referrals
       filteredReferrals = mockReferralsDb.filter(isReferralAccessibleByTrialAdmin);
+    } else if (authHeader.includes('doctor')) {
+      // Doctor role sees only assigned referrals, drafts by this doctor, or filled out by this doctor
+      filteredReferrals = mockReferralsDb.filter(r => {
+        const createdByMe = r.referredBy?.name === '李医生';
+        const isDraftByMe = r.status === 'Draft' && createdByMe;
+        // Check assignment explicitly by status and destination doctor
+        const isAssignedStatus = ['Approved', 'AwaitingFeedbackApproval', 'Closed'].includes(r.status);
+        const assignedToMe = isAssignedStatus && r.extendedData?.destination?.doctor?.includes('李医生');
+        
+        return isDraftByMe || assignedToMe;
+      });
     }
     
     return HttpResponse.json(filteredReferrals);
@@ -110,8 +121,17 @@ export const handlers = [
         return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Trial Admin cannot access this referral' });
       }
     } else if (authHeader.includes('teacher_token_zhang')) {
-      if (referral.referredBy?.name !== '张教授') {
+      if (referral.referredBy?.name !== '艾米丽·沃森') {
         return new HttpResponse(null, { status: 403, statusText: 'Forbidden: You can only access your own referrals' });
+      }
+    } else if (authHeader.includes('doctor')) {
+      const createdByMe = referral.referredBy?.name === '李医生';
+      const isDraftByMe = referral.status === 'Draft' && createdByMe;
+      const isAssignedStatus = ['Approved', 'AwaitingFeedbackApproval', 'Closed'].includes(referral.status);
+      const assignedToMe = isAssignedStatus && referral.extendedData?.destination?.doctor?.includes('李医生');
+      
+      if (!isDraftByMe && !assignedToMe) {
+        return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Doctor cannot access this referral' });
       }
     }
 
@@ -123,9 +143,11 @@ export const handlers = [
     
     let creatorName = '';
     if (authHeader.includes('teacher_token_zhang')) {
-      creatorName = '张教授';
+      creatorName = '艾米丽·沃森';
     } else if (authHeader.includes('head_councillor')) {
-      creatorName = '总辅导员';
+      creatorName = '张明诚';
+    } else if (authHeader.includes('doctor')) {
+      creatorName = '李医生';
     } else {
       return new HttpResponse(null, { status: 403, statusText: 'Forbidden' });
     }
@@ -406,5 +428,9 @@ export const handlers = [
     }
 
     return HttpResponse.json({ success: true });
-  })
+  }),
+  http.post(api('/api/feedback'), async () => {
+    await delay(MOCK_DELAY_MS);
+    return HttpResponse.json({ success: true, message: 'Feedback submitted' });
+  }),
 ];

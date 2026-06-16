@@ -149,5 +149,35 @@ export const mockDashboardDb: Record<string, DashboardData> = {
         statusType: 'warning'
       }
     ]
+  },
+  doctor: {
+    profileSummary: {
+      avatarText: "李",
+      title: "李医生",
+      subtitle: "精神科主治医师",
+      employeeId: "DR-5005",
+      accessLevel: "医生权限"
+    },
+    metrics: {
+      referralsCount: 6,
+      notificationsCount: 2
+    },
+    activityTitle: "最近随访",
+    activities: [
+      {
+        id: '1',
+        title: '需出具随访报告：李四',
+        timestamp: '1小时前',
+        statusText: '待处理',
+        statusType: 'error'
+      },
+      {
+        id: '2',
+        title: '已完成随访：王五',
+        timestamp: '昨天',
+        statusText: '已完成',
+        statusType: 'info'
+      }
+    ]
   }
 };

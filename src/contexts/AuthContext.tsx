@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import { clearDataCache } from '../hooks/useDataFetch';
 
-export type Role = 'student' | 'teacher' | 'head-councillor' | 'trial-admin';
+export type Role = 'student' | 'teacher' | 'head-councillor' | 'trial-admin' | 'doctor';
 
 export interface UserSession {
   role: Role;
@@ -37,6 +37,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         break;
       case 'trial-admin':
         token = 'mock_trial_admin_token';
+        break;
+      case 'doctor':
+        token = 'mock_doctor_token';
         break;
       case 'student':
       default:
