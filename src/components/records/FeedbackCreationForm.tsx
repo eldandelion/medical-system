@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { GenericDialog } from '../common/GenericDialog';
 import { AttachmentList } from '../common/AttachmentList';
 import { Referral } from '../../types';
+import { formatDateToChinese } from '../../utils/dateUtils';
 
 export function FeedbackCreationForm({ onClose }: { onClose: () => void }) {
   const { viewState, setHeaderActions, setOnCloseInterceptor } = useCreationOverlay();
@@ -173,7 +174,7 @@ export function FeedbackCreationForm({ onClose }: { onClose: () => void }) {
                     <md-select-option key={referral.id} value={referral.id}>
                       <div slot="headline">{referral.studentName}</div>
                       <div slot="supporting-text" className="text-[12px] opacity-70">
-                        {referral.title} • {referral.date}
+                        {referral.title} • {formatDateToChinese(referral.date)}
                       </div>
                     
                     </md-select-option>

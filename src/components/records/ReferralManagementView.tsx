@@ -4,6 +4,7 @@ import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { FilterChipSet } from '../common/FilterChip';
 import { useAuth } from '../../contexts/AuthContext';
 import { enrichReferralStatus } from '../../utils/referralUtils';
+import { formatDateToChinese } from '../../utils/dateUtils';
 import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS, STATUS_STYLES, STATUS_LABELS } from '../../config/styleConstants';
 
 import { Referral } from '../../types';
@@ -44,7 +45,7 @@ const columns: ColumnDefinition<Referral>[] = [
           {item.title}
         </span>
         <div className={`text-[12px] mt-0.5 flex items-center gap-2 ${isSelected ? 'opacity-90' : 'text-[var(--md-sys-color-on-surface-variant)] opacity-70'}`}>
-          <span className="shrink-0">{item.date} • {item.type}</span>
+          <span className="shrink-0">{formatDateToChinese(item.date)} • {item.type}</span>
           <div className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline-variant)] border-opacity-20 shrink-0">
             <div className="w-4 h-4 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center text-[9px] font-bold">
               {item.referredBy?.name?.charAt(0) || '?'}
@@ -91,20 +92,7 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
   const processReferrals = React.useCallback((data: any) => {
     const enrichedData = (data as Referral[]).map(enrichReferralStatus);
     return enrichedData.sort((a, b) => {
-      if (a.status === 'AwaitingApproval' && b.status !== 'AwaitingApproval') return -1;
-      if (a.status !== 'AwaitingApproval' && b.status === 'AwaitingApproval') return 1;
-      
-      const parseDate = (dStr: string) => {
-        const match = dStr.match(/(\d+)年(\d+)月(\d+)日/);
-        if (match) {
-          return new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3])).getTime();
-        }
-        return 0;
-      };
-      
-      const dateA = parseDate(a.date);
-      const dateB = parseDate(b.date);
-      return dateB - dateA;
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
   }, []);
 
