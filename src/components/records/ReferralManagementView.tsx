@@ -4,6 +4,7 @@ import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { FilterChipSet } from '../common/FilterChip';
 import { useAuth } from '../../contexts/AuthContext';
 import { enrichReferralStatus } from '../../utils/referralUtils';
+import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS, STATUS_STYLES, STATUS_LABELS } from '../../config/styleConstants';
 
 import { Referral } from '../../types';
 
@@ -97,13 +98,8 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
       width: 'w-[15%]',
       render: (item) => (
         <div className="flex items-center">
-          <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider ${item.riskLevel === 'High'
-            ? 'bg-[#fee2e2] text-[#991b1b]' // Red for High
-            : item.riskLevel === 'Medium'
-              ? 'bg-[#fef9c3] text-[#854d0e]' // Yellow for Medium
-              : 'bg-[#f0fdf4] text-[#166534]' // Green for Low
-            }`}>
-            {item.riskLevel === 'High' ? '高' : item.riskLevel === 'Medium' ? '中' : '低'}
+          <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider ${RISK_LEVEL_STYLES[item.riskLevel]}`}>
+            {RISK_LEVEL_LABELS[item.riskLevel] || item.riskLevel}
           </span>
         </div>
       )
@@ -116,34 +112,8 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
         const displayStatus = item.displayStatus || item.status;
 
         return (
-          <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${displayStatus === 'Approved'
-            ? 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]'
-            : displayStatus === 'AwaitingApproval'
-              ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-              : displayStatus === 'AwaitingTriage'
-                ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]' // Purple for Awaiting Assignment
-              : displayStatus === 'Pending'
-                ? 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]'
-                : displayStatus === 'Closed'
-                  ? 'bg-[#f0fdf4] text-[#166534]' // Green for Closed
-                  : displayStatus === 'Recalled'
-                    ? 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]'
-                    : displayStatus === 'Rejected'
-                      ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
-                      : displayStatus === 'AwaitingFeedbackApproval'
-                        ? 'bg-[#fef9c3] text-[#854d0e]' // Yellowish for awaiting feedback
-                        : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]'
-            }`}>
-            {displayStatus === 'Approved' ? '已批准' :
-              displayStatus === 'AwaitingApproval' ? '待审批' :
-                displayStatus === 'AwaitingTriage' ? '待分配' :
-                displayStatus === 'Pending' ? '进行中' :
-                  displayStatus === 'Closed' ? '已结案' :
-                    displayStatus === 'Draft' ? '草案' :
-                      displayStatus === 'Recalled' ? '已撤回' :
-                        displayStatus === 'Rejected' ? '被拒绝' :
-                          displayStatus === 'AwaitingFeedbackApproval' ? '待随访' :
-                            displayStatus}
+          <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${STATUS_STYLES[displayStatus] || STATUS_STYLES.default}`}>
+            {STATUS_LABELS[displayStatus] || displayStatus}
           </span>
         );
       }

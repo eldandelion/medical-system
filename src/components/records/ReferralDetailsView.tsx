@@ -15,6 +15,7 @@ import { useCreationOverlay } from '../../contexts/CreationContext';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { GenericDialog } from '../common/GenericDialog';
+import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS } from '../../config/styleConstants';
 
 import { Referral } from '../../types';
 
@@ -252,13 +253,12 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                 <span className="opacity-40 shrink-0">•</span>
                 <span className="font-medium truncate">{extendedData.school}</span>
                 <span className="opacity-40 shrink-0">•</span>
-                {/* Critical Status: Risk Level Chip */}
-                <div className={`px-3 py-1 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${referral.riskLevel === 'High'
-                  ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
-                  : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-                  }`}>
+                <div className={`px-3 py-1 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${RISK_LEVEL_STYLES[referral.riskLevel]}`}>
+                  <md-icon style={{ fontSize: '16px', width: '14px', height: '14px' }}>
+                    {referral.riskLevel === 'High' ? 'warning' : 'info'}
+                  </md-icon>
                   <span>
-                    {referral.riskLevel === 'High' ? '高风险' : '中低风险'}
+                    {RISK_LEVEL_LABELS[referral.riskLevel] || referral.riskLevel}
                   </span>
                 </div>
               </div>
