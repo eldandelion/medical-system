@@ -14,16 +14,12 @@ interface Student {
 interface StudentsViewProps {
   onStudentSelect?: (student: Student) => void;
   selectedStudentId?: string;
-  onLoadingChange?: (loading: boolean) => void;
+  header?: (loading: boolean) => React.ReactNode;
 }
 
-export function StudentsView({ onStudentSelect, selectedStudentId, onLoadingChange }: StudentsViewProps) {
+export function StudentsView({ onStudentSelect, selectedStudentId, header }: StudentsViewProps) {
   const { data: studentsData, loading } = useDataFetch<Student[]>('/api/students');
   const students = studentsData || [];
-
-  React.useEffect(() => {
-    onLoadingChange?.(loading);
-  }, [loading, onLoadingChange]);
 
   const columns: ColumnDefinition<Student>[] = [
     {
@@ -71,7 +67,9 @@ export function StudentsView({ onStudentSelect, selectedStudentId, onLoadingChan
   ];
 
   return (
-    <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
+    <>
+      {header && header(loading)}
+      <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
       <div className="shrink-0 z-10 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4">
         <FilterChipSet
           chips={[
@@ -86,12 +84,14 @@ export function StudentsView({ onStudentSelect, selectedStudentId, onLoadingChan
       <div className="flex-1 min-h-0 flex flex-col mt-2 relative">
         {loading && students.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
-            {/* Loading state is handled by parent CanvasHeader */}
+            {/* @ts-ignore */}
+            <md-circular-progress indeterminate></md-circular-progress>
           </div>
         ) : (
           <DataTable columns={columns} data={students} onRowClick={onStudentSelect} selectedId={selectedStudentId} />
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

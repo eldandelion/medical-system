@@ -43,7 +43,6 @@ export function TeacherPage() {
   const [activePage, setActivePage] = React.useState<TeacherPageName>(TeacherTabs.DASHBOARD);
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
-  const [isPageLoading, setIsPageLoading] = React.useState(false);
   const [dashboardData, setDashboardData] = React.useState<any>(null);
   const [dashboardLoading, setDashboardLoading] = React.useState(true);
   const [refreshKey, setRefreshKey] = React.useState(0);
@@ -122,37 +121,43 @@ export function TeacherPage() {
     />
   );
 
-  const handleLoadingChange = React.useCallback((loading: boolean) => {
-    setIsPageLoading(loading);
-  }, []);
-
-  React.useEffect(() => {
-    if (activePage === TeacherTabs.DASHBOARD) {
-      setIsPageLoading(dashboardLoading);
-    }
-  }, [activePage, dashboardLoading]);
-
   const renderActiveContent = () => {
     switch (activePage) {
       case TeacherTabs.NOTIFICATIONS:
-        return <NotificationsView />;
+        return (
+          <>
+            <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} />
+            <NotificationsView />
+          </>
+        );
       case TeacherTabs.STUDENTS:
-        return <StudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} onLoadingChange={handleLoadingChange} />;
+        return <StudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} header={(loading) => <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} isLoading={loading} />} />;
       case TeacherTabs.REFERRAL_MANAGEMENT:
-        return <ReferralManagementView key={`rmv-${refreshKey}`} onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} onLoadingChange={handleLoadingChange} />;
+        return <ReferralManagementView key={`rmv-${refreshKey}`} onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} header={(loading) => <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} isLoading={loading} />} />;
       case TeacherTabs.SECURITY:
-        return <SecurityConsentView />;
+        return (
+          <>
+            <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} />
+            <SecurityConsentView />
+          </>
+        );
       case TeacherTabs.DASHBOARD:
         if (dashboardLoading && !dashboardData) {
           return (
-            <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
-              {/* Loading state is handled by parent CanvasHeader */}
-            </div>
+            <>
+              <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} isLoading={true} />
+              <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
+                {/* @ts-ignore */}
+                <md-circular-progress indeterminate></md-circular-progress>
+              </div>
+            </>
           );
         }
         return dashboardData ? (
-          <DashboardView
-            profileSummary={{
+          <>
+            <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} isLoading={dashboardLoading} />
+            <DashboardView
+              profileSummary={{
               avatarText: dashboardData.profileSummary.avatarText,
               title: dashboardData.profileSummary.title,
               subtitle: dashboardData.profileSummary.subtitle,
@@ -172,7 +177,7 @@ export function TeacherPage() {
             activityTitle={dashboardData.activityTitle}
             activities={dashboardData.activities}
           />
-        ) : null;
+        </>) : null;
       default:
         return (
           <div className="flex-1 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
@@ -244,8 +249,6 @@ export function TeacherPage() {
               )}
             </DetailsPanel>
           }>
-          <CanvasHeader title={TEACHER_TAB_TITLES[activePage] || activePage} isLoading={isPageLoading} />
-
           <div className="flex-1 min-h-0 flex flex-col relative w-full h-full">
             {renderActiveContent()}
           </div>

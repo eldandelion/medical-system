@@ -39,17 +39,7 @@ export function StudentPage() {
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
   const [dashboardData, setDashboardData] = React.useState<any>(null);
   const [dashboardLoading, setDashboardLoading] = React.useState(true);
-  const [isPageLoading, setIsPageLoading] = React.useState(false);
 
-  const handleLoadingChange = React.useCallback((loading: boolean) => {
-    setIsPageLoading(loading);
-  }, []);
-
-  React.useEffect(() => {
-    if (activePage === StudentTabs.DASHBOARD) {
-      setIsPageLoading(dashboardLoading);
-    }
-  }, [activePage, dashboardLoading]);
   React.useEffect(() => {
     if (activePage !== StudentTabs.DASHBOARD) return;
     
@@ -82,46 +72,63 @@ export function StudentPage() {
     setActivePage(page);
     setSelectedRecord(null);
   };
-
   const renderActiveContent = () => {
     switch (activePage) {
       case StudentTabs.NOTIFICATIONS:
-        return <NotificationsView />;
+        return (
+          <>
+            <CanvasHeader title={STUDENT_TAB_TITLES[activePage]} />
+            <NotificationsView />
+          </>
+        );
       case StudentTabs.ASSESSMENTS:
-        return <AssessmentsView onLoadingChange={handleLoadingChange} />;
+        return <AssessmentsView header={(loading) => <CanvasHeader title={STUDENT_TAB_TITLES[activePage]} isLoading={loading} />} />;
       case StudentTabs.MY_RECORDS:
-        return <RecordsView onRecordSelect={setSelectedRecord} selectedRecordId={selectedRecord?.id} onLoadingChange={handleLoadingChange} />;
+        return <RecordsView onRecordSelect={setSelectedRecord} selectedRecordId={selectedRecord?.id} header={(loading) => <CanvasHeader title={STUDENT_TAB_TITLES[activePage]} isLoading={loading} />} />;
+      case StudentTabs.SECURITY:
+        return (
+          <>
+            <CanvasHeader title={STUDENT_TAB_TITLES[activePage]} />
+            <SecurityConsentView />
+          </>
+        );
       case StudentTabs.DASHBOARD:
         if (dashboardLoading && !dashboardData) {
           return (
-            <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
-              {/* Loading state is handled by parent CanvasHeader */}
-            </div>
+            <>
+              <CanvasHeader title={STUDENT_TAB_TITLES[activePage]} isLoading={true} />
+              <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
+                {/* @ts-ignore */}
+                <md-circular-progress indeterminate></md-circular-progress>
+              </div>
+            </>
           );
         }
         return dashboardData ? (
-          <DashboardView
-            profileSummary={{
-              avatarText: dashboardData.profileSummary.avatarText,
-              title: dashboardData.profileSummary.title,
-              subtitle: dashboardData.profileSummary.subtitle,
-              metadata: [
-                { icon: "badge", value: dashboardData.profileSummary.studentId || "" },
-                { icon: "school", value: dashboardData.profileSummary.school || "" }
-              ],
-              onClick: () => setShowProfileDetails(true)
-            }}
-            actionMetrics={STUDENT_METRICS_CONFIG.map((metric) => ({
-              icon: metric.icon,
-              numericValue: dashboardData.metrics[metric.metricKey] || 0,
-              label: metric.label,
-              containerColorClass: metric.containerColorClass,
-              onClick: () => handlePageChange(metric.targetPage as StudentTab)
-            }))}
+          <>
+            <CanvasHeader title={STUDENT_TAB_TITLES[activePage]} isLoading={dashboardLoading} />
+            <DashboardView
+              profileSummary={{
+                avatarText: dashboardData.profileSummary.avatarText,
+                title: dashboardData.profileSummary.title,
+                subtitle: dashboardData.profileSummary.subtitle,
+                metadata: [
+                  { icon: "badge", value: dashboardData.profileSummary.studentId || "" },
+                  { icon: "school", value: dashboardData.profileSummary.school || "" }
+                ],
+                onClick: () => setShowProfileDetails(true)
+              }}
+              actionMetrics={STUDENT_METRICS_CONFIG.map((metric) => ({
+                icon: metric.icon,
+                numericValue: dashboardData.metrics[metric.metricKey] || 0,
+                label: metric.label,
+                containerColorClass: metric.containerColorClass,
+                onClick: () => handlePageChange(metric.targetPage as StudentTab)
+              }))}
             activityTitle={dashboardData.activityTitle}
             activities={dashboardData.activities}
           />
-        ) : null;
+        </>) : null;
       default:
         return (
           <div className="flex-1 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
@@ -163,8 +170,6 @@ export function StudentPage() {
               <RecordDetailsView record={selectedRecord} />
             </DetailsPanel>
           }>
-          <CanvasHeader title={STUDENT_TAB_TITLES[activePage] || activePage} isLoading={isPageLoading} />
-
           {renderActiveContent()}
         </MainContent>
       </div>

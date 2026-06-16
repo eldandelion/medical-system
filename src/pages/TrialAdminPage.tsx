@@ -42,7 +42,6 @@ export function TrialAdminPage() {
   const [activePage, setActivePage] = React.useState<TrialAdminPageName>(TrialAdminTabs.DASHBOARD);
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
-  const [isPageLoading, setIsPageLoading] = React.useState(false);
   const [dashboardData, setDashboardData] = React.useState<any>(null);
   const [dashboardLoading, setDashboardLoading] = React.useState(true);
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
@@ -104,37 +103,48 @@ export function TrialAdminPage() {
   }, [tabs, activeTab]);
 
 
-  const handleLoadingChange = React.useCallback((loading: boolean) => {
-    setIsPageLoading(loading);
-  }, []);
-
-  React.useEffect(() => {
-    if (activePage === TrialAdminTabs.DASHBOARD) {
-      setIsPageLoading(dashboardLoading);
-    }
-  }, [activePage, dashboardLoading]);
-
   const renderActiveContent = () => {
     switch (activePage) {
       case TrialAdminTabs.NOTIFICATIONS:
-        return <NotificationsView />;
+        return (
+          <>
+            <CanvasHeader title={TRIAL_ADMIN_TAB_TITLES[activePage]} />
+            <NotificationsView />
+          </>
+        );
       case TrialAdminTabs.STAFF:
-        return <StaffManagementView onStaffSelect={setSelectedItem} selectedStaffId={selectedItem?.id} />;
+        return (
+          <>
+            <CanvasHeader title={TRIAL_ADMIN_TAB_TITLES[activePage]} />
+            <StaffManagementView onStaffSelect={setSelectedItem} selectedStaffId={selectedItem?.id} />
+          </>
+        );
       case TrialAdminTabs.REFERRAL_MANAGEMENT:
-        return <ReferralManagementView userRole="trial-admin" onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} onLoadingChange={handleLoadingChange} />;
+        return <ReferralManagementView userRole="trial-admin" onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} header={(loading) => <CanvasHeader title={TRIAL_ADMIN_TAB_TITLES[activePage]} isLoading={loading} />} />;
       case TrialAdminTabs.SECURITY:
-        return <SecurityConsentView />;
+        return (
+          <>
+            <CanvasHeader title={TRIAL_ADMIN_TAB_TITLES[activePage]} />
+            <SecurityConsentView />
+          </>
+        );
       case TrialAdminTabs.DASHBOARD:
         if (dashboardLoading && !dashboardData) {
           return (
-            <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
-              {/* Loading state is handled by parent CanvasHeader */}
-            </div>
+            <>
+              <CanvasHeader title={TRIAL_ADMIN_TAB_TITLES[activePage]} isLoading={true} />
+              <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
+                {/* @ts-ignore */}
+                <md-circular-progress indeterminate></md-circular-progress>
+              </div>
+            </>
           );
         }
         return dashboardData ? (
-          <DashboardView
-            profileSummary={{
+          <>
+            <CanvasHeader title={TRIAL_ADMIN_TAB_TITLES[activePage]} isLoading={dashboardLoading} />
+            <DashboardView
+              profileSummary={{
               avatarText: dashboardData.profileSummary.avatarText,
               title: dashboardData.profileSummary.title,
               subtitle: dashboardData.profileSummary.subtitle,
@@ -154,7 +164,7 @@ export function TrialAdminPage() {
             activityTitle={dashboardData.activityTitle}
             activities={dashboardData.activities}
           />
-        ) : null;
+        </>) : null;
       default:
         return (
           <div className="flex-1 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
@@ -218,8 +228,6 @@ export function TrialAdminPage() {
               )}
             </DetailsPanel>
           }>
-          <CanvasHeader title={TRIAL_ADMIN_TAB_TITLES[activePage] || activePage} isLoading={isPageLoading} />
-
           {renderActiveContent()}
         </MainContent>
       </div>

@@ -10,6 +10,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { ReferralStep, ReferralStepStatus, ReferralStepType } from '../../types';
+import { formatDateToChinese } from '../../utils/dateUtils';
 
 const getCardStyles = (status: ReferralStepStatus) => {
   switch (status) {
@@ -131,7 +132,7 @@ export function ReferralTracker({ steps }: ReferralTrackerProps) {
                         {step.title}
                       </h3>
                       <span className={`text-[15px] whitespace-nowrap ${styles.timeText}`}>
-                        {step.time}
+                        {formatDateToChinese(step.time)}
                       </span>
                     </div>
 

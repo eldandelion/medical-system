@@ -12,7 +12,7 @@ import { Referral } from '../../types';
 interface ReferralManagementViewProps {
   onReferralSelect?: (referral: Referral) => void;
   selectedReferralId?: string;
-  onLoadingChange?: (loading: boolean) => void;
+  header?: (loading: boolean) => React.ReactNode;
   userRole?: 'student' | 'teacher' | 'head-councillor' | 'trial-admin' | 'doctor';
 }
 
@@ -86,7 +86,7 @@ const columns: ColumnDefinition<Referral>[] = [
   }
 ];
 
-export function ReferralManagementView({ onReferralSelect, selectedReferralId, onLoadingChange, userRole }: ReferralManagementViewProps) {
+export function ReferralManagementView({ onReferralSelect, selectedReferralId, header, userRole }: ReferralManagementViewProps) {
   const { session } = useAuth();
   
   const processReferrals = React.useCallback((data: any) => {
@@ -104,31 +104,32 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, o
   
   const referrals = referralsData || [];
 
-  React.useEffect(() => {
-    onLoadingChange?.(loading);
-  }, [loading, onLoadingChange]);
-
   return (
-    <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
-      <div className="shrink-0 z-10 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4">
-        <FilterChipSet
-          chips={[
-            { label: '状态', options: ['进行中', '已批准', '已拒绝', '审核中'] },
-            { label: '类型', options: ['初次转诊', '随访', '紧急', '结业'] },
-            { label: '优先级', options: ['高', '中', '低'] },
-            { label: '指派至', options: ['教职工', '部门负责人', '顾问'] }
-          ]}
-        />
+    <>
+      {header && header(loading)}
+      <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
+        <div className="shrink-0 z-10 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4">
+          <FilterChipSet
+            chips={[
+              { label: '状态', options: ['进行中', '已批准', '已拒绝', '审核中'] },
+              { label: '类型', options: ['初次转诊', '随访', '紧急', '结业'] },
+              { label: '优先级', options: ['高', '中', '低'] },
+              { label: '指派至', options: ['教职工', '部门负责人', '顾问'] }
+            ]}
+          />
+        </div>
+        
+        {loading && referrals.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
+            {/* @ts-ignore */}
+            <md-circular-progress indeterminate></md-circular-progress>
+          </div>
+        ) : (
+          <div className="flex-1 min-h-0 flex flex-col relative">
+            <DataTable columns={columns} data={referrals} onRowClick={onReferralSelect} selectedId={selectedReferralId} />
+          </div>
+        )}
       </div>
-      {loading && referrals.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
-          {/* Loading state is handled by parent CanvasHeader */}
-        </div>
-      ) : (
-        <div className="flex-1 min-h-0 flex flex-col relative">
-          <DataTable columns={columns} data={referrals} onRowClick={onReferralSelect} selectedId={selectedReferralId} />
-        </div>
-      )}
-    </div>
+    </>
   );
 }

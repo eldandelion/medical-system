@@ -39,7 +39,6 @@ export function DoctorPage() {
   const [activePage, setActivePage] = React.useState<DoctorPageName>(DoctorTabs.DASHBOARD);
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
-  const [isPageLoading, setIsPageLoading] = React.useState(false);
   const [dashboardData, setDashboardData] = React.useState<any>(null);
   const [dashboardLoading, setDashboardLoading] = React.useState(true);
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
@@ -114,35 +113,41 @@ export function DoctorPage() {
     />
   );
 
-  const handleLoadingChange = React.useCallback((loading: boolean) => {
-    setIsPageLoading(loading);
-  }, []);
-
-  React.useEffect(() => {
-    if (activePage === DoctorTabs.DASHBOARD) {
-      setIsPageLoading(dashboardLoading);
-    }
-  }, [activePage, dashboardLoading]);
-
   const renderActiveContent = () => {
     switch (activePage) {
       case DoctorTabs.NOTIFICATIONS:
-        return <NotificationsView />;
+        return (
+          <>
+            <CanvasHeader title={DOCTOR_TAB_TITLES[activePage]} />
+            <NotificationsView />
+          </>
+        );
       case DoctorTabs.REFERRAL_MANAGEMENT:
-        return <ReferralManagementView userRole="doctor" onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} onLoadingChange={handleLoadingChange} />;
+        return <ReferralManagementView userRole="doctor" onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} header={(loading) => <CanvasHeader title={DOCTOR_TAB_TITLES[activePage]} isLoading={loading} />} />;
       case DoctorTabs.SECURITY:
-        return <SecurityConsentView />;
+        return (
+          <>
+            <CanvasHeader title={DOCTOR_TAB_TITLES[activePage]} />
+            <SecurityConsentView />
+          </>
+        );
       case DoctorTabs.DASHBOARD:
         if (dashboardLoading && !dashboardData) {
           return (
-            <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
-              {/* Loading state is handled by parent CanvasHeader */}
-            </div>
+            <>
+              <CanvasHeader title={DOCTOR_TAB_TITLES[activePage]} isLoading={true} />
+              <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
+                {/* @ts-ignore */}
+                <md-circular-progress indeterminate></md-circular-progress>
+              </div>
+            </>
           );
         }
         return dashboardData ? (
-          <DashboardView
-            profileSummary={{
+          <>
+            <CanvasHeader title={DOCTOR_TAB_TITLES[activePage]} isLoading={dashboardLoading} />
+            <DashboardView
+              profileSummary={{
               avatarText: dashboardData.profileSummary.avatarText,
               title: dashboardData.profileSummary.title,
               subtitle: dashboardData.profileSummary.subtitle,
@@ -162,7 +167,7 @@ export function DoctorPage() {
             activityTitle={dashboardData.activityTitle}
             activities={dashboardData.activities}
           />
-        ) : null;
+        </>) : null;
       default:
         return (
           <div className="flex-1 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] pt-20">
@@ -221,8 +226,6 @@ export function DoctorPage() {
               )}
             </DetailsPanel>
           }>
-          <CanvasHeader title={DOCTOR_TAB_TITLES[activePage] || activePage} isLoading={isPageLoading} />
-
           {renderActiveContent()}
         </MainContent>
       </div>

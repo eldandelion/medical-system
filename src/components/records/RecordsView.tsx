@@ -32,16 +32,12 @@ export const getRecordIcon = (type: PsychiatricRecordType): string => {
 interface RecordsViewProps {
   onRecordSelect?: (record: PsychiatricRecord) => void;
   selectedRecordId?: string;
-  onLoadingChange?: (loading: boolean) => void;
+  header?: (loading: boolean) => React.ReactNode;
 }
 
-export function RecordsView({ onRecordSelect, selectedRecordId, onLoadingChange }: RecordsViewProps) {
+export function RecordsView({ onRecordSelect, selectedRecordId, header }: RecordsViewProps) {
   const { data: recordsData, loading } = useDataFetch<PsychiatricRecord[]>('/api/records');
   const records = recordsData || [];
-
-  React.useEffect(() => {
-    onLoadingChange?.(loading);
-  }, [loading, onLoadingChange]);
 
   const columns: ColumnDefinition<PsychiatricRecord>[] = [
     {
@@ -109,24 +105,20 @@ export function RecordsView({ onRecordSelect, selectedRecordId, onLoadingChange 
   ];
 
   return (
-    <div className="w-full flex flex-col pt-4">
+    <>
+      {header && header(loading)}
+      <div className="w-full flex flex-col pt-4 overflow-y-auto custom-scrollbar">
       <div className="px-6">
         <RecordHeader title="精神医学记录" />
       </div>
       
       <div className="mt-2">
         {loading && records.length === 0 ? (
-          onLoadingChange ? (
-            <div className="py-12 flex flex-col items-center justify-center min-h-[200px]">
-              {/* Loading state handled by parent */}
-            </div>
-          ) : (
-            <div className="py-12 flex flex-col items-center justify-center min-h-[200px]">
-              {/* @ts-ignore */}
-              <md-circular-progress indeterminate></md-circular-progress>
-              <span className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] mt-4">正在加载记录...</span>
-            </div>
-          )
+          <div className="py-12 flex flex-col items-center justify-center min-h-[200px]">
+            {/* @ts-ignore */}
+            <md-circular-progress indeterminate></md-circular-progress>
+            <span className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] mt-4">正在加载记录...</span>
+          </div>
         ) : records.length === 0 ? (
           <div className="py-12 flex flex-col items-center justify-center min-h-[200px] text-[var(--md-sys-color-on-surface-variant)]">
             <span className="material-symbols-outlined text-[48px] opacity-50">description</span>
@@ -141,6 +133,7 @@ export function RecordsView({ onRecordSelect, selectedRecordId, onLoadingChange 
           />
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
