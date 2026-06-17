@@ -70,7 +70,7 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
     <>
       {header && header(loading)}
       <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
-      <div className="shrink-0 z-10 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4">
+      <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4">
         <FilterChipSet
           chips={[
             { label: '专业', options: ['计算机科学', '心理学', '生物学', '艺术史'] },

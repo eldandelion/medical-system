@@ -29,6 +29,7 @@ export function FilterChip({ label, options = ['Option 1', 'Option 2'], onOption
       <md-menu 
         anchor={buttonId}
         open={isOpen}
+        style={{ zIndex: 100 } as React.CSSProperties}
         onClose={(e: any) => {
           // Prevent closing when it's already being closed by onToggle logic 
           // to avoid double toggle issues
