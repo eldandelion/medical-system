@@ -3,7 +3,7 @@ import { LAYOUT_CONSTANTS } from '../../config/layoutConstants';
 import { motion, AnimatePresence } from 'motion/react';
 import { ScrollableDetailsLayout } from '../common/DetailsPanel';
 import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
-import { ActionFooter } from '../common/ActionFooter';
+import { DestructiveButton } from '../common/DestructiveButton';
 import { PrimaryTabs } from '../common/Tabs';
 import { PsychometricsTabContent } from '../assessments/PsychometricsTabContent';
 import { ReferralOverviewTab } from './ReferralOverviewTab';
@@ -11,9 +11,8 @@ import { ReferralTrackerTab } from './ReferralTrackerTab';
 import { ReferralFeedbackTab } from './ReferralFeedbackTab';
 
 import { useDetails } from '../../contexts/DetailsContext';
-import { useCreationOverlay } from '../../contexts/CreationContext';
-import { useSnackbar } from '../../contexts/SnackbarContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useReferralActions } from '../../hooks/useReferralActions';
+import { ReferralActionFooter } from './ReferralActionFooter';
 import { GenericDialog } from '../common/GenericDialog';
 import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS } from '../../config/styleConstants';
 
@@ -41,36 +40,22 @@ export const REFERRAL_DETAILS_TABS = [
 export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab: propsActiveTab, onTabChange, onUpdate }: ReferralDetailsViewProps) {
   const { isFullScreen } = useDetails();
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
-  const [isRejectionDialogOpen, setIsRejectionDialogOpen] = React.useState(false);
-  const [isApprovalDialogOpen, setIsApprovalDialogOpen] = React.useState(false);
-  const [isRecallDialogOpen, setIsRecallDialogOpen] = React.useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
-  const [isAssignDialogOpen, setIsAssignDialogOpen] = React.useState(false);
-  const [isSchedulingDialogOpen, setIsSchedulingDialogOpen] = React.useState(false);
-  const [rejectionReason, setRejectionReason] = React.useState('');
-  const [scheduleDateTime, setScheduleDateTime] = React.useState('');
-  const [selectedDoctorId, setSelectedDoctorId] = React.useState('李医生');
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
 
-  const { openCreation, closeCreation } = useCreationOverlay();
-  const { showSnackbar } = useSnackbar();
-  const { session } = useAuth();
+  const { state, actions } = useReferralActions({ referralId: referral.id, onUpdate });
 
   const [studentData, setStudentData] = React.useState<any>(null);
 
   React.useEffect(() => {
     let active = true;
-    fetch(`${import.meta.env.BASE_URL}/api/students`.replace('//api', '/api'))
+    fetch(`${import.meta.env.BASE_URL}/api/students?name=${encodeURIComponent(referral.studentName)}`.replace('//api', '/api'))
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch students');
         return res.json();
       })
       .then((students: any[]) => {
-        if (active) {
-          const match = students.find((s) => s.name === referral.studentName);
-          if (match) {
-            setStudentData(match);
-          }
+        if (active && students.length > 0) {
+          setStudentData(students[0]);
         }
       })
       .catch((err) => console.error('Failed to load matching student for referral:', err));
@@ -107,160 +92,6 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
   const displayStatus = referral.displayStatus || referral.status;
   const isDoctorRejected = displayStatus === 'Rejected' && extendedData?.steps?.some((s: any) => s.type === 'scheduling' && s.status === 'issue');
 
-  const handleRecall = async () => {
-    setIsRecallDialogOpen(false);
-    try {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${referral.id}/recall`.replace('//api', '/api'), {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session?.token || ''}`
-        }
-      });
-      if (res.ok) {
-        showSnackbar({ message: '转诊申请已撤回', duration: 3000 });
-        onUpdate?.();
-      } else {
-        throw new Error('Failed to recall');
-      }
-    } catch (e) {
-      showSnackbar({ message: '撤回失败，请稍后重试', duration: 3000 });
-    }
-  };
-
-  const handleDelete = async () => {
-    setIsDeleteDialogOpen(false);
-    try {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${referral.id}`.replace('//api', '/api'), {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${session?.token || ''}`
-        }
-      });
-      if (res.ok) {
-        showSnackbar({ message: '草案已删除', duration: 3000 });
-        onUpdate?.();
-      } else {
-        throw new Error('Failed to delete');
-      }
-    } catch (e) {
-      showSnackbar({ message: '删除失败，请稍后重试', duration: 3000 });
-    }
-  };
-
-  const handleApprove = async () => {
-    setIsApprovalDialogOpen(false);
-    try {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${referral.id}/approve`.replace('//api', '/api'), {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session?.token || ''}`
-        }
-      });
-      if (res.ok) {
-        showSnackbar({ message: '转诊已批准', duration: 3000 });
-        onUpdate?.();
-      } else {
-        throw new Error('Failed to approve');
-      }
-    } catch (e) {
-      showSnackbar({ message: '批准失败，请稍后重试', duration: 3000 });
-    }
-  };
-
-  const handleReject = async () => {
-    setIsRejectionDialogOpen(false);
-    try {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${referral.id}/reject`.replace('//api', '/api'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.token || ''}`
-        },
-        body: JSON.stringify({ reason: rejectionReason })
-      });
-      if (res.ok) {
-        showSnackbar({ message: '转诊已拒绝', duration: 3000 });
-        setRejectionReason('');
-        onUpdate?.();
-      } else {
-        throw new Error('Failed to reject');
-      }
-    } catch (e) {
-      showSnackbar({ message: '操作失败，请稍后重试', duration: 3000 });
-    }
-  };
-
-  const handleAssign = async () => {
-    setIsAssignDialogOpen(false);
-    try {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${referral.id}/assign`.replace('//api', '/api'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.token || ''}`
-        },
-        body: JSON.stringify({ doctorId: selectedDoctorId })
-      });
-      if (res.ok) {
-        showSnackbar({ message: '转诊已分配', duration: 3000 });
-        onUpdate?.();
-      } else {
-        throw new Error('Failed to assign');
-      }
-    } catch (e) {
-      showSnackbar({ message: '分配失败，请稍后重试', duration: 3000 });
-    }
-  };
-
-  const handleSchedule = async () => {
-    if (!scheduleDateTime) {
-      showSnackbar({ message: '请选择预约时间', duration: 3000 });
-      return;
-    }
-    setIsSchedulingDialogOpen(false);
-    try {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${referral.id}/schedule`.replace('//api', '/api'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.token || ''}`
-        },
-        body: JSON.stringify({ appointmentTime: scheduleDateTime })
-      });
-      if (res.ok) {
-        showSnackbar({ message: '预约已排期', duration: 3000 });
-        onUpdate?.();
-      } else {
-        throw new Error('Failed to schedule');
-      }
-    } catch (e) {
-      showSnackbar({ message: '预约排期失败，请稍后重试', duration: 3000 });
-    }
-  };
-
-  const handleResubmit = () => {
-    // Map existing data to CreationForm format
-    const initialData = {
-      title: referral.title,
-      reason: referral.description,
-      riskLevel: referral.riskLevel,
-      clinicalStatus: [
-        ...(extendedData.triage.isFirstVisit ? ['FirstVisit' as any] : []),
-        ...(extendedData.triage.isMedicated ? ['Medicated' as any] : []),
-        ...(extendedData.triage.priorTherapy === '有' ? ['PriorTherapy' as any] : [])
-      ],
-      severeRiskFactors: [
-        ...(extendedData.risk.ideation ? ['Ideation' as any] : []),
-        ...(extendedData.risk.attempt ? ['Attempt' as any] : []),
-        ...(extendedData.risk.selfHarm ? ['SelfHarm' as any] : [])
-      ],
-      attachments: extendedData.feedback?.attachments || []
-    };
-
-    // Need to dynamically import ReferralCreationForm to avoid circular dependencies if any, but since it's already used in pages, we can just import it.
-    // Wait, ReferralDetailsView doesn't import ReferralCreationForm yet. Let's add it to imports.
-  };
-
   return (
     <ScrollableDetailsLayout
       title={referral.studentName}
@@ -296,11 +127,8 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
 
           {/* Clickable right arrow button in the vertical middle */}
           <div className="flex items-center text-[var(--md-sys-color-on-surface-variant)] shrink-0">
-            {/* @ts-ignore */}
             <md-icon-button>
-              {/* @ts-ignore */}
               <md-icon>chevron_right</md-icon>
-              {/* @ts-ignore */}
             </md-icon-button>
           </div>
         </div>
@@ -313,163 +141,14 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
         />
       ) : undefined}
       footer={
-        (displayStatus === 'Recalled' && userRole === 'head-councillor') || displayStatus === 'Pending' || displayStatus === 'Closed' || (displayStatus === 'Rejected' && !(userRole === 'trial-admin' && isDoctorRejected)) || (displayStatus === 'AwaitingTriage' && (userRole === 'teacher' || userRole === 'head-councillor')) || (displayStatus === 'WaitingForScheduling' && userRole === 'trial-admin') ? undefined : (
-          <ActionFooter>
-            {displayStatus === 'Recalled' ? (
-              userRole === 'teacher' ? (
-                <>
-                  <PrimaryButton icon="restart_alt" label="基于此重新创建" onClick={() => {
-                    import('./ReferralCreationForm').then(({ ReferralCreationForm }) => {
-                      const initialData = {
-                        title: referral.title,
-                        reason: referral.description,
-                        riskLevel: referral.riskLevel,
-                        clinicalStatus: [
-                          ...(extendedData.triage.isFirstVisit ? ['FirstVisit' as any] : []),
-                          ...(extendedData.triage.isMedicated ? ['Medicated' as any] : []),
-                          ...(extendedData.triage.priorTherapy === '有' ? ['PriorTherapy' as any] : [])
-                        ],
-                        severeRiskFactors: [
-                          ...(extendedData.risk.ideation ? ['Ideation' as any] : []),
-                          ...(extendedData.risk.attempt ? ['Attempt' as any] : []),
-                          ...(extendedData.risk.selfHarm ? ['SelfHarm' as any] : [])
-                        ],
-                        attachments: extendedData.feedback?.attachments || []
-                      };
-                      openCreation('重新发起转诊', <ReferralCreationForm onClose={closeCreation} initialData={initialData} />);
-                    });
-                  }} />
-                </>
-              ) : null
-            ) : displayStatus === 'AwaitingApproval' ? (
-              userRole === 'head-councillor' ? (
-                <>
-                  <PrimaryButton icon="check" label="批准转诊" onClick={() => setIsApprovalDialogOpen(true)} />
-                  <SecondaryButton
-                    icon="close"
-                    label="拒绝申请"
-                    onClick={() => setIsRejectionDialogOpen(true)}
-                    style={{
-                      color: 'var(--md-sys-color-error)',
-                      '--md-outlined-button-label-text-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-with-icon-icon-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-hover-label-text-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-hover-state-layer-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-with-icon-hover-icon-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-pressed-label-text-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-pressed-state-layer-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-with-icon-pressed-icon-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-focus-label-text-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-with-icon-focus-icon-color': 'var(--md-sys-color-error)',
-                    } as React.CSSProperties}
-                  />
-                </>
-              ) : userRole === 'teacher' ? (
-                <SecondaryButton icon="undo" label="撤回申请" onClick={() => setIsRecallDialogOpen(true)} />
-              ) : null
-            ) : displayStatus === 'AwaitingTriage' ? (
-              userRole === 'trial-admin' ? (
-                <>
-                  <PrimaryButton icon="assignment_ind" label="分配医生" onClick={() => setIsAssignDialogOpen(true)} />
-                  <SecondaryButton
-                    icon="close"
-                    label="拒绝申请"
-                    onClick={() => setIsRejectionDialogOpen(true)}
-                    style={{
-                      color: 'var(--md-sys-color-error)',
-                      '--md-outlined-button-label-text-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-with-icon-icon-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-hover-label-text-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-hover-state-layer-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-with-icon-hover-icon-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-pressed-label-text-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-pressed-state-layer-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-with-icon-pressed-icon-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-focus-label-text-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-with-icon-focus-icon-color': 'var(--md-sys-color-error)',
-                    } as React.CSSProperties}
-                  />
-                </>
-              ) : null
-            ) : displayStatus === 'WaitingForScheduling' ? (
-              userRole === 'doctor' ? (
-                <>
-                  <PrimaryButton icon="calendar_month" label="安排就诊" onClick={() => setIsSchedulingDialogOpen(true)} />
-                  <SecondaryButton
-                    icon="close"
-                    label="拒绝"
-                    onClick={() => setIsRejectionDialogOpen(true)}
-                    style={{
-                      color: 'var(--md-sys-color-error)',
-                      '--md-outlined-button-label-text-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-with-icon-icon-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-hover-label-text-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-hover-state-layer-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-with-icon-hover-icon-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-pressed-label-text-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-pressed-state-layer-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-with-icon-pressed-icon-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-focus-label-text-color': 'var(--md-sys-color-error)',
-                      '--md-outlined-button-with-icon-focus-icon-color': 'var(--md-sys-color-error)',
-                    } as React.CSSProperties}
-                  />
-                </>
-              ) : null
-            ) : displayStatus === 'Draft' && (userRole === 'teacher' || userRole === 'head-councillor') ? (
-              <>
-                <PrimaryButton icon="edit_document" label="编辑草案" onClick={() => {
-                  import('./ReferralCreationForm').then(({ ReferralCreationForm }) => {
-                    const initialData = {
-                      title: referral.title,
-                      reason: referral.description,
-                      riskLevel: referral.riskLevel,
-                      clinicalStatus: [
-                        ...(extendedData.triage.isFirstVisit ? ['FirstVisit' as any] : []),
-                        ...(extendedData.triage.isMedicated ? ['Medicated' as any] : []),
-                        ...(extendedData.triage.priorTherapy === '有' ? ['PriorTherapy' as any] : [])
-                      ],
-                      severeRiskFactors: [
-                        ...(extendedData.risk.ideation ? ['Ideation' as any] : []),
-                        ...(extendedData.risk.attempt ? ['Attempt' as any] : []),
-                        ...(extendedData.risk.selfHarm ? ['SelfHarm' as any] : [])
-                      ],
-                      attachments: extendedData.feedback?.attachments || []
-                    };
-                    openCreation('重新发起转诊', <ReferralCreationForm onClose={closeCreation} initialData={initialData} />);
-                  });
-                }} />
-                <SecondaryButton
-                  icon="delete"
-                  label="删除草案"
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                  style={{
-                    color: 'var(--md-sys-color-error)',
-                    '--md-outlined-button-label-text-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-with-icon-icon-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-hover-label-text-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-hover-state-layer-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-with-icon-hover-icon-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-pressed-label-text-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-pressed-state-layer-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-with-icon-pressed-icon-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-focus-label-text-color': 'var(--md-sys-color-error)',
-                    '--md-outlined-button-with-icon-focus-icon-color': 'var(--md-sys-color-error)',
-                  } as React.CSSProperties}
-                />
-              </>
-            ) : displayStatus === 'AwaitingFeedbackApproval' ? (
-              <>
-                <PrimaryButton icon="check" label="确认反馈" />
-              </>
-            ) : displayStatus === 'Rejected' ? (
-              userRole === 'trial-admin' && isDoctorRejected ? (
-                <>
-                  <PrimaryButton icon="assignment_ind" label="重新分配医生" onClick={() => setIsAssignDialogOpen(true)} />
-                </>
-              ) : null
-            ) : null}
-          </ActionFooter>
-        )
+        <ReferralActionFooter
+          referral={referral}
+          displayStatus={displayStatus}
+          userRole={userRole || ''}
+          isDoctorRejected={isDoctorRejected || false}
+          actions={actions}
+          state={state}
+        />
       }
     >
       <AnimatePresence mode="wait">
@@ -510,25 +189,13 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
 
       {/* Rejection Reason Dialog */}
       <GenericDialog
-        open={isRejectionDialogOpen}
-        onClose={() => setIsRejectionDialogOpen(false)}
+        open={state.isRejectionDialogOpen}
+        onClose={() => state.setIsRejectionDialogOpen(false)}
         title="拒绝申请"
-
         actions={
           <>
-            <TertiaryButton label="取消" onClick={() => setIsRejectionDialogOpen(false)} />
-            <TertiaryButton
-              label="确认拒绝"
-              onClick={handleReject}
-              style={{
-                '--md-text-button-label-text-color': 'var(--md-sys-color-error)',
-                '--md-text-button-hover-label-text-color': 'var(--md-sys-color-error)',
-                '--md-text-button-focus-label-text-color': 'var(--md-sys-color-error)',
-                '--md-text-button-pressed-label-text-color': 'var(--md-sys-color-error)',
-                '--md-text-button-hover-state-layer-color': 'var(--md-sys-color-error)',
-                '--md-text-button-pressed-state-layer-color': 'var(--md-sys-color-error)',
-              } as React.CSSProperties}
-            />
+            <TertiaryButton label="取消" onClick={() => state.setIsRejectionDialogOpen(false)} />
+            <DestructiveButton label="确认拒绝" icon="close" onClick={actions.handleReject} />
           </>
         }
       >
@@ -536,29 +203,26 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
           <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
             请提供拒绝该转诊申请的具体原因。此信息将通过通知发送给发起人。
           </p>
-          {/* @ts-ignore */}
           <md-outlined-text-field
             type="textarea"
             rows={4}
             label="拒绝原因"
             className="w-full"
-            value={rejectionReason}
-            onInput={(e: any) => setRejectionReason(e.target.value)}
-          >
-          {/* @ts-ignore */}
-          </md-outlined-text-field>
+            value={state.rejectionReason}
+            onInput={(e: any) => state.setRejectionReason(e.target.value)}
+          />
         </div>
       </GenericDialog>
 
       {/* Recall Confirmation Dialog */}
       <GenericDialog
-        open={isRecallDialogOpen}
-        onClose={() => setIsRecallDialogOpen(false)}
+        open={state.isRecallDialogOpen}
+        onClose={() => state.setIsRecallDialogOpen(false)}
         title="确认撤回申请？"
         actions={
           <>
-            <SecondaryButton label="取消" onClick={() => setIsRecallDialogOpen(false)} />
-            <PrimaryButton label="确认撤回" onClick={handleRecall} />
+            <SecondaryButton label="取消" onClick={() => state.setIsRecallDialogOpen(false)} />
+            <PrimaryButton label="确认撤回" onClick={actions.handleRecall} />
           </>
         }
       >
@@ -567,13 +231,13 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
 
       {/* Approval Confirmation Dialog */}
       <GenericDialog
-        open={isApprovalDialogOpen}
-        onClose={() => setIsApprovalDialogOpen(false)}
+        open={state.isApprovalDialogOpen}
+        onClose={() => state.setIsApprovalDialogOpen(false)}
         title="确认批准转诊？"
         actions={
           <>
-            <SecondaryButton label="取消" onClick={() => setIsApprovalDialogOpen(false)} />
-            <PrimaryButton label="确认批准" onClick={handleApprove} />
+            <SecondaryButton label="取消" onClick={() => state.setIsApprovalDialogOpen(false)} />
+            <PrimaryButton label="确认批准" onClick={actions.handleApprove} />
           </>
         }
       >
@@ -582,22 +246,13 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
 
       {/* Delete Draft Dialog */}
       <GenericDialog
-        open={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
+        open={state.isDeleteDialogOpen}
+        onClose={() => state.setIsDeleteDialogOpen(false)}
         title="确认删除草案？"
         actions={
           <>
-            <SecondaryButton label="取消" onClick={() => setIsDeleteDialogOpen(false)} />
-            <PrimaryButton 
-              label="确认删除" 
-              onClick={handleDelete}
-              style={{
-                '--md-filled-button-container-color': 'var(--md-sys-color-error)',
-                '--md-filled-button-label-text-color': 'var(--md-sys-color-on-error)',
-                '--md-filled-button-hover-container-color': 'var(--md-sys-color-error)',
-                '--md-filled-button-pressed-container-color': 'var(--md-sys-color-error)',
-              } as React.CSSProperties}
-            />
+            <SecondaryButton label="取消" onClick={() => state.setIsDeleteDialogOpen(false)} />
+            <DestructiveButton label="确认删除" icon="delete" onClick={actions.handleDelete} />
           </>
         }
       >
@@ -606,13 +261,13 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
 
       {/* Assign Doctor Dialog */}
       <GenericDialog
-        open={isAssignDialogOpen}
-        onClose={() => setIsAssignDialogOpen(false)}
+        open={state.isAssignDialogOpen}
+        onClose={() => state.setIsAssignDialogOpen(false)}
         title="分配医生"
         actions={
           <>
-            <SecondaryButton label="取消" onClick={() => setIsAssignDialogOpen(false)} />
-            <PrimaryButton label="确认分配" onClick={handleAssign} />
+            <SecondaryButton label="取消" onClick={() => state.setIsAssignDialogOpen(false)} />
+            <PrimaryButton label="确认分配" onClick={actions.handleAssign} />
           </>
         }
       >
@@ -621,38 +276,28 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
             请选择接诊的心理医生。分配后，该转诊将进入医生评估阶段。
           </p>
           <div className="relative mt-2">
-            {/* @ts-ignore */}
             <md-outlined-select
               label="选择接诊医生"
               className="w-full relative"
-              value={selectedDoctorId}
-              onChange={(e: any) => setSelectedDoctorId(e.target.value)}
+              value={state.selectedDoctorId}
+              onChange={(e: any) => state.setSelectedDoctorId(e.target.value)}
             >
-              {/* @ts-ignore */}
               <md-select-option value="李医生">
                 <div slot="headline">李医生</div>
                 <div slot="supporting-text" className="text-[12px] opacity-70">医学院</div>
-              {/* @ts-ignore */}
               </md-select-option>
-              {/* @ts-ignore */}
               <md-select-option value="李娜">
                 <div slot="headline">李娜</div>
                 <div slot="supporting-text" className="text-[12px] opacity-70">工学院</div>
-              {/* @ts-ignore */}
               </md-select-option>
-              {/* @ts-ignore */}
               <md-select-option value="王明">
                 <div slot="headline">王明</div>
                 <div slot="supporting-text" className="text-[12px] opacity-70">经济学院</div>
-              {/* @ts-ignore */}
               </md-select-option>
-              {/* @ts-ignore */}
               <md-select-option value="陈佳">
                 <div slot="headline">陈佳</div>
                 <div slot="supporting-text" className="text-[12px] opacity-70">艺术学院</div>
-              {/* @ts-ignore */}
               </md-select-option>
-            {/* @ts-ignore */}
             </md-outlined-select>
           </div>
         </div>
@@ -660,13 +305,13 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
 
       {/* Scheduling Dialog */}
       <GenericDialog
-        open={isSchedulingDialogOpen}
-        onClose={() => setIsSchedulingDialogOpen(false)}
+        open={state.isSchedulingDialogOpen}
+        onClose={() => state.setIsSchedulingDialogOpen(false)}
         title="安排就诊时间"
         actions={
           <>
-            <SecondaryButton label="取消" onClick={() => setIsSchedulingDialogOpen(false)} />
-            <PrimaryButton label="确认安排" onClick={handleSchedule} />
+            <SecondaryButton label="取消" onClick={() => state.setIsSchedulingDialogOpen(false)} />
+            <PrimaryButton label="确认安排" onClick={actions.handleSchedule} />
           </>
         }
       >
@@ -678,8 +323,8 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
             <input 
               type="datetime-local" 
               className="w-full px-4 py-3 rounded-xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface)] focus:outline-none focus:border-[var(--md-sys-color-primary)] focus:ring-1 focus:ring-[var(--md-sys-color-primary)] transition-all"
-              value={scheduleDateTime}
-              onChange={(e) => setScheduleDateTime(e.target.value)}
+              value={state.scheduleDateTime}
+              onChange={(e) => state.setScheduleDateTime(e.target.value)}
             />
           </div>
         </div>

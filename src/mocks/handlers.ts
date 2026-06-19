@@ -43,8 +43,14 @@ export const handlers = [
     return HttpResponse.json(dashboardData);
   }),
 
-  http.get(api('/api/students'), async () => {
+  http.get(api('/api/students'), async ({ request }) => {
     await delay(MOCK_DELAY_MS);
+    const url = new URL(request.url);
+    const nameQuery = url.searchParams.get('name');
+    if (nameQuery) {
+      const match = mockStudentsDb.find((s) => s.name === nameQuery);
+      return HttpResponse.json(match ? [match] : []);
+    }
     return HttpResponse.json(mockStudentsDb);
   }),
 

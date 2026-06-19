@@ -48,7 +48,7 @@ describe('enrichReferralStatus', () => {
     expect(result.displayStatus).toBe('AwaitingTriage');
   });
 
-  it('maps active evaluation step to Pending', () => {
+  it('maps active evaluation step to Pending if appointment time is reached', () => {
     const referral = { 
       id: '1', 
       status: 'AwaitingTriage', 
@@ -56,11 +56,29 @@ describe('enrichReferralStatus', () => {
         steps: [
           { type: 'triage', status: 'completed' },
           { type: 'evaluation', status: 'active' }
-        ] 
+        ],
+        destination: {
+          appointmentTime: '2020-01-01T00:00:00Z'
+        }
       } 
     } as unknown as Referral;
     const result = enrichReferralStatus(referral);
     expect(result.displayStatus).toBe('Pending');
+  });
+
+  it('maps active evaluation step to WaitingForAppointment if appointment time is in future or missing', () => {
+    const referral = { 
+      id: '1', 
+      status: 'AwaitingTriage', 
+      extendedData: { 
+        steps: [
+          { type: 'triage', status: 'completed' },
+          { type: 'evaluation', status: 'active' }
+        ]
+      } 
+    } as unknown as Referral;
+    const result = enrichReferralStatus(referral);
+    expect(result.displayStatus).toBe('WaitingForAppointment');
   });
 
   it('falls back to raw status if active step type is unknown', () => {
