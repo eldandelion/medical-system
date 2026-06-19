@@ -78,15 +78,21 @@ export const handlers = [
       // Trial Admin role sees only handed over referrals
       filteredReferrals = mockReferralsDb.filter(isReferralAccessibleByTrialAdmin);
     } else if (authHeader.includes('doctor')) {
-      // Doctor role sees only assigned referrals, drafts by this doctor, or filled out by this doctor
+      // Doctor role sees only assigned referrals, drafts by this doctor, filled out by this doctor, or rejected by this doctor
       filteredReferrals = mockReferralsDb.filter(r => {
         const createdByMe = r.referredBy?.name === '李医生';
         const isDraftByMe = r.status === 'Draft' && createdByMe;
         // Check assignment explicitly by status and destination doctor
-        const isAssignedStatus = ['Approved', 'AwaitingFeedbackApproval', 'Closed'].includes(r.status);
+        const isAssignedStatus = ['Approved', 'WaitingForScheduling', 'WaitingForAppointment', 'Pending', 'AwaitingFeedbackApproval', 'Closed'].includes(r.status);
         const assignedToMe = isAssignedStatus && r.extendedData?.destination?.doctor?.includes('李医生');
+        const rejectedByMe = r.extendedData?.rejectedBy?.includes('李医生');
         
-        return isDraftByMe || assignedToMe;
+        return isDraftByMe || assignedToMe || rejectedByMe;
+      }).map(r => {
+        if (r.extendedData?.rejectedBy?.includes('李医生')) {
+          return { ...r, status: 'Rejected' };
+        }
+        return r;
       });
     }
     
@@ -127,11 +133,16 @@ export const handlers = [
     } else if (authHeader.includes('doctor')) {
       const createdByMe = referral.referredBy?.name === '李医生';
       const isDraftByMe = referral.status === 'Draft' && createdByMe;
-      const isAssignedStatus = ['Approved', 'AwaitingFeedbackApproval', 'Closed'].includes(referral.status);
+      const isAssignedStatus = ['Approved', 'WaitingForScheduling', 'WaitingForAppointment', 'Pending', 'AwaitingFeedbackApproval', 'Closed'].includes(referral.status);
       const assignedToMe = isAssignedStatus && referral.extendedData?.destination?.doctor?.includes('李医生');
+      const rejectedByMe = referral.extendedData?.rejectedBy?.includes('李医生');
       
-      if (!isDraftByMe && !assignedToMe) {
+      if (!isDraftByMe && !assignedToMe && !rejectedByMe) {
         return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Doctor cannot access this referral' });
+      }
+
+      if (rejectedByMe) {
+        return HttpResponse.json({ ...referral, status: 'Rejected' });
       }
     }
 
@@ -359,14 +370,25 @@ export const handlers = [
       if (triageStep?.status !== 'active') {
         return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Triage must be active' });
       }
+    } else if (authHeader.includes('doctor')) {
+      if (referral.status !== 'WaitingForScheduling') {
+        return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only referrals waiting for scheduling can be rejected by doctors' });
+      }
     } else {
-      return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Only head councillors or trial admins can reject' });
+      return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Only head councillors, trial admins, or doctors can reject' });
     }
 
     const data = await request.json() as any;
     const reason = data?.reason || '无拒绝原因';
 
     referral.status = 'Rejected';
+    if (authHeader.includes('doctor') && referral.extendedData) {
+      if (!referral.extendedData.rejectedBy) {
+        referral.extendedData.rejectedBy = [];
+      }
+      referral.extendedData.rejectedBy.push('李医生');
+    }
+
     if (referral.extendedData?.steps) {
       if (authHeader.includes('head_councillor')) {
         const reviewStep = referral.extendedData.steps.find(s => s.type === 'review');
@@ -381,6 +403,13 @@ export const handlers = [
           triageStep.status = 'issue';
           triageStep.subtitle = `分诊被拒绝: ${reason}`;
           triageStep.time = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+      } else if (authHeader.includes('doctor')) {
+        const schedulingStep = referral.extendedData.steps.find(s => s.type === 'scheduling');
+        if (schedulingStep) {
+          schedulingStep.status = 'issue';
+          schedulingStep.subtitle = `排诊被拒绝: ${reason}`;
+          schedulingStep.time = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
         }
       }
     }
@@ -401,34 +430,94 @@ export const handlers = [
       return new HttpResponse(null, { status: 404 });
     }
 
-    if (referral.status !== 'Approved' && referral.status !== 'Pending') {
-      return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only approved or pending referrals can be assigned' });
+    if (referral.status !== 'Approved' && referral.status !== 'Pending' && referral.status !== 'Rejected') {
+      return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only approved, pending, or rejected referrals can be assigned' });
     }
 
     const data = await request.json() as any;
     const doctorId = data?.doctorId;
     
-    if (referral.extendedData?.steps) {
-      const triageStep = referral.extendedData.steps.find(s => s.type === 'triage');
-      if (triageStep && triageStep.status === 'active') {
+    let targetReferral = referral;
+
+    if (referral.status === 'Rejected') {
+      targetReferral = JSON.parse(JSON.stringify(referral));
+      targetReferral.id = Math.random().toString(36).substring(7);
+      mockReferralsDb.push(targetReferral as any);
+    }
+
+    targetReferral.status = 'WaitingForScheduling';
+
+    if (targetReferral.extendedData?.steps) {
+      const triageStep = targetReferral.extendedData.steps.find(s => s.type === 'triage');
+      if (triageStep && (triageStep.status === 'active' || triageStep.status === 'completed')) {
         triageStep.status = 'completed';
         triageStep.subtitle = '已分诊';
         triageStep.time = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
       }
-      const evaluationStep = referral.extendedData.steps.find(s => s.type === 'evaluation');
-      if (evaluationStep) {
-        evaluationStep.status = 'active';
-        evaluationStep.subtitle = '等待医生评估';
-        evaluationStep.time = '进行中';
+      const schedulingStep = targetReferral.extendedData.steps.find(s => s.type === 'scheduling');
+      if (schedulingStep) {
+        schedulingStep.status = 'active';
+        schedulingStep.subtitle = '等待医生安排就诊时间';
+        schedulingStep.time = '进行中';
       }
       
-      if (referral.extendedData.destination) {
-          referral.extendedData.destination.doctor = doctorId || '未知医生';
+      if (!targetReferral.extendedData.destination) {
+        targetReferral.extendedData.destination = { hospital: '待分配', department: '待分配', doctor: doctorId || '未知医生', admin: '待分配', transferDate: '' };
+      } else {
+        targetReferral.extendedData.destination.doctor = doctorId || '未知医生';
+      }
+    }
+
+    return HttpResponse.json({ success: true, newId: targetReferral.id });
+  }),
+
+  http.post(api('/api/referrals/:id/schedule'), async ({ request, params }) => {
+    const { id } = params;
+    const authHeader = request.headers.get('Authorization') || '';
+    
+    if (!authHeader.includes('doctor')) {
+      return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Only doctors can schedule appointments' });
+    }
+
+    const referral = mockReferralsDb.find((r) => r.id === id);
+    if (!referral) {
+      return new HttpResponse(null, { status: 404 });
+    }
+
+    if (referral.status !== 'WaitingForScheduling') {
+      return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only referrals waiting for scheduling can be scheduled' });
+    }
+
+    const data = await request.json() as any;
+    const appointmentTime = data?.appointmentTime;
+    
+    referral.status = 'WaitingForAppointment';
+
+    if (referral.extendedData) {
+      if (!referral.extendedData.destination) {
+        referral.extendedData.destination = { hospital: '', department: '', doctor: '', admin: '', transferDate: '' };
+      }
+      referral.extendedData.destination.appointmentTime = appointmentTime;
+
+      if (referral.extendedData.steps) {
+        const schedulingStep = referral.extendedData.steps.find(s => s.type === 'scheduling');
+        if (schedulingStep && schedulingStep.status === 'active') {
+          schedulingStep.status = 'completed';
+          schedulingStep.subtitle = `已预约: ${new Date(appointmentTime).toLocaleString('zh-CN')}`;
+          schedulingStep.time = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        const evaluationStep = referral.extendedData.steps.find(s => s.type === 'evaluation');
+        if (evaluationStep) {
+          evaluationStep.status = 'active';
+          evaluationStep.subtitle = '等待医生评估';
+          evaluationStep.time = '进行中';
+        }
       }
     }
 
     return HttpResponse.json({ success: true });
   }),
+
   http.post(api('/api/feedback'), async () => {
     await delay(MOCK_DELAY_MS);
     return HttpResponse.json({ success: true, message: 'Feedback submitted' });

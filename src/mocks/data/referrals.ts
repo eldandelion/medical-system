@@ -88,6 +88,17 @@ const baseReferrals: Referral[] = [
     riskLevel: 'Medium',
     status: 'AwaitingApproval',
     referredBy: { name: '艾米丽·沃森' }
+  },
+  {
+    id: '9',
+    studentName: '赵云',
+    type: '初次转诊',
+    date: '2026-06-15T00:00:00Z',
+    title: '情绪严重低落',
+    description: '学生近期表现出明显的情绪低落和厌学倾向',
+    riskLevel: 'Medium',
+    status: 'Approved',
+    referredBy: { name: '张明诚' }
   }
 ];
 
@@ -95,6 +106,8 @@ const generateTrackerSteps = (referral: Referral): ReferralStep[] => {
   const isDraft = referral.status === 'Draft';
   const isAwaiting = referral.status === 'AwaitingApproval';
   const isPending = referral.status === 'Pending';
+  const isWaitingForScheduling = referral.status === 'WaitingForScheduling';
+  const isWaitingForAppointment = referral.status === 'WaitingForAppointment';
   const isApproved = referral.status === 'Approved';
   const isClosed = referral.status === 'Closed';
 
@@ -124,12 +137,20 @@ const generateTrackerSteps = (referral: Referral): ReferralStep[] => {
       status: (isDraft || isAwaiting) ? 'pending' : (isPending ? 'active' : 'completed')
     },
     {
+      id: `${referral.id}-3.5`,
+      type: 'scheduling',
+      title: '预约排诊',
+      subtitle: (isDraft || isAwaiting || isPending) ? '等待分诊完成' : (isWaitingForScheduling ? '等待医生安排就诊时间' : '已预约时间'),
+      time: (isDraft || isAwaiting || isPending || isWaitingForScheduling) ? '' : '2026年4月30日',
+      status: (isDraft || isAwaiting || isPending) ? 'pending' : (isWaitingForScheduling ? 'active' : 'completed')
+    },
+    {
       id: `${referral.id}-4`,
       type: 'evaluation',
       title: '医生评估',
-      subtitle: (isDraft || isAwaiting || isPending) ? '等待分诊分配' : (isApproved ? '等待医生接诊' : '医生已完成初步评估'),
-      time: (isDraft || isAwaiting || isPending) ? '' : (isApproved ? '待定' : '2026年5月1日'),
-      status: (isDraft || isAwaiting || isPending) ? 'pending' : (isApproved ? 'active' : 'completed')
+      subtitle: (isDraft || isAwaiting || isPending || isWaitingForScheduling) ? '等待排诊完成' : (isWaitingForAppointment ? '等待医生评估' : '医生已完成初步评估'),
+      time: (isDraft || isAwaiting || isPending || isWaitingForScheduling || isWaitingForAppointment) ? '' : '2026年5月1日',
+      status: (isDraft || isAwaiting || isPending || isWaitingForScheduling) ? 'pending' : (isWaitingForAppointment ? 'active' : 'completed')
     },
     {
       id: `${referral.id}-5`,
@@ -151,6 +172,9 @@ const generateTrackerSteps = (referral: Referral): ReferralStep[] => {
     steps[3].status = 'pending';
     steps[3].subtitle = '等待分诊问题解决';
     steps[3].time = '';
+    steps[4].status = 'pending';
+    steps[4].subtitle = '等待前置步骤完成';
+    steps[4].time = '';
   }
 
   return steps;
@@ -175,7 +199,7 @@ export const mockReferralsDb: Referral[] = baseReferrals.map(referral => ({
     destination: ['Approved', 'AwaitingFeedbackApproval', 'Closed'].includes(referral.status) ? {
       hospital: '中央大学医学中心',
       department: '精神医学与行为科学科',
-      doctor: referral.id === '2' || referral.id === '5' ? '李医生' : '张医生 (总住院医师)',
+      doctor: ['2', '5', '9'].includes(referral.id) ? '李医生' : '张医生 (总住院医师)',
       admin: '系统处理程序 (自动分配)',
       transferDate: referral.date
     } : undefined,

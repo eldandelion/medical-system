@@ -7,7 +7,8 @@ import {
   Users,
   Building2,
   Stethoscope,
-  MessageSquare
+  MessageSquare,
+  Calendar
 } from 'lucide-react';
 import { ReferralStep, ReferralStepStatus, ReferralStepType } from '../../types';
 import { formatDateToChinese } from '../../utils/dateUtils';
@@ -51,6 +52,7 @@ const getIconForType = (type: ReferralStepType) => {
     case 'initiation': return GraduationCap;
     case 'review': return Users;
     case 'triage': return Building2;
+    case 'scheduling': return Calendar;
     case 'evaluation': return Stethoscope;
     case 'feedback': return MessageSquare;
     default: return null;
@@ -107,7 +109,7 @@ export function ReferralTracker({ steps }: ReferralTrackerProps) {
             let customLineStyle = {};
             if (step.status === 'completed' && (nextStep?.status === 'completed' || nextStep?.status === 'active')) {
               lineColor = "bg-[var(--md-sys-color-primary)]";
-            } else if (step.status === 'completed' && nextStep?.status === 'issue') {
+            } else if ((step.status === 'completed' || step.status === 'active') && nextStep?.status === 'issue') {
               lineColor = ""; // Will use inline style
               customLineStyle = { background: "linear-gradient(to bottom, var(--md-sys-color-primary), var(--md-sys-color-error))" };
             }

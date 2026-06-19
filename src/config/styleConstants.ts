@@ -20,6 +20,8 @@ export const STATUS_STYLES: Record<string, string> = {
   Recalled: 'bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface-variant)]',
   Rejected: 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]',
   AwaitingFeedbackApproval: 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]',
+  WaitingForScheduling: 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]',
+  WaitingForAppointment: 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]',
   default: 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]'
 };
 
@@ -32,5 +34,7 @@ export const STATUS_LABELS: Record<string, string> = {
   Draft: '草案',
   Recalled: '已撤回',
   Rejected: '被拒绝',
-  AwaitingFeedbackApproval: '待随访'
+  AwaitingFeedbackApproval: '待随访',
+  WaitingForScheduling: '待排诊',
+  WaitingForAppointment: '待就诊'
 };

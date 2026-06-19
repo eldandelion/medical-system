@@ -1,5 +1,5 @@
 export type ReferralStepStatus = 'completed' | 'issue' | 'pending' | 'active';
-export type ReferralStepType = 'initiation' | 'review' | 'triage' | 'evaluation' | 'feedback';
+export type ReferralStepType = 'initiation' | 'review' | 'triage' | 'scheduling' | 'evaluation' | 'feedback';
 
 export type ClinicalStatusType = 'FirstVisit' | 'Medicated' | 'PriorTherapy';
 export type SevereRiskFactorType = 'Ideation' | 'Attempt' | 'SelfHarm';
@@ -21,7 +21,7 @@ export interface Referral {
   title: string;
   description: string;
   riskLevel: 'High' | 'Medium' | 'Low';
-  status: 'Draft' | 'Closed' | 'Pending' | 'Approved' | 'AwaitingApproval' | 'Recalled' | 'AwaitingFeedbackApproval' | 'Error' | 'Rejected';
+  status: 'Draft' | 'Closed' | 'Pending' | 'Approved' | 'AwaitingApproval' | 'Recalled' | 'AwaitingFeedbackApproval' | 'Error' | 'Rejected' | 'WaitingForScheduling' | 'WaitingForAppointment';
   displayStatus?: string;
   referredBy?: {
     name: string;
@@ -47,6 +47,7 @@ export interface Referral {
       doctor: string;
       admin: string;
       transferDate: string;
+      appointmentTime?: string;
     };
     risk: {
       ideation: boolean;
@@ -68,6 +69,7 @@ export interface Referral {
         size: string;
       }[];
     };
+    rejectedBy?: string[];
     steps?: ReferralStep[];
   };
 }

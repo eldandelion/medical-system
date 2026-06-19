@@ -21,7 +21,7 @@ import { Referral } from '../../types';
 
 interface ReferralDetailsViewProps {
   referral: Referral;
-  userRole?: 'student' | 'teacher' | 'head-councillor' | 'trial-admin';
+  userRole?: 'student' | 'teacher' | 'head-councillor' | 'trial-admin' | 'doctor';
   hideHeader?: boolean;
   activeTab?: string;
   onTabChange?: (tabId: string) => void;
@@ -46,8 +46,10 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
   const [isRecallDialogOpen, setIsRecallDialogOpen] = React.useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [isAssignDialogOpen, setIsAssignDialogOpen] = React.useState(false);
+  const [isSchedulingDialogOpen, setIsSchedulingDialogOpen] = React.useState(false);
   const [rejectionReason, setRejectionReason] = React.useState('');
-  const [selectedDoctorId, setSelectedDoctorId] = React.useState('张伟医生');
+  const [scheduleDateTime, setScheduleDateTime] = React.useState('');
+  const [selectedDoctorId, setSelectedDoctorId] = React.useState('李医生');
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
 
   const { openCreation, closeCreation } = useCreationOverlay();
@@ -103,6 +105,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
   );
 
   const displayStatus = referral.displayStatus || referral.status;
+  const isDoctorRejected = displayStatus === 'Rejected' && extendedData?.steps?.some((s: any) => s.type === 'scheduling' && s.status === 'issue');
 
   const handleRecall = async () => {
     setIsRecallDialogOpen(false);
@@ -209,6 +212,32 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
     }
   };
 
+  const handleSchedule = async () => {
+    if (!scheduleDateTime) {
+      showSnackbar({ message: '请选择预约时间', duration: 3000 });
+      return;
+    }
+    setIsSchedulingDialogOpen(false);
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${referral.id}/schedule`.replace('//api', '/api'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.token || ''}`
+        },
+        body: JSON.stringify({ appointmentTime: scheduleDateTime })
+      });
+      if (res.ok) {
+        showSnackbar({ message: '预约已排期', duration: 3000 });
+        onUpdate?.();
+      } else {
+        throw new Error('Failed to schedule');
+      }
+    } catch (e) {
+      showSnackbar({ message: '预约排期失败，请稍后重试', duration: 3000 });
+    }
+  };
+
   const handleResubmit = () => {
     // Map existing data to CreationForm format
     const initialData = {
@@ -284,7 +313,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
         />
       ) : undefined}
       footer={
-        (displayStatus === 'Recalled' && userRole === 'head-councillor') || displayStatus === 'Pending' || displayStatus === 'Closed' || displayStatus === 'Rejected' || (displayStatus === 'AwaitingTriage' && (userRole === 'teacher' || userRole === 'head-councillor')) ? undefined : (
+        (displayStatus === 'Recalled' && userRole === 'head-councillor') || displayStatus === 'Pending' || displayStatus === 'Closed' || (displayStatus === 'Rejected' && !(userRole === 'trial-admin' && isDoctorRejected)) || (displayStatus === 'AwaitingTriage' && (userRole === 'teacher' || userRole === 'head-councillor')) || (displayStatus === 'WaitingForScheduling' && userRole === 'trial-admin') ? undefined : (
           <ActionFooter>
             {displayStatus === 'Recalled' ? (
               userRole === 'teacher' ? (
@@ -362,6 +391,30 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
                   />
                 </>
               ) : null
+            ) : displayStatus === 'WaitingForScheduling' ? (
+              userRole === 'doctor' ? (
+                <>
+                  <PrimaryButton icon="calendar_month" label="安排就诊" onClick={() => setIsSchedulingDialogOpen(true)} />
+                  <SecondaryButton
+                    icon="close"
+                    label="拒绝"
+                    onClick={() => setIsRejectionDialogOpen(true)}
+                    style={{
+                      color: 'var(--md-sys-color-error)',
+                      '--md-outlined-button-label-text-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-with-icon-icon-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-hover-label-text-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-hover-state-layer-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-with-icon-hover-icon-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-pressed-label-text-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-pressed-state-layer-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-with-icon-pressed-icon-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-focus-label-text-color': 'var(--md-sys-color-error)',
+                      '--md-outlined-button-with-icon-focus-icon-color': 'var(--md-sys-color-error)',
+                    } as React.CSSProperties}
+                  />
+                </>
+              ) : null
             ) : displayStatus === 'Draft' && (userRole === 'teacher' || userRole === 'head-councillor') ? (
               <>
                 <PrimaryButton icon="edit_document" label="编辑草案" onClick={() => {
@@ -408,6 +461,12 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
               <>
                 <PrimaryButton icon="check" label="确认反馈" />
               </>
+            ) : displayStatus === 'Rejected' ? (
+              userRole === 'trial-admin' && isDoctorRejected ? (
+                <>
+                  <PrimaryButton icon="assignment_ind" label="重新分配医生" onClick={() => setIsAssignDialogOpen(true)} />
+                </>
+              ) : null
             ) : null}
           </ActionFooter>
         )
@@ -570,8 +629,8 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
               onChange={(e: any) => setSelectedDoctorId(e.target.value)}
             >
               {/* @ts-ignore */}
-              <md-select-option value="张伟医生">
-                <div slot="headline">张伟医生</div>
+              <md-select-option value="李医生">
+                <div slot="headline">李医生</div>
                 <div slot="supporting-text" className="text-[12px] opacity-70">医学院</div>
               {/* @ts-ignore */}
               </md-select-option>
@@ -595,6 +654,33 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
               </md-select-option>
             {/* @ts-ignore */}
             </md-outlined-select>
+          </div>
+        </div>
+      </GenericDialog>
+
+      {/* Scheduling Dialog */}
+      <GenericDialog
+        open={isSchedulingDialogOpen}
+        onClose={() => setIsSchedulingDialogOpen(false)}
+        title="安排就诊时间"
+        actions={
+          <>
+            <SecondaryButton label="取消" onClick={() => setIsSchedulingDialogOpen(false)} />
+            <PrimaryButton label="确认安排" onClick={handleSchedule} />
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
+            请选择为该学生安排的就诊日期和时间。排期后，学生将收到通知。
+          </p>
+          <div className="relative mt-2">
+            <input 
+              type="datetime-local" 
+              className="w-full px-4 py-3 rounded-xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface)] focus:outline-none focus:border-[var(--md-sys-color-primary)] focus:ring-1 focus:ring-[var(--md-sys-color-primary)] transition-all"
+              value={scheduleDateTime}
+              onChange={(e) => setScheduleDateTime(e.target.value)}
+            />
           </div>
         </div>
       </GenericDialog>
