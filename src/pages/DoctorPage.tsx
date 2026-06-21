@@ -17,6 +17,7 @@ import { useCreationOverlay } from '../contexts/CreationContext';
 import { FeedbackCreationForm } from '../components/records/FeedbackCreationForm';
 import { TertiaryFab } from '../components/common/Buttons';
 import { fetchWithRetry } from '../utils/api';
+import { mutateData } from '../hooks/useDataFetch';
 import { DOCTOR_METRICS_CONFIG } from '../config/dashboardConfig';
 
 export const DoctorTabs = {
@@ -220,7 +221,13 @@ export function DoctorPage() {
               {selectedItem && (
                 <>
                   {activePage === DoctorTabs.REFERRAL_MANAGEMENT && (
-                    <ReferralDetailsView referral={selectedItem} userRole="doctor" activeTab={activeTab} onTabChange={setActiveTab} />
+                    <ReferralDetailsView 
+                      referral={selectedItem} 
+                      userRole="doctor" 
+                      activeTab={activeTab} 
+                      onTabChange={setActiveTab} 
+                      onUpdate={() => mutateData('/api/referrals')}
+                    />
                   )}
                 </>
               )}

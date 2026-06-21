@@ -18,6 +18,7 @@ import { useCreationOverlay } from '../contexts/CreationContext';
 import { ReferralCreationForm } from '../components/records/ReferralCreationForm';
 import { TertiaryFab } from '../components/common/Buttons';
 import { fetchWithRetry } from '../utils/api';
+import { mutateData } from '../hooks/useDataFetch';
 
 import { TEACHER_METRICS_CONFIG } from '../config/dashboardConfig';
 
@@ -45,7 +46,6 @@ export function TeacherPage() {
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
   const [dashboardData, setDashboardData] = React.useState<any>(null);
   const [dashboardLoading, setDashboardLoading] = React.useState(true);
-  const [refreshKey, setRefreshKey] = React.useState(0);
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
 
 
@@ -133,7 +133,7 @@ export function TeacherPage() {
       case TeacherTabs.STUDENTS:
         return <StudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} header={(loading) => <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} isLoading={loading} />} />;
       case TeacherTabs.REFERRAL_MANAGEMENT:
-        return <ReferralManagementView key={`rmv-${refreshKey}`} onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} header={(loading) => <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} isLoading={loading} />} />;
+        return <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} header={(loading) => <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} isLoading={loading} />} />;
       case TeacherTabs.SECURITY:
         return (
           <>
@@ -241,7 +241,7 @@ export function TeacherPage() {
                       onTabChange={setActiveTab} 
                       onUpdate={() => {
                         setSelectedItem(null);
-                        setRefreshKey(k => k + 1);
+                        mutateData('/api/referrals');
                       }}
                     />
                   )}

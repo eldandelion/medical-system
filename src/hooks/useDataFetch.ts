@@ -1,15 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const globalCache = new Map<string, any>();
+type Listener = () => void;
+const listeners = new Map<string, Set<Listener>>();
 
 export const clearDataCache = () => {
   globalCache.clear();
+};
+
+export const mutateData = (url: string) => {
+  globalCache.delete(url);
+  const urlListeners = listeners.get(url);
+  if (urlListeners) {
+    urlListeners.forEach(listener => listener());
+  }
 };
 
 export function useDataFetch<T>(url: string, processData?: (data: any) => T, options?: RequestInit) {
   const cached = globalCache.get(url) as T | undefined;
   const [data, setData] = useState<T | null>(cached || null);
   const [loading, setLoading] = useState(true);
+  const [trigger, setTrigger] = useState(0);
+
+  useEffect(() => {
+    const listener = () => setTrigger(t => t + 1);
+    if (!listeners.has(url)) {
+      listeners.set(url, new Set());
+    }
+    listeners.get(url)!.add(listener);
+    
+    return () => {
+      const urlListeners = listeners.get(url);
+      if (urlListeners) {
+        urlListeners.delete(listener);
+      }
+    };
+  }, [url]);
 
   useEffect(() => {
     let active = true;
@@ -39,7 +65,7 @@ export function useDataFetch<T>(url: string, processData?: (data: any) => T, opt
     return () => {
       active = false;
     };
-  }, [url]);
+  }, [url, trigger]);
 
   return { data, loading, setData };
 }

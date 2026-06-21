@@ -17,6 +17,7 @@ import { useCreationOverlay } from '../contexts/CreationContext';
 import { ReferralCreationForm } from '../components/records/ReferralCreationForm';
 import { TertiaryFab } from '../components/common/Buttons';
 import { fetchWithRetry } from '../utils/api';
+import { mutateData } from '../hooks/useDataFetch';
 
 import { TRIAL_ADMIN_METRICS_CONFIG } from '../config/dashboardConfig';
 
@@ -222,7 +223,13 @@ export function TrialAdminPage() {
                     <StaffDetailsView staff={selectedItem} activeTab={activeTab} onTabChange={setActiveTab} />
                   )}
                   {activePage === TrialAdminTabs.REFERRAL_MANAGEMENT && (
-                    <ReferralDetailsView referral={selectedItem} userRole="trial-admin" activeTab={activeTab} onTabChange={setActiveTab} />
+                    <ReferralDetailsView 
+                      referral={selectedItem} 
+                      userRole="trial-admin" 
+                      activeTab={activeTab} 
+                      onTabChange={setActiveTab} 
+                      onUpdate={() => mutateData('/api/referrals')}
+                    />
                   )}
                 </>
               )}
