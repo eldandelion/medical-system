@@ -195,7 +195,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
         actions={
           <>
             <TertiaryButton label="取消" onClick={() => state.setIsRejectionDialogOpen(false)} />
-            <DestructiveButton label="确认拒绝" icon="close" onClick={actions.handleReject} />
+            <TertiaryButton label="确认拒绝" onClick={actions.handleReject} />
           </>
         }
       >
@@ -236,8 +236,8 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
         title="确认批准转诊？"
         actions={
           <>
-            <SecondaryButton label="取消" onClick={() => state.setIsApprovalDialogOpen(false)} />
-            <PrimaryButton label="确认批准" onClick={actions.handleApprove} />
+            <TertiaryButton label="取消" onClick={() => state.setIsApprovalDialogOpen(false)} />
+            <TertiaryButton label="确认批准" onClick={actions.handleApprove} />
           </>
         }
       >
@@ -266,8 +266,8 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
         title="分配医生"
         actions={
           <>
-            <SecondaryButton label="取消" onClick={() => state.setIsAssignDialogOpen(false)} />
-            <PrimaryButton label="确认分配" onClick={actions.handleAssign} />
+            <TertiaryButton label="取消" onClick={() => state.setIsAssignDialogOpen(false)} />
+            <TertiaryButton label="确认分配" onClick={actions.handleAssign} />
           </>
         }
       >

@@ -41,7 +41,7 @@ const HEAD_COUNCILLOR_TAB_TITLES: Record<HeadCouncillorPageName, string> = {
   [HeadCouncillorTabs.STUDENTS]: '学生管理',
   [HeadCouncillorTabs.STAFF]: '人员管理',
   [HeadCouncillorTabs.REFERRAL_MANAGEMENT]: '转诊管理',
-  [HeadCouncillorTabs.SECURITY]: '安全与知情同意'
+  [HeadCouncillorTabs.SECURITY]: '隐私安全'
 };
 
 export function HeadCouncillorPage() {
@@ -217,7 +217,7 @@ export function HeadCouncillorPage() {
         <NavItem icon="group" label="学生管理" active={activePage === HeadCouncillorTabs.STUDENTS} onClick={() => handlePageChange(HeadCouncillorTabs.STUDENTS)} />
         <NavItem icon="engineering" label="人员管理" active={activePage === HeadCouncillorTabs.STAFF} onClick={() => handlePageChange(HeadCouncillorTabs.STAFF)} />
         <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === HeadCouncillorTabs.REFERRAL_MANAGEMENT} onClick={() => handlePageChange(HeadCouncillorTabs.REFERRAL_MANAGEMENT)} />
-        <NavItem icon="security" label="安全与知情同意" active={activePage === HeadCouncillorTabs.SECURITY} onClick={() => handlePageChange(HeadCouncillorTabs.SECURITY)} />
+        <NavItem icon="security" label="隐私安全" active={activePage === HeadCouncillorTabs.SECURITY} onClick={() => handlePageChange(HeadCouncillorTabs.SECURITY)} />
       </Sidebar>
 
       <div className="flex-1 flex flex-col min-w-0 bg-transparent">

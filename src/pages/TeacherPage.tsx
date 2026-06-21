@@ -37,7 +37,7 @@ const TEACHER_TAB_TITLES: Record<TeacherPageName, string> = {
   [TeacherTabs.NOTIFICATIONS]: '通知中心',
   [TeacherTabs.STUDENTS]: '学生管理',
   [TeacherTabs.REFERRAL_MANAGEMENT]: '转诊管理',
-  [TeacherTabs.SECURITY]: '安全与知情同意'
+  [TeacherTabs.SECURITY]: '隐私安全'
 };
 
 export function TeacherPage() {
@@ -202,7 +202,7 @@ export function TeacherPage() {
 
         <NavItem icon="group" label="学生管理" active={activePage === TeacherTabs.STUDENTS} onClick={() => handlePageChange(TeacherTabs.STUDENTS)} />
         <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === TeacherTabs.REFERRAL_MANAGEMENT} onClick={() => handlePageChange(TeacherTabs.REFERRAL_MANAGEMENT)} />
-        <NavItem icon="security" label="安全与知情同意" active={activePage === TeacherTabs.SECURITY} onClick={() => handlePageChange(TeacherTabs.SECURITY)} />
+        <NavItem icon="security" label="隐私安全" active={activePage === TeacherTabs.SECURITY} onClick={() => handlePageChange(TeacherTabs.SECURITY)} />
       </Sidebar>
 
       <div className="flex-1 flex flex-col min-w-0 bg-transparent">

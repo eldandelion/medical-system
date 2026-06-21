@@ -34,7 +34,7 @@ const DOCTOR_TAB_TITLES: Record<DoctorPageName, string> = {
   [DoctorTabs.DASHBOARD]: '控制面板',
   [DoctorTabs.NOTIFICATIONS]: '通知中心',
   [DoctorTabs.REFERRAL_MANAGEMENT]: '转诊管理',
-  [DoctorTabs.SECURITY]: '安全与知情同意'
+  [DoctorTabs.SECURITY]: '隐私安全'
 };
 
 export function DoctorPage() {
@@ -194,7 +194,7 @@ export function DoctorPage() {
         <NavItem icon="notifications" label="通知中心" active={activePage === DoctorTabs.NOTIFICATIONS} onClick={() => handlePageChange(DoctorTabs.NOTIFICATIONS)} badge={true} />
 
         <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === DoctorTabs.REFERRAL_MANAGEMENT} onClick={() => handlePageChange(DoctorTabs.REFERRAL_MANAGEMENT)} />
-        <NavItem icon="security" label="安全与知情同意" active={activePage === DoctorTabs.SECURITY} onClick={() => handlePageChange(DoctorTabs.SECURITY)} />
+        <NavItem icon="security" label="隐私安全" active={activePage === DoctorTabs.SECURITY} onClick={() => handlePageChange(DoctorTabs.SECURITY)} />
       </Sidebar>
 
       <div className="flex-1 flex flex-col min-w-0 bg-transparent">
