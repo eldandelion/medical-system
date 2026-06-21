@@ -9,6 +9,7 @@ import { ReferralManagementView } from '../components/records/ReferralManagement
 import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
 import { DashboardView } from '../components/dashboard/DashboardView';
+import { DashboardCalendarWidget } from '../components/dashboard/DashboardCalendarWidget';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { ReferralDetailsView, REFERRAL_DETAILS_TABS } from '../components/records/ReferralDetailsView';
 import { StaffManagementView } from '../components/staff/StaffManagementView';
@@ -167,6 +168,7 @@ export function DoctorPage() {
             }))}
             activityTitle={dashboardData.activityTitle}
             activities={dashboardData.activities}
+            rightWidget={<DashboardCalendarWidget doctorId={dashboardData.profileSummary.name || '李医生'} />}
           />
         </>) : null;
       default:

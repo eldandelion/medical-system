@@ -32,6 +32,7 @@ interface DashboardViewProps {
   activityTitle: string;
   activities: ActivityItem[];
   onActivityClick?: (item: ActivityItem) => void;
+  rightWidget?: React.ReactNode;
 }
 
 export function DashboardView({
@@ -39,7 +40,8 @@ export function DashboardView({
   actionMetrics,
   activityTitle,
   activities,
-  onActivityClick
+  onActivityClick,
+  rightWidget
 }: DashboardViewProps) {
   return (
     <div className="w-full h-full p-6 bg-[var(--md-sys-color-surface)] overflow-y-auto">
@@ -68,15 +70,30 @@ export function DashboardView({
           </div>
         ))}
 
-        {/* Recent Activity List */}
-        <div className="md:col-span-12 flex flex-col gap-4 mt-4">
-          <h3 className="text-[16px] leading-[24px] font-medium text-[var(--md-sys-color-on-surface)] tracking-[0.15px]">
-            {activityTitle}
-          </h3>
-          <InteractiveStatusList
-            items={activities}
-            onRowClick={onActivityClick || (() => {})}
-          />
+        {/* Bottom Section: Recent Activity List & Optional Right Widget */}
+        <div className={`md:col-span-12 grid grid-cols-1 ${rightWidget ? 'md:grid-cols-2' : ''} gap-6 mt-4`}>
+          {/* Left Side: Activity List */}
+          <div className="flex flex-col gap-4">
+            <h3 className="text-[16px] leading-[24px] font-medium text-[var(--md-sys-color-on-surface)] tracking-[0.15px]">
+              {activityTitle}
+            </h3>
+            <InteractiveStatusList
+              items={activities}
+              onRowClick={onActivityClick || (() => {})}
+            />
+          </div>
+
+          {/* Right Side: Optional Widget */}
+          {rightWidget && (
+            <div className="flex flex-col gap-4">
+              <h3 className="text-[16px] leading-[24px] font-medium text-[var(--md-sys-color-on-surface)] tracking-[0.15px]">
+                日程安排
+              </h3>
+              <div className="flex-1 bg-[var(--md-sys-color-surface-container-low)] rounded-2xl overflow-hidden">
+                {rightWidget}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
