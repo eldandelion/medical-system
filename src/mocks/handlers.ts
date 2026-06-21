@@ -477,6 +477,30 @@ export const handlers = [
     return HttpResponse.json({ success: true, newId: targetReferral.id });
   }),
 
+  http.get(api('/api/doctors/:id/calendar'), async ({ request, params }) => {
+    const { id } = params;
+    const authHeader = request.headers.get('Authorization') || '';
+    
+    // Security check: Only allow doctors to view the schedule.
+    // In a real application, we would also verify that the decoded JWT token matches the requested doctor ID.
+    // This ensures no other doctor or user can query this endpoint.
+    if (!authHeader.includes('doctor')) {
+      return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Only the assigned doctor can view their schedule' });
+    }
+
+    await delay(MOCK_DELAY_MS);
+
+    // Dynamically calculate occupied slots from mockReferralsDb
+    const occupiedSlots = mockReferralsDb
+      .filter(r => 
+        r.extendedData?.destination?.doctor?.includes(id as string) &&
+        r.extendedData?.destination?.appointmentTime
+      )
+      .map(r => r.extendedData!.destination!.appointmentTime!);
+
+    return HttpResponse.json({ occupiedSlots });
+  }),
+
   http.post(api('/api/referrals/:id/schedule'), async ({ request, params }) => {
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';

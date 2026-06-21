@@ -15,6 +15,7 @@ import { useReferralActions } from '../../hooks/useReferralActions';
 import { ReferralActionFooter } from './ReferralActionFooter';
 import { GenericDialog } from '../common/GenericDialog';
 import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS } from '../../config/styleConstants';
+import { DoctorScheduleCalendar } from '../common/DoctorScheduleCalendar';
 
 import { Referral } from '../../types';
 
@@ -35,7 +36,6 @@ export const REFERRAL_DETAILS_TABS = [
   { id: 'psychometrics', label: '量表数据', icon: 'analytics' },
   { id: 'feedback', label: '诊疗反馈', icon: 'history_edu' },
 ];
-
 
 export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab: propsActiveTab, onTabChange, onUpdate }: ReferralDetailsViewProps) {
   const { isFullScreen } = useDetails();
@@ -308,6 +308,7 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
         open={state.isSchedulingDialogOpen}
         onClose={() => state.setIsSchedulingDialogOpen(false)}
         title="安排就诊时间"
+        maxWidth="900px"
         actions={
           <>
             <SecondaryButton label="取消" onClick={() => state.setIsSchedulingDialogOpen(false)} />
@@ -315,16 +316,15 @@ export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab:
           </>
         }
       >
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 w-full">
           <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
             请选择为该学生安排的就诊日期和时间。排期后，学生将收到通知。
           </p>
-          <div className="relative mt-2">
-            <input 
-              type="datetime-local" 
-              className="w-full px-4 py-3 rounded-xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface)] focus:outline-none focus:border-[var(--md-sys-color-primary)] focus:ring-1 focus:ring-[var(--md-sys-color-primary)] transition-all"
-              value={state.scheduleDateTime}
-              onChange={(e) => state.setScheduleDateTime(e.target.value)}
+          <div className="mt-2">
+            <DoctorScheduleCalendar 
+              doctorId={state.selectedDoctorId}
+              selectedDateTime={state.scheduleDateTime}
+              onSelectDateTime={(val) => state.setScheduleDateTime(val)}
             />
           </div>
         </div>

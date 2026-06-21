@@ -12,6 +12,7 @@ import { DashboardView } from '../components/dashboard/DashboardView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { RecordDetailsView } from '../components/records/RecordDetailsView';
+import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { STUDENT_METRICS_CONFIG } from '../config/dashboardConfig';
 import { fetchWithRetry } from '../utils/api';
 
