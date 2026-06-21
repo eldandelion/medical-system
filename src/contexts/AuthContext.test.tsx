@@ -52,6 +52,20 @@ describe('AuthContext', () => {
 
     expect(result.current.session.role).toBe('trial-admin');
     expect(result.current.session.token).toBe('mock_trial_admin_token');
+
+    act(() => {
+      result.current.setRole('head-councillor');
+    });
+
+    expect(result.current.session.role).toBe('head-councillor');
+    expect(result.current.session.token).toBe('mock_head_councillor_token_wang');
+
+    act(() => {
+      result.current.setRole('student');
+    });
+
+    expect(result.current.session.role).toBe('student');
+    expect(result.current.session.token).toBe('mock_student_token');
   });
 
   it('clears data cache when switching roles', () => {

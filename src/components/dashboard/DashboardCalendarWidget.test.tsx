@@ -3,19 +3,31 @@ import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
 import { DashboardCalendarWidget } from './DashboardCalendarWidget';
 import * as auth from '../../contexts/AuthContext';
-import * as ReactQuery from '@tanstack/react-query';
-
-vi.mock('@tanstack/react-query', () => ({
-  useQuery: vi.fn()
-}));
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: vi.fn()
 }));
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false, // disable retries for tests
+    },
+  },
+});
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <QueryClientProvider client={queryClient}>
+    {children}
+  </QueryClientProvider>
+);
+
 describe('DashboardCalendarWidget', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    global.fetch = vi.fn();
+    queryClient.clear();
     (auth.useAuth as any).mockReturnValue({ session: { token: 'mock-token' } });
   });
 
@@ -24,10 +36,11 @@ describe('DashboardCalendarWidget', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders loading state initially', () => {
-    (ReactQuery.useQuery as Mock).mockReturnValue({ isLoading: true, data: undefined, error: null });
+  it('renders loading state initially', async () => {
+    // Delay fetch to simulate loading state
+    (global.fetch as any).mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
 
-    render(<DashboardCalendarWidget doctorId="doctor-123" />);
+    render(<DashboardCalendarWidget doctorId="doctor-123" />, { wrapper });
 
     expect(document.querySelector('md-circular-progress')).toBeDefined();
   });
@@ -44,9 +57,12 @@ describe('DashboardCalendarWidget', () => {
     const dd = String(monday.getDate()).padStart(2, '0');
     const mockDateStr = `${yyyy}-${mm}-${dd}`;
 
-    (ReactQuery.useQuery as Mock).mockReturnValue({ isLoading: false, data: { occupiedSlots: [`${yyyy}-${mm}-${dd}T09:00`] }, error: null });
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({ occupiedSlots: [`${yyyy}-${mm}-${dd}T09:00`] })
+    });
 
-    render(<DashboardCalendarWidget doctorId="doctor-123" />);
+    render(<DashboardCalendarWidget doctorId="doctor-123" />, { wrapper });
 
     await waitFor(() => {
       expect(document.querySelector('md-circular-progress')).toBeNull();
@@ -60,9 +76,9 @@ describe('DashboardCalendarWidget', () => {
   });
 
   it('renders an error message when the API request fails', async () => {
-    (ReactQuery.useQuery as Mock).mockReturnValue({ isLoading: false, data: undefined, error: new Error('Network error') });
+    (global.fetch as any).mockResolvedValue({ ok: false });
 
-    render(<DashboardCalendarWidget doctorId="doctor-123" />);
+    render(<DashboardCalendarWidget doctorId="doctor-123" />, { wrapper });
 
     await waitFor(() => {
       expect(screen.getByText('无法加载排班表。')).toBeDefined();
@@ -70,9 +86,12 @@ describe('DashboardCalendarWidget', () => {
   });
 
   it('does not allow interaction since it is read-only', async () => {
-    (ReactQuery.useQuery as Mock).mockReturnValue({ isLoading: false, data: { occupiedSlots: ['2026-06-15T09:00:00Z'] }, error: null });
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({ occupiedSlots: ['2026-06-15T09:00:00Z'] })
+    });
 
-    render(<DashboardCalendarWidget doctorId="doctor-123" />);
+    render(<DashboardCalendarWidget doctorId="doctor-123" />, { wrapper });
 
     await waitFor(() => {
       expect(document.querySelector('md-circular-progress')).toBeNull();

@@ -3,11 +3,25 @@ import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/re
 import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
 import { DoctorScheduleCalendar } from './DoctorScheduleCalendar';
 import * as auth from '../../contexts/AuthContext';
-import * as ReactQuery from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-vi.mock('@tanstack/react-query', () => ({
-  useQuery: vi.fn()
+vi.mock('../../contexts/AuthContext', () => ({
+  useAuth: vi.fn()
 }));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false, // disable retries for tests
+    },
+  },
+});
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <QueryClientProvider client={queryClient}>
+    {children}
+  </QueryClientProvider>
+);
 
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: vi.fn()
@@ -18,6 +32,8 @@ describe('DoctorScheduleCalendar', () => {
   
   beforeEach(() => {
     vi.clearAllMocks();
+    global.fetch = vi.fn();
+    queryClient.clear();
     (auth.useAuth as any).mockReturnValue({ session: { token: 'mock-token' } });
   });
 
@@ -26,15 +42,16 @@ describe('DoctorScheduleCalendar', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders loading state initially when doctorId is provided', () => {
-    (ReactQuery.useQuery as Mock).mockReturnValue({ isLoading: true, data: undefined, error: null });
+  it('renders loading state initially when doctorId is provided', async () => {
+    (global.fetch as any).mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
 
     render(
       <DoctorScheduleCalendar 
         doctorId="doctor-123" 
         selectedDateTime="" 
         onSelectDateTime={mockOnSelectDateTime} 
-      />
+      />,
+      { wrapper }
     );
 
     expect(document.querySelector('md-circular-progress')).toBeDefined();
@@ -52,14 +69,18 @@ describe('DoctorScheduleCalendar', () => {
     const dd = String(monday.getDate()).padStart(2, '0');
     const mockDateStr = `${yyyy}-${mm}-${dd}`;
 
-    (ReactQuery.useQuery as Mock).mockReturnValue({ isLoading: false, data: { occupiedSlots: [`${mockDateStr}T10:00`] }, error: null });
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({ occupiedSlots: [`${yyyy}-${mm}-${dd}T09:00`] })
+    });
 
     render(
       <DoctorScheduleCalendar 
         doctorId="doctor-123" 
         selectedDateTime="" 
         onSelectDateTime={mockOnSelectDateTime} 
-      />
+      />,
+      { wrapper }
     );
 
     await waitFor(() => {
@@ -74,14 +95,18 @@ describe('DoctorScheduleCalendar', () => {
   });
 
   it('calls onSelectDateTime when an unoccupied slot is clicked', async () => {
-    (ReactQuery.useQuery as Mock).mockReturnValue({ isLoading: false, data: { occupiedSlots: ['2026-06-15T09:00:00Z'] }, error: null });
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({ occupiedSlots: ['2026-06-15T09:00:00Z'] })
+    });
 
     render(
       <DoctorScheduleCalendar 
         doctorId="doctor-123" 
         selectedDateTime="" 
         onSelectDateTime={mockOnSelectDateTime} 
-      />
+      />,
+      { wrapper }
     );
 
     await waitFor(() => {
@@ -111,16 +136,19 @@ describe('DoctorScheduleCalendar', () => {
     const yyyy = monday.getFullYear();
     const mm = String(monday.getMonth() + 1).padStart(2, '0');
     const dd = String(monday.getDate()).padStart(2, '0');
-    const mockDateStr = `${yyyy}-${mm}-${dd}`;
-
-    (ReactQuery.useQuery as Mock).mockReturnValue({ isLoading: false, data: { occupiedSlots: [`${mockDateStr}T08:00`] }, error: null });
+    
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({ occupiedSlots: [`${yyyy}-${mm}-${dd}T08:00`] })
+    });
 
     render(
       <DoctorScheduleCalendar 
         doctorId="doctor-123" 
         selectedDateTime="" 
         onSelectDateTime={mockOnSelectDateTime} 
-      />
+      />,
+      { wrapper }
     );
 
     await waitFor(() => {
@@ -139,18 +167,38 @@ describe('DoctorScheduleCalendar', () => {
   });
 
   it('renders an error message when the API request fails', async () => {
-    (ReactQuery.useQuery as Mock).mockReturnValue({ isLoading: false, data: undefined, error: new Error('Network error') });
+    (global.fetch as any).mockResolvedValue({ ok: false });
 
     render(
       <DoctorScheduleCalendar 
         doctorId="doctor-123" 
         selectedDateTime="" 
         onSelectDateTime={mockOnSelectDateTime} 
-      />
+      />,
+      { wrapper }
     );
 
     await waitFor(() => {
       expect(screen.getByText('无法加载排班表，您可能没有权限查看。')).toBeDefined();
     });
+  });
+
+  it('does not render loading spinner if no doctorId is provided', async () => {
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({ occupiedSlots: [] })
+    });
+
+    render(
+      <DoctorScheduleCalendar 
+        doctorId="" 
+        selectedDateTime="" 
+        onSelectDateTime={mockOnSelectDateTime} 
+      />,
+      { wrapper }
+    );
+
+    // It should not fetch or show loading
+    expect(document.querySelector('md-circular-progress')).toBeNull();
   });
 });
