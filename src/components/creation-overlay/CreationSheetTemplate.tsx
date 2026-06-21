@@ -9,8 +9,21 @@ export function CreationSheetTemplate() {
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target || typeof target.closest !== 'function') return;
+      
+      // If the click originated from within a dialog, tooltip, or popover, ignore it.
+      if (
+        target.closest('[role="dialog"]') || 
+        target.closest('.generic-dialog-overlay') || 
+        target.closest('md-dialog') ||
+        target.closest('.cdk-overlay-container') // Common portal wrapper class for standard material components if used
+      ) {
+        return;
+      }
+
       // If we clicked outside the sheet, minimize it
-      if (sheetRef.current && !sheetRef.current.contains(event.target as Node)) {
+      if (sheetRef.current && !sheetRef.current.contains(target as Node)) {
         minimizeCreation();
       }
     };

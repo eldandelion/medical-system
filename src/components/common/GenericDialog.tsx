@@ -22,7 +22,7 @@ export function GenericDialog({
   const dialogContent = (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-6">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-6 generic-dialog-overlay" role="presentation">
           {/* Scrim/Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -34,12 +34,14 @@ export function GenericDialog({
 
           {/* Dialog Container */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             style={{ maxWidth }}
-            className="relative w-full bg-[var(--md-sys-color-surface-container-high)] rounded-[28px] shadow-2xl overflow-hidden flex flex-col"
+            className="relative w-full bg-[var(--md-sys-color-surface-container-high)] rounded-[28px] shadow-2xl overflow-hidden flex flex-col generic-dialog-container"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Headline */}
