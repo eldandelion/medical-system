@@ -187,7 +187,7 @@ export const handlers = [
       id: Math.random().toString(36).substring(7),
       studentName,
       type: '初次转诊',
-      date: new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }),
+      date: new Date().toISOString(),
       title: title || '无标题',
       description: reason,
       riskLevel: riskLevel,
@@ -232,7 +232,7 @@ export const handlers = [
             type: 'initiation',
             title: '发起转诊',
             subtitle: actionType === 'draft' ? '等待提交' : `${creatorName} 提交了转诊申请`,
-            time: actionType === 'draft' ? '' : new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }),
+            time: actionType === 'draft' ? '' : new Date().toISOString(),
             status: actionType === 'draft' ? 'pending' : 'completed'
           },
           {
@@ -240,7 +240,7 @@ export const handlers = [
             type: 'review',
             title: '辅导员审核',
             subtitle: actionType === 'draft' ? '等待提交申请' : (isHeadCouncillor ? '自动跳过（院系级发起）' : '等待辅导员审核中'),
-            time: actionType === 'draft' ? '' : (isHeadCouncillor ? new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }) : '等待中'),
+            time: actionType === 'draft' ? '' : (isHeadCouncillor ? new Date().toISOString() : '等待中'),
             status: actionType === 'draft' ? 'pending' : (isHeadCouncillor ? 'completed' : 'active')
           },
           {
@@ -344,7 +344,7 @@ export const handlers = [
       if (reviewStep) {
         reviewStep.status = 'completed';
         reviewStep.subtitle = '审核已通过';
-        reviewStep.time = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+        reviewStep.time = new Date().toISOString();
       }
       const triageStep = referral.extendedData.steps.find(s => s.type === 'triage');
       if (triageStep) {
@@ -403,21 +403,21 @@ export const handlers = [
         if (reviewStep) {
           reviewStep.status = 'issue';
           reviewStep.subtitle = `申请被拒绝: ${reason}`;
-          reviewStep.time = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+          reviewStep.time = new Date().toISOString();
         }
       } else if (authHeader.includes('trial_admin')) {
         const triageStep = referral.extendedData.steps.find(s => s.type === 'triage');
         if (triageStep) {
           triageStep.status = 'issue';
           triageStep.subtitle = `分诊被拒绝: ${reason}`;
-          triageStep.time = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+          triageStep.time = new Date().toISOString();
         }
       } else if (authHeader.includes('doctor')) {
         const schedulingStep = referral.extendedData.steps.find(s => s.type === 'scheduling');
         if (schedulingStep) {
           schedulingStep.status = 'issue';
           schedulingStep.subtitle = `排诊被拒绝: ${reason}`;
-          schedulingStep.time = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+          schedulingStep.time = new Date().toISOString();
         }
       }
     }
@@ -460,7 +460,7 @@ export const handlers = [
       if (triageStep && (triageStep.status === 'active' || triageStep.status === 'completed')) {
         triageStep.status = 'completed';
         triageStep.subtitle = '已分诊';
-        triageStep.time = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+        triageStep.time = new Date().toISOString();
       }
       const schedulingStep = targetReferral.extendedData.steps.find(s => s.type === 'scheduling');
       if (schedulingStep) {
@@ -536,7 +536,7 @@ export const handlers = [
         if (schedulingStep && schedulingStep.status === 'active') {
           schedulingStep.status = 'completed';
           schedulingStep.subtitle = `已预约: ${new Date(appointmentTime).toLocaleString('zh-CN')}`;
-          schedulingStep.time = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+          schedulingStep.time = new Date().toISOString();
         }
         const evaluationStep = referral.extendedData.steps.find(s => s.type === 'evaluation');
         if (evaluationStep) {
