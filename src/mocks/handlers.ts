@@ -181,6 +181,8 @@ export const handlers = [
     const student = mockStudentsDb.find(s => s.id === studentId);
     const studentName = student ? student.name : '未知学生';
 
+    const isHeadCouncillor = authHeader.includes('head_councillor');
+
     const newReferral = {
       id: Math.random().toString(36).substring(7),
       studentName,
@@ -189,7 +191,7 @@ export const handlers = [
       title: title || '无标题',
       description: reason,
       riskLevel: riskLevel,
-      status: actionType === 'draft' ? 'Draft' : 'AwaitingApproval',
+      status: actionType === 'draft' ? 'Draft' : (isHeadCouncillor ? 'Approved' : 'AwaitingApproval'),
       referredBy: { name: creatorName },
       extendedData: {
         age: 20,
@@ -237,17 +239,17 @@ export const handlers = [
             id: `step-2`,
             type: 'review',
             title: '辅导员审核',
-            subtitle: actionType === 'draft' ? '等待提交申请' : '等待辅导员审核中',
-            time: actionType === 'draft' ? '' : '等待中',
-            status: actionType === 'draft' ? 'pending' : 'active'
+            subtitle: actionType === 'draft' ? '等待提交申请' : (isHeadCouncillor ? '自动跳过（院系级发起）' : '等待辅导员审核中'),
+            time: actionType === 'draft' ? '' : (isHeadCouncillor ? new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }) : '等待中'),
+            status: actionType === 'draft' ? 'pending' : (isHeadCouncillor ? 'completed' : 'active')
           },
           {
             id: `step-3`,
             type: 'triage',
             title: '心理中心分诊',
-            subtitle: '等待审核完成',
+            subtitle: actionType !== 'draft' && isHeadCouncillor ? '等待分配医生' : '等待审核完成',
             time: '',
-            status: 'pending'
+            status: actionType !== 'draft' && isHeadCouncillor ? 'active' : 'pending'
           },
           {
             id: `step-4`,
