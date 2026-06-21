@@ -11,6 +11,9 @@ import { ReferralTrackerTab } from './ReferralTrackerTab';
 import { ReferralFeedbackTab } from './ReferralFeedbackTab';
 
 import { useDetails } from '../../contexts/DetailsContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { enrichReferralStatus } from '../../utils/referralUtils';
 import { useReferralActions } from '../../hooks/useReferralActions';
 import { ReferralActionFooter } from './ReferralActionFooter';
 import { GenericDialog } from '../common/GenericDialog';
@@ -37,10 +40,30 @@ export const REFERRAL_DETAILS_TABS = [
   { id: 'feedback', label: '诊疗反馈', icon: 'history_edu' },
 ];
 
-export function ReferralDetailsView({ referral, userRole, hideHeader, activeTab: propsActiveTab, onTabChange, onUpdate }: ReferralDetailsViewProps) {
+export function ReferralDetailsView({ referral: initialReferral, userRole, hideHeader, activeTab: propsActiveTab, onTabChange, onUpdate }: ReferralDetailsViewProps) {
   const { isFullScreen } = useDetails();
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
+
+  const { session } = useAuth();
+  
+  const processReferral = React.useCallback((data: any) => {
+    return enrichReferralStatus(data as Referral);
+  }, []);
+
+  const { data: latestReferralData } = useQuery<Referral>({
+    queryKey: [`/api/referrals/${initialReferral.id}`],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${initialReferral.id}`.replace('//api', '/api'), {
+        headers: { 'Authorization': `Bearer ${session?.token || ''}` }
+      });
+      if (!res.ok) throw new Error('Failed to fetch referral');
+      const rawData = await res.json();
+      return processReferral(rawData);
+    }
+  });
+
+  const referral = latestReferralData || initialReferral;
 
   const { state, actions } = useReferralActions({ referralId: referral.id, onUpdate });
 

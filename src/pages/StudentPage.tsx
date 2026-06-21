@@ -11,10 +11,10 @@ import { RecordsView, getRecordIcon } from '../components/records/RecordsView';
 import { DashboardView } from '../components/dashboard/DashboardView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
+import { useQuery } from '@tanstack/react-query';
 import { RecordDetailsView } from '../components/records/RecordDetailsView';
 import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { STUDENT_METRICS_CONFIG } from '../config/dashboardConfig';
-import { fetchWithRetry } from '../utils/api';
 
 export const StudentTabs = {
   DASHBOARD: 'Dashboard',
@@ -38,35 +38,17 @@ export function StudentPage() {
   const [activePage, setActivePage] = React.useState<StudentTab>(StudentTabs.DASHBOARD);
   const [selectedRecord, setSelectedRecord] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
-  const [dashboardData, setDashboardData] = React.useState<any>(null);
-  const [dashboardLoading, setDashboardLoading] = React.useState(true);
+  const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
+    queryKey: ['/api/dashboard/student'],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/dashboard/student`.replace('//api', '/api'));
+      if (!res.ok) throw new Error('Failed to fetch dashboard');
+      return res.json();
+    },
+    enabled: activePage === StudentTabs.DASHBOARD
+  });
 
-  React.useEffect(() => {
-    if (activePage !== StudentTabs.DASHBOARD) return;
-    
-    let active = true;
-    setDashboardLoading(true);
-    fetchWithRetry('/api/dashboard/student')
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch dashboard');
-        return res.json();
-      })
-      .then((data) => {
-        if (active) {
-          setDashboardData(data);
-          setDashboardLoading(false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to load student dashboard:', err);
-        if (active) {
-          setDashboardLoading(false);
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, [activePage]);
+
 
   // Handle page change to clear selection
   const handlePageChange = (page: StudentTab) => {

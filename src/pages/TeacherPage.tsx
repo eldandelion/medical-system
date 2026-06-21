@@ -17,8 +17,8 @@ import { ReferralDetailsView, REFERRAL_DETAILS_TABS } from '../components/record
 import { useCreationOverlay } from '../contexts/CreationContext';
 import { ReferralCreationForm } from '../components/records/ReferralCreationForm';
 import { TertiaryFab } from '../components/common/Buttons';
-import { fetchWithRetry } from '../utils/api';
-import { mutateData } from '../hooks/useDataFetch';
+import { queryClient } from '../utils/queryClient';
+import { useQuery } from '@tanstack/react-query';
 
 import { TEACHER_METRICS_CONFIG } from '../config/dashboardConfig';
 
@@ -44,37 +44,20 @@ export function TeacherPage() {
   const [activePage, setActivePage] = React.useState<TeacherPageName>(TeacherTabs.DASHBOARD);
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
-  const [dashboardData, setDashboardData] = React.useState<any>(null);
-  const [dashboardLoading, setDashboardLoading] = React.useState(true);
+  const [refreshKey, setRefreshKey] = React.useState(0);
+  const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
+    queryKey: ['/api/dashboard/teacher'],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/dashboard/teacher`.replace('//api', '/api'));
+      if (!res.ok) throw new Error('Failed to fetch dashboard');
+      return res.json();
+    },
+    enabled: activePage === TeacherTabs.DASHBOARD
+  });
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
 
 
-  React.useEffect(() => {
-    if (activePage !== TeacherTabs.DASHBOARD) return;
-    
-    let active = true;
-    setDashboardLoading(true);
-    fetchWithRetry('/api/dashboard/teacher')
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch dashboard');
-        return res.json();
-      })
-      .then((data) => {
-        if (active) {
-          setDashboardData(data);
-          setDashboardLoading(false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to load teacher dashboard:', err);
-        if (active) {
-          setDashboardLoading(false);
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, [activePage]);
+
 
   const handlePageChange = (page: TeacherPageName) => {
     setActivePage(page);
@@ -240,8 +223,9 @@ export function TeacherPage() {
                       activeTab={activeTab} 
                       onTabChange={setActiveTab} 
                       onUpdate={() => {
+                        queryClient.invalidateQueries({ queryKey: ['/api/referrals'] });
                         setSelectedItem(null);
-                        mutateData('/api/referrals');
+                        setRefreshKey(k => k + 1);
                       }}
                     />
                   )}

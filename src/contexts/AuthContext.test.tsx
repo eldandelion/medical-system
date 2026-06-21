@@ -2,11 +2,13 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import * as React from 'react';
 import { AuthProvider, useAuth } from './AuthContext';
-import * as useDataFetch from '../hooks/useDataFetch';
+import { queryClient } from '../utils/queryClient';
 
-// Mock the useDataFetch hook to verify cache clearing
-vi.mock('../hooks/useDataFetch', () => ({
-  clearDataCache: vi.fn(),
+// Mock queryClient.clear
+vi.mock('../utils/queryClient', () => ({
+  queryClient: {
+    clear: vi.fn(),
+  }
 }));
 
 describe('AuthContext', () => {
@@ -63,6 +65,6 @@ describe('AuthContext', () => {
       result.current.setRole('doctor');
     });
 
-    expect(useDataFetch.clearDataCache).toHaveBeenCalled();
+    expect(queryClient.clear).toHaveBeenCalled();
   });
 });

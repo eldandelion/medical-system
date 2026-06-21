@@ -17,8 +17,8 @@ import { StaffDetailsView, STAFF_DETAILS_TABS } from '../components/staff/StaffD
 import { useCreationOverlay } from '../contexts/CreationContext';
 import { FeedbackCreationForm } from '../components/records/FeedbackCreationForm';
 import { TertiaryFab } from '../components/common/Buttons';
-import { fetchWithRetry } from '../utils/api';
-import { mutateData } from '../hooks/useDataFetch';
+import { queryClient } from '../utils/queryClient';
+import { useQuery } from '@tanstack/react-query';
 import { DOCTOR_METRICS_CONFIG } from '../config/dashboardConfig';
 
 export const DoctorTabs = {
@@ -41,37 +41,19 @@ export function DoctorPage() {
   const [activePage, setActivePage] = React.useState<DoctorPageName>(DoctorTabs.DASHBOARD);
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
-  const [dashboardData, setDashboardData] = React.useState<any>(null);
-  const [dashboardLoading, setDashboardLoading] = React.useState(true);
+  const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
+    queryKey: ['/api/dashboard/doctor'],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/dashboard/doctor`.replace('//api', '/api'));
+      if (!res.ok) throw new Error('Failed to fetch dashboard');
+      return res.json();
+    },
+    enabled: activePage === DoctorTabs.DASHBOARD
+  });
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
 
 
-  React.useEffect(() => {
-    if (activePage !== DoctorTabs.DASHBOARD) return;
-    
-    let active = true;
-    setDashboardLoading(true);
-    fetchWithRetry('/api/dashboard/doctor')
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch dashboard');
-        return res.json();
-      })
-      .then((data) => {
-        if (active) {
-          setDashboardData(data);
-          setDashboardLoading(false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to load trial admin dashboard:', err);
-        if (active) {
-          setDashboardLoading(false);
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, [activePage]);
+
 
   const handlePageChange = (page: DoctorPageName) => {
     setActivePage(page);
@@ -228,7 +210,7 @@ export function DoctorPage() {
                       userRole="doctor" 
                       activeTab={activeTab} 
                       onTabChange={setActiveTab} 
-                      onUpdate={() => mutateData('/api/referrals')}
+                      onUpdate={() => queryClient.invalidateQueries({ queryKey: ['/api/referrals'] })}
                     />
                   )}
                 </>

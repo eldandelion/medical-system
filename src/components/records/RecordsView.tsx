@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useDataFetch } from '../../hooks/useDataFetch';
+import { useQuery } from '@tanstack/react-query';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { RecordHeader } from './RecordHeader';
 
@@ -36,7 +36,14 @@ interface RecordsViewProps {
 }
 
 export function RecordsView({ onRecordSelect, selectedRecordId, header }: RecordsViewProps) {
-  const { data: recordsData, loading } = useDataFetch<PsychiatricRecord[]>('/api/records');
+  const { data: recordsData, isLoading: loading } = useQuery<PsychiatricRecord[]>({
+    queryKey: ['/api/records'],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/records`.replace('//api', '/api'));
+      if (!res.ok) throw new Error('Failed to fetch records');
+      return res.json();
+    }
+  });
   const records = recordsData || [];
 
   const columns: ColumnDefinition<PsychiatricRecord>[] = [

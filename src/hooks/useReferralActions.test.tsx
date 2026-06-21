@@ -1,6 +1,8 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useReferralActions } from './useReferralActions';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React from 'react';
 
 const mockShowSnackbar = vi.fn();
 vi.mock('../contexts/SnackbarContext', () => ({
@@ -11,14 +13,22 @@ vi.mock('../contexts/AuthContext', () => ({
   useAuth: () => ({ session: { token: 'fake-token' } })
 }));
 
+const queryClient = new QueryClient();
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <QueryClientProvider client={queryClient}>
+    {children}
+  </QueryClientProvider>
+);
+
 describe('useReferralActions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     global.fetch = vi.fn();
+    queryClient.clear();
   });
 
   it('should initialize with default state', () => {
-    const { result } = renderHook(() => useReferralActions({ referralId: '123' }));
+    const { result } = renderHook(() => useReferralActions({ referralId: '123' }), { wrapper });
     
     expect(result.current.state.isRejectionDialogOpen).toBe(false);
     expect(result.current.state.rejectionReason).toBe('');
@@ -26,7 +36,7 @@ describe('useReferralActions', () => {
   });
 
   it('should update state when toggled', () => {
-    const { result } = renderHook(() => useReferralActions({ referralId: '123' }));
+    const { result } = renderHook(() => useReferralActions({ referralId: '123' }), { wrapper });
 
     act(() => {
       result.current.state.setIsRejectionDialogOpen(true);
@@ -41,7 +51,7 @@ describe('useReferralActions', () => {
     const mockOnUpdate = vi.fn();
     (global.fetch as any).mockResolvedValue({ ok: true });
 
-    const { result } = renderHook(() => useReferralActions({ referralId: '123', onUpdate: mockOnUpdate }));
+    const { result } = renderHook(() => useReferralActions({ referralId: '123', onUpdate: mockOnUpdate }), { wrapper });
 
     act(() => {
       result.current.state.setIsRejectionDialogOpen(true);
@@ -73,7 +83,7 @@ describe('useReferralActions', () => {
     const mockOnUpdate = vi.fn();
     (global.fetch as any).mockResolvedValue({ ok: false }); // simulate 500 error
 
-    const { result } = renderHook(() => useReferralActions({ referralId: '123', onUpdate: mockOnUpdate }));
+    const { result } = renderHook(() => useReferralActions({ referralId: '123', onUpdate: mockOnUpdate }), { wrapper });
 
     act(() => {
       result.current.state.setIsApprovalDialogOpen(true);

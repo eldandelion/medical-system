@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useDataFetch } from '../../hooks/useDataFetch';
+import { useQuery } from '@tanstack/react-query';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { FilterChipSet } from '../common/FilterChip';
 import { useAuth } from '../../contexts/AuthContext';
@@ -96,11 +96,17 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, h
     });
   }, []);
 
-  const { data: referralsData, loading } = useDataFetch<Referral[]>(
-    '/api/referrals', 
-    processReferrals, 
-    { headers: { 'Authorization': `Bearer ${session.token}` } }
-  );
+  const { data: referralsData, isLoading: loading } = useQuery<Referral[]>({
+    queryKey: ['/api/referrals'],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals`.replace('//api', '/api'), {
+        headers: { 'Authorization': `Bearer ${session.token}` }
+      });
+      if (!res.ok) throw new Error('Failed to fetch referrals');
+      const rawData = await res.json();
+      return processReferrals(rawData);
+    }
+  });
   
   const referrals = referralsData || [];
 

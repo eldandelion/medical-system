@@ -2,6 +2,8 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { queryClient } from './utils/queryClient';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 // Import Material Web Components (registers them as custom elements)
 import '@material/web/chips/chip-set.js';
@@ -33,16 +35,15 @@ import '@material/web/tabs/tabs.js';
 import '@material/web/tabs/primary-tab.js';
 
 async function enableMocking() {
-  const { worker } = await import('./mocks/browser');
-
-  // `worker.start()` returns a Promise that resolves
-  // once the Service Worker is up and ready to intercept requests.
-  return worker.start({
-    onUnhandledRequest: 'bypass',
-    serviceWorker: {
-      url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
-    },
-  });
+  if (import.meta.env.DEV) {
+    const { worker } = await import('./mocks/browser');
+    return worker.start({
+      onUnhandledRequest: 'bypass',
+      serviceWorker: {
+        url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
+      },
+    });
+  }
 }
 
 import { AuthProvider } from './contexts/AuthContext';
@@ -50,9 +51,11 @@ import { AuthProvider } from './contexts/AuthContext';
 enableMocking().then(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </QueryClientProvider>
     </StrictMode>,
   );
 });

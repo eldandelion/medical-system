@@ -3,10 +3,10 @@ import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
 import { DashboardCalendarWidget } from './DashboardCalendarWidget';
 import * as auth from '../../contexts/AuthContext';
-import { fetchWithRetry } from '../../utils/api';
+import * as ReactQuery from '@tanstack/react-query';
 
-vi.mock('../../utils/api', () => ({
-  fetchWithRetry: vi.fn()
+vi.mock('@tanstack/react-query', () => ({
+  useQuery: vi.fn()
 }));
 
 vi.mock('../../contexts/AuthContext', () => ({
@@ -25,7 +25,7 @@ describe('DashboardCalendarWidget', () => {
   });
 
   it('renders loading state initially', () => {
-    (fetchWithRetry as Mock).mockReturnValue(new Promise(() => {}));
+    (ReactQuery.useQuery as Mock).mockReturnValue({ isLoading: true, data: undefined, error: null });
 
     render(<DashboardCalendarWidget doctorId="doctor-123" />);
 
@@ -44,12 +44,7 @@ describe('DashboardCalendarWidget', () => {
     const dd = String(monday.getDate()).padStart(2, '0');
     const mockDateStr = `${yyyy}-${mm}-${dd}`;
 
-    (fetchWithRetry as Mock).mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        occupiedSlots: [`${mockDateStr}T09:00`]
-      })
-    });
+    (ReactQuery.useQuery as Mock).mockReturnValue({ isLoading: false, data: { occupiedSlots: [`${yyyy}-${mm}-${dd}T09:00`] }, error: null });
 
     render(<DashboardCalendarWidget doctorId="doctor-123" />);
 
@@ -65,7 +60,7 @@ describe('DashboardCalendarWidget', () => {
   });
 
   it('renders an error message when the API request fails', async () => {
-    (fetchWithRetry as Mock).mockRejectedValue(new Error('Network error'));
+    (ReactQuery.useQuery as Mock).mockReturnValue({ isLoading: false, data: undefined, error: new Error('Network error') });
 
     render(<DashboardCalendarWidget doctorId="doctor-123" />);
 
@@ -75,10 +70,7 @@ describe('DashboardCalendarWidget', () => {
   });
 
   it('does not allow interaction since it is read-only', async () => {
-    (fetchWithRetry as Mock).mockResolvedValue({
-      ok: true,
-      json: async () => ({ occupiedSlots: [] })
-    });
+    (ReactQuery.useQuery as Mock).mockReturnValue({ isLoading: false, data: { occupiedSlots: ['2026-06-15T09:00:00Z'] }, error: null });
 
     render(<DashboardCalendarWidget doctorId="doctor-123" />);
 

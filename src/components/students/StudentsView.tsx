@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useDataFetch } from '../../hooks/useDataFetch';
+import { useQuery } from '@tanstack/react-query';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { FilterChipSet } from '../common/FilterChip';
 
@@ -18,7 +18,14 @@ interface StudentsViewProps {
 }
 
 export function StudentsView({ onStudentSelect, selectedStudentId, header }: StudentsViewProps) {
-  const { data: studentsData, loading } = useDataFetch<Student[]>('/api/students');
+  const { data: studentsData, isLoading: loading } = useQuery<Student[]>({
+    queryKey: ['/api/students'],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/students`.replace('//api', '/api'));
+      if (!res.ok) throw new Error('Failed to fetch students');
+      return res.json();
+    }
+  });
   const students = studentsData || [];
 
   const columns: ColumnDefinition<Student>[] = [

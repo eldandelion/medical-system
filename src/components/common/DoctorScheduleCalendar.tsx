@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { motion } from 'motion/react';
-import { fetchWithRetry } from '../../utils/api';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface DoctorScheduleCalendarProps {
@@ -46,46 +46,21 @@ export function DoctorScheduleCalendar({ doctorId, selectedDateTime, onSelectDat
   const { session } = useAuth();
   const days = React.useMemo(() => getCurrentWeekWorkingDays(), []);
   
-  const [occupiedSlots, setOccupiedSlots] = React.useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
-  const [error, setError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    if (!doctorId) return;
-
-    let active = true;
-    setIsLoading(true);
-    setError(null);
-
-    fetchWithRetry(`/api/doctors/${doctorId}/calendar`, {
-      headers: {
-        'Authorization': `Bearer ${session?.token || ''}`
-      }
-    })
-      .then(res => {
-        if (!res.ok) {
-          throw new Error('Failed to load schedule');
-        }
-        return res.json();
-      })
-      .then(data => {
-        if (active) {
-          setOccupiedSlots(new Set(data.occupiedSlots || []));
-          setIsLoading(false);
-        }
-      })
-      .catch(err => {
-        console.error('Failed to fetch doctor calendar:', err);
-        if (active) {
-          setError('无法加载排班表，您可能没有权限查看。');
-          setIsLoading(false);
+  const { data, isLoading, error } = useQuery({
+    queryKey: [`/api/doctors/${doctorId}/calendar`, session?.token],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/doctors/${doctorId}/calendar`.replace('//api', '/api'), {
+        headers: {
+          'Authorization': `Bearer ${session?.token || ''}`
         }
       });
+      if (!res.ok) throw new Error('Failed to fetch schedule');
+      return res.json();
+    },
+    enabled: !!doctorId
+  });
 
-    return () => {
-      active = false;
-    };
-  }, [doctorId]);
+  const occupiedSlots = React.useMemo(() => new Set(data?.occupiedSlots || []), [data]);
 
   const handleSlotClick = (dateStr: string, timeStr: string, isOccupied: boolean) => {
     if (isOccupied || isLoading || error) return;
@@ -123,7 +98,7 @@ export function DoctorScheduleCalendar({ doctorId, selectedDateTime, onSelectDat
           {error && (
             <div className="absolute inset-0 bg-[var(--md-sys-color-surface)] z-20 flex flex-col items-center justify-center text-[var(--md-sys-color-error)] gap-2">
               <md-icon>error_outline</md-icon>
-              <span className="text-[14px]">{error}</span>
+              <p className="text-[var(--md-sys-color-error)] text-sm">无法加载排班表，您可能没有权限查看。</p>
             </div>
           )}
 

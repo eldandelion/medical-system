@@ -25,6 +25,7 @@ interface ReferralActionFooterProps {
     setIsDeleteDialogOpen: (v: boolean) => void;
     setIsAssignDialogOpen: (v: boolean) => void;
     setIsSchedulingDialogOpen: (v: boolean) => void;
+    isActionCompleted?: boolean;
   };
 }
 
@@ -144,7 +145,7 @@ export const ReferralActionFooter: React.FC<ReferralActionFooterProps> = ({
   };
 
   const content = renderButtons();
-  if (!content) return null;
+  if (!content || state.isActionCompleted) return null;
 
   return <ActionFooter>{content}</ActionFooter>;
 };

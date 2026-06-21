@@ -7,6 +7,8 @@ interface UseReferralActionsProps {
   onUpdate?: () => void;
 }
 
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
 export function useReferralActions({ referralId, onUpdate }: UseReferralActionsProps) {
   const { showSnackbar } = useSnackbar();
   const { session } = useAuth();
@@ -21,9 +23,12 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
   const [rejectionReason, setRejectionReason] = useState('');
   const [scheduleDateTime, setScheduleDateTime] = useState('');
   const [selectedDoctorId, setSelectedDoctorId] = useState('李医生');
+  const [isActionCompleted, setIsActionCompleted] = useState(false);
 
-  const executeAction = async (endpoint: string, method: string, successMsg: string, errorMsg: string, body?: any) => {
-    try {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async ({ endpoint, method, body }: any) => {
       const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${referralId}${endpoint}`.replace('//api', '/api'), {
         method,
         headers: {
@@ -32,15 +37,25 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
         },
         ...(body ? { body: JSON.stringify(body) } : {})
       });
-      if (res.ok) {
-        showSnackbar({ message: successMsg, duration: 3000 });
-        onUpdate?.();
-        return true;
-      } else {
-        throw new Error(`Failed to ${endpoint}`);
-      }
-    } catch (e) {
+      if (!res.ok) throw new Error(`Failed to ${endpoint}`);
+      return res;
+    },
+    onSuccess: (_, { successMsg }) => {
+      setIsActionCompleted(true);
+      showSnackbar({ message: successMsg, duration: 3000 });
+      queryClient.invalidateQueries(); // Invalidate all queries (dashboard, calendar, lists) to ensure everything stays in sync
+      onUpdate?.();
+    },
+    onError: (_, { errorMsg }) => {
       showSnackbar({ message: errorMsg, duration: 3000 });
+    }
+  });
+
+  const executeAction = async (endpoint: string, method: string, successMsg: string, errorMsg: string, body?: any) => {
+    try {
+      await mutation.mutateAsync({ endpoint, method, body, successMsg, errorMsg });
+      return true;
+    } catch {
       return false;
     }
   };
@@ -96,6 +111,7 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
       rejectionReason, setRejectionReason,
       scheduleDateTime, setScheduleDateTime,
       selectedDoctorId, setSelectedDoctorId,
+      isActionCompleted,
     },
     actions: {
       handleRecall,
