@@ -9,7 +9,7 @@ import { Student, ClinicalStatusType, SevereRiskFactorType } from '../../types';
 import { CLINICAL_STATUS_OPTIONS, RISK_FACTOR_OPTIONS } from '../../config/referralConstants';
 import { RISK_LEVEL_STYLES } from '../../config/styleConstants';
 import { AttachmentList } from '../common/AttachmentList';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 
 export function ReferralCreationForm({ onClose, initialData }: { onClose: () => void; initialData?: Partial<{
   studentId: string;
@@ -27,10 +27,13 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
   const isFullscreen = viewState === 'FULLSCREEN';
 
   const [isCloseWarningOpen, setIsCloseWarningOpen] = React.useState(false);
-
-  const [students, setStudents] = React.useState<Student[]>([]);
-  const [loading, setLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  
+  // Safely grab the portal slot inside an effect to keep the render pure
+  const [progressSlot, setProgressSlot] = React.useState<HTMLElement | null>(null);
+  React.useEffect(() => {
+    setProgressSlot(document.getElementById('creation-progress-slot'));
+  }, []);
 
   const [formData, setFormData] = React.useState({
     studentId: initialData?.studentId || '',
@@ -45,11 +48,30 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
     ]
   });
 
+  // Keep a mutable ref of formData to avoid re-registering the close interceptor on every keystroke
+  const formDataRef = React.useRef(formData);
+  React.useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
+
   const [errors, setErrors] = React.useState({
     studentId: false,
     title: false,
     reason: false,
     riskLevel: false
+  });
+
+  // Replace manual useEffect fetching with react-query
+  const { data: students = [], isLoading: loading } = useQuery<Student[]>({
+    queryKey: ['/api/students'],
+    queryFn: async () => {
+      const apiUrl = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/api/students`;
+      const res = await fetch(apiUrl, {
+        headers: { 'Authorization': `Bearer ${session?.token || ''}` }
+      });
+      if (!res.ok) throw new Error('Failed to fetch students');
+      return res.json();
+    }
   });
 
   const handleSubmit = async (actionType: 'draft' | 'submit') => {
@@ -72,7 +94,8 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
     setIsSubmitting(true);
     
     try {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals`.replace('//api', '/api'), {
+      const apiUrl = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/api/referrals`;
+      const res = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -103,26 +126,11 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
     }
   };
 
-  React.useEffect(() => {
-    const controller = new AbortController();
-    fetch(`${import.meta.env.BASE_URL}/api/students`.replace('//api', '/api'), { signal: controller.signal })
-      .then(res => res.json())
-      .then(data => {
-        setStudents(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        if (err.name !== 'AbortError') {
-          console.error('Failed to fetch students:', err);
-          setLoading(false);
-        }
-      });
-    return () => controller.abort();
-  }, []);
-
+  // Register close interceptor safely without constant re-registration
   React.useEffect(() => {
     setOnCloseInterceptor(() => () => {
-      const isDirty = formData.studentId !== '' || formData.title.trim() !== '' || formData.reason.trim() !== '';
+      const currentData = formDataRef.current;
+      const isDirty = currentData.studentId !== '' || currentData.title.trim() !== '' || currentData.reason.trim() !== '';
       if (isDirty) {
         setIsCloseWarningOpen(true);
         return false; // intercept close
@@ -130,7 +138,7 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
       return true; // allow close
     });
     return () => setOnCloseInterceptor(null);
-  }, [formData, setOnCloseInterceptor]);
+  }, [setOnCloseInterceptor]);
 
   React.useEffect(() => {
     if (isFullscreen) {
@@ -149,8 +157,6 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
   }, [isFullscreen, setHeaderActions, isSubmitting]);
 
   const selectedStudent = students.find(s => s.id === formData.studentId);
-
-  const progressSlot = document.getElementById('creation-progress-slot');
 
   return (
     <>
@@ -175,8 +181,9 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
                 label={loading ? '正在加载学生列表...' : '选择学生'}
                 className="w-full relative"
                 value={formData.studentId}
-                onChange={(e: any) => {
-                  const val = e.target.value;
+                onChange={(e: React.SyntheticEvent) => {
+                  const target = e.target as HTMLSelectElement;
+                  const val = target.value;
                   setFormData(prev => ({ ...prev, studentId: val }));
                   if (errors.studentId) setErrors(prev => ({ ...prev, studentId: false }));
                 }}
@@ -238,8 +245,9 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
               label="标题"
               className="w-full"
               value={formData.title}
-              onInput={(e: any) => {
-                const val = e.target.value;
+              onInput={(e: React.SyntheticEvent) => {
+                const target = e.target as HTMLInputElement;
+                const val = target.value;
                 setFormData(prev => ({ ...prev, title: val }));
                 if (errors.title) setErrors(prev => ({ ...prev, title: false }));
               }}
@@ -256,8 +264,9 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
               supporting-text={`* 字数限制: ${formData.reason.length}/500`}
               maxLength={500}
               value={formData.reason}
-              onInput={(e: any) => {
-                const val = e.target.value;
+              onInput={(e: React.SyntheticEvent) => {
+                const target = e.target as HTMLInputElement;
+                const val = target.value;
                 setFormData(prev => ({ ...prev, reason: val }));
                 if (errors.reason) setErrors(prev => ({ ...prev, reason: false }));
               }}
