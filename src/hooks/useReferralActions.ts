@@ -19,6 +19,8 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isSchedulingDialogOpen, setIsSchedulingDialogOpen] = useState(false);
+  const [isReportProblemDialogOpen, setIsReportProblemDialogOpen] = useState(false);
+  const [reportProblemReason, setReportProblemReason] = useState('');
   
   const [rejectionReason, setRejectionReason] = useState('');
   const [scheduleDateTime, setScheduleDateTime] = useState('');
@@ -40,10 +42,11 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
       if (!res.ok) throw new Error(`Failed to ${endpoint}`);
       return res;
     },
-    onSuccess: (_, { successMsg }) => {
+    onSuccess: async (_, { successMsg }) => {
       setIsActionCompleted(true);
       showSnackbar({ message: successMsg, duration: 3000 });
-      queryClient.invalidateQueries(); // Invalidate all queries (dashboard, calendar, lists) to ensure everything stays in sync
+      await queryClient.invalidateQueries(); // Invalidate all queries (dashboard, calendar, lists) to ensure everything stays in sync
+      setIsActionCompleted(false);
       onUpdate?.();
     },
     onError: (_, { errorMsg }) => {
@@ -100,6 +103,14 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
     }
   };
 
+  const handleReportProblem = async () => {
+    setIsReportProblemDialogOpen(false);
+    const success = await executeAction('/report-problem', 'POST', '问题已报告', '报告失败，请稍后重试', { reason: reportProblemReason });
+    if (success) {
+      setReportProblemReason('');
+    }
+  };
+
   return {
     state: {
       isRejectionDialogOpen, setIsRejectionDialogOpen,
@@ -108,6 +119,8 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
       isDeleteDialogOpen, setIsDeleteDialogOpen,
       isAssignDialogOpen, setIsAssignDialogOpen,
       isSchedulingDialogOpen, setIsSchedulingDialogOpen,
+      isReportProblemDialogOpen, setIsReportProblemDialogOpen,
+      reportProblemReason, setReportProblemReason,
       rejectionReason, setRejectionReason,
       scheduleDateTime, setScheduleDateTime,
       selectedDoctorId, setSelectedDoctorId,
@@ -120,6 +133,7 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
       handleReject,
       handleAssign,
       handleSchedule,
+      handleReportProblem,
     }
   };
 }

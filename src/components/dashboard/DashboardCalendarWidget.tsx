@@ -82,11 +82,11 @@ export function DashboardCalendarWidget({ doctorId }: DashboardCalendarWidgetPro
                 key={idx} 
                 className="p-1 flex flex-col items-center justify-center min-w-[60px]"
               >
-                <div className={`flex flex-col items-center justify-center px-3 py-1 ${isToday ? 'bg-[var(--md-sys-color-surface-container-highest)] rounded-full shadow-sm' : ''}`}>
-                  <span className={`text-[12px] font-bold ${isToday ? 'text-[var(--md-sys-color-primary)]' : 'text-[var(--md-sys-color-on-surface)]'}`}>
+                <div className={`flex flex-col items-center justify-center px-4 py-1 ${isToday ? 'bg-[var(--md-sys-color-surface-container-high)] rounded-full' : ''}`}>
+                  <span className={`text-[12px] font-bold text-[var(--md-sys-color-on-surface)]`}>
                     {WEEKDAYS_ZH[idx]}
                   </span>
-                  <span className={`text-[10px] mt-0.5 ${isToday ? 'text-[var(--md-sys-color-primary)]' : 'text-[var(--md-sys-color-on-surface-variant)]'}`}>
+                  <span className={`text-[10px] mt-0.5 text-[var(--md-sys-color-on-surface-variant)`}>
                     {String(day.getMonth() + 1).padStart(2, '0')}/{String(day.getDate()).padStart(2, '0')}
                   </span>
                 </div>

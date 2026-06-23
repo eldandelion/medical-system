@@ -25,6 +25,7 @@ interface ReferralActionFooterProps {
     setIsDeleteDialogOpen: (v: boolean) => void;
     setIsAssignDialogOpen: (v: boolean) => void;
     setIsSchedulingDialogOpen: (v: boolean) => void;
+    setIsReportProblemDialogOpen?: (v: boolean) => void;
     isActionCompleted?: boolean;
   };
 }
@@ -59,6 +60,12 @@ export const ReferralActionFooter: React.FC<ReferralActionFooterProps> = ({
         attachments: extendedData?.feedback?.attachments || []
       };
       openCreation('重新发起转诊', <ReferralCreationForm onClose={closeCreation} initialData={initialData} />);
+    });
+  };
+
+  const handleWriteFeedback = () => {
+    import('./FeedbackCreationForm').then(({ FeedbackCreationForm }) => {
+      openCreation('填写诊疗反馈', <FeedbackCreationForm onClose={closeCreation} initialReferralId={referral.id} />);
     });
   };
 
@@ -114,6 +121,17 @@ export const ReferralActionFooter: React.FC<ReferralActionFooterProps> = ({
             <>
               <PrimaryButton icon="calendar_month" label="安排就诊" onClick={() => state.setIsSchedulingDialogOpen(true)} />
               <DestructiveButton icon="close" label="拒绝" onClick={() => state.setIsRejectionDialogOpen(true)} />
+            </>
+          );
+        }
+        return null;
+
+      case 'WaitingForAppointment':
+        if (userRole === 'doctor') {
+          return (
+            <>
+              <PrimaryButton icon="edit_note" label="写反馈" onClick={handleWriteFeedback} />
+              <DestructiveButton icon="report_problem" label="报告问题" onClick={() => state.setIsReportProblemDialogOpen?.(true)} />
             </>
           );
         }

@@ -550,8 +550,43 @@ export const handlers = [
     return HttpResponse.json({ success: true });
   }),
 
-  http.post(api('/api/feedback'), async () => {
+  http.post(api('/api/feedback'), async ({ request }) => {
     await delay(MOCK_DELAY_MS);
+    
+    const data = await request.json() as any;
+    const { referralId, feedback, attachments } = data;
+
+    const referral = mockReferralsDb.find((r) => r.id === referralId);
+    if (!referral) {
+      return new HttpResponse(null, { status: 404 });
+    }
+
+    referral.status = 'Approved';
+
+    if (referral.extendedData) {
+      if (!referral.extendedData.feedback) {
+        referral.extendedData.feedback = { summary: '', followUp: '', attachments: [] };
+      }
+      referral.extendedData.feedback.summary = feedback;
+      referral.extendedData.feedback.attachments = attachments || [];
+
+      if (referral.extendedData.steps) {
+        const evaluationStep = referral.extendedData.steps.find((s: any) => s.type === 'evaluation');
+        if (evaluationStep) {
+          evaluationStep.status = 'completed';
+          evaluationStep.subtitle = '医生已完成评估';
+          evaluationStep.time = new Date().toISOString();
+        }
+
+        const feedbackStep = referral.extendedData.steps.find((s: any) => s.type === 'feedback');
+        if (feedbackStep) {
+          feedbackStep.status = 'completed';
+          feedbackStep.subtitle = '医生已填写诊疗反馈';
+          feedbackStep.time = new Date().toISOString();
+        }
+      }
+    }
+
     return HttpResponse.json({ success: true, message: 'Feedback submitted' });
   }),
 ];

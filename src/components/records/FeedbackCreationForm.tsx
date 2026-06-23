@@ -8,12 +8,14 @@ import { GenericDialog } from '../common/GenericDialog';
 import { AttachmentList } from '../common/AttachmentList';
 import { Referral } from '../../types';
 import { formatDateToChinese } from '../../utils/dateUtils';
+import { useQueryClient } from '@tanstack/react-query';
 
-export function FeedbackCreationForm({ onClose }: { onClose: () => void }) {
+export function FeedbackCreationForm({ onClose, initialReferralId }: { onClose: () => void; initialReferralId?: string }) {
   const { viewState, setHeaderActions, setOnCloseInterceptor } = useCreationOverlay();
   const { showSnackbar } = useSnackbar();
   const { session } = useAuth();
   const isFullscreen = viewState === 'FULLSCREEN';
+  const queryClient = useQueryClient();
 
   const [isCloseWarningOpen, setIsCloseWarningOpen] = React.useState(false);
 
@@ -22,7 +24,7 @@ export function FeedbackCreationForm({ onClose }: { onClose: () => void }) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const [formData, setFormData] = React.useState({
-    referralId: '',
+    referralId: initialReferralId || '',
     feedback: '',
     attachments: [] as { name: string; size: string }[]
   });
@@ -68,6 +70,7 @@ export function FeedbackCreationForm({ onClose }: { onClose: () => void }) {
         throw new Error('API Error');
       }
 
+      queryClient.invalidateQueries();
       onClose();
       showSnackbar({
         message: '诊疗反馈已成功提交',
@@ -90,7 +93,13 @@ export function FeedbackCreationForm({ onClose }: { onClose: () => void }) {
       .then(res => res.json())
       .then((data: Referral[]) => {
         // Only show referrals that are active and need feedback (e.g. pending/approved)
-        const activeReferrals = data.filter(r => r.status === 'Pending' || r.status === 'Approved');
+        const activeReferrals = data.filter(r => r.status === 'Pending' || r.status === 'Approved' || r.status === 'WaitingForAppointment');
+        
+        if (initialReferralId && !activeReferrals.find(r => r.id === initialReferralId)) {
+          showSnackbar({ message: '所选转诊记录无效或状态已更新', duration: 4000 });
+          setFormData(prev => ({ ...prev, referralId: '' }));
+        }
+
         setReferrals(activeReferrals);
         setLoading(false);
       })
@@ -101,7 +110,7 @@ export function FeedbackCreationForm({ onClose }: { onClose: () => void }) {
         }
       });
     return () => controller.abort();
-  }, [session?.token]);
+  }, [session?.token, initialReferralId, showSnackbar]);
 
   React.useEffect(() => {
     setOnCloseInterceptor(() => () => {
@@ -165,7 +174,7 @@ export function FeedbackCreationForm({ onClose }: { onClose: () => void }) {
                     setFormData(prev => ({ ...prev, referralId: val }));
                     if (errors.referralId) setErrors(prev => ({ ...prev, referralId: false }));
                   }}
-                  disabled={loading || referrals.length === 0 || isSubmitting}
+                  disabled={loading || referrals.length === 0 || isSubmitting || !!initialReferralId}
                   error={errors.referralId || undefined}
                   error-text="此项为必填项"
                 >

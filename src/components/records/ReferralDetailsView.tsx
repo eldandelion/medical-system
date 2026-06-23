@@ -353,6 +353,33 @@ export function ReferralDetailsView({ referral: initialReferral, userRole, hideH
         </div>
       </GenericDialog>
 
+      {/* Report Problem Dialog */}
+      <GenericDialog
+        open={state.isReportProblemDialogOpen}
+        onClose={() => state.setIsReportProblemDialogOpen(false)}
+        title="报告问题"
+        actions={
+          <>
+            <TertiaryButton label="取消" onClick={() => state.setIsReportProblemDialogOpen(false)} />
+            <TertiaryButton label="确认报告" onClick={actions.handleReportProblem} />
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
+            请详细描述您遇到的问题（如：学生未按时就诊、联系方式有误等）。
+          </p>
+          <md-outlined-text-field
+            type="textarea"
+            rows={4}
+            label="问题描述"
+            className="w-full"
+            value={state.reportProblemReason}
+            onInput={(e: any) => state.setReportProblemReason(e.target.value)}
+          />
+        </div>
+      </GenericDialog>
+
     </ScrollableDetailsLayout>
   );
 }
