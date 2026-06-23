@@ -3,13 +3,16 @@ import * as React from 'react';
 interface FilterChipProps {
   label: string;
   options?: string[];
+  selectedValue?: string;
   onOptionSelect?: (option: string) => void;
   isOpen: boolean;
   onToggle: () => void;
 }
 
-export function FilterChip({ label, options = ['Option 1', 'Option 2'], onOptionSelect, isOpen, onToggle }: FilterChipProps) {
+export function FilterChip({ label, options = ['Option 1', 'Option 2'], selectedValue, onOptionSelect, isOpen, onToggle }: FilterChipProps) {
   const buttonId = React.useId().replace(/:/g, ''); // Material web IDs shouldn't have colons
+
+  const displayLabel = selectedValue ? `${label}: ${selectedValue}` : label;
 
   return (
     <div className="relative shrink-0">
@@ -21,7 +24,7 @@ export function FilterChip({ label, options = ['Option 1', 'Option 2'], onOption
         }}
         className={`flex items-center gap-1 h-8 px-3 rounded-lg border ${isOpen ? 'bg-[var(--md-sys-color-surface-variant)] border-transparent' : 'border-[var(--md-sys-color-outline)] bg-transparent'} text-[var(--md-sys-color-on-surface)] hover:bg-[var(--md-sys-color-surface-variant)] transition-colors font-medium text-[13px]`}
       >
-        {label}
+        {displayLabel}
         <span className="material-symbols-outlined text-[18px]">arrow_drop_down</span>
       </button>
       
@@ -47,6 +50,9 @@ export function FilterChip({ label, options = ['Option 1', 'Option 2'], onOption
             }}
           >
             <div slot="headline">{option}</div>
+            {selectedValue === option && (
+              <md-icon slot="end">check</md-icon>
+            )}
           </md-menu-item>
         ))}
       </md-menu>
@@ -56,10 +62,25 @@ export function FilterChip({ label, options = ['Option 1', 'Option 2'], onOption
 
 interface FilterChipSetProps {
   chips: { label: string; options?: string[] }[];
+  initialFilters?: Record<string, string>;
+  onFilterChange?: (filters: Record<string, string>) => void;
 }
 
-export function FilterChipSet({ chips }: FilterChipSetProps) {
+export function FilterChipSet({ chips, initialFilters = {}, onFilterChange }: FilterChipSetProps) {
   const [openChip, setOpenChip] = React.useState<string | null>(null);
+  const [selectedFilters, setSelectedFilters] = React.useState<Record<string, string>>(initialFilters);
+
+  const handleOptionSelect = (chipLabel: string, option: string) => {
+    const newFilters = { ...selectedFilters };
+    if (newFilters[chipLabel] === option) {
+      // Deselect if already selected (except we might not want to allow deselection for default sorts, but we'll leave it flexible)
+      delete newFilters[chipLabel];
+    } else {
+      newFilters[chipLabel] = option;
+    }
+    setSelectedFilters(newFilters);
+    onFilterChange?.(newFilters);
+  };
 
   return (
     <div className="flex flex-wrap items-center gap-2 mb-6 px-6 relative z-20">
@@ -68,6 +89,8 @@ export function FilterChipSet({ chips }: FilterChipSetProps) {
           <FilterChip 
             label={chip.label}
             options={chip.options}
+            selectedValue={selectedFilters[chip.label]}
+            onOptionSelect={(option) => handleOptionSelect(chip.label, option)}
             isOpen={openChip === chip.label}
             onToggle={() => setOpenChip(openChip === chip.label ? null : chip.label)}
           />

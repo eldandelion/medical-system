@@ -9,8 +9,11 @@ afterEach(() => {
 
 describe('FilterChip Component', () => {
   it('renders the label correctly', () => {
-    render(<FilterChip label="Status" isOpen={false} onToggle={() => {}} />);
+    const { rerender } = render(<FilterChip label="Status" isOpen={false} onToggle={() => {}} />);
     expect(screen.getByText('Status')).toBeDefined();
+
+    rerender(<FilterChip label="Status" selectedValue="Active" isOpen={false} onToggle={() => {}} />);
+    expect(screen.getByText('Status: Active')).toBeDefined();
   });
 
   it('triggers onToggle when the button is clicked', () => {

@@ -91,9 +91,7 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, h
   
   const processReferrals = React.useCallback((data: any) => {
     const enrichedData = (data as Referral[]).map(enrichReferralStatus);
-    return enrichedData.sort((a, b) => {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
+    return enrichedData; // Removed sorting here since it will be done dynamically by the filter
   }, []);
 
   const { data: referralsData, isLoading: loading } = useQuery<Referral[]>({
@@ -110,17 +108,51 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, h
   
   const referrals = referralsData || [];
 
+  const [activeFilters, setActiveFilters] = React.useState<Record<string, string>>({
+    '时间': '从新到旧'
+  });
+
+  const processedReferrals = React.useMemo(() => {
+    let filtered = referrals.filter(r => {
+      if (activeFilters['状态'] && activeFilters['状态'] !== '全部') {
+        const displayStatus = r.displayStatus || r.status;
+        const statusLabel = STATUS_LABELS[displayStatus] || displayStatus;
+        if (statusLabel !== activeFilters['状态']) return false;
+      }
+      if (activeFilters['类型'] && activeFilters['类型'] !== '全部') {
+        if (r.type !== activeFilters['类型']) return false;
+      }
+      if (activeFilters['优先级'] && activeFilters['优先级'] !== '全部') {
+        const riskLabel = RISK_LEVEL_LABELS[r.riskLevel] || r.riskLevel;
+        if (riskLabel !== activeFilters['优先级']) return false;
+      }
+      return true;
+    });
+
+    filtered.sort((a, b) => {
+      const diff = new Date(b.date).getTime() - new Date(a.date).getTime();
+      if (activeFilters['时间'] === '从旧到新') {
+        return -diff;
+      }
+      return diff; // '从新到旧' (default)
+    });
+
+    return filtered;
+  }, [referrals, activeFilters]);
+
   return (
     <>
       {header && header(loading)}
       <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
         <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4">
           <FilterChipSet
+            initialFilters={activeFilters}
+            onFilterChange={setActiveFilters}
             chips={[
-              { label: '状态', options: ['进行中', '已批准', '已拒绝', '审核中'] },
-              { label: '类型', options: ['初次转诊', '随访', '紧急', '结业'] },
-              { label: '优先级', options: ['高', '中', '低'] },
-              { label: '指派至', options: ['教职工', '部门负责人', '顾问'] }
+              { label: '状态', options: ['全部', '进行中', '已批准', '已拒绝', '待审批'] },
+              { label: '类型', options: ['全部', '初次转诊', '随访'] },
+              { label: '优先级', options: ['全部', '高', '中', '低'] },
+              { label: '时间', options: ['从新到旧', '从旧到新'] }
             ]}
           />
         </div>
@@ -132,7 +164,7 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, h
           </div>
         ) : (
           <div className="flex-1 min-h-0 flex flex-col relative">
-            <DataTable columns={columns} data={referrals} onRowClick={onReferralSelect} selectedId={selectedReferralId} />
+            <DataTable columns={columns} data={processedReferrals} onRowClick={onReferralSelect} selectedId={selectedReferralId} />
           </div>
         )}
       </div>
