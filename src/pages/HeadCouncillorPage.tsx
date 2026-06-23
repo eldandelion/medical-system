@@ -239,11 +239,7 @@ export function HeadCouncillorPage() {
                       userRole="head-councillor" 
                       activeTab={activeTab} 
                       onTabChange={setActiveTab} 
-                      onUpdate={() => {
-                        queryClient.invalidateQueries({ queryKey: ['/api/referrals'] });
-                        setSelectedItem(null);
-                        setRefreshKey(k => k + 1);
-                      }}
+                      onUpdate={() => queryClient.invalidateQueries({ queryKey: ['/api/referrals'] })}
                     />
                   )}
                 </>

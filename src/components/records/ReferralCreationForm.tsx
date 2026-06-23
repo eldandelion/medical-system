@@ -9,6 +9,7 @@ import { Student, ClinicalStatusType, SevereRiskFactorType } from '../../types';
 import { CLINICAL_STATUS_OPTIONS, RISK_FACTOR_OPTIONS } from '../../config/referralConstants';
 import { RISK_LEVEL_STYLES } from '../../config/styleConstants';
 import { AttachmentList } from '../common/AttachmentList';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function ReferralCreationForm({ onClose, initialData }: { onClose: () => void; initialData?: Partial<{
   studentId: string;
@@ -22,6 +23,7 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
   const { viewState, setHeaderActions, setOnCloseInterceptor } = useCreationOverlay();
   const { showSnackbar } = useSnackbar();
   const { session } = useAuth();
+  const queryClient = useQueryClient();
   const isFullscreen = viewState === 'FULLSCREEN';
 
   const [isCloseWarningOpen, setIsCloseWarningOpen] = React.useState(false);
@@ -89,7 +91,7 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
       if (!res.ok) {
         throw new Error('API Error');
       }
-
+      queryClient.invalidateQueries();
       onClose();
       showSnackbar({
         message: actionType === 'draft' ? '草稿已保存' : '转诊申请已成功提交',
