@@ -31,6 +31,11 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ~/medical-system
-            docker compose up --build -d
+            # Try Docker Compose V2 first, fallback to V1, and use sudo to avoid permission denied errors
+            if sudo docker compose version > /dev/null 2>&1; then
+              sudo docker compose up --build -d
+            else
+              sudo docker-compose up --build -d
+            fi
             # Clean up old unused images to save disk space
-            docker image prune -f
+            sudo docker image prune -f
