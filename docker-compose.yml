@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: medical-system-frontend
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    # networks:
+    #   - app-network
+
+  # Placeholder for your future backend
+  # backend:
+  #   image: your-backend-image # Or build: ./backend
+  #   container_name: medical-system-backend
+  #   ports:
+  #     - "8080:8080"
+  #   restart: unless-stopped
+  #   networks:
+  #     - app-network
+
+# networks:
+#   app-network:
+#     driver: bridge
