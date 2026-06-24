@@ -35,15 +35,13 @@ import '@material/web/tabs/tabs.js';
 import '@material/web/tabs/primary-tab.js';
 
 async function enableMocking() {
-  if (import.meta.env.DEV) {
-    const { worker } = await import('./mocks/browser');
-    return worker.start({
-      onUnhandledRequest: 'bypass',
-      serviceWorker: {
-        url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
-      },
-    });
-  }
+  const { worker } = await import('./mocks/browser');
+  return worker.start({
+    onUnhandledRequest: 'bypass',
+    serviceWorker: {
+      url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
+    },
+  });
 }
 
 import { AuthProvider } from './contexts/AuthContext';
