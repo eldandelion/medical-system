@@ -9,6 +9,15 @@ import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS, STATUS_STYLES, STATUS_LABELS } fr
 
 import { Referral } from '../../types';
 
+// Declare custom elements to avoid @ts-ignore
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'md-circular-progress': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & { indeterminate?: boolean };
+    }
+  }
+}
+
 interface ReferralManagementViewProps {
   onReferralSelect?: (referral: Referral) => void;
   selectedReferralId?: string;
@@ -46,11 +55,11 @@ const columns: ColumnDefinition<Referral>[] = [
         </span>
         <div className={`text-[12px] mt-0.5 flex items-center gap-2 ${isSelected ? 'opacity-90' : 'text-[var(--md-sys-color-on-surface-variant)] opacity-70'}`}>
           <span className="shrink-0">{formatDateToChinese(item.date)} • {item.type}</span>
-          <div className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline-variant)] border-opacity-20 shrink-0">
+          <div className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-[var(--md-sys-color-surface-container)] shrink-0">
             <div className="w-4 h-4 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center text-[9px] font-bold">
               {item.referredBy?.name?.charAt(0) || '?'}
             </div>
-            <span className="text-[11px] font-medium text-[var(--md-sys-color-on-surface)] truncate max-w-[80px] leading-none">
+            <span className="text-[11px] font-medium text-[var(--md-sys-color-on-surface-variant)] truncate max-w-[80px] leading-none">
               {item.referredBy?.name || '未知'}
             </span>
           </div>
@@ -88,21 +97,19 @@ const columns: ColumnDefinition<Referral>[] = [
 
 export function ReferralManagementView({ onReferralSelect, selectedReferralId, header, userRole }: ReferralManagementViewProps) {
   const { session } = useAuth();
-  
-  const processReferrals = React.useCallback((data: any) => {
-    const enrichedData = (data as Referral[]).map(enrichReferralStatus);
-    return enrichedData; // Removed sorting here since it will be done dynamically by the filter
-  }, []);
 
-  const { data: referralsData, isLoading: loading } = useQuery<Referral[]>({
+  const { data: referralsData, isLoading: loading, isError } = useQuery<Referral[]>({
     queryKey: ['/api/referrals'],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals`.replace('//api', '/api'), {
+      const apiUrl = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/api/referrals`;
+      const res = await fetch(apiUrl, {
         headers: { 'Authorization': `Bearer ${session.token}` }
       });
       if (!res.ok) throw new Error('Failed to fetch referrals');
-      const rawData = await res.json();
-      return processReferrals(rawData);
+      const rawData: Referral[] = await res.json();
+      
+      // Removed unnecessary useCallback and processed directly
+      return rawData.map(enrichReferralStatus);
     }
   });
   
@@ -157,9 +164,13 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, h
           />
         </div>
         
-        {loading && referrals.length === 0 ? (
+        {isError ? (
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[200px] text-[var(--md-sys-color-error)]">
+            <span className="material-symbols-outlined text-4xl mb-2">error</span>
+            <p>加载转诊记录失败，请检查网络或稍后重试。</p>
+          </div>
+        ) : loading && referrals.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
-            {/* @ts-ignore */}
             <md-circular-progress indeterminate></md-circular-progress>
           </div>
         ) : (

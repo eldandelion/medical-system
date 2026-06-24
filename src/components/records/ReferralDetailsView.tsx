@@ -176,7 +176,11 @@ export function ReferralDetailsView({ referral: initialReferral, userRole, hideH
     >
       <AnimatePresence mode="wait">
         {activeTab === 'overview' && (
-          <ReferralOverviewTab referral={referral} extendedData={extendedData} />
+          <ReferralOverviewTab 
+            referral={referral} 
+            extendedData={extendedData} 
+            onNavigateToTracker={() => setActiveTab('tracker')}
+          />
         )}
 
         {activeTab === 'tracker' && (

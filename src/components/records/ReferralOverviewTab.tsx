@@ -4,16 +4,23 @@ import { DetailsSection, MetricCard } from '../common/DetailsPanel';
 import { AttachmentList } from '../common/AttachmentList';
 import { Quote } from 'lucide-react';
 import { LAYOUT_CONSTANTS } from '../../config/layoutConstants';
+import { STATUS_STYLES, STATUS_LABELS } from '../../config/styleConstants';
 import { Referral } from '../../types';
 import { useDetails } from '../../contexts/DetailsContext';
+import { ReferralStatusCard } from './ReferralStatusCard';
 
 interface ReferralOverviewTabProps {
   referral: Referral;
   extendedData: NonNullable<Referral['extendedData']>;
+  onNavigateToTracker?: () => void;
 }
 
-export function ReferralOverviewTab({ referral, extendedData }: ReferralOverviewTabProps) {
+export function ReferralOverviewTab({ referral, extendedData, onNavigateToTracker }: ReferralOverviewTabProps) {
   const { isFullScreen } = useDetails();
+
+  const displayStatus = referral.displayStatus || referral.status;
+  const steps = extendedData.steps || [];
+  const activeStep = steps.find(s => s.status === 'active' || s.status === 'issue') || steps[steps.length - 1];
 
   return (
     <motion.div
@@ -24,6 +31,13 @@ export function ReferralOverviewTab({ referral, extendedData }: ReferralOverview
       transition={{ duration: 0.2 }}
       className="flex flex-col gap-6"
     >
+      {referral.status !== 'Draft' && (
+        <ReferralStatusCard 
+          activeStep={activeStep} 
+          onClick={onNavigateToTracker} 
+        />
+      )}
+
       <DetailsSection title="分诊基本信息" className="border-t-0 pt-0 mt-0">
         <div className="flex flex-col gap-6">
           {/* 3-Column Metrics Grid */}

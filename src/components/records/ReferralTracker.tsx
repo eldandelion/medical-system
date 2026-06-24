@@ -47,7 +47,7 @@ const getCardStyles = (status: ReferralStepStatus) => {
   }
 };
 
-const getIconForType = (type: ReferralStepType) => {
+export const getIconForType = (type: ReferralStepType) => {
   switch (type) {
     case 'initiation': return GraduationCap;
     case 'review': return Users;
