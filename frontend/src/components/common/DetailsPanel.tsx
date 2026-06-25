@@ -38,12 +38,14 @@ export function DetailsPanel({
 }: DetailsPanelProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [titleOverride, setTitleOverride] = React.useState<string | null>(null);
+  const [tabsOverride, setTabsOverride] = React.useState<any[] | null>(null);
 
   // Reset expansion state when the panel is closed
   React.useEffect(() => {
     if (!isOpen) {
       setIsExpanded(false);
       setTitleOverride(null);
+      setTabsOverride(null);
     }
   }, [isOpen]);
 
@@ -85,7 +87,7 @@ export function DetailsPanel({
 
 
             <div className={`flex-1 custom-scrollbar flex flex-col scroll-smooth ${disablePadding ? 'overflow-hidden' : 'overflow-y-auto p-5'}`}>
-              <DetailsContext.Provider value={{ isFullScreen: false, titleOverride, setTitleOverride }}>
+              <DetailsContext.Provider value={{ isFullScreen: false, titleOverride, setTitleOverride, tabsOverride, setTabsOverride }}>
                 {children}
               </DetailsContext.Provider>
             </div>
@@ -98,12 +100,12 @@ export function DetailsPanel({
         title={title}
         subtitle={subtitle}
         avatar={headerAvatar}
-        tabs={tabs}
+        tabs={tabsOverride || tabs}
         activeTab={activeTab}
         onTabChange={onTabChange}
         disablePadding={disablePadding}
       >
-        <DetailsContext.Provider value={{ isFullScreen: true, titleOverride, setTitleOverride }}>
+        <DetailsContext.Provider value={{ isFullScreen: true, titleOverride, setTitleOverride, tabsOverride, setTabsOverride }}>
           {children}
         </DetailsContext.Provider>
       </FullScreenView>

@@ -41,7 +41,7 @@ export const REFERRAL_DETAILS_TABS = [
 ];
 
 export function ReferralDetailsView({ referral: initialReferral, userRole, hideHeader, activeTab: propsActiveTab, onTabChange, onUpdate }: ReferralDetailsViewProps) {
-  const { isFullScreen } = useDetails();
+  const { isFullScreen, setTabsOverride } = useDetails();
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
 
@@ -108,9 +108,20 @@ export function ReferralDetailsView({ referral: initialReferral, userRole, hideH
 
   if (!extendedData) return null;
 
-  const tabs = REFERRAL_DETAILS_TABS.filter(
+  const tabs = React.useMemo(() => REFERRAL_DETAILS_TABS.filter(
     tab => tab.id !== 'feedback' || isFeedbackAvailable
-  );
+  ), [isFeedbackAvailable]);
+
+  React.useEffect(() => {
+    if (setTabsOverride) {
+      setTabsOverride(tabs);
+    }
+    return () => {
+      if (setTabsOverride) {
+        setTabsOverride(null);
+      }
+    };
+  }, [tabs, setTabsOverride]);
 
   const displayStatus = referral.displayStatus || referral.status;
   const isDoctorRejected = displayStatus === 'Rejected' && extendedData?.steps?.some((s: any) => s.type === 'scheduling' && s.status === 'issue');
