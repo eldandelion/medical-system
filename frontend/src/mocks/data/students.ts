@@ -3,6 +3,7 @@ import { Student } from '../../types';
 export const mockStudentsDb: Student[] = [
   {
     id: '1',
+    studentNumber: '2021001',
     name: '张伟',
     major: '计算机科学',
     year: '大三',
@@ -45,6 +46,7 @@ export const mockStudentsDb: Student[] = [
   },
   {
     id: '2',
+    studentNumber: '2021002',
     name: '李娜',
     major: '心理学',
     year: '大四',
@@ -86,6 +88,7 @@ export const mockStudentsDb: Student[] = [
   },
   {
     id: '3',
+    studentNumber: '2022001',
     name: '王强',
     major: '生物学',
     year: '大一',
@@ -126,6 +129,7 @@ export const mockStudentsDb: Student[] = [
   },
   {
     id: '4',
+    studentNumber: '2022002',
     name: '刘洋',
     major: '艺术史',
     year: '大二',
@@ -166,6 +170,7 @@ export const mockStudentsDb: Student[] = [
   },
   {
     id: '5',
+    studentNumber: '2023001',
     name: '陈思宇',
     major: '文学',
     year: '大二',
@@ -185,6 +190,7 @@ export const mockStudentsDb: Student[] = [
   },
   {
     id: '6',
+    studentNumber: '2023002',
     name: '赵明',
     major: '物理',
     year: '大四',
@@ -204,6 +210,7 @@ export const mockStudentsDb: Student[] = [
   },
   {
     id: '7',
+    studentNumber: '2021003',
     name: '孙悦',
     major: '化学',
     year: '大三',
@@ -223,6 +230,7 @@ export const mockStudentsDb: Student[] = [
   },
   {
     id: '8',
+    studentNumber: '2022003',
     name: '周杰',
     major: '计算机科学',
     year: '研究生',
@@ -242,6 +250,7 @@ export const mockStudentsDb: Student[] = [
   },
   {
     id: '9',
+    studentNumber: '2023003',
     name: '王小明',
     major: '工程学',
     year: '大一',

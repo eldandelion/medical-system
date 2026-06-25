@@ -4,6 +4,7 @@ const baseReferrals: Referral[] = [
   {
     id: '1',
     studentName: '张伟',
+    studentNumber: '2022001',
     type: '初次转诊',
     date: '2026-04-12T00:00:00Z',
     title: '期中考试后急性焦虑',
@@ -15,6 +16,7 @@ const baseReferrals: Referral[] = [
   {
     id: '2',
     studentName: '李娜',
+    studentNumber: '2023002',
     type: '随访',
     date: '2026-04-20T00:00:00Z',
     title: '每周治疗随访',
@@ -26,6 +28,7 @@ const baseReferrals: Referral[] = [
   {
     id: '3',
     studentName: '王强',
+    studentNumber: '2021003',
     type: '初次转诊',
     date: '2026-05-05T00:00:00Z',
     title: '自愿转诊',
@@ -37,6 +40,7 @@ const baseReferrals: Referral[] = [
   {
     id: '4',
     studentName: '陈思宇',
+    studentNumber: '2022004',
     type: '紧急',
     date: '2026-04-18T00:00:00Z',
     title: '宿舍事故报告',
@@ -48,6 +52,7 @@ const baseReferrals: Referral[] = [
   {
     id: '5',
     studentName: '赵明',
+    studentNumber: '2023005',
     type: '随访',
     date: '2026-04-15T00:00:00Z',
     title: '药物复核',
@@ -59,6 +64,7 @@ const baseReferrals: Referral[] = [
   {
     id: '6',
     studentName: '孙悦',
+    studentNumber: '2021006',
     type: '初次转诊',
     date: '2026-04-22T00:00:00Z',
     title: '退出社交活动',
@@ -70,6 +76,7 @@ const baseReferrals: Referral[] = [
   {
     id: '7',
     studentName: '周杰',
+    studentNumber: '2022007',
     type: '转诊',
     date: '2026-04-10T00:00:00Z',
     title: '工作压力',
@@ -81,6 +88,7 @@ const baseReferrals: Referral[] = [
   {
     id: '8',
     studentName: '王小明',
+    studentNumber: '2023008',
     type: '初次转诊',
     date: '2026-04-28T00:00:00Z',
     title: '严重睡眠障碍',
@@ -92,6 +100,7 @@ const baseReferrals: Referral[] = [
   {
     id: '9',
     studentName: '赵云',
+    studentNumber: '2021009',
     type: '初次转诊',
     date: '2026-06-15T00:00:00Z',
     title: '情绪严重低落',

@@ -16,6 +16,7 @@ export interface ReferralStep {
 export interface Referral {
   id: string;
   studentName: string;
+  studentNumber: string;
   type: string;
   date: string;
   title: string;
@@ -76,6 +77,7 @@ export interface Referral {
 
 export interface Student {
   id: string;
+  studentNumber: string;
   name: string;
   major: string;
   year: string;

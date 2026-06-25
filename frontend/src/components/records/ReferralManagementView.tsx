@@ -40,7 +40,10 @@ const columns: ColumnDefinition<Referral>[] = [
             <div className="absolute -left-3.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[var(--md-sys-color-error)] shadow-[0_0_8px_rgba(179,38,30,0.4)]" />
           )}
         </div>
-        <span className="text-[14px] font-normal">{item.studentName}</span>
+        <div className="flex flex-col">
+          <span className="text-[14px] font-medium">{item.studentName}</span>
+          <span className="text-[12px] opacity-70">学号: {item.studentNumber}</span>
+        </div>
       </div>
     )
   },

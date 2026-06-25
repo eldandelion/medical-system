@@ -40,7 +40,10 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
           <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-xs font-medium shrink-0">
             {item.name.charAt(0)}
           </div>
-          <span className="text-[14px] font-normal">{item.name}</span>
+          <div className="flex flex-col">
+            <span className="text-[14px] font-medium">{item.name}</span>
+            <span className="text-[12px] opacity-70">学号: {item.studentNumber}</span>
+          </div>
         </div>
       )
     },
