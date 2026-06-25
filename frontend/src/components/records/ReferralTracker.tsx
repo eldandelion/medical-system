@@ -101,24 +101,28 @@ export function ReferralTracker({ steps }: ReferralTrackerProps) {
             const IconComponent = getIconForType(step.type);
             const iconStyles = getIconStyles(step.status);
 
-            // Determine the line color connecting to the NEXT node
             const nextStep = steps[index + 1];
-            let lineColor = "bg-[var(--md-sys-color-outline-variant)]"; // Default
+            const prevStep = steps[index - 1];
 
-            // Note: Use style prop for gradients with CSS variables if arbitrary values have parsing issues
-            let customLineStyle = {};
-            if (step.status === 'completed' && (nextStep?.status === 'completed' || nextStep?.status === 'active')) {
-              lineColor = "bg-[var(--md-sys-color-primary)]";
-            } else if ((step.status === 'completed' || step.status === 'active') && nextStep?.status === 'issue') {
-              lineColor = ""; // Will use inline style
-              customLineStyle = { background: "linear-gradient(to bottom, var(--md-sys-color-primary), var(--md-sys-color-error))" };
-            }
+            const getLineColor = (s1: ReferralStep, s2: ReferralStep) => {
+              if (!s1 || !s2) return "bg-[var(--md-sys-color-outline-variant)]";
+              if (s1.status === 'completed' && (s2.status === 'completed' || s2.status === 'active')) {
+                return "bg-[var(--md-sys-color-primary)]";
+              }
+              if ((s1.status === 'completed' || s1.status === 'active') && s2.status === 'issue') {
+                return "bg-[var(--md-sys-color-error)]";
+              }
+              return "bg-[var(--md-sys-color-outline-variant)]";
+            };
+
+            const bottomLineColor = getLineColor(step, nextStep);
+            const topLineColor = prevStep ? getLineColor(prevStep, step) : '';
 
             return (
               <div key={step.id} className="flex items-stretch gap-6 relative group z-10">
 
                 {/* Left Side: The Card */}
-                <div className={`flex-1 ${step.status === 'active' ? 'rounded-[30px]' : 'rounded-[22px]'} p-5 pl-6 pr-5 flex items-start gap-4 transition-all duration-300 ${styles.bg}`}>
+                <div className={`flex-1 ${(step.status === 'active' || step.status === 'issue') ? 'rounded-[30px]' : 'rounded-[22px]'} p-5 pl-6 pr-5 flex items-start gap-4 transition-all duration-300 ${styles.bg}`}>
 
                   {/* Card Icon */}
                   {IconComponent && (
@@ -148,7 +152,12 @@ export function ReferralTracker({ steps }: ReferralTrackerProps) {
                 </div>
 
                 {/* Right Side: Timeline Track & Indicator */}
-                <div className="w-8 flex flex-col items-center pt-8 relative shrink-0">
+                <div className="w-8 flex flex-col items-center justify-center relative shrink-0">
+
+                  {/* Top Line Segment */}
+                  {index !== 0 && (
+                    <div className={`absolute top-[-16px] bottom-1/2 left-1/2 -translate-x-1/2 w-[1.5px] z-0 ${topLineColor}`} />
+                  )}
 
                   {/* Status Circle */}
                   <div className="relative z-10 flex items-center justify-center bg-[var(--md-sys-color-surface)]">
@@ -174,12 +183,9 @@ export function ReferralTracker({ steps }: ReferralTrackerProps) {
                     )}
                   </div>
 
-                  {/* Connecting Line (drawn below the circle to the next item) */}
+                  {/* Bottom Line Segment */}
                   {!isLast && (
-                    <div
-                      className={`absolute top-[44px] bottom-[-32px] left-1/2 -translate-x-1/2 w-[1.5px] z-0 ${lineColor}`}
-                      style={customLineStyle}
-                    />
+                    <div className={`absolute top-1/2 bottom-[-16px] left-1/2 -translate-x-1/2 w-[1.5px] z-0 ${bottomLineColor}`} />
                   )}
                 </div>
 

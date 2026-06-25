@@ -4,6 +4,8 @@ import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { RecordHeader } from './RecordHeader';
 import { STATUS_STYLES, STATUS_LABELS } from '../../config/styleConstants';
 
+import { enrichReferralStatus } from '../../utils/referralUtils';
+
 import { Referral } from '../../types';
 
 export const getRecordIcon = (type: string): string => {
@@ -32,7 +34,8 @@ export function RecordsView({ onRecordSelect, selectedRecordId, header }: Record
         headers: { 'Authorization': 'Bearer student_token_chen' }
       });
       if (!res.ok) throw new Error('Failed to fetch referrals');
-      return res.json();
+      const rawData = await res.json();
+      return rawData.map(enrichReferralStatus);
     }
   });
   const records = recordsData || [];
@@ -75,8 +78,9 @@ export function RecordsView({ onRecordSelect, selectedRecordId, header }: Record
       label: '状态',
       width: 'w-[20%]',
       render: (item, isSelected) => {
-        const style = STATUS_STYLES[item.status] || STATUS_STYLES.default;
-        const label = STATUS_LABELS[item.status] || item.status;
+        const displayStatus = item.displayStatus || item.status;
+        const style = STATUS_STYLES[displayStatus] || STATUS_STYLES.default;
+        const label = STATUS_LABELS[displayStatus] || displayStatus;
         return (
           <div className="flex items-center">
             <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${style}`}>
