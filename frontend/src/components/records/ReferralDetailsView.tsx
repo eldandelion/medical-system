@@ -145,12 +145,9 @@ export function ReferralDetailsView({ referral: initialReferral, userRole, hideH
                   {extendedData.studentId || 'N/A'}
                 </span>
                 <span className="opacity-40 shrink-0">•</span>
-                <span className="font-medium truncate">{extendedData.school}</span>
+                <span className="font-normal truncate">{extendedData.school}</span>
                 <span className="opacity-40 shrink-0">•</span>
                 <div className={`px-3 py-1 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${RISK_LEVEL_STYLES[referral.riskLevel]}`}>
-                  <md-icon style={{ fontSize: '16px', width: '14px', height: '14px' }}>
-                    {referral.riskLevel === 'High' ? 'warning' : 'info'}
-                  </md-icon>
                   <span>
                     {RISK_LEVEL_LABELS[referral.riskLevel] || referral.riskLevel}
                   </span>

@@ -66,16 +66,14 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
                   {student.demographics?.studentId || 'N/A'}
                 </span>
                 <span className="opacity-40 shrink-0">•</span>
-                <span className="font-medium truncate">{student.major}</span>
+                <span className="font-normal truncate">{student.major}</span>
                 <span className="opacity-40 shrink-0">•</span>
                 {/* Critical Status: Risk Level Chip */}
                 <div className={`px-3 py-1 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${student.riskLevel === 'High'
                   ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
-                  : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                  : 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]'
                   }`}>
-                  <span>
-                    {student.riskLevel === 'High' ? '高风险' : '中低风险'}
-                  </span>
+                  {student.riskLevel === 'High' ? '高风险' : '中风险'}
                 </div>
               </div>
             </div>
