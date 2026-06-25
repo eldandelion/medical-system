@@ -148,7 +148,7 @@ export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, assigned
                 已分配问卷 ({assignedAssessments.length})
               </h3>
               {assignedAssessments.length === 0 ? (
-                <p className="text-[var(--md-sys-color-on-surface-variant)] text-[14px] opacity-70 p-4 bg-[var(--md-sys-color-surface)] rounded-xl border border-[var(--md-sys-color-outline-variant)]">
+                <p className="text-[var(--md-sys-color-on-surface-variant)] text-[14px] opacity-70 p-4 bg-[var(--md-sys-color-surface-container)] rounded-xl">
                   该学生暂无已分配的问卷
                 </p>
               ) : (
