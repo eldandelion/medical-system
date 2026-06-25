@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { RecordHeader } from './RecordHeader';
+import { STATUS_STYLES, STATUS_LABELS } from '../../config/styleConstants';
 
 import { Referral } from '../../types';
 
@@ -74,14 +75,12 @@ export function RecordsView({ onRecordSelect, selectedRecordId, header }: Record
       label: '状态',
       width: 'w-[20%]',
       render: (item, isSelected) => {
-        const isPending = item.status === 'Pending' || item.status === 'AwaitingApproval' || item.status === 'Draft';
+        const style = STATUS_STYLES[item.status] || STATUS_STYLES.default;
+        const label = STATUS_LABELS[item.status] || item.status;
         return (
           <div className="flex items-center">
-            <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${isPending
-                ? 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]'
-                : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]'
-              }`}>
-              {isPending ? '处理中' : (item.status === 'Closed' ? '已结案' : item.status)}
+            <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${style}`}>
+              {label}
             </span>
           </div>
         );
