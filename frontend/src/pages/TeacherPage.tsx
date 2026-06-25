@@ -209,7 +209,6 @@ export function TeacherPage() {
               tabs={tabs}
               activeTab={activeTab}
               onTabChange={setActiveTab}
-              disablePadding={(activePage === TeacherTabs.STUDENTS && !!selectedItem?.name) || (activePage === TeacherTabs.REFERRAL_MANAGEMENT && !!selectedItem?.studentName)}
             >
               {selectedItem && (
                 <>

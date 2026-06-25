@@ -34,7 +34,7 @@ services:
     image: mysql:8.0
     container_name: medical-system-db
     ports:
-      - "3306:3306"
+      - "3307:3306"
     restart: unless-stopped
     environment:
       - MYSQL_DATABASE=medical_db

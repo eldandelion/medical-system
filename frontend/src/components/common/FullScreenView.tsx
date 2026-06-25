@@ -20,7 +20,6 @@ interface FullScreenViewProps {
   sidebar?: React.ReactNode;
   actions?: React.ReactNode;
   progress?: number;
-  disablePadding?: boolean;
 }
 
 export function FullScreenView({
@@ -35,8 +34,7 @@ export function FullScreenView({
   children,
   sidebar,
   actions,
-  progress,
-  disablePadding = false
+  progress
 }: FullScreenViewProps) {
   return (
     <AnimatePresence>
@@ -108,8 +106,8 @@ export function FullScreenView({
             )}
 
             {/* Main content - Centered layout */}
-            <div className={`flex-1 overflow-y-auto custom-scrollbar bg-[var(--md-sys-color-surface)] ${disablePadding ? '' : 'pt-8 pb-32'}`}>
-              <div className={`max-w-4xl w-full mx-auto ${disablePadding ? 'h-full' : 'px-6'}`}>
+            <div className="flex-1 overflow-y-auto custom-scrollbar bg-[var(--md-sys-color-surface)]">
+              <div className="max-w-4xl w-full mx-auto h-full">
                 {children}
               </div>
             </div>

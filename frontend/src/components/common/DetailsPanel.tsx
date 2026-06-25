@@ -17,7 +17,6 @@ interface DetailsPanelProps {
   onTabChange?: (tabId: string) => void;
   children: React.ReactNode;
   width?: number;
-  disablePadding?: boolean;
 }
 
 export function DetailsPanel({
@@ -33,8 +32,7 @@ export function DetailsPanel({
   activeTab = '',
   onTabChange,
   children,
-  width = 720,
-  disablePadding = false
+  width = 720
 }: DetailsPanelProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [titleOverride, setTitleOverride] = React.useState<string | null>(null);
@@ -86,7 +84,7 @@ export function DetailsPanel({
             </div>
 
 
-            <div className={`flex-1 custom-scrollbar flex flex-col scroll-smooth ${disablePadding ? 'overflow-hidden' : 'overflow-y-auto p-5'}`}>
+            <div className="flex-1 custom-scrollbar flex flex-col scroll-smooth overflow-hidden">
               <DetailsContext.Provider value={{ isFullScreen: false, titleOverride, setTitleOverride, tabsOverride, setTabsOverride }}>
                 {children}
               </DetailsContext.Provider>
@@ -103,7 +101,6 @@ export function DetailsPanel({
         tabs={tabsOverride || tabs}
         activeTab={activeTab}
         onTabChange={onTabChange}
-        disablePadding={disablePadding}
       >
         <DetailsContext.Provider value={{ isFullScreen: true, titleOverride, setTitleOverride, tabsOverride, setTabsOverride }}>
           {children}

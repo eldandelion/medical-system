@@ -200,7 +200,6 @@ export function DoctorPage() {
               tabs={tabs}
               activeTab={activeTab}
               onTabChange={setActiveTab}
-              disablePadding={(activePage === DoctorTabs.REFERRAL_MANAGEMENT && !!selectedItem?.studentName)}
             >
               {selectedItem && (
                 <>

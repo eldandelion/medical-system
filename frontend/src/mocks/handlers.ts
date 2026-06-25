@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from 'msw';
-import { mockAssessmentsDb, mockPsychiatricRecordsDb, mockDashboardDb, mockStudentsDb, mockReferralsDb } from './db';
+import { mockAssessmentsDb, mockDashboardDb, mockStudentsDb, mockReferralsDb } from './db';
 const MOCK_DELAY_MS = 1000;
 
 const api = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`;
@@ -19,19 +19,6 @@ export const handlers = [
     return HttpResponse.json(assessment);
   }),
 
-  http.get(api('/api/records'), async () => {
-    await delay(MOCK_DELAY_MS);
-    return HttpResponse.json(mockPsychiatricRecordsDb);
-  }),
-
-  http.get(api('/api/records/:id'), ({ params }) => {
-    const { id } = params;
-    const record = mockPsychiatricRecordsDb.find((r) => r.id === id);
-    if (!record) {
-      return new HttpResponse(null, { status: 404 });
-    }
-    return HttpResponse.json(record);
-  }),
 
   http.get(api('/api/dashboard/:role'), async ({ params }) => {
     await delay(MOCK_DELAY_MS);
@@ -83,6 +70,17 @@ export const handlers = [
     } else if (authHeader.includes('trial_admin')) {
       // Trial Admin role sees only handed over referrals
       filteredReferrals = mockReferralsDb.filter(isReferralAccessibleByTrialAdmin);
+    } else if (authHeader.includes('student')) {
+      // Student role sees only their own referrals
+      // Assuming '陈思宇' for demo
+      filteredReferrals = mockReferralsDb.filter(r => r.studentName === '陈思宇');
+      filteredReferrals = filteredReferrals.map(r => ({
+        ...r,
+        extendedData: r.extendedData ? {
+          triage: { fullDescription: r.extendedData.triage.fullDescription } as any,
+          steps: r.extendedData.steps
+        } as any : undefined
+      }));
     } else if (authHeader.includes('doctor')) {
       // Doctor role sees only assigned referrals, drafts by this doctor, filled out by this doctor, or rejected by this doctor
       filteredReferrals = mockReferralsDb.filter(r => {
@@ -136,6 +134,17 @@ export const handlers = [
       if (referral.referredBy?.name !== '艾米丽·沃森') {
         return new HttpResponse(null, { status: 403, statusText: 'Forbidden: You can only access your own referrals' });
       }
+    } else if (authHeader.includes('student')) {
+      if (referral.studentName !== '陈思宇') {
+        return new HttpResponse(null, { status: 403, statusText: 'Forbidden: You can only access your own referrals' });
+      }
+      return HttpResponse.json({
+        ...referral,
+        extendedData: referral.extendedData ? {
+          triage: { fullDescription: referral.extendedData.triage.fullDescription },
+          steps: referral.extendedData.steps
+        } : undefined
+      });
     } else if (authHeader.includes('doctor')) {
       const createdByMe = referral.referredBy?.name === '李医生';
       const isDraftByMe = referral.status === 'Draft' && createdByMe;

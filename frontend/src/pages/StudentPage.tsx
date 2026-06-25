@@ -147,7 +147,7 @@ export function StudentPage() {
             <DetailsPanel
               isOpen={!!selectedRecord}
               onClose={() => setSelectedRecord(null)}
-              title=""
+              title={selectedRecord ? (selectedRecord.title || selectedRecord.type) : ''}
               icon={selectedRecord ? getRecordIcon(selectedRecord.type) : 'description'}
             >
               <RecordDetailsView record={selectedRecord} />

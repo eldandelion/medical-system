@@ -197,7 +197,6 @@ export function TrialAdminPage() {
               tabs={tabs}
               activeTab={activeTab}
               onTabChange={setActiveTab}
-              disablePadding={(activePage === TrialAdminTabs.REFERRAL_MANAGEMENT && !!selectedItem?.studentName) || (activePage === TrialAdminTabs.STAFF && !!selectedItem?.employeeId)}
             >
               {selectedItem && (
                 <>

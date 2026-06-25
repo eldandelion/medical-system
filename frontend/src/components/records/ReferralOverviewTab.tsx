@@ -41,103 +41,107 @@ export function ReferralOverviewTab({ referral, extendedData, onNavigateToTracke
       <DetailsSection title="分诊基本信息" className="border-t-0 pt-0 mt-0">
         <div className="flex flex-col gap-6">
           {/* 3-Column Metrics Grid */}
-          <div className={`grid grid-cols-3 gap-4 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: "40" }}>
-            <MetricCard
-              label="是否初诊"
-              icon="person_add"
-              value={extendedData.triage.isFirstVisit ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]">
-                  <span className="material-symbols-outlined text-[16px] font-bold">check</span>是
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
-                  <span className="material-symbols-outlined text-[16px] font-bold">close</span>否
-                </span>
-              )}
-            />
+          {extendedData.triage.isFirstVisit !== undefined && (
+            <div className={`grid grid-cols-3 gap-4 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: "40" }}>
+              <MetricCard
+                label="是否初诊"
+                icon="person_add"
+                value={extendedData.triage.isFirstVisit ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]">
+                    <span className="material-symbols-outlined text-[16px] font-bold">check</span>是
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
+                    <span className="material-symbols-outlined text-[16px] font-bold">close</span>否
+                  </span>
+                )}
+              />
 
-            <MetricCard
-              label="是否服药"
-              icon="medication"
-              value={extendedData.triage.isMedicated ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
-                  <span className="material-symbols-outlined text-[16px] font-bold">check</span>是
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
-                  <span className="material-symbols-outlined text-[16px] font-bold">close</span>否
-                </span>
-              )}
-            />
+              <MetricCard
+                label="是否服药"
+                icon="medication"
+                value={extendedData.triage.isMedicated ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
+                    <span className="material-symbols-outlined text-[16px] font-bold">check</span>是
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
+                    <span className="material-symbols-outlined text-[16px] font-bold">close</span>否
+                  </span>
+                )}
+              />
 
-            <MetricCard
-              label="心理治疗"
-              icon="monitoring"
-              value={extendedData.triage.priorTherapy === '无' ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
-                  <span className="material-symbols-outlined text-[16px] font-bold">remove</span>无
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
-                  <span className="material-symbols-outlined text-[16px] font-bold">check</span>{extendedData.triage.priorTherapy}
-                </span>
-              )}
-            />
-          </div>
+              <MetricCard
+                label="心理治疗"
+                icon="monitoring"
+                value={extendedData.triage.priorTherapy === '无' ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
+                    <span className="material-symbols-outlined text-[16px] font-bold">remove</span>无
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
+                    <span className="material-symbols-outlined text-[16px] font-bold">check</span>{extendedData.triage.priorTherapy}
+                  </span>
+                )}
+              />
+            </div>
+          )}
 
           {/* 3-Column Risk Grid */}
-          <div className={`grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: "40" }}>
-            <MetricCard
-              label="自杀意念"
-              icon="psychology"
-              className={extendedData.risk.ideation ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]" : ""}
-              value={
-                extendedData.risk.ideation ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
-                    <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
-                    <span className="material-symbols-outlined text-[16px] font-bold">close</span>否
-                  </span>
-                )
-              }
-            />
+          {extendedData.risk && (
+            <div className={`grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: "40" }}>
+              <MetricCard
+                label="自杀意念"
+                icon="psychology"
+                className={extendedData.risk.ideation ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]" : ""}
+                value={
+                  extendedData.risk.ideation ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
+                      <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
+                      <span className="material-symbols-outlined text-[16px] font-bold">close</span>否
+                    </span>
+                  )
+                }
+              />
 
-            <MetricCard
-              label="自杀企图"
-              icon="personal_injury"
-              className={extendedData.risk.attempt ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]" : ""}
-              value={
-                extendedData.risk.attempt ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
-                    <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
-                    <span className="material-symbols-outlined text-[16px] font-bold">close</span>否
-                  </span>
-                )
-              }
-            />
+              <MetricCard
+                label="自杀企图"
+                icon="personal_injury"
+                className={extendedData.risk.attempt ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]" : ""}
+                value={
+                  extendedData.risk.attempt ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
+                      <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
+                      <span className="material-symbols-outlined text-[16px] font-bold">close</span>否
+                    </span>
+                  )
+                }
+              />
 
-            <MetricCard
-              label="自残行为"
-              icon="healing"
-              className={extendedData.risk.selfHarm ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]" : ""}
-              value={
-                extendedData.risk.selfHarm ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
-                    <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
-                    <span className="material-symbols-outlined text-[16px] font-bold">close</span>否
-                  </span>
-                )
-              }
-            />
-          </div>
+              <MetricCard
+                label="自残行为"
+                icon="healing"
+                className={extendedData.risk.selfHarm ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]" : ""}
+                value={
+                  extendedData.risk.selfHarm ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
+                      <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
+                      <span className="material-symbols-outlined text-[16px] font-bold">close</span>否
+                    </span>
+                  )
+                }
+              />
+            </div>
+          )}
 
           {/* Referral Full Description Card (Watermarked elegant quote) */}
           <div className="relative p-6 rounded-[28px] bg-[var(--md-sys-color-surface-container-low)] border-opacity-10 overflow-hidden flex flex-col gap-3">

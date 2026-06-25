@@ -223,7 +223,6 @@ export function HeadCouncillorPage() {
               tabs={tabs}
               activeTab={activeTab}
               onTabChange={setActiveTab}
-              disablePadding={(activePage === HeadCouncillorTabs.STUDENTS && !!selectedItem?.name) || (activePage === HeadCouncillorTabs.REFERRAL_MANAGEMENT && !!selectedItem?.studentName) || (activePage === HeadCouncillorTabs.STAFF && !!selectedItem?.employeeId)}
             >
               {selectedItem && (
                 <>

@@ -3,22 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { RecordHeader } from './RecordHeader';
 
-export type PsychiatricRecordType = '初诊转诊' | '随访';
+import { Referral } from '../../types';
 
-export interface PsychiatricRecord {
-  id: string;
-  type: PsychiatricRecordType;
-  reason: string;
-  date: string;
-  status: 'Pending' | 'Closed';
-  detailedReason?: string;
-  hospitalSummary?: string;
-  followUpArrangement?: string;
-  attachments?: { name: string; size: string; type: string }[];
-  privacyVisitInitial?: string;
-}
-
-export const getRecordIcon = (type: PsychiatricRecordType): string => {
+export const getRecordIcon = (type: string): string => {
   switch (type) {
     case '初诊转诊':
       return 'clinical_notes';
@@ -30,23 +17,26 @@ export const getRecordIcon = (type: PsychiatricRecordType): string => {
 };
 
 interface RecordsViewProps {
-  onRecordSelect?: (record: PsychiatricRecord) => void;
+  onRecordSelect?: (record: Referral) => void;
   selectedRecordId?: string;
   header?: (loading: boolean) => React.ReactNode;
 }
 
 export function RecordsView({ onRecordSelect, selectedRecordId, header }: RecordsViewProps) {
-  const { data: recordsData, isLoading: loading } = useQuery<PsychiatricRecord[]>({
-    queryKey: ['/api/records'],
+  const { data: recordsData, isLoading: loading } = useQuery<Referral[]>({
+    queryKey: ['/api/referrals'],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/records`.replace('//api', '/api'));
-      if (!res.ok) throw new Error('Failed to fetch records');
+      // In a real app we'd pass the auth token. Here the mock handler intercepts it based on mock logic.
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals`.replace('//api', '/api'), {
+        headers: { 'Authorization': 'Bearer student_token_chen' }
+      });
+      if (!res.ok) throw new Error('Failed to fetch referrals');
       return res.json();
     }
   });
   const records = recordsData || [];
 
-  const columns: ColumnDefinition<PsychiatricRecord>[] = [
+  const columns: ColumnDefinition<Referral>[] = [
     {
       key: 'type',
       label: '类型',
@@ -72,9 +62,9 @@ export function RecordsView({ onRecordSelect, selectedRecordId, header }: Record
       width: 'flex-1',
       render: (item, isSelected) => (
         <div className="flex flex-col justify-center">
-          <span className="text-[14px] truncate">{item.reason}</span>
+          <span className="text-[14px] truncate">{item.title}</span>
           <span className={`text-[12px] ${isSelected ? 'opacity-90' : 'opacity-70'} mt-0.5`}>
-            {item.date}
+            {item.date.split('T')[0]}
           </span>
         </div>
       )
@@ -84,14 +74,14 @@ export function RecordsView({ onRecordSelect, selectedRecordId, header }: Record
       label: '状态',
       width: 'w-[20%]',
       render: (item, isSelected) => {
-        const isPending = item.status === 'Pending';
+        const isPending = item.status === 'Pending' || item.status === 'AwaitingApproval' || item.status === 'Draft';
         return (
           <div className="flex items-center">
             <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${isPending
                 ? 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]'
                 : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]'
               }`}>
-              {item.status === 'Pending' ? '处理中' : '已结案'}
+              {isPending ? '处理中' : (item.status === 'Closed' ? '已结案' : item.status)}
             </span>
           </div>
         );
