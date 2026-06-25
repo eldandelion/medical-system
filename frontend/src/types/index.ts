@@ -80,7 +80,7 @@ export interface Student {
   major: string;
   year: string;
   status: 'Active' | 'Inactive';
-  riskLevel?: 'High' | 'Moderate' | 'Low';
+  riskLevel?: 'High' | 'Medium' | 'Low';
   riskReason?: string;
   referralReason?: string;
   scidDiagnosis?: string;

@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { FilterChipSet } from '../common/FilterChip';
+import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS } from '../../config/styleConstants';
 
 interface Student {
   id: string;
@@ -9,6 +10,7 @@ interface Student {
   major: string;
   year: string;
   status: 'Active' | 'Inactive';
+  riskLevel?: 'High' | 'Medium' | 'Low';
 }
 
 interface StudentsViewProps {
@@ -59,17 +61,20 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
       )
     },
     {
-      key: 'status',
-      label: '状态',
+      key: 'riskLevel',
+      label: '风险',
       width: 'w-[15%]',
-      render: (item) => (
-        <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${item.status === 'Active'
-            ? 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]'
-            : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]'
-          }`}>
-          {item.status === 'Active' ? '在籍' : '休学'}
-        </span>
-      )
+      render: (item) => {
+        const risk = item.riskLevel || 'Low';
+        const style = RISK_LEVEL_STYLES[risk] || RISK_LEVEL_STYLES.Low;
+        const label = RISK_LEVEL_LABELS[risk] || '低';
+        
+        return (
+          <span className={`px-3 py-1 rounded-full text-[12px] font-bold tracking-[0.5px] uppercase ${style}`}>
+            {label}
+          </span>
+        );
+      }
     }
   ];
 
@@ -82,7 +87,7 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
           chips={[
             { label: '专业', options: ['计算机科学', '心理学', '生物学', '艺术史'] },
             { label: '年级', options: ['大一', '大二', '大三', '大四'] },
-            { label: '状态', options: ['在籍', '休学'] },
+            { label: '风险', options: ['高', '中', '低'] },
             { label: '导师', options: ['Dr. Watson', 'Dr. Smith', 'Prof. Miller'] }
           ]}
         />

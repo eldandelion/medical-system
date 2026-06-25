@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { DetailsSection, DetailItem, MetricCard, ScrollableDetailsLayout } from '../common/DetailsPanel';
 import { PrimaryButton, SecondaryButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
+import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS } from '../../config/styleConstants';
 import { useCreationOverlay } from '../../contexts/CreationContext';
 import { useDetails } from '../../contexts/DetailsContext';
 import { PrimaryTabs } from '../common/Tabs';
@@ -69,11 +70,8 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
                 <span className="font-normal truncate">{student.major}</span>
                 <span className="opacity-40 shrink-0">•</span>
                 {/* Critical Status: Risk Level Chip */}
-                <div className={`px-3 py-1 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${student.riskLevel === 'High'
-                  ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
-                  : 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]'
-                  }`}>
-                  {student.riskLevel === 'High' ? '高风险' : '中风险'}
+                <div className={`px-3 py-1 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${RISK_LEVEL_STYLES[student.riskLevel || 'Low']}`}>
+                  {RISK_LEVEL_LABELS[student.riskLevel || 'Low']}
                 </div>
               </div>
             </div>
