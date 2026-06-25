@@ -12,16 +12,41 @@ services:
     # networks:
     #   - app-network
 
-  # Placeholder for your future backend
-  # backend:
-  #   image: your-backend-image # Or build: ./backend
-  #   container_name: medical-system-backend
-  #   ports:
-  #     - "8080:8080"
-  #   restart: unless-stopped
-  #   networks:
-  #     - app-network
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: medical-system-backend
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/medical_db?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    networks:
+      - app-network
 
-# networks:
-#   app-network:
-#     driver: bridge
+  db:
+    image: mysql:8.0
+    container_name: medical-system-db
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=medical_db
+      - MYSQL_ROOT_PASSWORD=rootpassword
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db-data:
