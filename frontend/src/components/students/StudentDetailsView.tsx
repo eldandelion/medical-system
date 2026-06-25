@@ -8,6 +8,7 @@ import { useCreationOverlay } from '../../contexts/CreationContext';
 import { useDetails } from '../../contexts/DetailsContext';
 import { PrimaryTabs } from '../common/Tabs';
 import { PsychometricsTabContent } from '../assessments/PsychometricsTabContent';
+import { AssignQuestionnaireDialog } from '../assessments/AssignQuestionnaireDialog';
 import { Student } from '../../types';
 
 interface StudentDetailsViewProps {
@@ -34,6 +35,9 @@ export const STUDENT_DETAILS_TABS = [
 export function StudentDetailsView({ student, hideHeader, activeTab: propsActiveTab, onTabChange }: StudentDetailsViewProps) {
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>(StudentDetailsTabs.OVERVIEW);
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
+  
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = React.useState(false);
+  const [assignedQuestionnaires, setAssignedQuestionnaires] = React.useState<string[]>([]);
 
   const setActiveTab = (tab: TabType) => {
     setInternalActiveTab(tab);
@@ -93,13 +97,20 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
             onClick={() => openCreation('拟稿：新转诊', <div className="p-6">转诊表单模板将显示在此处...</div>)}
           />
           <SecondaryButton
-            icon="history_edu"
-            label="记录随访"
-            onClick={() => openCreation('记录联系', <div className="p-6">联系日志模板将显示在此处...</div>)}
+            icon="assignment"
+            label="分配问卷"
+            onClick={() => setIsAssignDialogOpen(true)}
           />
         </ActionFooter>
       }
     >
+      <AssignQuestionnaireDialog
+        isOpen={isAssignDialogOpen}
+        onClose={() => setIsAssignDialogOpen(false)}
+        studentId={student.id}
+        assignedIds={assignedQuestionnaires}
+        onAssign={setAssignedQuestionnaires}
+      />
       <AnimatePresence mode="wait">
             {activeTab === StudentDetailsTabs.OVERVIEW && (
               <motion.div

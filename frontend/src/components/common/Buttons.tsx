@@ -20,6 +20,7 @@ export function PrimaryButton({ icon, label, className = "h-10", onClick, style,
     <md-filled-button
       className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       onClick={onClick}
+      onPointerUp={(e) => e.currentTarget.blur()}
       disabled={disabled}
       trailing-icon={trailingIcon ? "" : undefined}
       style={{
@@ -42,6 +43,7 @@ export function SecondaryButton({ icon, label, className = "h-10", onClick, styl
     <md-outlined-button
       className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       onClick={onClick}
+      onPointerUp={(e) => e.currentTarget.blur()}
       disabled={disabled}
       trailing-icon={trailingIcon ? "" : undefined}
       style={{

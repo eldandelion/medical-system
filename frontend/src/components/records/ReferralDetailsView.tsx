@@ -286,8 +286,11 @@ export function ReferralDetailsView({ referral: initialReferral, userRole, hideH
         title="确认删除草案？"
         actions={
           <>
-            <SecondaryButton label="取消" onClick={() => state.setIsDeleteDialogOpen(false)} />
-            <DestructiveButton label="确认删除" icon="delete" onClick={actions.handleDelete} />
+            <TertiaryButton label="取消" onClick={() => state.setIsDeleteDialogOpen(false)} />
+            <TertiaryButton 
+              label="确认删除" 
+              onClick={actions.handleDelete}
+            />
           </>
         }
       >
