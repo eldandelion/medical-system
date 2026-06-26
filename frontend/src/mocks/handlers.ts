@@ -441,6 +441,11 @@ export const handlers = [
           schedulingStep.subtitle = `排诊被拒绝: ${reason}`;
           schedulingStep.time = new Date().toISOString();
         }
+        const triageStep = referral.extendedData.steps.find(s => s.type === 'triage');
+        if (triageStep) {
+          triageStep.status = 'active';
+          triageStep.subtitle = '等待重新分配医生';
+        }
       }
     }
 
