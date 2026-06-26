@@ -2,6 +2,9 @@ import { http, HttpResponse, delay } from 'msw';
 import { mockAssessmentsDb, mockDashboardDb, mockStudentsDb, mockReferralsDb } from './db';
 const MOCK_DELAY_MS = 1000;
 
+import { Referral, ReferralAction } from '../types';
+import { computeAvailableActions } from '../utils/actionUtils';
+
 const api = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`;
 
 export const handlers = [
@@ -87,7 +90,7 @@ export const handlers = [
         const createdByMe = r.referredBy?.name === '李医生';
         const isDraftByMe = r.status === 'Draft' && createdByMe;
         // Check assignment explicitly by status and destination doctor
-        const isAssignedStatus = ['Approved', 'WaitingForScheduling', 'WaitingForAppointment', 'Pending', 'AwaitingFeedbackApproval', 'Closed'].includes(r.status);
+        const isAssignedStatus = ['WaitingForScheduling', 'WaitingForAppointment', 'AwaitingFeedbackApproval', 'Closed'].includes(r.status);
         const assignedToMe = isAssignedStatus && r.extendedData?.destination?.doctor?.includes('李医生');
         const rejectedByMe = r.extendedData?.rejectedBy?.includes('李医生');
         
@@ -100,7 +103,10 @@ export const handlers = [
       });
     }
     
-    return HttpResponse.json(filteredReferrals);
+    return HttpResponse.json(filteredReferrals.map(r => ({
+      ...r,
+      availableActions: computeAvailableActions(r, authHeader)
+    })));
   }),
 
   http.get(api('/api/referrals/:id'), ({ request, params }) => {
@@ -148,7 +154,7 @@ export const handlers = [
     } else if (authHeader.includes('doctor')) {
       const createdByMe = referral.referredBy?.name === '李医生';
       const isDraftByMe = referral.status === 'Draft' && createdByMe;
-      const isAssignedStatus = ['Approved', 'WaitingForScheduling', 'WaitingForAppointment', 'Pending', 'AwaitingFeedbackApproval', 'Closed'].includes(referral.status);
+      const isAssignedStatus = ['WaitingForScheduling', 'WaitingForAppointment', 'AwaitingFeedbackApproval', 'Closed'].includes(referral.status);
       const assignedToMe = isAssignedStatus && referral.extendedData?.destination?.doctor?.includes('李医生');
       const rejectedByMe = referral.extendedData?.rejectedBy?.includes('李医生');
       
@@ -157,11 +163,14 @@ export const handlers = [
       }
 
       if (rejectedByMe) {
-        return HttpResponse.json({ ...referral, status: 'Rejected' });
+        return HttpResponse.json({ ...referral, status: 'Rejected', availableActions: computeAvailableActions({ ...referral, status: 'Rejected' } as any, authHeader) });
       }
     }
 
-    return HttpResponse.json(referral);
+    return HttpResponse.json({
+      ...referral,
+      availableActions: computeAvailableActions(referral, authHeader)
+    });
   }),
 
   http.post(api('/api/referrals'), async ({ request }) => {
@@ -347,7 +356,7 @@ export const handlers = [
       return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting approval referrals can be approved' });
     }
 
-    referral.status = 'Approved';
+    referral.status = 'AwaitingTriage';
     if (referral.extendedData?.steps) {
       const reviewStep = referral.extendedData.steps.find(s => s.type === 'review');
       if (reviewStep) {
@@ -380,8 +389,8 @@ export const handlers = [
         return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting approval referrals can be rejected by head councillor' });
       }
     } else if (authHeader.includes('trial_admin')) {
-      if (referral.status !== 'Approved' && referral.status !== 'Pending') {
-        return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only approved or pending referrals can be rejected by trial admin' });
+      if (referral.status !== 'AwaitingTriage') {
+        return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting triage referrals can be rejected by trial admin' });
       }
       const triageStep = referral.extendedData?.steps?.find(s => s.type === 'triage');
       if (triageStep?.status !== 'active') {
@@ -398,12 +407,16 @@ export const handlers = [
     const data = await request.json() as any;
     const reason = data?.reason || '无拒绝原因';
 
-    referral.status = 'Rejected';
-    if (authHeader.includes('doctor') && referral.extendedData) {
-      if (!referral.extendedData.rejectedBy) {
-        referral.extendedData.rejectedBy = [];
+    if (authHeader.includes('doctor')) {
+      referral.status = 'AwaitingTriage';
+      if (referral.extendedData) {
+        if (!referral.extendedData.rejectedBy) {
+          referral.extendedData.rejectedBy = [];
+        }
+        referral.extendedData.rejectedBy.push('李医生');
       }
-      referral.extendedData.rejectedBy.push('李医生');
+    } else {
+      referral.status = 'Rejected';
     }
 
     if (referral.extendedData?.steps) {
@@ -447,8 +460,8 @@ export const handlers = [
       return new HttpResponse(null, { status: 404 });
     }
 
-    if (referral.status !== 'Approved' && referral.status !== 'Pending' && referral.status !== 'Rejected') {
-      return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only approved, pending, or rejected referrals can be assigned' });
+    if (referral.status !== 'AwaitingTriage' && referral.status !== 'Rejected') {
+      return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting triage or rejected referrals can be assigned' });
     }
 
     const data = await request.json() as any;
@@ -570,7 +583,7 @@ export const handlers = [
       return new HttpResponse(null, { status: 404 });
     }
 
-    referral.status = 'Approved';
+    referral.status = 'AwaitingFeedbackApproval';
 
     if (referral.extendedData) {
       if (!referral.extendedData.feedback) {
@@ -589,8 +602,8 @@ export const handlers = [
 
         const feedbackStep = referral.extendedData.steps.find((s: any) => s.type === 'feedback');
         if (feedbackStep) {
-          feedbackStep.status = 'completed';
-          feedbackStep.subtitle = '医生已填写诊疗反馈';
+          feedbackStep.status = 'active';
+          feedbackStep.subtitle = '等待辅导员确认反馈';
           feedbackStep.time = new Date().toISOString();
         }
       }
@@ -598,4 +611,35 @@ export const handlers = [
 
     return HttpResponse.json({ success: true, message: 'Feedback submitted' });
   }),
+
+  http.post(api('/api/referrals/:id/acknowledge-feedback'), async ({ request, params }) => {
+    const { id } = params;
+    const authHeader = request.headers.get('Authorization') || '';
+    
+    if (!authHeader.includes('head_councillor')) {
+      return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Only head councillors can acknowledge feedback' });
+    }
+
+    const referral = mockReferralsDb.find((r) => r.id === id);
+    if (!referral) {
+      return new HttpResponse(null, { status: 404 });
+    }
+
+    if (referral.status !== 'AwaitingFeedbackApproval') {
+      return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting feedback approval referrals can be acknowledged' });
+    }
+
+    referral.status = 'Closed';
+    
+    if (referral.extendedData?.steps) {
+      const feedbackStep = referral.extendedData.steps.find(s => s.type === 'feedback');
+      if (feedbackStep) {
+        feedbackStep.status = 'completed';
+        feedbackStep.subtitle = '已出具随访计划并反馈';
+        feedbackStep.time = new Date().toISOString();
+      }
+    }
+
+    return HttpResponse.json({ success: true });
+  })
 ];

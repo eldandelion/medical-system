@@ -3,10 +3,10 @@ import { enrichReferralStatus } from './referralUtils';
 import { Referral } from '../types';
 
 describe('enrichReferralStatus', () => {
-  it('returns the same status if no steps are present', () => {
-    const referral = { id: '1', status: 'Pending' } as Referral;
-    const result = enrichReferralStatus(referral);
-    expect(result.displayStatus).toBe('Pending');
+  it('returns the same referral if it has no extendedData or appointments', () => {
+    const referral = { id: '1', status: 'AwaitingTriage' } as Referral;
+    const enriched = enrichReferralStatus(referral);
+    expect(enriched.displayStatus).toBe('AwaitingTriage');
   });
 
   it('returns Rejected if status is already explicitly Rejected', () => {

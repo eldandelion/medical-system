@@ -1,5 +1,4 @@
-import { PsychiatricRecordType } from '../../components/records/RecordsView';
-
+export type PsychiatricRecordType = '初诊转诊' | '随访' | '危机干预';
 export interface PsychiatricRecord {
   id: string;
   type: PsychiatricRecordType;

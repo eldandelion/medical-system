@@ -13,6 +13,19 @@ export interface ReferralStep {
   status: ReferralStepStatus;
 }
 
+export type ReferralAction = 
+  | 'recreate'
+  | 'delete_draft'
+  | 'approve_referral'
+  | 'reject_referral'
+  | 'recall_referral'
+  | 'assign_doctor'
+  | 'schedule_appointment'
+  | 'write_feedback'
+  | 'report_problem'
+  | 'acknowledge_feedback'
+  | 'reassign_doctor';
+
 export interface Referral {
   id: string;
   studentName: string;
@@ -22,8 +35,9 @@ export interface Referral {
   title: string;
   description: string;
   riskLevel: 'High' | 'Medium' | 'Low';
-  status: 'Draft' | 'Closed' | 'Pending' | 'Approved' | 'AwaitingApproval' | 'Recalled' | 'AwaitingFeedbackApproval' | 'Error' | 'Rejected' | 'WaitingForScheduling' | 'WaitingForAppointment';
+  status: 'Draft' | 'Closed' | 'AwaitingTriage' | 'AwaitingApproval' | 'Recalled' | 'AwaitingFeedbackApproval' | 'Error' | 'Rejected' | 'WaitingForScheduling' | 'WaitingForAppointment';
   displayStatus?: string;
+  availableActions?: ReferralAction[];
   referredBy?: {
     name: string;
     avatar?: string;

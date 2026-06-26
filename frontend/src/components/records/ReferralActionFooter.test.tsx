@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ReferralActionFooter } from './ReferralActionFooter';
 import { Referral } from '../../types';
 
@@ -47,28 +47,33 @@ describe('ReferralActionFooter', () => {
     vi.clearAllMocks();
   });
 
-  const renderComponent = (displayStatus: string, userRole: string, isDoctorRejected: boolean = false) => {
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  const renderComponent = (availableActions: string[] = []) => {
+    const referralWithActions = {
+      ...mockReferral,
+      availableActions: availableActions as any
+    };
     return render(
       <ReferralActionFooter
-        referral={mockReferral}
-        displayStatus={displayStatus}
-        userRole={userRole}
-        isDoctorRejected={isDoctorRejected}
+        referral={referralWithActions}
         actions={mockActions}
         state={mockState}
       />
     );
   };
 
-  it('hides footer entirely for trial-admin when WaitingForScheduling', () => {
-    const { container } = renderComponent('WaitingForScheduling', 'trial-admin');
+  it('hides footer entirely when no actions are available', () => {
+    const { container } = renderComponent([]);
     expect(container.firstChild).toBeNull();
   });
 
-  it('renders correctly for doctor when WaitingForScheduling', () => {
-    renderComponent('WaitingForScheduling', 'doctor');
+  it('renders correctly when schedule_appointment and reject_referral are available', () => {
+    renderComponent(['schedule_appointment', 'reject_referral']);
     const scheduleButton = screen.getByText('安排就诊');
-    const rejectButton = screen.getByText('拒绝');
+    const rejectButton = screen.getByText('拒绝申请');
     expect(scheduleButton).toBeDefined();
     expect(rejectButton).toBeDefined();
 
@@ -76,8 +81,8 @@ describe('ReferralActionFooter', () => {
     expect(mockState.setIsSchedulingDialogOpen).toHaveBeenCalledWith(true);
   });
 
-  it('renders reassign button for trial-admin when Rejected by doctor', () => {
-    renderComponent('Rejected', 'trial-admin', true);
+  it('renders reassign button when reassign_doctor is available', () => {
+    renderComponent(['reassign_doctor']);
     const reassignButton = screen.getByText('重新分配医生');
     expect(reassignButton).toBeDefined();
 
@@ -85,13 +90,8 @@ describe('ReferralActionFooter', () => {
     expect(mockState.setIsAssignDialogOpen).toHaveBeenCalledWith(true);
   });
 
-  it('hides footer for trial-admin when Rejected but NOT by doctor', () => {
-    const { container } = renderComponent('Rejected', 'trial-admin', false);
-    expect(container.firstChild).toBeNull();
-  });
-
-  it('renders correctly for head-councillor when AwaitingApproval', () => {
-    renderComponent('AwaitingApproval', 'head-councillor');
+  it('renders correctly when approve_referral and reject_referral are available', () => {
+    renderComponent(['approve_referral', 'reject_referral']);
     const approveButton = screen.getByText('批准转诊');
     const rejectButton = screen.getByText('拒绝申请');
     expect(approveButton).toBeDefined();

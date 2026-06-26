@@ -7,9 +7,6 @@ import { Referral } from '../../types';
 
 interface ReferralActionFooterProps {
   referral: Referral;
-  displayStatus: string;
-  userRole: string;
-  isDoctorRejected: boolean;
   actions: {
     handleRecall: () => void;
     handleDelete: () => void;
@@ -26,15 +23,13 @@ interface ReferralActionFooterProps {
     setIsAssignDialogOpen: (v: boolean) => void;
     setIsSchedulingDialogOpen: (v: boolean) => void;
     setIsReportProblemDialogOpen?: (v: boolean) => void;
+    setIsAcknowledgeDialogOpen?: (v: boolean) => void;
     isActionCompleted?: boolean;
   };
 }
 
 export const ReferralActionFooter: React.FC<ReferralActionFooterProps> = ({
   referral,
-  displayStatus,
-  userRole,
-  isDoctorRejected,
   actions,
   state
 }) => {
@@ -69,97 +64,50 @@ export const ReferralActionFooter: React.FC<ReferralActionFooterProps> = ({
     });
   };
 
-  // Determine if the footer should be completely hidden
-  const shouldHideFooter =
-    (displayStatus === 'Recalled' && userRole === 'head-councillor') ||
-    displayStatus === 'Pending' ||
-    displayStatus === 'Closed' ||
-    (displayStatus === 'Rejected' && !(userRole === 'trial-admin' && isDoctorRejected)) ||
-    (displayStatus === 'AwaitingTriage' && (userRole === 'teacher' || userRole === 'head-councillor')) ||
-    (displayStatus === 'WaitingForScheduling' && userRole === 'trial-admin');
+  const availableActions = referral.availableActions || [];
 
-  if (shouldHideFooter) {
+  if (availableActions.length === 0) {
     return null;
   }
 
   const renderButtons = () => {
-    switch (displayStatus) {
-      case 'Recalled':
-        if (userRole === 'teacher') {
-          return <PrimaryButton icon="restart_alt" label="基于此重新创建" onClick={handleRecreate} />;
-        }
-        return null;
-
-      case 'AwaitingApproval':
-        if (userRole === 'head-councillor') {
-          return (
-            <>
-              <PrimaryButton icon="check" label="批准转诊" onClick={() => state.setIsApprovalDialogOpen(true)} />
-              <DestructiveButton icon="close" label="拒绝申请" onClick={() => state.setIsRejectionDialogOpen(true)} />
-            </>
-          );
-        }
-        if (userRole === 'teacher') {
-          return <SecondaryButton icon="undo" label="撤回申请" onClick={() => state.setIsRecallDialogOpen(true)} />;
-        }
-        return null;
-
-      case 'AwaitingTriage':
-        if (userRole === 'trial-admin') {
-          return (
-            <>
-              <PrimaryButton icon="assignment_ind" label="分配医生" onClick={() => state.setIsAssignDialogOpen(true)} />
-              <DestructiveButton icon="close" label="拒绝申请" onClick={() => state.setIsRejectionDialogOpen(true)} />
-            </>
-          );
-        }
-        return null;
-
-      case 'WaitingForScheduling':
-        if (userRole === 'doctor') {
-          return (
-            <>
-              <PrimaryButton icon="calendar_month" label="安排就诊" onClick={() => state.setIsSchedulingDialogOpen(true)} />
-              <DestructiveButton icon="close" label="拒绝" onClick={() => state.setIsRejectionDialogOpen(true)} />
-            </>
-          );
-        }
-        return null;
-
-      case 'WaitingForAppointment':
-        if (userRole === 'doctor') {
-          return (
-            <>
-              <PrimaryButton icon="edit_note" label="写反馈" onClick={handleWriteFeedback} />
-              <DestructiveButton icon="report_problem" label="报告问题" onClick={() => state.setIsReportProblemDialogOpen?.(true)} />
-            </>
-          );
-        }
-        return null;
-
-      case 'Draft':
-        if (userRole === 'teacher' || userRole === 'head-councillor') {
-          return (
-            <>
-              <PrimaryButton icon="edit" label="继续编辑" onClick={handleRecreate} />
-              <DestructiveButton icon="delete" label="删除草案" onClick={() => state.setIsDeleteDialogOpen(true)} />
-            </>
-          );
-        }
-        return null;
-
-      case 'AwaitingFeedbackApproval':
-        return <PrimaryButton icon="check" label="确认反馈" />;
-
-      case 'Rejected':
-        if (userRole === 'trial-admin' && isDoctorRejected) {
-          return <PrimaryButton icon="assignment_ind" label="重新分配医生" onClick={() => state.setIsAssignDialogOpen(true)} />;
-        }
-        return null;
-
-      default:
-        return null;
-    }
+    return (
+      <>
+        {availableActions.includes('recreate') && (
+          <PrimaryButton icon={referral.status === 'Draft' ? "edit" : "restart_alt"} label={referral.status === 'Draft' ? "继续编辑" : "基于此重新创建"} onClick={handleRecreate} />
+        )}
+        {availableActions.includes('delete_draft') && (
+          <DestructiveButton icon="delete" label="删除草案" onClick={() => state.setIsDeleteDialogOpen(true)} />
+        )}
+        {availableActions.includes('approve_referral') && (
+          <PrimaryButton icon="check" label="批准转诊" onClick={() => state.setIsApprovalDialogOpen(true)} />
+        )}
+        {availableActions.includes('reject_referral') && (
+          <DestructiveButton icon="close" label="拒绝申请" onClick={() => state.setIsRejectionDialogOpen(true)} />
+        )}
+        {availableActions.includes('recall_referral') && (
+          <SecondaryButton icon="undo" label="撤回申请" onClick={() => state.setIsRecallDialogOpen(true)} />
+        )}
+        {availableActions.includes('assign_doctor') && (
+          <PrimaryButton icon="assignment_ind" label="分配医生" onClick={() => state.setIsAssignDialogOpen(true)} />
+        )}
+        {availableActions.includes('reassign_doctor') && (
+          <PrimaryButton icon="assignment_ind" label="重新分配医生" onClick={() => state.setIsAssignDialogOpen(true)} />
+        )}
+        {availableActions.includes('schedule_appointment') && (
+          <PrimaryButton icon="calendar_month" label="安排就诊" onClick={() => state.setIsSchedulingDialogOpen(true)} />
+        )}
+        {availableActions.includes('write_feedback') && (
+          <PrimaryButton icon="edit_note" label="写反馈" onClick={handleWriteFeedback} />
+        )}
+        {availableActions.includes('report_problem') && (
+          <DestructiveButton icon="report_problem" label="报告问题" onClick={() => state.setIsReportProblemDialogOpen?.(true)} />
+        )}
+        {availableActions.includes('acknowledge_feedback') && (
+          <PrimaryButton icon="check" label="确认反馈" onClick={() => state.setIsAcknowledgeDialogOpen?.(true)} />
+        )}
+      </>
+    );
   };
 
   const content = renderButtons();

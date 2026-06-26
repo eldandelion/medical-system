@@ -174,9 +174,6 @@ export function ReferralDetailsView({ referral: initialReferral, userRole, hideH
       footer={
         <ReferralActionFooter
           referral={referral}
-          displayStatus={displayStatus}
-          userRole={userRole || ''}
-          isDoctorRejected={isDoctorRejected || false}
           actions={actions}
           state={state}
         />
@@ -392,6 +389,25 @@ export function ReferralDetailsView({ referral: initialReferral, userRole, hideH
             value={state.reportProblemReason}
             onInput={(e: any) => state.setReportProblemReason(e.target.value)}
           />
+        </div>
+      </GenericDialog>
+
+      {/* Acknowledge Feedback Dialog */}
+      <GenericDialog
+        open={state.isAcknowledgeDialogOpen || false}
+        onClose={() => state.setIsAcknowledgeDialogOpen?.(false)}
+        title="确认反馈"
+        actions={
+          <>
+            <TertiaryButton label="取消" onClick={() => state.setIsAcknowledgeDialogOpen?.(false)} />
+            <PrimaryButton label="确认" onClick={actions.handleAcknowledgeFeedback} />
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
+            您确定要确认这份诊疗反馈吗？确认后，该转诊流程将正式结案。
+          </p>
         </div>
       </GenericDialog>
 

@@ -92,8 +92,8 @@ export function FeedbackCreationForm({ onClose, initialReferralId }: { onClose: 
     })
       .then(res => res.json())
       .then((data: Referral[]) => {
-        // Only show referrals that are active and need feedback (e.g. pending/approved)
-        const activeReferrals = data.filter(r => r.status === 'Pending' || r.status === 'Approved' || r.status === 'WaitingForAppointment');
+        // Only show referrals that are active and need feedback (e.g. WaitingForAppointment)
+        const activeReferrals = data.filter(r => r.status === 'WaitingForAppointment');
         
         if (initialReferralId && !activeReferrals.find(r => r.id === initialReferralId)) {
           showSnackbar({ message: '所选转诊记录无效或状态已更新', duration: 4000 });

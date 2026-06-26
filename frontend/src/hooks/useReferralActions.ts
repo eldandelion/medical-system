@@ -20,6 +20,8 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isSchedulingDialogOpen, setIsSchedulingDialogOpen] = useState(false);
   const [isReportProblemDialogOpen, setIsReportProblemDialogOpen] = useState(false);
+  const [isAcknowledgeDialogOpen, setIsAcknowledgeDialogOpen] = useState(false);
+  
   const [reportProblemReason, setReportProblemReason] = useState('');
   
   const [rejectionReason, setRejectionReason] = useState('');
@@ -111,6 +113,11 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
     }
   };
 
+  const handleAcknowledgeFeedback = async () => {
+    setIsAcknowledgeDialogOpen(false);
+    await executeAction('/acknowledge-feedback', 'POST', '反馈已确认，转诊已结案', '操作失败，请稍后重试');
+  };
+
   return {
     state: {
       isRejectionDialogOpen, setIsRejectionDialogOpen,
@@ -120,6 +127,7 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
       isAssignDialogOpen, setIsAssignDialogOpen,
       isSchedulingDialogOpen, setIsSchedulingDialogOpen,
       isReportProblemDialogOpen, setIsReportProblemDialogOpen,
+      isAcknowledgeDialogOpen, setIsAcknowledgeDialogOpen,
       reportProblemReason, setReportProblemReason,
       rejectionReason, setRejectionReason,
       scheduleDateTime, setScheduleDateTime,
@@ -134,6 +142,7 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
       handleAssign,
       handleSchedule,
       handleReportProblem,
+      handleAcknowledgeFeedback,
     }
   };
 }

@@ -6,6 +6,7 @@ import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS } from '../../config/styleConstant
 
 interface Student {
   id: string;
+  studentNumber?: string;
   name: string;
   major: string;
   year: string;

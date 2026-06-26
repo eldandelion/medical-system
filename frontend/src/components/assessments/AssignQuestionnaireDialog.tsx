@@ -87,7 +87,7 @@ export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, assigned
           <>
             {/* Available Questionnaires */}
             <div className="flex flex-col gap-2">
-              <h3 className="text-[14px] font-bold text-[var(--md-sys-color-primary)] uppercase tracking-wider mb-2">
+              <h3 className="text-[14px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-wider mb-2">
                 可分配问卷 ({availableAssessments.length})
               </h3>
               {availableAssessments.length === 0 ? (

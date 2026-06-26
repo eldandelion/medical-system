@@ -10,7 +10,7 @@ const baseReferrals: Referral[] = [
     title: '期中考试后急性焦虑',
     description: '期中考试后出现急性恐慌发作和睡眠剥夺',
     riskLevel: 'High',
-    status: 'Approved',
+    status: 'AwaitingFeedbackApproval',
     referredBy: { name: '艾米丽·沃森' }
   },
   {
@@ -22,7 +22,7 @@ const baseReferrals: Referral[] = [
     title: '每周治疗随访',
     description: '情绪持续低落',
     riskLevel: 'Medium',
-    status: 'Pending',
+    status: 'AwaitingTriage',
     referredBy: { name: '艾米丽·沃森' }
   },
   {
@@ -46,7 +46,7 @@ const baseReferrals: Referral[] = [
     title: '宿舍事故报告',
     description: '提到自杀意念',
     riskLevel: 'High',
-    status: 'Approved',
+    status: 'Rejected',
     referredBy: { name: '张明诚' }
   },
   {
@@ -70,7 +70,7 @@ const baseReferrals: Referral[] = [
     title: '退出社交活动',
     description: '持续疲劳并退出社交活动',
     riskLevel: 'Medium',
-    status: 'Pending',
+    status: 'AwaitingTriage',
     referredBy: { name: '艾米丽·沃森' }
   },
   {
@@ -106,7 +106,7 @@ const baseReferrals: Referral[] = [
     title: '情绪严重低落',
     description: '学生近期表现出明显的情绪低落和厌学倾向',
     riskLevel: 'Medium',
-    status: 'Approved',
+    status: 'AwaitingTriage',
     referredBy: { name: '张明诚' }
   }
 ];
@@ -114,10 +114,11 @@ const baseReferrals: Referral[] = [
 const generateTrackerSteps = (referral: Referral): ReferralStep[] => {
   const isDraft = referral.status === 'Draft';
   const isAwaiting = referral.status === 'AwaitingApproval';
-  const isPending = referral.status === 'Pending';
+  const isAwaitingTriage = referral.status === 'AwaitingTriage';
+  const hasDoctorRejection = referral.extendedData?.rejectedBy && referral.extendedData.rejectedBy.length > 0;
   const isWaitingForScheduling = referral.status === 'WaitingForScheduling';
   const isWaitingForAppointment = referral.status === 'WaitingForAppointment';
-  const isApproved = referral.status === 'Approved';
+  const isAwaitingFeedbackApproval = referral.status === 'AwaitingFeedbackApproval';
   const isClosed = referral.status === 'Closed';
 
   const steps: ReferralStep[] = [
@@ -141,33 +142,33 @@ const generateTrackerSteps = (referral: Referral): ReferralStep[] => {
       id: `${referral.id}-3`,
       type: 'triage',
       title: '心理中心分诊',
-      subtitle: (isDraft || isAwaiting) ? '等待审核完成' : (isPending ? '正在处理分诊信息...' : '分诊已完成，已分配对应科室'),
-      time: (isDraft || isAwaiting) ? '' : (isPending ? '进行中' : '2026年4月30日'),
-      status: (isDraft || isAwaiting) ? 'pending' : (isPending ? 'active' : 'completed')
+      subtitle: (isDraft || isAwaiting) ? '等待审核完成' : (isAwaitingTriage ? (hasDoctorRejection ? '等待重新分配医生' : '等待分配医生') : '分诊已完成，已分配对应科室'),
+      time: (isDraft || isAwaiting) ? '' : (isAwaitingTriage ? '进行中' : '2026年4月30日'),
+      status: (isDraft || isAwaiting) ? 'pending' : (isAwaitingTriage ? 'active' : 'completed')
     },
     {
       id: `${referral.id}-3.5`,
       type: 'scheduling',
       title: '预约排诊',
-      subtitle: (isDraft || isAwaiting || isPending) ? '等待分诊完成' : (isWaitingForScheduling ? '等待医生安排就诊时间' : '已预约时间'),
-      time: (isDraft || isAwaiting || isPending || isWaitingForScheduling) ? '' : '2026年4月30日',
-      status: (isDraft || isAwaiting || isPending) ? 'pending' : (isWaitingForScheduling ? 'active' : 'completed')
+      subtitle: (isDraft || isAwaiting || isAwaitingTriage) ? (hasDoctorRejection ? '医生已拒绝排诊' : '等待分诊完成') : (isWaitingForScheduling ? '等待医生安排就诊时间' : '已预约时间'),
+      time: (isDraft || isAwaiting || isAwaitingTriage || isWaitingForScheduling) ? '' : '2026年4月30日',
+      status: (isDraft || isAwaiting || isAwaitingTriage) ? (hasDoctorRejection && isAwaitingTriage ? 'issue' : 'pending') : (isWaitingForScheduling ? 'active' : 'completed')
     },
     {
       id: `${referral.id}-4`,
       type: 'evaluation',
       title: '医生评估',
-      subtitle: (isDraft || isAwaiting || isPending || isWaitingForScheduling) ? '等待排诊完成' : (isWaitingForAppointment ? '等待医生评估' : '医生已完成初步评估'),
-      time: (isDraft || isAwaiting || isPending || isWaitingForScheduling || isWaitingForAppointment) ? '' : '2026年5月1日',
-      status: (isDraft || isAwaiting || isPending || isWaitingForScheduling) ? 'pending' : (isWaitingForAppointment ? 'active' : 'completed')
+      subtitle: (isDraft || isAwaiting || isAwaitingTriage || isWaitingForScheduling) ? '等待排诊完成' : (isWaitingForAppointment ? '等待医生评估' : '医生已完成初步评估'),
+      time: (isDraft || isAwaiting || isAwaitingTriage || isWaitingForScheduling || isWaitingForAppointment) ? '' : '2026年5月1日',
+      status: (isDraft || isAwaiting || isAwaitingTriage || isWaitingForScheduling) ? 'pending' : (isWaitingForAppointment ? 'active' : 'completed')
     },
     {
       id: `${referral.id}-5`,
       type: 'feedback',
       title: '评估反馈与随访计划',
-      subtitle: isClosed ? '已出具随访计划并反馈' : '等待医生评估完成',
+      subtitle: isClosed ? '已出具随访计划并反馈' : (isAwaitingFeedbackApproval ? '等待辅导员确认反馈' : '等待医生评估完成'),
       time: isClosed ? '2026年5月2日' : '',
-      status: isClosed ? 'completed' : 'pending'
+      status: isClosed ? 'completed' : (isAwaitingFeedbackApproval ? 'active' : 'pending')
     }
   ];
 
