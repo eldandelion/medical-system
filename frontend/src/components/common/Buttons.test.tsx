@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { PrimaryButton, SegmentedButton } from './Buttons';
+import { PrimaryButton, SecondaryButton, TertiaryButton, TertiaryFab, SegmentedButton } from './Buttons';
 
 // Clean up the DOM after each test to prevent multiple elements from piling up
 afterEach(() => {
@@ -36,6 +36,67 @@ describe('Buttons Component', () => {
       
       // Check the HTML attribute directly since JSDOM doesn't map web component properties
       expect(btn?.hasAttribute('disabled')).toBe(true);
+    });
+    
+    it('renders with icon', () => {
+      render(<PrimaryButton label="Icon Btn" icon="home" />);
+      expect(screen.getByText('Icon Btn')).toBeDefined();
+    });
+  });
+  
+  describe('SecondaryButton', () => {
+    it('renders correctly', () => {
+      render(<SecondaryButton label="Secondary" />);
+      expect(screen.getByText('Secondary')).toBeDefined();
+    });
+
+    it('triggers onClick when clicked', () => {
+      const onClickMock = vi.fn();
+      render(<SecondaryButton label="Click Me" onClick={onClickMock} />);
+      fireEvent.click(screen.getByText('Click Me'));
+      expect(onClickMock).toHaveBeenCalledTimes(1);
+    });
+    
+    it('renders with icon', () => {
+      render(<SecondaryButton label="Icon Btn" icon="settings" />);
+      expect(screen.getByText('Icon Btn')).toBeDefined();
+    });
+  });
+
+  describe('TertiaryButton', () => {
+    it('renders correctly', () => {
+      render(<TertiaryButton label="Tertiary" />);
+      expect(screen.getByText('Tertiary')).toBeDefined();
+    });
+
+    it('triggers onClick when clicked', () => {
+      const onClickMock = vi.fn();
+      render(<TertiaryButton label="Click Me" onClick={onClickMock} />);
+      fireEvent.click(screen.getByText('Click Me'));
+      expect(onClickMock).toHaveBeenCalledTimes(1);
+    });
+    
+    it('renders with icon', () => {
+      render(<TertiaryButton label="Icon Btn" icon="info" />);
+      expect(screen.getByText('Icon Btn')).toBeDefined();
+    });
+  });
+
+  describe('TertiaryFab', () => {
+    it('renders correctly', () => {
+      render(<TertiaryFab label="FAB" icon="add" />);
+      const fab = document.querySelector('md-fab');
+      expect(fab).toBeDefined();
+    });
+
+    it('triggers onClick when clicked', () => {
+      const onClickMock = vi.fn();
+      render(<TertiaryFab label="Click Me" onClick={onClickMock} icon="add" />);
+      const fab = document.querySelector('md-fab');
+      if (fab) {
+         fireEvent.click(fab);
+      }
+      expect(onClickMock).toHaveBeenCalledTimes(1);
     });
   });
 

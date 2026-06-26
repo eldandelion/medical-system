@@ -1,12 +1,15 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ReferralActionFooter } from './ReferralActionFooter';
 import { Referral } from '../../types';
 
+const mockOpenCreation = vi.fn();
+const mockCloseCreation = vi.fn();
+
 vi.mock('../../contexts/CreationContext', () => ({
   useCreationOverlay: () => ({
-    openCreation: vi.fn(),
-    closeCreation: vi.fn()
+    openCreation: mockOpenCreation,
+    closeCreation: mockCloseCreation
   })
 }));
 
@@ -41,6 +44,8 @@ describe('ReferralActionFooter', () => {
     setIsDeleteDialogOpen: vi.fn(),
     setIsAssignDialogOpen: vi.fn(),
     setIsSchedulingDialogOpen: vi.fn(),
+    setIsReportProblemDialogOpen: vi.fn(),
+    setIsAcknowledgeDialogOpen: vi.fn(),
   };
 
   beforeEach(() => {
@@ -51,14 +56,15 @@ describe('ReferralActionFooter', () => {
     document.body.innerHTML = '';
   });
 
-  const renderComponent = (availableActions: string[] = []) => {
+  const renderComponent = (availableActions: string[] = [], status = 'Pending') => {
     const referralWithActions = {
       ...mockReferral,
+      status,
       availableActions: availableActions as any
     };
     return render(
       <ReferralActionFooter
-        referral={referralWithActions}
+        referral={referralWithActions as any}
         actions={mockActions}
         state={mockState}
       />
@@ -79,6 +85,9 @@ describe('ReferralActionFooter', () => {
 
     fireEvent.click(scheduleButton);
     expect(mockState.setIsSchedulingDialogOpen).toHaveBeenCalledWith(true);
+    
+    fireEvent.click(rejectButton);
+    expect(mockState.setIsRejectionDialogOpen).toHaveBeenCalledWith(true);
   });
 
   it('renders reassign button when reassign_doctor is available', () => {
@@ -93,11 +102,77 @@ describe('ReferralActionFooter', () => {
   it('renders correctly when approve_referral and reject_referral are available', () => {
     renderComponent(['approve_referral', 'reject_referral']);
     const approveButton = screen.getByText('批准转诊');
-    const rejectButton = screen.getByText('拒绝申请');
     expect(approveButton).toBeDefined();
-    expect(rejectButton).toBeDefined();
 
     fireEvent.click(approveButton);
     expect(mockState.setIsApprovalDialogOpen).toHaveBeenCalledWith(true);
+  });
+
+  it('renders correctly for delete_draft and recall_referral', () => {
+    renderComponent(['delete_draft', 'recall_referral']);
+    const deleteBtn = screen.getByText('删除草案');
+    const recallBtn = screen.getByText('撤回申请');
+    expect(deleteBtn).toBeDefined();
+    expect(recallBtn).toBeDefined();
+
+    fireEvent.click(deleteBtn);
+    expect(mockState.setIsDeleteDialogOpen).toHaveBeenCalledWith(true);
+
+    fireEvent.click(recallBtn);
+    expect(mockState.setIsRecallDialogOpen).toHaveBeenCalledWith(true);
+  });
+
+  it('renders correctly for assign_doctor', () => {
+    renderComponent(['assign_doctor']);
+    const assignBtn = screen.getByText('分配医生');
+    expect(assignBtn).toBeDefined();
+
+    fireEvent.click(assignBtn);
+    expect(mockState.setIsAssignDialogOpen).toHaveBeenCalledWith(true);
+  });
+
+  it('renders correctly for report_problem and acknowledge_feedback', () => {
+    renderComponent(['report_problem', 'acknowledge_feedback']);
+    const reportBtn = screen.getByText('报告问题');
+    const ackBtn = screen.getByText('确认反馈');
+    
+    fireEvent.click(reportBtn);
+    expect(mockState.setIsReportProblemDialogOpen).toHaveBeenCalledWith(true);
+    
+    fireEvent.click(ackBtn);
+    expect(mockState.setIsAcknowledgeDialogOpen).toHaveBeenCalledWith(true);
+  });
+
+  it('handles recreate action for Draft status', async () => {
+    renderComponent(['recreate'], 'Draft');
+    const recreateBtn = screen.getByText('继续编辑');
+    fireEvent.click(recreateBtn);
+    
+    // Dynamic import inside handleRecreate
+    await waitFor(() => {
+      expect(mockOpenCreation).toHaveBeenCalled();
+    });
+  });
+
+  it('handles recreate action for non-Draft status', async () => {
+    renderComponent(['recreate'], 'Rejected');
+    const recreateBtn = screen.getByText('基于此重新创建');
+    fireEvent.click(recreateBtn);
+    
+    // Dynamic import inside handleRecreate
+    await waitFor(() => {
+      expect(mockOpenCreation).toHaveBeenCalled();
+    });
+  });
+
+  it('handles write_feedback action', async () => {
+    renderComponent(['write_feedback']);
+    const writeBtn = screen.getByText('写反馈');
+    fireEvent.click(writeBtn);
+    
+    // Dynamic import inside handleWriteFeedback
+    await waitFor(() => {
+      expect(mockOpenCreation).toHaveBeenCalled();
+    });
   });
 });

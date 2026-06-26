@@ -35,6 +35,28 @@ describe('FilterChip Component', () => {
     expect(screen.getByText('Active')).toBeDefined();
     expect(screen.getByText('Pending')).toBeDefined();
   });
+  
+
+  it('triggers onOptionSelect and onToggle when md-menu-item is clicked', () => {
+    const onOptionSelectMock = vi.fn();
+    const onToggleMock = vi.fn();
+    render(
+      <FilterChip 
+        label="Status" 
+        options={['Active', 'Pending']} 
+        isOpen={true} 
+        onToggle={onToggleMock} 
+        onOptionSelect={onOptionSelectMock}
+      />
+    );
+    
+    const menuItem = screen.getByText('Active').closest('md-menu-item');
+    if (menuItem) {
+      fireEvent.click(menuItem);
+    }
+    expect(onOptionSelectMock).toHaveBeenCalledWith('Active');
+    expect(onToggleMock).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('FilterChipSet Component', () => {
@@ -55,5 +77,30 @@ describe('FilterChipSet Component', () => {
     const menus = document.querySelectorAll('md-menu');
     expect(menus[0].hasAttribute('open')).toBe(true);
     expect(menus[1].hasAttribute('open')).toBe(false);
+  });
+
+  it('manages filter selection and calls onFilterChange', () => {
+    const chips = [{ label: 'Status', options: ['Active', 'Pending'] }];
+    const onFilterChangeMock = vi.fn();
+    
+    render(<FilterChipSet chips={chips} onFilterChange={onFilterChangeMock} />);
+    
+    fireEvent.click(screen.getByText('Status'));
+    
+    const activeItem = screen.getByText('Active').closest('md-menu-item');
+    if (activeItem) {
+      fireEvent.click(activeItem);
+    }
+    
+    expect(onFilterChangeMock).toHaveBeenCalledWith({ 'Status': 'Active' });
+    
+    // Deselect
+    fireEvent.click(screen.getByText('Status: Active'));
+    const activeItemAgain = screen.getByText('Active').closest('md-menu-item');
+    if (activeItemAgain) {
+      fireEvent.click(activeItemAgain);
+    }
+    
+    expect(onFilterChangeMock).toHaveBeenCalledWith({});
   });
 });
