@@ -73,39 +73,34 @@ export const ReferralActionFooter: React.FC<ReferralActionFooterProps> = ({
   const renderButtons = () => {
     return (
       <>
-        {availableActions.includes('recreate') && (
-          <PrimaryButton icon={referral.status === 'Draft' ? "edit" : "restart_alt"} label={referral.status === 'Draft' ? "继续编辑" : "基于此重新创建"} onClick={handleRecreate} />
-        )}
-        {availableActions.includes('delete_draft') && (
-          <DestructiveButton icon="delete" label="删除草案" onClick={() => state.setIsDeleteDialogOpen(true)} />
-        )}
-        {availableActions.includes('approve_referral') && (
-          <PrimaryButton icon="check" label="批准转诊" onClick={() => state.setIsApprovalDialogOpen(true)} />
-        )}
-        {availableActions.includes('reject_referral') && (
-          <DestructiveButton icon="close" label="拒绝申请" onClick={() => state.setIsRejectionDialogOpen(true)} />
-        )}
-        {availableActions.includes('recall_referral') && (
-          <SecondaryButton icon="undo" label="撤回申请" onClick={() => state.setIsRecallDialogOpen(true)} />
-        )}
-        {availableActions.includes('assign_doctor') && (
-          <PrimaryButton icon="assignment_ind" label="分配医生" onClick={() => state.setIsAssignDialogOpen(true)} />
-        )}
-        {availableActions.includes('reassign_doctor') && (
-          <PrimaryButton icon="assignment_ind" label="重新分配医生" onClick={() => state.setIsAssignDialogOpen(true)} />
-        )}
-        {availableActions.includes('schedule_appointment') && (
-          <PrimaryButton icon="calendar_month" label="安排就诊" onClick={() => state.setIsSchedulingDialogOpen(true)} />
-        )}
-        {availableActions.includes('write_feedback') && (
-          <PrimaryButton icon="edit_note" label="写反馈" onClick={handleWriteFeedback} />
-        )}
-        {availableActions.includes('report_problem') && (
-          <DestructiveButton icon="report_problem" label="报告问题" onClick={() => state.setIsReportProblemDialogOpen?.(true)} />
-        )}
-        {availableActions.includes('acknowledge_feedback') && (
-          <PrimaryButton icon="check" label="确认反馈" onClick={() => state.setIsAcknowledgeDialogOpen?.(true)} />
-        )}
+        {availableActions.map((action) => {
+          switch (action) {
+            case 'recreate':
+              return <PrimaryButton key={action} icon={referral.status === 'Draft' ? "edit" : "restart_alt"} label={referral.status === 'Draft' ? "继续编辑" : "基于此重新创建"} onClick={handleRecreate} />;
+            case 'delete_draft':
+              return <DestructiveButton key={action} icon="delete" label="删除草案" onClick={() => state.setIsDeleteDialogOpen(true)} />;
+            case 'approve_referral':
+              return <PrimaryButton key={action} icon="check" label="批准转诊" onClick={() => state.setIsApprovalDialogOpen(true)} />;
+            case 'reject_referral':
+              return <DestructiveButton key={action} icon="close" label="拒绝申请" onClick={() => state.setIsRejectionDialogOpen(true)} />;
+            case 'recall_referral':
+              return <SecondaryButton key={action} icon="undo" label="撤回申请" onClick={() => state.setIsRecallDialogOpen(true)} />;
+            case 'assign_doctor':
+              return <PrimaryButton key={action} icon="assignment_ind" label="分配医生" onClick={() => state.setIsAssignDialogOpen(true)} />;
+            case 'reassign_doctor':
+              return <PrimaryButton key={action} icon="assignment_ind" label="重新分配医生" onClick={() => state.setIsAssignDialogOpen(true)} />;
+            case 'schedule_appointment':
+              return <PrimaryButton key={action} icon="calendar_month" label="安排就诊" onClick={() => state.setIsSchedulingDialogOpen(true)} />;
+            case 'write_feedback':
+              return <PrimaryButton key={action} icon="edit_note" label="写反馈" onClick={handleWriteFeedback} />;
+            case 'report_problem':
+              return <DestructiveButton key={action} icon="report_problem" label="报告问题" onClick={() => state.setIsReportProblemDialogOpen?.(true)} />;
+            case 'acknowledge_feedback':
+              return <PrimaryButton key={action} icon="check" label="确认反馈" onClick={() => state.setIsAcknowledgeDialogOpen?.(true)} />;
+            default:
+              return null;
+          }
+        })}
       </>
     );
   };
