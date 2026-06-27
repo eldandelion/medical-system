@@ -33,15 +33,17 @@ export const handlers = [
     return HttpResponse.json(dashboardData);
   }),
 
-  http.get(api('/api/students'), async ({ request }) => {
+  // Intercept detail fetches and return rich mock data
+  http.get(api('/api/students/:id'), async ({ request, params }) => {
     await delay(MOCK_DELAY_MS);
-    const url = new URL(request.url);
-    const nameQuery = url.searchParams.get('name');
-    if (nameQuery) {
-      const match = mockStudentsDb.find((s) => s.name === nameQuery);
-      return HttpResponse.json(match ? [match] : []);
+    const { id } = params;
+    const match = mockStudentsDb.find((s) => s.id === id);
+    if (match) {
+      return HttpResponse.json(match);
     }
-    return HttpResponse.json(mockStudentsDb);
+    // Fallback if ID not found (since real DB has 1,2,3,4 but mock DB has s1, s2, s3, s4)
+    const fallbackStudent = mockStudentsDb[0];
+    return HttpResponse.json({ ...fallbackStudent, id: id as string });
   }),
 
   http.get(api('/api/referrals'), async ({ request }) => {

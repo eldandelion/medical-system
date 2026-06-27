@@ -32,7 +32,7 @@ export const STUDENT_DETAILS_TABS = [
   { id: StudentDetailsTabs.HISTORY, label: '档案记录', icon: 'history_edu' },
 ];
 
-export function StudentDetailsView({ student, hideHeader, activeTab: propsActiveTab, onTabChange }: StudentDetailsViewProps) {
+export function StudentDetailsView({ student: initialStudent, hideHeader, activeTab: propsActiveTab, onTabChange }: StudentDetailsViewProps) {
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>(StudentDetailsTabs.OVERVIEW);
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
   
@@ -46,8 +46,26 @@ export function StudentDetailsView({ student, hideHeader, activeTab: propsActive
 
   const { openCreation } = useCreationOverlay();
   const { isFullScreen } = useDetails();
-
   const tabs = STUDENT_DETAILS_TABS;
+
+  const [studentData, setStudentData] = React.useState<Student | null>(null);
+
+  React.useEffect(() => {
+    let active = true;
+    if (!initialStudent?.id) return;
+    fetch(`${import.meta.env.BASE_URL}/api/students/${initialStudent.id}`.replace('//api', '/api'))
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch student details');
+        return res.json();
+      })
+      .then(data => {
+        if (active) setStudentData(data);
+      })
+      .catch(err => console.error(err));
+    return () => { active = false; };
+  }, [initialStudent?.id]);
+
+  const student = studentData || initialStudent;
 
   if (!student) return null;
 

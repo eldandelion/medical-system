@@ -17,9 +17,10 @@ export default defineConfig(() => {
             // Do not modify file watching is disabled to prevent flickering during agent edits.
             hmr: process.env.DISABLE_HMR !== 'true',
             proxy: {
-                '/api': {
+                '/medical-system/api': {
                     target: 'http://localhost:8080',
                     changeOrigin: true,
+                    rewrite: (path) => path.replace(/^\/medical-system\/api/, '/api'),
                 },
             },
         },
