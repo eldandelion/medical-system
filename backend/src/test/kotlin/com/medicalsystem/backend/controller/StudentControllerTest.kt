@@ -23,7 +23,7 @@ class StudentControllerTest {
 
     @Test
     fun `should return all students`() {
-        val student = StudentDto("1", "S123", "John Doe", "CS", "Year 1", "Active")
+        val student = StudentDto("1", "S123", "John Doe", 1L, "CS", java.time.LocalDate.of(2023, 9, 1), "大二", com.medicalsystem.backend.entity.RiskStatus.LOW)
         `when`(studentService.getAllStudents()).thenReturn(listOf(student))
 
         val response = studentController.getAllStudents()
@@ -35,8 +35,8 @@ class StudentControllerTest {
 
     @Test
     fun `should create a student`() {
-        val inputDto = StudentDto(null, "S123", "John Doe", "CS", "Year 1", "Active")
-        val savedDto = StudentDto("1", "S123", "John Doe", "CS", "Year 1", "Active")
+        val inputDto = StudentDto(null, "S123", "John Doe", 1L, "CS", java.time.LocalDate.of(2023, 9, 1), null, com.medicalsystem.backend.entity.RiskStatus.LOW)
+        val savedDto = StudentDto("1", "S123", "John Doe", 1L, "CS", java.time.LocalDate.of(2023, 9, 1), "大二", com.medicalsystem.backend.entity.RiskStatus.LOW)
         
         `when`(studentService.createStudent(any())).thenReturn(savedDto)
 

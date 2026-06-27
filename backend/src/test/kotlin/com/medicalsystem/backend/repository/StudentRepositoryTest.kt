@@ -13,14 +13,22 @@ class StudentRepositoryTest {
     @Autowired
     private lateinit var studentRepository: StudentRepository
 
+    @Autowired
+    private lateinit var collegeRepository: com.medicalsystem.backend.repository.CollegeRepository
+
+    @Autowired
+    private lateinit var majorRepository: com.medicalsystem.backend.repository.MajorRepository
+
     @Test
     fun `should save and find student by student number`() {
+        val college = collegeRepository.save(com.medicalsystem.backend.entity.CollegeEntity(name = "Engineering"))
+        val major = majorRepository.save(com.medicalsystem.backend.entity.MajorEntity(name = "CS", college = college))
         val student = StudentEntity(
             studentNumber = "S999",
             name = "Test Student",
-            major = "Testing",
-            year = "Year 4",
-            status = "Active"
+            major = major,
+            enrollmentDate = java.time.LocalDate.of(2023, 9, 1),
+            riskStatus = com.medicalsystem.backend.entity.RiskStatus.LOW
         )
         
         studentRepository.save(student)

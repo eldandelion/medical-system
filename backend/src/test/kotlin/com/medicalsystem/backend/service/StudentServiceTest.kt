@@ -19,12 +19,17 @@ class StudentServiceTest {
     @Mock
     private lateinit var studentRepository: StudentRepository
 
+    @Mock
+    private lateinit var majorRepository: com.medicalsystem.backend.repository.MajorRepository
+
     @InjectMocks
     private lateinit var studentService: StudentService
 
     @Test
     fun `should get all students mapped to dto`() {
-        val entity = StudentEntity(1L, "S123", "John Doe", "CS", "Year 1", "Active")
+        val college = com.medicalsystem.backend.entity.CollegeEntity(1L, "Engineering")
+        val major = com.medicalsystem.backend.entity.MajorEntity(1L, "CS", college)
+        val entity = StudentEntity(1L, "S123", "John Doe", major, java.time.LocalDate.of(2023, 9, 1), com.medicalsystem.backend.entity.RiskStatus.LOW)
         `when`(studentRepository.findAll()).thenReturn(listOf(entity))
 
         val result = studentService.getAllStudents()
@@ -36,8 +41,13 @@ class StudentServiceTest {
 
     @Test
     fun `should create student and map back to dto`() {
-        val dto = StudentDto(null, "S123", "John Doe", "CS", "Year 1", "Active")
-        val savedEntity = StudentEntity(1L, "S123", "John Doe", "CS", "Year 1", "Active")
+        val dto = StudentDto(null, "S123", "John Doe", 1L, null, java.time.LocalDate.of(2023, 9, 1), null, com.medicalsystem.backend.entity.RiskStatus.LOW)
+        
+        val college = com.medicalsystem.backend.entity.CollegeEntity(1L, "Engineering")
+        val major = com.medicalsystem.backend.entity.MajorEntity(1L, "CS", college)
+        val savedEntity = StudentEntity(1L, "S123", "John Doe", major, java.time.LocalDate.of(2023, 9, 1), com.medicalsystem.backend.entity.RiskStatus.LOW)
+        
+        `when`(majorRepository.findById(1L)).thenReturn(java.util.Optional.of(major))
         
         `when`(studentRepository.save(any())).thenReturn(savedEntity)
 

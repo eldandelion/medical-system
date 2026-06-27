@@ -12,14 +12,16 @@ class StudentEntity(
     val studentNumber: String,
 
     @Column(nullable = false)
-    val name: String,
+    var name: String,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "major_id", nullable = false)
+    var major: MajorEntity,
 
     @Column(nullable = false)
-    val major: String,
+    var enrollmentDate: java.time.LocalDate,
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    val year: String,
-
-    @Column(nullable = false)
-    val status: String
+    var riskStatus: RiskStatus
 )
