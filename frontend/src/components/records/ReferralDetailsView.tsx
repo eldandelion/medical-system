@@ -40,11 +40,7 @@ export const REFERRAL_DETAILS_TABS = [
   { id: 'feedback', label: '诊疗反馈', icon: 'history_edu' },
 ];
 
-export function ReferralDetailsView({ referral: initialReferral, userRole, hideHeader, activeTab: propsActiveTab, onTabChange, onUpdate }: ReferralDetailsViewProps) {
-  const { isFullScreen, setTabsOverride } = useDetails();
-  const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
-  const activeTab = (propsActiveTab || internalActiveTab) as TabType;
-
+export function ReferralDetailsView(props: ReferralDetailsViewProps) {
   const { session } = useAuth();
   
   const processReferral = React.useCallback((data: any) => {
@@ -52,9 +48,9 @@ export function ReferralDetailsView({ referral: initialReferral, userRole, hideH
   }, []);
 
   const { data: latestReferralData } = useQuery<Referral>({
-    queryKey: [`/api/referrals/${initialReferral.id}`],
+    queryKey: [`/api/referrals/${props.referral.id}`],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${initialReferral.id}`.replace('//api', '/api'), {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${props.referral.id}`.replace('//api', '/api'), {
         headers: { 'Authorization': `Bearer ${session?.token || ''}` }
       });
       if (!res.ok) throw new Error('Failed to fetch referral');
@@ -63,7 +59,38 @@ export function ReferralDetailsView({ referral: initialReferral, userRole, hideH
     }
   });
 
-  const referral = latestReferralData || initialReferral;
+  const referral = latestReferralData || props.referral;
+  const extendedData = referral.extendedData;
+
+  // Handle case where extended data hasn't loaded yet
+  if (!extendedData) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] w-full text-[var(--md-sys-color-on-surface-variant)] bg-[var(--md-sys-color-surface)]">
+        {/* @ts-ignore */}
+        <md-circular-progress indeterminate></md-circular-progress>
+        <span className="mt-4 text-[14px]">正在加载转诊详细数据...</span>
+      </div>
+    );
+  }
+
+  return (
+    <ReferralDetailsPresenter 
+      {...props}
+      referral={referral}
+      extendedData={extendedData}
+    />
+  );
+}
+
+interface ReferralDetailsPresenterProps extends Omit<ReferralDetailsViewProps, 'referral'> {
+  referral: Referral;
+  extendedData: NonNullable<Referral['extendedData']>;
+}
+
+function ReferralDetailsPresenter({ referral, extendedData, userRole, hideHeader, activeTab: propsActiveTab, onTabChange, onUpdate }: ReferralDetailsPresenterProps) {
+  const { isFullScreen, setTabsOverride } = useDetails();
+  const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
+  const activeTab = (propsActiveTab || internalActiveTab) as TabType;
 
   const { state, actions } = useReferralActions({ referralId: referral.id, onUpdate });
 
@@ -92,10 +119,8 @@ export function ReferralDetailsView({ referral: initialReferral, userRole, hideH
     onTabChange?.(tab);
   }, [onTabChange]);
 
-  const extendedData = referral.extendedData;
-
   const isFeedbackAvailable = React.useMemo(() => {
-    return extendedData?.steps?.some(
+    return extendedData.steps?.some(
       step => step.type === 'feedback' && step.status === 'completed'
     ) || referral.status === 'Closed';
   }, [extendedData, referral.status]);
@@ -105,8 +130,6 @@ export function ReferralDetailsView({ referral: initialReferral, userRole, hideH
       setActiveTab('overview');
     }
   }, [internalActiveTab, isFeedbackAvailable, setActiveTab]);
-
-  if (!extendedData) return null;
 
   const tabs = React.useMemo(() => REFERRAL_DETAILS_TABS.filter(
     tab => tab.id !== 'feedback' || isFeedbackAvailable
@@ -124,7 +147,7 @@ export function ReferralDetailsView({ referral: initialReferral, userRole, hideH
   }, [tabs, setTabsOverride]);
 
   const displayStatus = referral.displayStatus || referral.status;
-  const isDoctorRejected = displayStatus === 'Rejected' && extendedData?.steps?.some((s: any) => s.type === 'scheduling' && s.status === 'issue');
+  const isDoctorRejected = displayStatus === 'Rejected' && extendedData.steps?.some((s: any) => s.type === 'scheduling' && s.status === 'issue');
 
   return (
     <ScrollableDetailsLayout

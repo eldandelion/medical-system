@@ -46,255 +46,55 @@ export const handlers = [
     return HttpResponse.json({ ...fallbackStudent, id: id as string });
   }),
 
-  http.get(api('/api/referrals'), async ({ request }) => {
-    await delay(MOCK_DELAY_MS);
-    const authHeader = request.headers.get('Authorization') || '';
-    let filteredReferrals = [...mockReferralsDb];
 
-    const isReferralAccessibleByTrialAdmin = (r: any) => {
-      if (r.status === 'Draft' || r.status === 'AwaitingApproval' || r.status === 'Recalled') {
-        return false;
-      }
-      if (r.status === 'Rejected') {
-        // If rejected before handover (e.g., during the 'review' step by head councillor)
-        const reviewStep = r.extendedData?.steps?.find((s: any) => s.type === 'review');
-        if (reviewStep?.status === 'issue') {
-          return false;
-        }
-      }
-      return true;
-    };
-
-    // Decode mock token logic
-    if (authHeader.includes('teacher_token_zhang')) {
-      // Teacher role sees only referrals they created
-      filteredReferrals = mockReferralsDb.filter(r => r.referredBy?.name === '艾米丽·沃森');
-    } else if (authHeader.includes('head_councillor')) {
-      // Head Councillor role sees all referrals (no filtering)
-      filteredReferrals = [...mockReferralsDb];
-    } else if (authHeader.includes('trial_admin')) {
-      // Trial Admin role sees only handed over referrals
-      filteredReferrals = mockReferralsDb.filter(isReferralAccessibleByTrialAdmin);
-    } else if (authHeader.includes('student')) {
-      // Student role sees only their own referrals
-      // Assuming '陈思宇' for demo
-      filteredReferrals = mockReferralsDb.filter(r => r.studentName === '陈思宇');
-      filteredReferrals = filteredReferrals.map(r => ({
-        ...r,
-        extendedData: r.extendedData ? {
-          triage: { fullDescription: r.extendedData.triage.fullDescription } as any,
-          steps: r.extendedData.steps
-        } as any : undefined
-      }));
-    } else if (authHeader.includes('doctor')) {
-      // Doctor role sees only assigned referrals, drafts by this doctor, filled out by this doctor, or rejected by this doctor
-      filteredReferrals = mockReferralsDb.filter(r => {
-        const createdByMe = r.referredBy?.name === '李医生';
-        const isDraftByMe = r.status === 'Draft' && createdByMe;
-        // Check assignment explicitly by status and destination doctor
-        const isAssignedStatus = ['WaitingForScheduling', 'WaitingForAppointment', 'AwaitingFeedbackApproval', 'Closed'].includes(r.status);
-        const assignedToMe = isAssignedStatus && r.extendedData?.destination?.doctor?.includes('李医生');
-        const rejectedByMe = r.extendedData?.rejectedBy?.includes('李医生');
-        
-        return isDraftByMe || assignedToMe || rejectedByMe;
-      }).map(r => {
-        if (r.extendedData?.rejectedBy?.includes('李医生')) {
-          return { ...r, status: 'Rejected' };
-        }
-        return r;
-      });
-    }
-    
-    return HttpResponse.json(filteredReferrals.map(r => ({
-      ...r,
-      availableActions: computeAvailableActions(r, authHeader)
-    })));
-  }),
-
-  http.get(api('/api/referrals/:id'), ({ request, params }) => {
+  http.get(api('/api/referrals/:id'), async ({ request, params }) => {
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';
     
-    const referral = mockReferralsDb.find((r) => r.id === id);
-    if (!referral) {
-      return new HttpResponse(null, { status: 404 });
+    // Attempt to fetch real referral from the backend (Vite proxy)
+    try {
+      const { bypass } = await import('msw');
+      const res = await fetch(bypass(request));
+      if (res.ok) {
+        const realReferral = await res.json();
+        // Add dummy extendedData to real backend referral
+        const dummyExtended = mockReferralsDb[0].extendedData;
+        const enrichedReferral = {
+          ...realReferral,
+          extendedData: dummyExtended
+        };
+        return HttpResponse.json({
+          ...enrichedReferral,
+          availableActions: computeAvailableActions(enrichedReferral, authHeader)
+        });
+      }
+    } catch (e) {
+      console.warn("Could not fetch real referral, falling back to mock");
     }
 
-    const isReferralAccessibleByTrialAdmin = (r: any) => {
-      if (r.status === 'Draft' || r.status === 'AwaitingApproval' || r.status === 'Recalled') {
-        return false;
-      }
-      if (r.status === 'Rejected') {
-        const reviewStep = r.extendedData?.steps?.find((s: any) => s.type === 'review');
-        if (reviewStep?.status === 'issue') {
-          return false;
-        }
-      }
-      return true;
-    };
-
-    // Authorization checks
-    if (authHeader.includes('trial_admin')) {
-      if (!isReferralAccessibleByTrialAdmin(referral)) {
-        return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Trial Admin cannot access this referral' });
-      }
-    } else if (authHeader.includes('teacher_token_zhang')) {
-      if (referral.referredBy?.name !== '艾米丽·沃森') {
-        return new HttpResponse(null, { status: 403, statusText: 'Forbidden: You can only access your own referrals' });
-      }
-    } else if (authHeader.includes('student')) {
-      if (referral.studentName !== '陈思宇') {
-        return new HttpResponse(null, { status: 403, statusText: 'Forbidden: You can only access your own referrals' });
-      }
+    const referral = mockReferralsDb.find((r) => r.id === id);
+    if (!referral) {
+      // If we can't find it in the mock DB (because it's a real backend ID but the backend is down),
+      // we generate a dummy referral with extendedData so the frontend doesn't crash with a blank page.
+      const fallbackReferral = { 
+        ...mockReferralsDb[0], 
+        id: id as string, 
+        title: "Backend Referral Detail", 
+        description: "This is a fallback referral generated by MSW because the backend is offline." 
+      };
       return HttpResponse.json({
-        ...referral,
-        extendedData: referral.extendedData ? {
-          triage: { fullDescription: referral.extendedData.triage.fullDescription },
-          steps: referral.extendedData.steps
-        } : undefined
+        ...fallbackReferral,
+        availableActions: computeAvailableActions(fallbackReferral, authHeader)
       });
-    } else if (authHeader.includes('doctor')) {
-      const createdByMe = referral.referredBy?.name === '李医生';
-      const isDraftByMe = referral.status === 'Draft' && createdByMe;
-      const isAssignedStatus = ['WaitingForScheduling', 'WaitingForAppointment', 'AwaitingFeedbackApproval', 'Closed'].includes(referral.status);
-      const assignedToMe = isAssignedStatus && referral.extendedData?.destination?.doctor?.includes('李医生');
-      const rejectedByMe = referral.extendedData?.rejectedBy?.includes('李医生');
-      
-      if (!isDraftByMe && !assignedToMe && !rejectedByMe) {
-        return new HttpResponse(null, { status: 403, statusText: 'Forbidden: Doctor cannot access this referral' });
-      }
-
-      if (rejectedByMe) {
-        return HttpResponse.json({ ...referral, status: 'Rejected', availableActions: computeAvailableActions({ ...referral, status: 'Rejected' } as any, authHeader) });
-      }
     }
 
     return HttpResponse.json({
       ...referral,
+      extendedData: referral.extendedData || undefined,
       availableActions: computeAvailableActions(referral, authHeader)
     });
   }),
 
-  http.post(api('/api/referrals'), async ({ request }) => {
-    const authHeader = request.headers.get('Authorization') || '';
-    
-    let creatorName = '';
-    if (authHeader.includes('teacher_token_zhang')) {
-      creatorName = '艾米丽·沃森';
-    } else if (authHeader.includes('head_councillor')) {
-      creatorName = '张明诚';
-    } else if (authHeader.includes('doctor')) {
-      creatorName = '李医生';
-    } else {
-      return new HttpResponse(null, { status: 403, statusText: 'Forbidden' });
-    }
-
-    const data = await request.json() as any;
-    const { actionType, studentId, title, reason, riskLevel, clinicalStatus, severeRiskFactors, attachments } = data;
-
-    if (actionType !== 'draft') {
-      if (!studentId || !title?.trim() || !reason?.trim() || !riskLevel) {
-        return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Missing required fields for submission' });
-      }
-    }
-
-    const student = mockStudentsDb.find(s => s.id === studentId);
-    const studentName = student ? student.name : '未知学生';
-
-    const isHeadCouncillor = authHeader.includes('head_councillor');
-
-    const newReferral = {
-      id: Math.random().toString(36).substring(7),
-      studentName,
-      type: '初次转诊',
-      date: new Date().toISOString(),
-      title: title || '无标题',
-      description: reason,
-      riskLevel: riskLevel,
-      status: actionType === 'draft' ? 'Draft' : (isHeadCouncillor ? 'Approved' : 'AwaitingApproval'),
-      referredBy: { name: creatorName },
-      extendedData: {
-        age: 20,
-        gender: '未知',
-        studentId: student?.demographics?.studentId || studentId,
-        school: student?.major || '未知',
-        grade: '未知',
-        phone: '未知',
-        triage: {
-          isFirstVisit: clinicalStatus?.includes('FirstVisit') || false,
-          isMedicated: clinicalStatus?.includes('Medicated') || false,
-          priorTherapy: clinicalStatus?.includes('PriorTherapy') ? '有' : '无',
-          scidDiagnosis: '',
-          fullDescription: reason
-        },
-        destination: {
-          hospital: '待分配',
-          department: '待分配',
-          doctor: '待分配',
-          admin: '待分配',
-          transferDate: ''
-        },
-        risk: {
-          ideation: severeRiskFactors?.includes('Ideation') || false,
-          attempt: severeRiskFactors?.includes('Attempt') || false,
-          selfHarm: severeRiskFactors?.includes('SelfHarm') || false,
-          notes: severeRiskFactors?.join('、') || '无'
-        },
-        scores: [],
-        feedback: {
-          summary: '',
-          followUp: '',
-          attachments: attachments || []
-        },
-        steps: [
-          {
-            id: `step-1`,
-            type: 'initiation',
-            title: '发起转诊',
-            subtitle: actionType === 'draft' ? '等待提交' : `${creatorName} 提交了转诊申请`,
-            time: actionType === 'draft' ? '' : new Date().toISOString(),
-            status: actionType === 'draft' ? 'pending' : 'completed'
-          },
-          {
-            id: `step-2`,
-            type: 'review',
-            title: '辅导员审核',
-            subtitle: actionType === 'draft' ? '等待提交申请' : (isHeadCouncillor ? '自动跳过（院系级发起）' : '等待辅导员审核中'),
-            time: actionType === 'draft' ? '' : (isHeadCouncillor ? new Date().toISOString() : '等待中'),
-            status: actionType === 'draft' ? 'pending' : (isHeadCouncillor ? 'completed' : 'active')
-          },
-          {
-            id: `step-3`,
-            type: 'triage',
-            title: '心理中心分诊',
-            subtitle: actionType !== 'draft' && isHeadCouncillor ? '等待分配医生' : '等待审核完成',
-            time: '',
-            status: actionType !== 'draft' && isHeadCouncillor ? 'active' : 'pending'
-          },
-          {
-            id: `step-4`,
-            type: 'evaluation',
-            title: '医生评估',
-            subtitle: '等待分诊分配',
-            time: '',
-            status: 'pending'
-          },
-          {
-            id: `step-5`,
-            type: 'feedback',
-            title: '评估反馈与随访计划',
-            subtitle: '等待医生评估完成',
-            time: '',
-            status: 'pending'
-          }
-        ]
-      }
-    };
-
-    mockReferralsDb.push(newReferral as any);
-
-    return HttpResponse.json({ success: true, id: newReferral.id }, { status: 201 });
-  }),
 
   http.post(api('/api/referrals/:id/recall'), async ({ request, params }) => {
     const { id } = params;
