@@ -8,10 +8,13 @@ import org.springframework.stereotype.Service
 import com.medicalsystem.backend.repository.MajorRepository
 import java.time.LocalDate
 
+import com.medicalsystem.backend.util.AcademicYearCalculator
+
 @Service
 class StudentService(
     private val studentRepository: StudentRepository,
-    private val majorRepository: MajorRepository
+    private val majorRepository: MajorRepository,
+    private val academicYearCalculator: AcademicYearCalculator
 ) {
 
     fun getAllStudents(): List<StudentDto> {
@@ -45,27 +48,9 @@ class StudentService(
             majorId = entity.major.id,
             major = entity.major.name,
             enrollmentDate = entity.enrollmentDate,
-            year = calculateAcademicYear(entity.enrollmentDate),
+            year = academicYearCalculator.calculate(entity.enrollmentDate),
             riskLevel = entity.riskStatus
         )
-    }
-
-    private fun calculateAcademicYear(enrollmentDate: LocalDate): String {
-        val today = LocalDate.now()
-        val yearDiff = today.year - enrollmentDate.year
-        val academicYearIndex = if (today.monthValue >= 9) {
-            yearDiff + 1
-        } else {
-            yearDiff
-        }
-        return when (academicYearIndex) {
-            1 -> "大一"
-            2 -> "大二"
-            3 -> "大三"
-            4 -> "大四"
-            5 -> "大五"
-            else -> if (academicYearIndex > 5) "毕业" else "新生"
-        }
     }
 
     //TODO before adding a record to the database, student number must be checked against REGEX

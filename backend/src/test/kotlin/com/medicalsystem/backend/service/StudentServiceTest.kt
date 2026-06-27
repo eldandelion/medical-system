@@ -21,6 +21,9 @@ class StudentServiceTest {
 
     @Mock
     private lateinit var majorRepository: com.medicalsystem.backend.repository.MajorRepository
+    
+    @Mock
+    private lateinit var academicYearCalculator: com.medicalsystem.backend.util.AcademicYearCalculator
 
     @InjectMocks
     private lateinit var studentService: StudentService
