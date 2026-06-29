@@ -6,5 +6,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface StudentRepository : JpaRepository<StudentEntity, Long> {
+    fun existsByStudentNumber(studentNumber: String): Boolean
     fun findByStudentNumber(studentNumber: String): StudentEntity?
 }

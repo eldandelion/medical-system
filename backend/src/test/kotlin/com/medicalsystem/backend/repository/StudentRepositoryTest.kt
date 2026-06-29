@@ -28,7 +28,7 @@ class StudentRepositoryTest {
             name = "Test Student",
             major = major,
             enrollmentDate = java.time.LocalDate.of(2023, 9, 1),
-            riskStatus = com.medicalsystem.backend.entity.RiskStatus.LOW
+            riskStatus = com.medicalsystem.backend.model.RiskStatus.LOW
         )
         
         studentRepository.save(student)
