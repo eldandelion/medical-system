@@ -8,5 +8,6 @@ data class Student(
     val name: String,
     val major: Major,
     val enrollmentDate: LocalDate,
-    val riskStatus: RiskStatus
+    val riskStatus: RiskStatus,
+    val demographics: Demographics? = null
 )

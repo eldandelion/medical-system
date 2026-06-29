@@ -14,5 +14,6 @@ data class StudentDto(
     val enrollmentDate: LocalDate,
     val year: AcademicYear?,
     val riskLevel: RiskStatus?,
-    val status: String = "Active"
+    val status: String = "Active",
+    val demographics: DemographicsDto? = null
 )

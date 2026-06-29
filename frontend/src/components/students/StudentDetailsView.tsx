@@ -140,9 +140,9 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
                 className="flex flex-col gap-1"
               >
                 <DetailsSection title="学生基本信息" className="border-t-0 pt-0 mt-0">
-                  <div className="flex flex-col gap-4">
-                    {/* 3-Column Demographic Grid */}
-                    <div className="grid grid-cols-3 gap-4">
+                  <div className="flex flex-col gap-6">
+                    {/* 4-Column Demographic Grid */}
+                    <div className="grid grid-cols-4 gap-4">
                       <MetricCard
                         label="年龄"
                         value={`${student.demographics?.age?.toString() || 'N/A'} 岁`}
@@ -154,10 +154,25 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
                         icon="wc"
                       />
                       <MetricCard
+                        label="民族"
+                        value={student.demographics?.ethnicity || 'N/A'}
+                        icon="diversity_3"
+                      />
+                      <MetricCard
                         label="年级"
                         value={student.year || 'N/A'}
                         icon="school"
                       />
+                    </div>
+
+                    {/* Detailed Info List */}
+                    <div className="flex flex-col gap-0 border border-[var(--md-sys-color-outline-variant)] border-opacity-50 rounded-[24px] overflow-hidden bg-[var(--md-sys-color-surface-container-lowest)]">
+                      <DetailItem icon="badge" label="身份证号" value={student.demographics?.idCardNumber || 'N/A'} />
+                      <DetailItem icon="phone_iphone" label="联系电话" value={student.demographics?.contactNumber || 'N/A'} />
+                      <DetailItem icon="mail" label="电子邮箱" value={student.demographics?.email || 'N/A'} />
+                      <DetailItem icon="home_pin" label="家庭住址" value={student.demographics?.homeAddress || 'N/A'} />
+                      <DetailItem icon="account_balance" label="学校" value={student.demographics?.school || 'N/A'} />
+                      <DetailItem icon="contact_emergency" label="紧急联系人" value={`${student.demographics?.emergencyContactName || 'N/A'} (${student.demographics?.emergencyContactPhone || 'N/A'})`} />
                     </div>
 
                     {/* 就读专业 Card */}

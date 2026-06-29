@@ -24,5 +24,8 @@ class StudentEntity(
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    var riskStatus: RiskStatus
+    var riskStatus: RiskStatus,
+
+    @Embedded
+    var demographics: StudentDemographics? = null
 )

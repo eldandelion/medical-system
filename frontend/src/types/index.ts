@@ -102,10 +102,18 @@ export interface Student {
   scidDiagnosis?: string;
   riskFlags?: { label: string; value: boolean; severity: 'high' | 'medium' | 'none' }[];
   demographics?: {
-    age: number;
-    gender: string;
-    studentId: string;
-    emergencyContact: string;
+    gender?: string;
+    age?: number;
+    ethnicity?: string;
+    idCardNumber?: string;
+    contactNumber?: string;
+    email?: string;
+    homeAddress?: string;
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
+    school?: string;
+    studentId?: string; // Kept for backwards compatibility if needed
+    emergencyContact?: string; // Kept for backwards compatibility
   };
   psychometrics?: {
     scores: { date: string; value: number }[];
