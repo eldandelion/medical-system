@@ -27,5 +27,14 @@ class StudentEntity(
     var riskStatus: RiskStatus,
 
     @Embedded
-    var demographics: StudentDemographics? = null
+    var demographics: StudentDemographics? = null,
+
+    @Column(columnDefinition = "TEXT")
+    var scidDiagnosis: String? = null,
+
+    @OneToMany(mappedBy = "student", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var riskFlags: MutableList<RiskFlagEntity> = mutableListOf(),
+
+    @OneToMany(mappedBy = "student", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var psychometricTests: MutableList<PsychometricTestEntity> = mutableListOf()
 )

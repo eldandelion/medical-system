@@ -1,0 +1,37 @@
+package com.medicalsystem.backend.dto
+
+import com.medicalsystem.backend.model.FlagStatus
+import com.medicalsystem.backend.model.TestResultName
+import java.time.LocalDate
+
+data class PsychometricsSummaryDto(
+    val scidDiagnosis: String?,
+    val riskFlags: List<RiskFlagDto>,
+    val scores: List<ScoreTrendDto>,
+    val radarData: List<RadarDataDto>,
+    val tests: List<PsychometricTestDto>
+)
+
+data class RiskFlagDto(
+    val label: String,
+    val value: Boolean // Mapping FlagStatus to Boolean for frontend compatibility (POSITIVE=true, NEGATIVE=false)
+)
+
+data class ScoreTrendDto(
+    val date: String,
+    val value: Int
+)
+
+data class RadarDataDto(
+    val subject: String,
+    val A: Int,
+    val fullMark: Int
+)
+
+data class PsychometricTestDto(
+    val name: String, // from TestResultName.displayName
+    val value: Int,
+    val max: Int,
+    val level: String,
+    val date: String
+)

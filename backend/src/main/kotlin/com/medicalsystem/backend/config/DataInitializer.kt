@@ -43,10 +43,30 @@ class DataInitializer {
         val s3Demo = StudentDemographics(gender = "男", dateOfBirth = LocalDate.of(2005, 11, 2), ethnicity = "汉族", idCardNumber = "440106200511025678", contactNumber = "13500135000", email = "zhangwei@univ.edu.cn", homeAddress = "广州市天河区某街道", emergencyContactName = "张明", emergencyContactPhone = "13400134000", school = "某重点大学")
         val s4Demo = StudentDemographics(gender = "女", dateOfBirth = LocalDate.of(2002, 3, 15), ethnicity = "满族", idCardNumber = "210102200203158901", contactNumber = "13300133000", email = "chenxiu@univ.edu.cn", homeAddress = "沈阳市和平区某街道", emergencyContactName = "陈军", emergencyContactPhone = "13200132000", school = "某重点大学")
 
-        val s1 = studentRepository.save(StudentEntity(studentNumber = "S2023001", name = "李明", major = csMajor, enrollmentDate = LocalDate.of(2024, 9, 1), riskStatus = RiskStatus.MEDIUM, demographics = s1Demo))
+        val s1 = studentRepository.save(StudentEntity(studentNumber = "S2023001", name = "李明", major = csMajor, enrollmentDate = LocalDate.of(2024, 9, 1), riskStatus = RiskStatus.MEDIUM, demographics = s1Demo, scidDiagnosis = "重度抑郁症，伴随焦虑症状"))
         val s2 = studentRepository.save(StudentEntity(studentNumber = "S2023002", name = "王芳", major = engMajor, enrollmentDate = LocalDate.of(2023, 9, 1), riskStatus = RiskStatus.LOW, demographics = s2Demo))
-        val s3 = studentRepository.save(StudentEntity(studentNumber = "S2023003", name = "张伟", major = busMajor, enrollmentDate = LocalDate.of(2025, 9, 1), riskStatus = RiskStatus.HIGH, demographics = s3Demo))
+        val s3 = studentRepository.save(StudentEntity(studentNumber = "S2023003", name = "张伟", major = busMajor, enrollmentDate = LocalDate.of(2025, 9, 1), riskStatus = RiskStatus.HIGH, demographics = s3Demo, scidDiagnosis = "广泛性焦虑障碍"))
         val s4 = studentRepository.save(StudentEntity(studentNumber = "S2023004", name = "陈秀", major = medMajor, enrollmentDate = LocalDate.of(2022, 9, 1), riskStatus = RiskStatus.LOW, demographics = s4Demo))
+
+        // Add Psychometrics for s1 (李明)
+        val rf1 = RiskFlagEntity(name = com.medicalsystem.backend.model.RiskFlagName.SUICIDAL_IDEATION, status = com.medicalsystem.backend.model.FlagStatus.POSITIVE, student = s1)
+        val rf2 = RiskFlagEntity(name = com.medicalsystem.backend.model.RiskFlagName.SELF_HARM, status = com.medicalsystem.backend.model.FlagStatus.NEGATIVE, student = s1)
+        s1.riskFlags.addAll(listOf(rf1, rf2))
+        
+        val pt1 = PsychometricTestEntity(testResultName = com.medicalsystem.backend.model.TestResultName.GAD_7, score = 15, maxScore = 21, level = "重度", testDate = LocalDate.now().minusDays(30), student = s1)
+        val pt2 = PsychometricTestEntity(testResultName = com.medicalsystem.backend.model.TestResultName.GAD_7, score = 18, maxScore = 21, level = "重度", testDate = LocalDate.now().minusDays(15), student = s1)
+        val pt3 = PsychometricTestEntity(testResultName = com.medicalsystem.backend.model.TestResultName.GAD_7, score = 20, maxScore = 21, level = "重度", testDate = LocalDate.now().minusDays(5), student = s1)
+        val pt4 = PsychometricTestEntity(testResultName = com.medicalsystem.backend.model.TestResultName.PHQ_9, score = 22, maxScore = 27, level = "重度", testDate = LocalDate.now().minusDays(5), student = s1)
+        val pt5 = PsychometricTestEntity(testResultName = com.medicalsystem.backend.model.TestResultName.PSQI, score = 16, maxScore = 21, level = "较差", testDate = LocalDate.now().minusDays(5), student = s1)
+        s1.psychometricTests.addAll(listOf(pt1, pt2, pt3, pt4, pt5))
+        studentRepository.save(s1)
+
+        // Add Psychometrics for s3 (张伟)
+        val rf3 = RiskFlagEntity(name = com.medicalsystem.backend.model.RiskFlagName.SUICIDE_ATTEMPT, status = com.medicalsystem.backend.model.FlagStatus.POSITIVE, student = s3)
+        s3.riskFlags.add(rf3)
+        val pt6 = PsychometricTestEntity(testResultName = com.medicalsystem.backend.model.TestResultName.GAD_7, score = 12, maxScore = 21, level = "中度", testDate = LocalDate.now().minusDays(10), student = s3)
+        s3.psychometricTests.add(pt6)
+        studentRepository.save(s3)
 
         val ref1 = ReferralEntity(
             student = s1,

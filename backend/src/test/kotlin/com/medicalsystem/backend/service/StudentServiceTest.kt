@@ -139,5 +139,70 @@ class StudentServiceTest {
         assertEquals("1", result.id)
         assertEquals("John Doe", result.name)
     }
+
+    @Test
+    fun `getPsychometrics should return correctly formatted summary and fallback missing flags to negative`() {
+        val collegeEntity = CollegeEntity(1L, "Engineering")
+        val majorEntity = MajorEntity(1L, "CS", collegeEntity)
+        val entity = StudentEntity(
+            id = 1L,
+            studentNumber = "S123",
+            name = "John Doe",
+            major = majorEntity,
+            enrollmentDate = LocalDate.of(2023, 9, 1),
+            riskStatus = RiskStatus.LOW,
+            scidDiagnosis = "Anxiety"
+        )
+        
+        // Add one positive flag and one psychometric test
+        val flag = com.medicalsystem.backend.entity.RiskFlagEntity(
+            name = com.medicalsystem.backend.model.RiskFlagName.SUICIDAL_IDEATION,
+            status = com.medicalsystem.backend.model.FlagStatus.POSITIVE,
+            student = entity
+        )
+        entity.riskFlags.add(flag)
+        
+        val test = com.medicalsystem.backend.entity.PsychometricTestEntity(
+            testResultName = com.medicalsystem.backend.model.TestResultName.GAD_7,
+            score = 15,
+            maxScore = 21,
+            level = "重度",
+            testDate = LocalDate.now(),
+            student = entity
+        )
+        entity.psychometricTests.add(test)
+
+        `when`(studentRepository.findById(1L)).thenReturn(Optional.of(entity))
+
+        val summary = studentService.getPsychometrics(1L)
+        
+        assertEquals("Anxiety", summary.scidDiagnosis)
+        
+        // Assert exactly 3 flags
+        assertEquals(3, summary.riskFlags.size)
+        // SUICIDAL_IDEATION should be true because it's in the DB
+        assertEquals("自杀意念终身", summary.riskFlags[0].label)
+        assertEquals(true, summary.riskFlags[0].value)
+        // Others should default to false
+        assertEquals("自杀尝试终身", summary.riskFlags[1].label)
+        assertEquals(false, summary.riskFlags[1].value)
+        assertEquals("自伤行为终身", summary.riskFlags[2].label)
+        assertEquals(false, summary.riskFlags[2].value)
+        
+        // Assert tests and charts mapping
+        assertEquals(1, summary.tests.size)
+        assertEquals(1, summary.scores.size) // Trend for GAD-7
+        assertEquals(1, summary.radarData.size)
+        assertEquals("GAD-7", summary.radarData[0].subject)
+    }
+
+    @Test
+    fun `getPsychometrics should throw ResourceNotFoundException when student missing`() {
+        `when`(studentRepository.findById(99L)).thenReturn(Optional.empty())
+        
+        assertThrows(ResourceNotFoundException::class.java) {
+            studentService.getPsychometrics(99L)
+        }
+    }
 }
 

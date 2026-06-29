@@ -78,27 +78,59 @@ const MemoizedRadarChart = React.memo(({ radarData }: { radarData: any[] }) => (
 ));
 
 export function PsychometricsTabContent({ student }: PsychometricsTabContentProps) {
+  const [data, setData] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!student?.id) return;
+    
+    setLoading(true);
+    fetch(`${import.meta.env.BASE_URL}/api/students/${student.id}/psychometrics`.replace('//api', '/api'))
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch psychometrics data');
+        return res.json();
+      })
+      .then(json => {
+        setData(json);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setError('无法加载量表数据');
+        setLoading(false);
+      });
+  }, [student?.id]);
+
+  if (loading) {
+    return <div className="py-8 text-center text-sm text-[var(--md-sys-color-on-surface-variant)] opacity-60">加载中...</div>;
+  }
+
+  if (error || !data) {
+    return <div className="py-8 text-center text-sm text-[var(--md-sys-color-error)]">{error || '无数据'}</div>;
+  }
+
   return (
     <>
-      {student.scidDiagnosis || (student.riskFlags && student.riskFlags.length > 0) ? (
+      {data.scidDiagnosis || (data.riskFlags && data.riskFlags.length > 0) ? (
         <DetailsSection title="临床实际情况" icon="psychology">
           <div className="flex flex-col gap-5">
-            {student.scidDiagnosis && (
+            {data.scidDiagnosis && (
               <div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-[var(--md-sys-color-surface-container-low)]">
                 <span className="text-[12px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-70">SCID诊断</span>
-                <span className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)]">{student.scidDiagnosis}</span>
+                <span className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)]">{data.scidDiagnosis}</span>
               </div>
             )}
 
-            {student.riskFlags && student.riskFlags.length > 0 && (
+            {data.riskFlags && data.riskFlags.length > 0 && (
               <div className="flex flex-col gap-3">
                 <span className="text-[12px] font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-70 ml-1">严重风险标记</span>
                 <div className="grid grid-cols-1 gap-2.5">
-                  {student.riskFlags.map((flag: any, idx: number) => (
+                  {data.riskFlags.map((flag: any, idx: number) => (
                     <div key={idx} className="flex items-center justify-between px-4 py-3 rounded-xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)] border-opacity-50 transition-all hover:bg-[var(--md-sys-color-surface-container-low)]">
                       <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">{flag.label}</span>
                       <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold ${flag.value
-                        ? flag.severity === 'high' ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]' : 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                        ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
                         : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)] opacity-40'
                         }`}>
                         {flag.value ? '阳性 (+)' : '阴性 (-)'}
@@ -112,39 +144,35 @@ export function PsychometricsTabContent({ student }: PsychometricsTabContentProp
         </DetailsSection>
       ) : null}
 
-      {student.psychometrics?.scores && student.psychometrics.scores.length > 0 && (
+      {data.scores && data.scores.length > 0 && (
         <div className="flex flex-col gap-2">
           <h4 className="text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] flex items-center gap-2">
             <span className="material-symbols-outlined text-sm">trending_up</span>
-            焦虑分数趋势
+            分数趋势 (GAD-7)
           </h4>
           <div className="w-full h-48 bg-[var(--md-sys-color-surface-container-low)] rounded-2xl p-4 mt-2">
-            <MemoizedLineChart scores={student.psychometrics.scores} />
+            <MemoizedLineChart scores={data.scores} />
           </div>
         </div>
       )}
 
-      {student.psychometrics?.radarData && student.psychometrics.radarData.length > 0 && (
+      {data.radarData && data.radarData.length > 0 && (
         <div className="flex flex-col gap-2">
           <h4 className="text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] flex items-center gap-2">
             <span className="material-symbols-outlined text-sm">hub</span>
             症状分布
           </h4>
           <div className="w-full h-64 flex justify-center mt-2 overflow-visible">
-            <MemoizedRadarChart radarData={student.psychometrics.radarData} />
+            <MemoizedRadarChart radarData={data.radarData} />
           </div>
         </div>
       )}
 
-      <PsychometricTable scores={[
-        { name: 'PHQ-9 (抑郁)', value: student.name === '李娜' ? 21 : 12, max: 27, level: student.name === '李娜' ? '重度' : '中度', date: '5天前' },
-        { name: 'GAD-7 (焦虑)', value: student.name === '李娜' ? 18 : 15, max: 21, level: '重度', date: '5天前' },
-        { name: 'BDI-II (贝克抑郁)', value: 24, max: 63, level: '中度', date: '1个月前' },
-        { name: 'BAI (贝克焦虑)', value: 16, max: 63, level: '轻度', date: '1个月前' },
-        { name: 'PSQI (睡眠质量)', value: student.name === '李娜' ? 17 : 14, max: 21, level: '较差', date: '2周前' },
-        { name: 'ISS (失眠严重程度)', value: 19, max: 28, level: '临床失眠', date: '2周前' },
-        { name: 'ESS (白天嗜睡情况)', value: 11, max: 24, level: '轻度', date: '2周前' }
-      ]} />
+      {data.tests && data.tests.length > 0 ? (
+        <PsychometricTable scores={data.tests} />
+      ) : (
+        <div className="py-8 text-center text-sm text-[var(--md-sys-color-on-surface-variant)] opacity-60">暂无量表数据</div>
+      )}
     </>
   );
 }

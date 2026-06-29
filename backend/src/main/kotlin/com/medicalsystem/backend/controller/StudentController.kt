@@ -5,6 +5,7 @@ import com.medicalsystem.backend.service.StudentService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import com.medicalsystem.backend.dto.PsychometricsSummaryDto
 
 @RestController
 @RequestMapping("/api/students")
@@ -14,6 +15,12 @@ class StudentController(private val studentService: StudentService) {
     fun getAllStudents(): ResponseEntity<List<StudentDto>> {
         val students = studentService.getAllStudents()
         return ResponseEntity.ok(students)
+    }
+
+    @GetMapping("/{id}/psychometrics")
+    fun getPsychometrics(@PathVariable id: Long): ResponseEntity<PsychometricsSummaryDto> {
+        val psychometrics = studentService.getPsychometrics(id)
+        return ResponseEntity.ok(psychometrics)
     }
 
     @GetMapping("/{id}")

@@ -46,4 +46,27 @@ class StudentControllerTest {
         assertEquals("1", response.body?.id)
         assertEquals("John Doe", response.body?.name)
     }
+
+    @Test
+    fun `should return psychometrics summary`() {
+        val summaryDto = com.medicalsystem.backend.dto.PsychometricsSummaryDto(
+            scidDiagnosis = "Major Depression",
+            riskFlags = listOf(
+                com.medicalsystem.backend.dto.RiskFlagDto("自杀意念终身", true),
+                com.medicalsystem.backend.dto.RiskFlagDto("自杀尝试终身", false),
+                com.medicalsystem.backend.dto.RiskFlagDto("自伤行为终身", false)
+            ),
+            scores = emptyList(),
+            radarData = emptyList(),
+            tests = emptyList()
+        )
+        
+        `when`(studentService.getPsychometrics(1L)).thenReturn(summaryDto)
+
+        val response = studentController.getPsychometrics(1L)
+        
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals("Major Depression", response.body?.scidDiagnosis)
+        assertEquals(3, response.body?.riskFlags?.size)
+    }
 }

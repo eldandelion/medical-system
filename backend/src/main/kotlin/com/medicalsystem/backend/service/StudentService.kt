@@ -60,5 +60,63 @@ class StudentService(
         
         return studentMapper.toDto(studentMapper.toModel(savedEntity))
     }
+
+    @Transactional(readOnly = true)
+    fun getPsychometrics(id: Long): com.medicalsystem.backend.dto.PsychometricsSummaryDto {
+        val entity = studentRepository.findById(id)
+            .orElseThrow {
+                logger.error("Student with ID $id not found when fetching psychometrics.")
+                ResourceNotFoundException("Student with ID $id not found")
+            }
+            
+        // Map Risk Flags guaranteeing all 3 exist
+        val existingFlags = entity.riskFlags.associateBy { it.name }
+        val riskFlags = com.medicalsystem.backend.model.RiskFlagName.entries.map { flagName ->
+            val entityFlag = existingFlags[flagName]
+            com.medicalsystem.backend.dto.RiskFlagDto(
+                label = flagName.displayName,
+                value = entityFlag?.status == com.medicalsystem.backend.model.FlagStatus.POSITIVE
+            )
+        }
+        
+        // Map Raw Tests
+        val tests = entity.psychometricTests.sortedByDescending { it.testDate }
+        val testDtos = tests.map { test ->
+            com.medicalsystem.backend.dto.PsychometricTestDto(
+                name = test.testResultName.displayName,
+                value = test.score,
+                max = test.maxScore,
+                level = test.level,
+                date = test.testDate.toString()
+            )
+        }
+        
+        // Extract Trend (GAD-7 as an example)
+        val gad7Tests = tests.filter { it.testResultName == com.medicalsystem.backend.model.TestResultName.GAD_7 }.sortedBy { it.testDate }
+        val scores = gad7Tests.map { test ->
+            com.medicalsystem.backend.dto.ScoreTrendDto(
+                date = test.testDate.toString(),
+                value = test.score
+            )
+        }
+        
+        // Compute Radar Data from latest unique tests
+        val latestTests = tests.groupBy { it.testResultName }.mapValues { it.value.first() }
+        val radarData = latestTests.values.map { test ->
+            com.medicalsystem.backend.dto.RadarDataDto(
+                subject = test.testResultName.displayName.substringBefore(" ("), // E.g. "PHQ-9"
+                A = test.score,
+                fullMark = test.maxScore
+            )
+        }
+        
+        return com.medicalsystem.backend.dto.PsychometricsSummaryDto(
+            scidDiagnosis = entity.scidDiagnosis,
+            riskFlags = riskFlags,
+            scores = scores,
+            radarData = radarData,
+            tests = testDtos
+        )
+    }
 }
 
