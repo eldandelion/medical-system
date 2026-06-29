@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'motion/react';
 import { DetailsSection, DetailItem, MetricCard, ScrollableDetailsLayout } from '../common/DetailsPanel';
 import { PrimaryButton, SecondaryButton } from '../common/Buttons';
@@ -48,22 +49,16 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
   const { isFullScreen } = useDetails();
   const tabs = STUDENT_DETAILS_TABS;
 
-  const [studentData, setStudentData] = React.useState<Student | null>(null);
-
-  React.useEffect(() => {
-    let active = true;
-    if (!initialStudent?.id) return;
-    fetch(`${import.meta.env.BASE_URL}/api/students/${initialStudent.id}`.replace('//api', '/api'))
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch student details');
-        return res.json();
-      })
-      .then(data => {
-        if (active) setStudentData(data);
-      })
-      .catch(err => console.error(err));
-    return () => { active = false; };
-  }, [initialStudent?.id]);
+  const { data: studentData } = useQuery<Student>({
+    queryKey: ['/api/students', initialStudent?.id],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/students/${initialStudent?.id}`.replace('//api', '/api'));
+      if (!res.ok) throw new Error('Failed to fetch student details');
+      return res.json();
+    },
+    enabled: !!initialStudent?.id,
+    initialData: initialStudent
+  });
 
   const student = studentData || initialStudent;
 
