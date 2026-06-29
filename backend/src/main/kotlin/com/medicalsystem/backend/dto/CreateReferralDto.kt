@@ -1,6 +1,6 @@
 package com.medicalsystem.backend.dto
 
-import com.medicalsystem.backend.entity.RiskStatus
+import com.medicalsystem.backend.model.RiskStatus
 
 data class CreateReferralDto(
     val studentId: Long,

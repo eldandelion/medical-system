@@ -1,10 +1,10 @@
 package com.medicalsystem.backend.service
 
 import com.medicalsystem.backend.dto.CreateReferralDto
-import com.medicalsystem.backend.dto.ReferredByDto
 import com.medicalsystem.backend.dto.ReferralDto
 import com.medicalsystem.backend.entity.ReferralEntity
-import com.medicalsystem.backend.entity.ReferralStatus
+import com.medicalsystem.backend.model.ReferralStatus
+import com.medicalsystem.backend.mapper.ReferralMapper
 import com.medicalsystem.backend.repository.ReferralRepository
 import com.medicalsystem.backend.repository.StudentRepository
 import org.springframework.stereotype.Service
@@ -13,16 +13,20 @@ import java.time.LocalDateTime
 @Service
 class ReferralService(
     private val referralRepository: ReferralRepository,
-    private val studentRepository: StudentRepository
+    private val studentRepository: StudentRepository,
+    private val referralMapper: ReferralMapper
 ) {
     fun getAllReferrals(): List<ReferralDto> {
-        return referralRepository.findAll().map { toDto(it) }
+        return referralRepository.findAll()
+            .map { referralMapper.toModel(it) }
+            .map { referralMapper.toDto(it) }
     }
 
     fun getReferralById(id: Long): ReferralDto {
         val entity = referralRepository.findById(id)
             .orElseThrow { IllegalArgumentException("Referral not found") }
-        return toDto(entity)
+        val model = referralMapper.toModel(entity)
+        return referralMapper.toDto(model)
     }
 
     fun createReferral(dto: CreateReferralDto): ReferralDto {
@@ -47,21 +51,8 @@ class ReferralService(
         )
 
         val saved = referralRepository.save(entity)
-        return toDto(saved)
-    }
-
-    private fun toDto(entity: ReferralEntity): ReferralDto {
-        return ReferralDto(
-            id = entity.id.toString(),
-            studentName = entity.student.name,
-            studentNumber = entity.student.studentNumber,
-            type = entity.type,
-            date = entity.createdAt,
-            title = entity.title,
-            description = entity.description,
-            riskLevel = entity.riskLevel,
-            status = entity.status,
-            referredBy = ReferredByDto(entity.referredByName)
-        )
+        val model = referralMapper.toModel(saved)
+        return referralMapper.toDto(model)
     }
 }
+

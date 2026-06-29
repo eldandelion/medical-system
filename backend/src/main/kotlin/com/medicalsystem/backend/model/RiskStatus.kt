@@ -1,4 +1,4 @@
-package com.medicalsystem.backend.entity
+package com.medicalsystem.backend.model
 
 import com.fasterxml.jackson.annotation.JsonValue
 

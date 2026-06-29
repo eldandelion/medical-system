@@ -1,7 +1,7 @@
 package com.medicalsystem.backend.dto
 
 import java.time.LocalDate
-import com.medicalsystem.backend.entity.RiskStatus
+import com.medicalsystem.backend.model.RiskStatus
 
 import com.medicalsystem.backend.model.AcademicYear
 

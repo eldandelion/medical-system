@@ -1,7 +1,7 @@
 package com.medicalsystem.backend.dto
 
-import com.medicalsystem.backend.entity.ReferralStatus
-import com.medicalsystem.backend.entity.RiskStatus
+import com.medicalsystem.backend.model.ReferralStatus
+import com.medicalsystem.backend.model.RiskStatus
 import java.time.LocalDateTime
 
 data class ReferralDto(

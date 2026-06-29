@@ -1,6 +1,8 @@
 package com.medicalsystem.backend.config
 
 import com.medicalsystem.backend.dto.StudentDto
+import com.medicalsystem.backend.model.ReferralStatus
+import com.medicalsystem.backend.model.RiskStatus
 import com.medicalsystem.backend.entity.*
 import com.medicalsystem.backend.repository.*
 import com.medicalsystem.backend.service.StudentService

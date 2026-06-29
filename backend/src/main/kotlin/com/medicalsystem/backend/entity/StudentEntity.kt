@@ -1,6 +1,7 @@
 package com.medicalsystem.backend.entity
 
 import jakarta.persistence.*
+import com.medicalsystem.backend.model.RiskStatus
 
 @Entity
 @Table(name = "students")
