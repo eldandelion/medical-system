@@ -6,6 +6,8 @@ import com.medicalsystem.backend.service.ReferralService
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 
+import jakarta.validation.Valid
+
 @RestController
 @RequestMapping("/api/referrals")
 class ReferralController(
@@ -28,7 +30,7 @@ class ReferralController(
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createReferral(@RequestBody dto: CreateReferralDto): ReferralDto {
+    fun createReferral(@Valid @RequestBody dto: CreateReferralDto): ReferralDto {
         return referralService.createReferral(dto)
     }
 }

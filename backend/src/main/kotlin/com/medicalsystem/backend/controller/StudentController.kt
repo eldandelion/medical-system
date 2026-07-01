@@ -7,35 +7,30 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import com.medicalsystem.backend.dto.PsychometricsSummaryDto
 
+import jakarta.validation.Valid
+
 @RestController
 @RequestMapping("/api/students")
 class StudentController(private val studentService: StudentService) {
 
     @GetMapping
-    fun getAllStudents(): ResponseEntity<List<StudentDto>> {
-        val students = studentService.getAllStudents()
-        return ResponseEntity.ok(students)
+    fun getAllStudents(): List<StudentDto> {
+        return studentService.getAllStudents()
     }
 
     @GetMapping("/{id}/psychometrics")
-    fun getPsychometrics(@PathVariable id: Long): ResponseEntity<PsychometricsSummaryDto> {
-        val psychometrics = studentService.getPsychometrics(id)
-        return ResponseEntity.ok(psychometrics)
+    fun getPsychometrics(@PathVariable id: Long): PsychometricsSummaryDto {
+        return studentService.getPsychometrics(id)
     }
 
     @GetMapping("/{id}")
-    fun getStudentById(@PathVariable id: Long): ResponseEntity<StudentDto> {
-        val student = studentService.getStudentById(id)
-        return if (student != null) {
-            ResponseEntity.ok(student)
-        } else {
-            ResponseEntity.notFound().build()
-        }
+    fun getStudentById(@PathVariable id: Long): StudentDto {
+        return studentService.getStudentById(id)
     }
 
     @PostMapping
-    fun createStudent(@RequestBody dto: StudentDto): ResponseEntity<StudentDto> {
-        val createdStudent = studentService.createStudent(dto)
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdStudent)
+    @ResponseStatus(HttpStatus.CREATED)
+    fun createStudent(@Valid @RequestBody dto: StudentDto): StudentDto {
+        return studentService.createStudent(dto)
     }
 }
