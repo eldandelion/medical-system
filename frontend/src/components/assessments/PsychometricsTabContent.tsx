@@ -77,37 +77,26 @@ const MemoizedRadarChart = React.memo(({ radarData }: { radarData: any[] }) => (
   </RadarChart>
 ));
 
-export function PsychometricsTabContent({ student }: PsychometricsTabContentProps) {
-  const [data, setData] = React.useState<any>(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
+import { useQuery } from '@tanstack/react-query';
 
-  React.useEffect(() => {
-    if (!student?.id) return;
-    
-    setLoading(true);
-    fetch(`${import.meta.env.BASE_URL}/api/students/${student.id}/psychometrics`.replace('//api', '/api'))
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch psychometrics data');
-        return res.json();
-      })
-      .then(json => {
-        setData(json);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setError('无法加载量表数据');
-        setLoading(false);
-      });
-  }, [student?.id]);
+export function PsychometricsTabContent({ student }: PsychometricsTabContentProps) {
+  const { data, isLoading: loading, error } = useQuery({
+    queryKey: ['psychometrics', student?.id],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/students/${student?.id}/psychometrics`.replace('//api', '/api'));
+      if (!res.ok) throw new Error('Failed to fetch psychometrics data');
+      return res.json();
+    },
+    enabled: !!student?.id,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
 
   if (loading) {
     return <div className="py-8 text-center text-sm text-[var(--md-sys-color-on-surface-variant)] opacity-60">加载中...</div>;
   }
 
   if (error || !data) {
-    return <div className="py-8 text-center text-sm text-[var(--md-sys-color-error)]">{error || '无数据'}</div>;
+    return <div className="py-8 text-center text-sm text-[var(--md-sys-color-error)]">无法加载量表数据</div>;
   }
 
   return (

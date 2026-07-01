@@ -44,6 +44,13 @@ class StudentService(
             throw ConflictException("Student with number ${dto.studentNumber} already exists")
         }
 
+        dto.demographics?.email?.let { email ->
+            val emailRegex = "^[A-Za-z0-9+_.-]+@(.+)\$".toRegex()
+            if (!emailRegex.matches(email)) {
+                throw ValidationException("Invalid email format")
+            }
+        }
+
         val major = majorRepository.findById(dto.majorId)
             .orElseThrow { ResourceNotFoundException("Major with ID ${dto.majorId} not found") }
 
@@ -54,6 +61,8 @@ class StudentService(
             enrollmentDate = dto.enrollmentDate,
             riskStatus = dto.riskLevel ?: RiskStatus.LOW
         )
+        
+        // Note: demographics are not mapped here yet as dto to entity mapper for student creation needs a complete model
         
         val savedEntity = studentRepository.save(entity)
         logger.info("Successfully created student with ID: ${savedEntity.id} and number: ${savedEntity.studentNumber}")

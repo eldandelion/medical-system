@@ -135,12 +135,22 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
                 transition={{ duration: 0.2 }}
                 className="flex flex-col gap-1"
               >
-                {/* 基础特征 */}
-                <DetailsSection title="基本特征" className="border-t-0 pt-0 mt-0">
+                {/* 基本特征 */}
+                <DetailsSection title="基本特征" className="border-t-0">
                   <div className={`grid grid-cols-4 gap-4 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: 48 }}>
-                    <MetricCard label="年龄" value={`${student.demographics?.age?.toString() || 'N/A'} 岁`} icon="cake" />
-                    <MetricCard label="性别" value={student.demographics?.gender || 'N/A'} icon="wc" />
-                    <MetricCard label="民族" value={student.demographics?.ethnicity || 'N/A'} icon="diversity_3" className="col-span-2" />
+                    <MetricCard 
+                      label="性别" 
+                      value={
+                        student.demographics?.gender === 'MALE' ? '男' :
+                        student.demographics?.gender === 'FEMALE' ? '女' :
+                        student.demographics?.gender === 'OTHER' ? '其他' :
+                        student.demographics?.gender || 'N/A'
+                      } 
+                      icon="wc" 
+                      className="col-span-1" 
+                    />
+                    <MetricCard label="年龄" value={student.demographics?.age?.toString() || 'N/A'} icon="cake" className="col-span-1" />
+                    <MetricCard label="民族" value={student.demographics?.ethnicity || 'N/A'} icon="public" className="col-span-2" />
                     <MetricCard label="身份证号" value={student.demographics?.idCardNumber || 'N/A'} icon="badge" className="col-span-4" copyable={true} />
                   </div>
                 </DetailsSection>

@@ -3,7 +3,7 @@ package com.medicalsystem.backend.model
 import java.time.LocalDate
 
 data class Demographics(
-    val gender: String?,
+    val gender: Gender?,
     val dateOfBirth: LocalDate?,
     val ethnicity: String?,
     val idCardNumber: String?,
