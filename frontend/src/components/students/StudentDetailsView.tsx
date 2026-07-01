@@ -135,79 +135,32 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
                 transition={{ duration: 0.2 }}
                 className="flex flex-col gap-1"
               >
-                <DetailsSection title="学生基本信息" className="border-t-0 pt-0 mt-0">
-                  <div className="flex flex-col gap-6">
-                    {/* Unified Demographic Grid */}
-                    <div 
-                      className={`grid grid-cols-4 gap-4 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`}
-                      {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: 48 }}
-                    >
-                      <MetricCard
-                        label="年龄"
-                        value={`${student.demographics?.age?.toString() || 'N/A'} 岁`}
-                        icon="cake"
-                      />
-                      <MetricCard
-                        label="性别"
-                        value={student.demographics?.gender || 'N/A'}
-                        icon="wc"
-                      />
-                      <MetricCard
-                        label="民族"
-                        value={student.demographics?.ethnicity || 'N/A'}
-                        icon="diversity_3"
-                      />
-                      <MetricCard
-                        label="年级"
-                        value={student.year || 'N/A'}
-                        icon="school"
-                      />
-                      
-                      <MetricCard 
-                        label="身份证号" 
-                        value={student.demographics?.idCardNumber || 'N/A'} 
-                        icon="badge" 
-                        className="col-span-2" 
-                      />
-                      <MetricCard 
-                        label="联系电话" 
-                        value={student.demographics?.contactNumber || 'N/A'} 
-                        icon="phone_iphone" 
-                        className="col-span-2" 
-                      />
-                      
-                      <MetricCard 
-                        label="电子邮箱" 
-                        value={student.demographics?.email || 'N/A'} 
-                        icon="mail" 
-                        className="col-span-2" 
-                      />
-                      <MetricCard 
-                        label="学校" 
-                        value={student.demographics?.school || 'N/A'} 
-                        icon="account_balance" 
-                        className="col-span-2" 
-                      />
-                      
-                      <MetricCard 
-                        label="家庭住址" 
-                        value={student.demographics?.homeAddress || 'N/A'} 
-                        icon="home_pin" 
-                        className="col-span-4" 
-                      />
-                      <MetricCard 
-                        label="紧急联系人" 
-                        value={`${student.demographics?.emergencyContactName || 'N/A'} (${student.demographics?.emergencyContactPhone || 'N/A'})`} 
-                        icon="contact_emergency" 
-                        className="col-span-4" 
-                      />
-                      <MetricCard 
-                        label="就读专业" 
-                        value={student.major || 'N/A'} 
-                        icon="menu_book" 
-                        className="col-span-4" 
-                      />
-                    </div>
+                {/* 基础特征 */}
+                <DetailsSection title="基本特征" className="border-t-0 pt-0 mt-0">
+                  <div className={`grid grid-cols-4 gap-4 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: 48 }}>
+                    <MetricCard label="年龄" value={`${student.demographics?.age?.toString() || 'N/A'} 岁`} icon="cake" />
+                    <MetricCard label="性别" value={student.demographics?.gender || 'N/A'} icon="wc" />
+                    <MetricCard label="民族" value={student.demographics?.ethnicity || 'N/A'} icon="diversity_3" className="col-span-2" />
+                    <MetricCard label="身份证号" value={student.demographics?.idCardNumber || 'N/A'} icon="badge" className="col-span-4" copyable={true} />
+                  </div>
+                </DetailsSection>
+
+                {/* 学籍信息 */}
+                <DetailsSection title="学籍信息" className="border-t-0">
+                  <div className={`grid grid-cols-4 gap-4 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: 48 }}>
+                    <MetricCard label="年级" value={student.year || 'N/A'} icon="school" className="col-span-2" />
+                    <MetricCard label="学校" value={student.demographics?.school || 'N/A'} icon="account_balance" className="col-span-2" />
+                    <MetricCard label="就读专业" value={student.major || 'N/A'} icon="menu_book" className="col-span-4" />
+                  </div>
+                </DetailsSection>
+
+                {/* 联系方式 */}
+                <DetailsSection title="联系方式" className="border-t-0">
+                  <div className={`grid grid-cols-4 gap-4 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: 48 }}>
+                    <MetricCard label="联系电话" value={student.demographics?.contactNumber || 'N/A'} icon="phone_iphone" className="col-span-2" copyable={true} />
+                    <MetricCard label="电子邮箱" value={student.demographics?.email || 'N/A'} icon="mail" className="col-span-2" copyable={true} />
+                    <MetricCard label="家庭住址" value={student.demographics?.homeAddress || 'N/A'} icon="home_pin" className="col-span-4" copyable={true} />
+                    <MetricCard label="紧急联系人" value={`${student.demographics?.emergencyContactName || 'N/A'} (${student.demographics?.emergencyContactPhone || 'N/A'})`} icon="contact_emergency" className="col-span-4" copyable={true} copyValue={student.demographics?.emergencyContactPhone} />
                   </div>
                 </DetailsSection>
 

@@ -127,6 +127,8 @@ export function DetailsSection({ title, children, icon, className = "" }: { titl
   );
 }
 
+import { Snackbar } from './Snackbar';
+
 /**
  * Helper component for structured 3-column demographic or metric card items
  */
@@ -136,7 +138,9 @@ export function MetricCard({
   icon,
   className = "",
   labelClassName = "text-[var(--md-sys-color-on-surface-variant)] opacity-85",
-  badgeClassName = "bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-container)]"
+  badgeClassName = "bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-container)]",
+  copyable = false,
+  copyValue,
 }: {
   label: string;
   value: React.ReactNode;
@@ -144,22 +148,52 @@ export function MetricCard({
   className?: string;
   labelClassName?: string;
   badgeClassName?: string;
+  copyable?: boolean;
+  copyValue?: string;
 }) {
+  const [snackbarOpen, setSnackbarOpen] = React.useState(false);
+  const textToCopy = copyValue || (typeof value === 'string' ? value : undefined);
+  const showCopyButton = copyable && textToCopy;
+
+  const handleCopy = () => {
+    if (textToCopy) {
+      navigator.clipboard.writeText(textToCopy);
+      setSnackbarOpen(true);
+    }
+  };
+
   return (
     <div className={`py-4 px-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3 ${className}`}>
       <div className={`flex items-center gap-2 ${labelClassName}`}>
         <span className="material-symbols-outlined text-[20px]">{icon}</span>
         <span className="text-[14px] font-bold whitespace-nowrap">{label}</span>
       </div>
-      <div className="flex">
-        {typeof value === 'string' ? (
-          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold whitespace-nowrap ${badgeClassName}`}>
-            {value}
-          </span>
-        ) : (
-          value
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-1 overflow-hidden">
+          {typeof value === 'string' ? (
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold whitespace-nowrap ${badgeClassName}`}>
+              {value}
+            </span>
+          ) : (
+            value
+          )}
+        </div>
+        {showCopyButton && (
+          <button
+            onClick={handleCopy}
+            className="p-1 rounded-full hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)] transition-colors flex items-center justify-center shrink-0"
+            title="复制"
+          >
+            <span className="material-symbols-outlined text-[14px]">content_copy</span>
+          </button>
         )}
       </div>
+      <Snackbar 
+        open={snackbarOpen} 
+        message={`${label} 已复制到剪贴板`} 
+        onClose={() => setSnackbarOpen(false)} 
+        duration={3000} 
+      />
     </div>
   );
 }
