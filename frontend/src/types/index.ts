@@ -30,7 +30,7 @@ export interface Referral {
   id: string;
   studentName: string;
   studentNumber: string;
-  type: string;
+  type: '初次转诊' | '复诊转诊' | '紧急转诊' | string;
   date: string;
   title: string;
   description: string;
@@ -56,14 +56,6 @@ export interface Referral {
       scidDiagnosis: string;
       fullDescription: string;
     };
-    destination: {
-      hospital: string;
-      department: string;
-      doctor: string;
-      admin: string;
-      transferDate: string;
-      appointmentTime?: string;
-    };
     risk: {
       ideation: boolean;
       attempt: boolean;
@@ -85,8 +77,19 @@ export interface Referral {
       }[];
     };
     rejectedBy?: string[];
-    steps?: ReferralStep[];
   };
+}
+
+export interface ReferralTrackingData {
+  destination?: {
+    hospital: string;
+    department: string;
+    doctor: string;
+    admin: string;
+    transferDate: string;
+    appointmentTime?: string;
+  };
+  steps?: ReferralStep[];
 }
 
 export interface Student {

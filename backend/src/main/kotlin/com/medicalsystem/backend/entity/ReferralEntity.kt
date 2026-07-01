@@ -3,6 +3,7 @@ package com.medicalsystem.backend.entity
 import jakarta.persistence.*
 import java.time.LocalDateTime
 import com.medicalsystem.backend.model.ReferralStatus
+import com.medicalsystem.backend.model.ReferralType
 import com.medicalsystem.backend.model.RiskStatus
 
 @Entity
@@ -16,8 +17,9 @@ class ReferralEntity(
     @JoinColumn(name = "student_id", nullable = false)
     var student: StudentEntity,
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    var type: String,
+    var type: ReferralType,
 
     @Column(nullable = false)
     var title: String,
@@ -37,5 +39,11 @@ class ReferralEntity(
     var referredByName: String,
 
     @Column(nullable = false)
-    var createdAt: LocalDateTime = LocalDateTime.now()
+    var createdAt: LocalDateTime = LocalDateTime.now(),
+
+    @Embedded
+    var destination: ReferralDestination? = null,
+
+    @OneToMany(mappedBy = "referral", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var steps: MutableList<ReferralStepEntity> = mutableListOf()
 )

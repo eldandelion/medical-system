@@ -212,7 +212,7 @@ function ReferralDetailsPresenter({ referral, extendedData, userRole, hideHeader
         )}
 
         {activeTab === 'tracker' && (
-          <ReferralTrackerTab extendedData={extendedData} />
+          <ReferralTrackerTab referralId={referral.id} />
         )}
 
 

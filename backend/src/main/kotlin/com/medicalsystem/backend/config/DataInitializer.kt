@@ -1,10 +1,8 @@
 package com.medicalsystem.backend.config
 
 import com.medicalsystem.backend.dto.StudentDto
-import com.medicalsystem.backend.model.ReferralStatus
-import com.medicalsystem.backend.model.RiskStatus
-import com.medicalsystem.backend.model.Gender
 import com.medicalsystem.backend.entity.*
+import com.medicalsystem.backend.model.*
 import com.medicalsystem.backend.repository.*
 import com.medicalsystem.backend.service.StudentService
 import org.springframework.boot.CommandLineRunner
@@ -24,7 +22,11 @@ class DataInitializer {
         majorRepository: MajorRepository,
         referralRepository: ReferralRepository,
         ethnicityRepository: EthnicityRepository,
-        schoolRepository: SchoolRepository
+        schoolRepository: SchoolRepository,
+        hospitalRepository: HospitalRepository,
+        departmentRepository: DepartmentRepository,
+        doctorRepository: DoctorRepository,
+        adminRepository: AdminRepository
     ) = CommandLineRunner {
         referralRepository.deleteAll()
         studentRepository.deleteAll()
@@ -32,6 +34,10 @@ class DataInitializer {
         collegeRepository.deleteAll()
         ethnicityRepository.deleteAll()
         schoolRepository.deleteAll()
+        hospitalRepository.deleteAll()
+        departmentRepository.deleteAll()
+        doctorRepository.deleteAll()
+        adminRepository.deleteAll()
 
         val medCollege = collegeRepository.save(CollegeEntity(name = "医学院"))
         val csCollege = collegeRepository.save(CollegeEntity(name = "计算机学院"))
@@ -79,19 +85,74 @@ class DataInitializer {
         s3.psychometricTests.add(pt6)
         studentRepository.save(s3)
 
+        val hosp = hospitalRepository.save(HospitalEntity(name = "市精神卫生中心", address = "市中心大道1号", contactPhone = "021-12345678"))
+        val dept = departmentRepository.save(DepartmentEntity(name = "临床心理科", hospital = hosp))
+        val doc = doctorRepository.save(DoctorEntity(name = "王建国", department = dept, phone = "13912345678"))
+        val admin = adminRepository.save(AdminEntity(name = "张老师", role = "分诊管理员"))
+
+        val dest = ReferralDestination(
+            hospital = hosp,
+            department = dept,
+            doctor = doc,
+            admin = admin,
+            transferDate = LocalDate.now().plusDays(2),
+            appointmentTime = LocalDateTime.now().plusDays(2).withHour(10).withMinute(0)
+        )
+
         val ref1 = ReferralEntity(
             student = s1,
-            type = "初次转诊",
+            type = ReferralType.INITIAL,
             title = "期中考试后急性焦虑",
             description = "期中考试后出现急性恐慌发作和睡眠剥夺",
             riskLevel = RiskStatus.HIGH,
             status = ReferralStatus.AWAITING_FEEDBACK_APPROVAL,
             referredByName = "艾米丽·沃森",
-            createdAt = LocalDateTime.now().minusDays(1)
+            createdAt = LocalDateTime.now().minusDays(1),
+            destination = dest
         )
+        
+        val step1 = ReferralStepEntity(
+            referral = ref1,
+            type = ReferralStepType.INITIATION,
+            title = "发起转诊",
+            subtitle = "由辅导员提交",
+            time = LocalDateTime.now().minusDays(1),
+            status = ReferralStepStatus.COMPLETED,
+            actor = admin
+        )
+        val step2 = ReferralStepEntity(
+            referral = ref1,
+            type = ReferralStepType.REVIEW,
+            title = "转诊审核",
+            subtitle = "等待院级审批",
+            time = LocalDateTime.now().minusHours(20),
+            status = ReferralStepStatus.COMPLETED,
+            actor = admin
+        )
+        val step3 = ReferralStepEntity(
+            referral = ref1,
+            type = ReferralStepType.TRIAGE,
+            title = "分诊评估",
+            subtitle = "分诊至市精神卫生中心",
+            time = LocalDateTime.now().minusHours(18),
+            status = ReferralStepStatus.COMPLETED,
+            actor = admin
+        )
+        val step4 = ReferralStepEntity(
+            referral = ref1,
+            type = ReferralStepType.SCHEDULING,
+            title = "预约安排",
+            subtitle = "等待预约确认",
+            time = LocalDateTime.now().minusHours(5),
+            status = ReferralStepStatus.ACTIVE,
+            actor = admin
+        )
+        
+        ref1.steps.addAll(listOf(step1, step2, step3, step4))
+
         val ref2 = ReferralEntity(
             student = s2,
-            type = "随访",
+            type = ReferralType.FOLLOW_UP,
             title = "每周治疗随访",
             description = "情绪持续低落",
             riskLevel = RiskStatus.MEDIUM,

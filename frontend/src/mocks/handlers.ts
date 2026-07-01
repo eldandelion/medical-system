@@ -95,6 +95,37 @@ export const handlers = [
     });
   }),
 
+  http.get(api('/api/referrals/:id/tracking'), async ({ request, params }) => {
+    const { id } = params;
+    await delay(MOCK_DELAY_MS); // Simulate network delay for skeleton loader
+    
+    // Attempt to fetch from real backend first
+    try {
+      const { bypass } = await import('msw');
+      const res = await fetch(bypass(request));
+      if (res.ok) {
+        return HttpResponse.json(await res.json());
+      }
+    } catch (e) {
+      console.warn("Could not fetch real tracking data, falling back to mock");
+    }
+
+    const referral = mockReferralsDb.find((r) => r.id === id);
+    if (!referral) {
+      // Return dummy tracking data if not found
+      const fallback = mockReferralsDb[0].extendedData;
+      return HttpResponse.json({
+        destination: fallback?.destination,
+        steps: fallback?.steps
+      });
+    }
+
+    return HttpResponse.json({
+      destination: referral.extendedData?.destination,
+      steps: referral.extendedData?.steps
+    });
+  }),
+
 
   http.post(api('/api/referrals/:id/recall'), async ({ request, params }) => {
     const { id } = params;

@@ -21,6 +21,11 @@ class ReferralController(
         return referralService.getReferralById(id)
     }
 
+    @GetMapping("/{id}/tracking")
+    fun getReferralTracking(@PathVariable id: Long): com.medicalsystem.backend.dto.ReferralTrackingDto {
+        return referralService.getReferralTracking(id)
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun createReferral(@RequestBody dto: CreateReferralDto): ReferralDto {

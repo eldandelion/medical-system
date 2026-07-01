@@ -6,7 +6,7 @@ data class Referral(
     val id: Long?,
     val studentName: String,
     val studentNumber: String,
-    val type: String,
+    val type: ReferralType,
     val date: LocalDateTime,
     val title: String,
     val description: String,
