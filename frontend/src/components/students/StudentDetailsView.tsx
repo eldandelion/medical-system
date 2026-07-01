@@ -148,9 +148,10 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
                 {/* 学籍信息 */}
                 <DetailsSection title="学籍信息" className="border-t-0">
                   <div className={`grid grid-cols-4 gap-4 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: 48 }}>
+                    <MetricCard label="学号" value={student.studentNumber || 'N/A'} icon="numbers" className="col-span-2" copyable={true} />
                     <MetricCard label="年级" value={student.year || 'N/A'} icon="school" className="col-span-2" />
                     <MetricCard label="学校" value={student.demographics?.school || 'N/A'} icon="account_balance" className="col-span-2" />
-                    <MetricCard label="就读专业" value={student.major || 'N/A'} icon="menu_book" className="col-span-4" />
+                    <MetricCard label="就读专业" value={student.major || 'N/A'} icon="menu_book" className="col-span-2" />
                   </div>
                 </DetailsSection>
 
