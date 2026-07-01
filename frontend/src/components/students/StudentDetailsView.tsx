@@ -6,6 +6,7 @@ import { PrimaryButton, SecondaryButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
 import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS } from '../../config/styleConstants';
 import { useCreationOverlay } from '../../contexts/CreationContext';
+import { LAYOUT_CONSTANTS } from '../../config/layoutConstants';
 import { useDetails } from '../../contexts/DetailsContext';
 import { PrimaryTabs } from '../common/Tabs';
 import { PsychometricsTabContent } from '../assessments/PsychometricsTabContent';
@@ -136,8 +137,11 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
               >
                 <DetailsSection title="学生基本信息" className="border-t-0 pt-0 mt-0">
                   <div className="flex flex-col gap-6">
-                    {/* 4-Column Demographic Grid */}
-                    <div className="grid grid-cols-4 gap-4">
+                    {/* Unified Demographic Grid */}
+                    <div 
+                      className={`grid grid-cols-4 gap-4 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`}
+                      {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: 48 }}
+                    >
                       <MetricCard
                         label="年龄"
                         value={`${student.demographics?.age?.toString() || 'N/A'} 岁`}
@@ -158,29 +162,51 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
                         value={student.year || 'N/A'}
                         icon="school"
                       />
-                    </div>
-
-                    {/* Detailed Info List */}
-                    <div className="flex flex-col gap-0 border border-[var(--md-sys-color-outline-variant)] border-opacity-50 rounded-[24px] overflow-hidden bg-[var(--md-sys-color-surface-container-lowest)]">
-                      <DetailItem icon="badge" label="身份证号" value={student.demographics?.idCardNumber || 'N/A'} />
-                      <DetailItem icon="phone_iphone" label="联系电话" value={student.demographics?.contactNumber || 'N/A'} />
-                      <DetailItem icon="mail" label="电子邮箱" value={student.demographics?.email || 'N/A'} />
-                      <DetailItem icon="home_pin" label="家庭住址" value={student.demographics?.homeAddress || 'N/A'} />
-                      <DetailItem icon="account_balance" label="学校" value={student.demographics?.school || 'N/A'} />
-                      <DetailItem icon="contact_emergency" label="紧急联系人" value={`${student.demographics?.emergencyContactName || 'N/A'} (${student.demographics?.emergencyContactPhone || 'N/A'})`} />
-                    </div>
-
-                    {/* 就读专业 Card */}
-                    <div className="p-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex items-center justify-between animate-in fade-in slide-in-from-bottom-2 duration-300">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-secondary-container)] bg-opacity-20 text-[var(--md-sys-color-secondary)] flex items-center justify-center shrink-0">
-                          <span className="material-symbols-outlined text-[20px] font-bold">menu_book</span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-70 uppercase tracking-tight">就读专业</span>
-                          <span className="text-[15px] font-medium leading-tight mt-0.5">{student.major || 'N/A'}</span>
-                        </div>
-                      </div>
+                      
+                      <MetricCard 
+                        label="身份证号" 
+                        value={student.demographics?.idCardNumber || 'N/A'} 
+                        icon="badge" 
+                        className="col-span-2" 
+                      />
+                      <MetricCard 
+                        label="联系电话" 
+                        value={student.demographics?.contactNumber || 'N/A'} 
+                        icon="phone_iphone" 
+                        className="col-span-2" 
+                      />
+                      
+                      <MetricCard 
+                        label="电子邮箱" 
+                        value={student.demographics?.email || 'N/A'} 
+                        icon="mail" 
+                        className="col-span-2" 
+                      />
+                      <MetricCard 
+                        label="学校" 
+                        value={student.demographics?.school || 'N/A'} 
+                        icon="account_balance" 
+                        className="col-span-2" 
+                      />
+                      
+                      <MetricCard 
+                        label="家庭住址" 
+                        value={student.demographics?.homeAddress || 'N/A'} 
+                        icon="home_pin" 
+                        className="col-span-4" 
+                      />
+                      <MetricCard 
+                        label="紧急联系人" 
+                        value={`${student.demographics?.emergencyContactName || 'N/A'} (${student.demographics?.emergencyContactPhone || 'N/A'})`} 
+                        icon="contact_emergency" 
+                        className="col-span-4" 
+                      />
+                      <MetricCard 
+                        label="就读专业" 
+                        value={student.major || 'N/A'} 
+                        icon="menu_book" 
+                        className="col-span-4" 
+                      />
                     </div>
                   </div>
                 </DetailsSection>
