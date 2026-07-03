@@ -18,16 +18,16 @@ class DataInitializer {
     @Bean
     fun initData(
         studentService: StudentService,
-        studentRepository: StudentRepository,
-        collegeRepository: CollegeRepository,
-        majorRepository: MajorRepository,
+        userRepository: com.medicalsystem.backend.repository.UserJpaRepository,
+        collegeRepository: com.medicalsystem.backend.repository.CollegeJpaRepository,
+        majorRepository: com.medicalsystem.backend.repository.MajorJpaRepository,
+        studentRepository: com.medicalsystem.backend.repository.StudentJpaRepository,
+        ethnicityRepository: com.medicalsystem.backend.repository.EthnicityJpaRepository,
+        schoolRepository: com.medicalsystem.backend.repository.SchoolJpaRepository,
         referralRepository: ReferralJpaRepository,
-        ethnicityRepository: EthnicityRepository,
-        schoolRepository: SchoolRepository,
         hospitalRepository: HospitalRepository,
         departmentRepository: DepartmentRepository,
         doctorRepository: DoctorRepository,
-        userRepository: UserJpaRepository,
         studentHealthProfileRepository: StudentHealthProfileJpaRepository
     ) = CommandLineRunner {
         referralRepository.deleteAll()

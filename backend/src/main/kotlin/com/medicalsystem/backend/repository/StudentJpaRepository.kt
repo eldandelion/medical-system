@@ -1,0 +1,12 @@
+package com.medicalsystem.backend.repository
+
+import com.medicalsystem.backend.entity.StudentEntity
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
+
+@Repository
+interface StudentJpaRepository : JpaRepository<StudentEntity, Long> {
+    fun existsByStudentNumber(studentNumber: String): Boolean
+    fun findByStudentNumber(studentNumber: String): StudentEntity?
+    fun findByMajorCollegeId(collegeId: Long): List<StudentEntity>
+}

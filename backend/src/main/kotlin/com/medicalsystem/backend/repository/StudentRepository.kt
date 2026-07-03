@@ -1,12 +1,13 @@
 package com.medicalsystem.backend.repository
 
-import com.medicalsystem.backend.entity.StudentEntity
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
+import com.medicalsystem.backend.model.Student
+import java.util.Optional
 
-@Repository
-interface StudentRepository : JpaRepository<StudentEntity, Long> {
+interface StudentRepository {
+    fun findAll(): List<Student>
+    fun findById(id: Long): Optional<Student>
     fun existsByStudentNumber(studentNumber: String): Boolean
-    fun findByStudentNumber(studentNumber: String): StudentEntity?
-    fun findByMajorCollegeId(collegeId: Long): List<StudentEntity>
+    fun findByStudentNumber(studentNumber: String): Student?
+    fun findByMajorCollegeId(collegeId: Long): List<Student>
+    fun save(student: Student): Student
 }

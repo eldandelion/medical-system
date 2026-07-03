@@ -18,8 +18,8 @@ import com.medicalsystem.backend.repository.StudentHealthProfileRepository
 class StudentMapper(
     private val majorMapper: MajorMapper,
     private val academicYearCalculator: AcademicYearCalculator,
-    private val ethnicityRepository: EthnicityRepository,
-    private val schoolRepository: SchoolRepository,
+    private val ethnicityRepository: com.medicalsystem.backend.repository.EthnicityJpaRepository,
+    private val schoolRepository: com.medicalsystem.backend.repository.SchoolJpaRepository,
     private val healthProfileRepository: StudentHealthProfileRepository
 ) {
     fun toModel(entity: StudentEntity): Student {

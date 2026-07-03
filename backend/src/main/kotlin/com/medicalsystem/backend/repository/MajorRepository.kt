@@ -1,10 +1,10 @@
 package com.medicalsystem.backend.repository
 
-import com.medicalsystem.backend.entity.MajorEntity
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
+import com.medicalsystem.backend.model.Major
+import java.util.Optional
 
-@Repository
-interface MajorRepository : JpaRepository<MajorEntity, Long> {
-    fun findByName(name: String): MajorEntity?
+interface MajorRepository {
+    fun findAll(): List<Major>
+    fun findById(id: Long): Optional<Major>
+    fun findByName(name: String): Major?
 }

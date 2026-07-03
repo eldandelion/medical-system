@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component
 
 @Component
 class UserMapper(
-    private val collegeRepository: CollegeRepository,
-    private val departmentRepository: DepartmentRepository
+    private val collegeRepository: com.medicalsystem.backend.repository.CollegeJpaRepository,
+    private val departmentRepository: com.medicalsystem.backend.repository.DepartmentRepository
 ) {
     fun toModel(entity: UserEntity): User {
         return when (entity) {

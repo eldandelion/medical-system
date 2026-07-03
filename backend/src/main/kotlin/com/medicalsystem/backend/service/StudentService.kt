@@ -33,14 +33,13 @@ class StudentService(
         }
         
         return students
-            .map { studentMapper.toModel(it) }
             .map { studentMapper.toDto(it) }
     }
 
     fun getStudentById(id: Long): StudentDto {
-        val entity = studentRepository.findById(id)
+        val model = studentRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("Student with ID $id not found") }
-        return studentMapper.toDto(studentMapper.toModel(entity))
+        return studentMapper.toDto(model)
     }
 
     @Transactional
@@ -63,28 +62,29 @@ class StudentService(
         val major = majorRepository.findById(dto.majorId)
             .orElseThrow { ResourceNotFoundException("Major with ID ${dto.majorId} not found") }
 
-        val entity = StudentEntity(
+        val model = com.medicalsystem.backend.model.Student(
+            id = 0,
             studentNumber = dto.studentNumber,
             name = dto.name,
             major = major,
-            enrollmentDate = dto.enrollmentDate
+            enrollmentDate = dto.enrollmentDate,
+            riskStatus = dto.riskLevel ?: RiskStatus.LOW,
+            demographics = null
         )
         
-        // Note: demographics are not mapped here yet as dto to entity mapper for student creation needs a complete model
-        
-        val savedEntity = studentRepository.save(entity)
+        val savedModel = studentRepository.save(model)
         
         healthProfileRepository.save(com.medicalsystem.backend.model.StudentHealthProfile(
             id = 0,
-            studentId = savedEntity.id,
+            studentId = savedModel.id,
             riskStatus = dto.riskLevel ?: RiskStatus.LOW,
             scidDiagnosis = null,
             riskFlags = mutableListOf(),
             psychometricTests = mutableListOf()
         ))
-        logger.info("Successfully created student with ID: ${savedEntity.id} and number: ${savedEntity.studentNumber}")
+        logger.info("Successfully created student with ID: ${savedModel.id} and number: ${savedModel.studentNumber}")
         
-        return studentMapper.toDto(studentMapper.toModel(savedEntity))
+        return studentMapper.toDto(savedModel)
     }
 
     @Transactional(readOnly = true)

@@ -1,9 +1,10 @@
 package com.medicalsystem.backend.repository
 
-import com.medicalsystem.backend.entity.SchoolEntity
-import org.springframework.data.jpa.repository.JpaRepository
+import com.medicalsystem.backend.model.School
 import java.util.Optional
 
-interface SchoolRepository : JpaRepository<SchoolEntity, Long> {
-    fun findByName(name: String): Optional<SchoolEntity>
+interface SchoolRepository {
+    fun findAll(): List<School>
+    fun findById(id: Long): Optional<School>
+    fun findByName(name: String): Optional<School>
 }
