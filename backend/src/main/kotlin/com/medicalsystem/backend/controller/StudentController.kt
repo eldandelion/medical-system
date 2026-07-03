@@ -14,8 +14,8 @@ import jakarta.validation.Valid
 class StudentController(private val studentService: StudentService) {
 
     @GetMapping
-    fun getAllStudents(): List<StudentDto> {
-        return studentService.getAllStudents()
+    fun getAllStudents(@RequestHeader(value = "Authorization", required = false) token: String?): List<StudentDto> {
+        return studentService.getAllStudents(token)
     }
 
     @GetMapping("/{id}/psychometrics")

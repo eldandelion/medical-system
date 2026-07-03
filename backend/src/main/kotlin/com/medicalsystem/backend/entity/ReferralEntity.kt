@@ -35,8 +35,9 @@ class ReferralEntity(
     @Column(nullable = false)
     var status: ReferralStatus,
 
-    @Column(nullable = false)
-    var referredByName: String,
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "referred_by_id", nullable = false)
+    var referredBy: UserEntity,
 
     @Column(nullable = false)
     var createdAt: LocalDateTime = LocalDateTime.now(),
@@ -44,11 +45,26 @@ class ReferralEntity(
     @Embedded
     var destination: ReferralDestination? = null,
 
+    @ElementCollection
+    @CollectionTable(name = "referral_clinical_status", joinColumns = [JoinColumn(name = "referral_id")])
+    @Enumerated(EnumType.STRING)
+    @Column(name = "clinical_status")
+    var clinicalStatus: MutableList<com.medicalsystem.backend.model.ClinicalStatusType> = mutableListOf(),
+
+    @ElementCollection
+    @CollectionTable(name = "referral_severe_risk_factors", joinColumns = [JoinColumn(name = "referral_id")])
+    @Enumerated(EnumType.STRING)
+    @Column(name = "risk_flag_name")
+    var severeRiskFactors: MutableList<com.medicalsystem.backend.model.RiskFlagName> = mutableListOf(),
+
+    @OneToMany(mappedBy = "referral", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var attachments: MutableList<AttachmentEntity> = mutableListOf(),
+
     @OneToMany(mappedBy = "referral", cascade = [CascadeType.ALL], orphanRemoval = true)
     var steps: MutableList<ReferralStepEntity> = mutableListOf()
 ) {
 
-    fun transition(newStatus: ReferralStatus, title: String, subtitle: String? = null, actor: AdminEntity? = null) {
+    fun transition(newStatus: ReferralStatus, title: String, subtitle: String? = null, actor: UserEntity? = null) {
         require(newStatus.canTransitionFrom(this.status)) {
             "Invalid transition from ${this.status} to $newStatus"
         }

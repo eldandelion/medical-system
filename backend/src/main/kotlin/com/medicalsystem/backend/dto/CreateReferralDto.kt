@@ -19,5 +19,10 @@ data class CreateReferralDto(
     
     @field:NotNull(message = "Risk level cannot be null")
     val riskLevel: RiskStatus,
-    // Ignoring complex nested structures for now like clinicalStatus and severeRiskFactors
+
+    val clinicalStatus: List<com.medicalsystem.backend.model.ClinicalStatusType> = emptyList(),
+    
+    val severeRiskFactors: List<com.medicalsystem.backend.model.RiskFlagName> = emptyList(),
+    
+    val attachments: List<AttachmentDto> = emptyList()
 )

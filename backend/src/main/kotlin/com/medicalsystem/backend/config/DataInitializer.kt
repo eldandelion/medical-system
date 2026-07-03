@@ -26,7 +26,7 @@ class DataInitializer {
         hospitalRepository: HospitalRepository,
         departmentRepository: DepartmentRepository,
         doctorRepository: DoctorRepository,
-        adminRepository: AdminRepository
+        userRepository: UserRepository
     ) = CommandLineRunner {
         referralRepository.deleteAll()
         studentRepository.deleteAll()
@@ -37,7 +37,7 @@ class DataInitializer {
         hospitalRepository.deleteAll()
         departmentRepository.deleteAll()
         doctorRepository.deleteAll()
-        adminRepository.deleteAll()
+        userRepository.deleteAll()
 
         val medCollege = collegeRepository.save(CollegeEntity(name = "医学院"))
         val csCollege = collegeRepository.save(CollegeEntity(name = "计算机学院"))
@@ -87,14 +87,15 @@ class DataInitializer {
 
         val hosp = hospitalRepository.save(HospitalEntity(name = "市精神卫生中心", address = "市中心大道1号", contactPhone = "021-12345678"))
         val dept = departmentRepository.save(DepartmentEntity(name = "临床心理科", hospital = hosp))
-        val doc = doctorRepository.save(DoctorEntity(name = "王建国", department = dept, phone = "13912345678"))
-        val admin = adminRepository.save(AdminEntity(name = "张老师", role = "分诊管理员"))
+        val doc = doctorRepository.save(DoctorEntity(name = "王建国", department = dept, phone = "13912345678", email = "wang@hospital.com"))
+        val triageAdmin = userRepository.save(TrialAdminEntity(name = "张老师", email = "zhang@univ.edu.cn"))
+        val referrer = userRepository.save(TeacherEntity(name = "艾米丽·沃森", email = "emily@univ.edu.cn", college = medCollege))
 
         val dest = ReferralDestination(
             hospital = hosp,
             department = dept,
             doctor = doc,
-            admin = admin,
+            triageAdmin = triageAdmin,
             transferDate = LocalDate.now().plusDays(2),
             appointmentTime = LocalDateTime.now().plusDays(2).withHour(10).withMinute(0)
         )
@@ -106,7 +107,7 @@ class DataInitializer {
             description = "期中考试后出现急性恐慌发作和睡眠剥夺",
             riskLevel = RiskStatus.HIGH,
             status = ReferralStatus.AWAITING_FEEDBACK_APPROVAL,
-            referredByName = "艾米丽·沃森",
+            referredBy = referrer,
             createdAt = LocalDateTime.now().minusDays(1),
             destination = dest
         )
@@ -118,7 +119,7 @@ class DataInitializer {
             subtitle = "由辅导员提交",
             time = LocalDateTime.now().minusDays(1),
             status = ReferralStepStatus.COMPLETED,
-            actor = admin
+            actor = referrer
         )
         val step2 = ReferralStepEntity(
             referral = ref1,
@@ -127,7 +128,7 @@ class DataInitializer {
             subtitle = "等待院级审批",
             time = LocalDateTime.now().minusHours(20),
             status = ReferralStepStatus.COMPLETED,
-            actor = admin
+            actor = referrer
         )
         val step3 = ReferralStepEntity(
             referral = ref1,
@@ -136,7 +137,7 @@ class DataInitializer {
             subtitle = "分诊至市精神卫生中心",
             time = LocalDateTime.now().minusHours(18),
             status = ReferralStepStatus.COMPLETED,
-            actor = admin
+            actor = triageAdmin
         )
         val step4 = ReferralStepEntity(
             referral = ref1,
@@ -145,7 +146,7 @@ class DataInitializer {
             subtitle = "等待预约确认",
             time = LocalDateTime.now().minusHours(5),
             status = ReferralStepStatus.ACTIVE,
-            actor = admin
+            actor = triageAdmin
         )
         
         ref1.steps.addAll(listOf(step1, step2, step3, step4))
@@ -157,7 +158,7 @@ class DataInitializer {
             description = "情绪持续低落",
             riskLevel = RiskStatus.MEDIUM,
             status = ReferralStatus.AWAITING_TRIAGE,
-            referredByName = "艾米丽·沃森",
+            referredBy = referrer,
             createdAt = LocalDateTime.now().minusDays(2)
         )
 
@@ -168,7 +169,7 @@ class DataInitializer {
             subtitle = "由辅导员提交",
             time = LocalDateTime.now().minusDays(2),
             status = ReferralStepStatus.COMPLETED,
-            actor = admin
+            actor = referrer
         )
         val ref2Step2 = ReferralStepEntity(
             referral = ref2,
@@ -177,7 +178,7 @@ class DataInitializer {
             subtitle = "等待院级审批",
             time = LocalDateTime.now().minusHours(24),
             status = ReferralStepStatus.COMPLETED,
-            actor = admin
+            actor = referrer
         )
         val ref2Step3 = ReferralStepEntity(
             referral = ref2,
@@ -186,7 +187,7 @@ class DataInitializer {
             subtitle = "等待分诊安排",
             time = LocalDateTime.now().minusHours(12),
             status = ReferralStepStatus.ACTIVE,
-            actor = admin
+            actor = triageAdmin
         )
         ref2.steps.addAll(listOf(ref2Step1, ref2Step2, ref2Step3))
 

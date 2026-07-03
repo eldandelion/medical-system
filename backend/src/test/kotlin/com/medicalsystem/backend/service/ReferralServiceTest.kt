@@ -21,15 +21,22 @@ import org.mockito.kotlin.argThat
 import java.time.LocalDateTime
 import java.util.Optional
 
+import com.medicalsystem.backend.repository.UserRepository
+import com.medicalsystem.backend.entity.UserEntity
+import com.medicalsystem.backend.entity.TeacherEntity
+import com.medicalsystem.backend.model.UserRole
+
 class ReferralServiceTest {
 
     private val referralRepository: ReferralRepository = mock()
     private val studentRepository: StudentRepository = mock()
+    private val userRepository: UserRepository = mock()
     private val referralMapper: ReferralMapper = mock()
     
     private val referralService = ReferralService(
         referralRepository,
         studentRepository,
+        userRepository,
         referralMapper
     )
 
@@ -44,6 +51,13 @@ class ReferralServiceTest {
         riskStatus = com.medicalsystem.backend.model.RiskStatus.LOW
     )
 
+    private val mockUser = TeacherEntity(
+        id = 1L,
+        name = "Test Teacher",
+        email = "test@univ.edu.cn",
+        college = mock()
+    )
+
     private val mockReferralEntity = ReferralEntity(
         id = 100L,
         student = mockStudent,
@@ -52,7 +66,7 @@ class ReferralServiceTest {
         description = "Test Desc",
         riskLevel = com.medicalsystem.backend.model.RiskStatus.LOW,
         status = ReferralStatus.AWAITING_APPROVAL,
-        referredByName = "SYSTEM",
+        referredBy = mockUser,
         createdAt = LocalDateTime.now()
     )
 
@@ -62,8 +76,10 @@ class ReferralServiceTest {
     fun `getReferralById_WhenExists_ReturnsDto`() {
         // Arrange
         val id = 100L
+        val mockModel: com.medicalsystem.backend.model.Referral = mock()
         whenever(referralRepository.findById(id)).thenReturn(Optional.of(mockReferralEntity))
-        whenever(referralMapper.toDto(mockReferralEntity)).thenReturn(mockReferralDto)
+        whenever(referralMapper.toModel(any())).thenReturn(mockModel)
+        whenever(referralMapper.toDto(any<com.medicalsystem.backend.model.Referral>())).thenReturn(mockReferralDto)
 
         // Act
         val result = referralService.getReferralById(id)
@@ -71,7 +87,8 @@ class ReferralServiceTest {
         // Assert
         assertEquals(mockReferralDto, result)
         verify(referralRepository).findById(id)
-        verify(referralMapper).toDto(mockReferralEntity)
+        verify(referralMapper).toModel(mockReferralEntity)
+        verify(referralMapper).toDto(mockModel)
     }
 
     @Test
@@ -98,6 +115,7 @@ class ReferralServiceTest {
             actionType = ReferralService.ACTION_DRAFT
         )
         whenever(studentRepository.findById(1L)).thenReturn(Optional.of(mockStudent))
+        whenever(userRepository.findAll()).thenReturn(listOf(mockUser))
         whenever(referralRepository.save(any())).thenReturn(mockReferralEntity)
         whenever(referralMapper.toDto(mockReferralEntity)).thenReturn(mockReferralDto)
 
@@ -110,7 +128,7 @@ class ReferralServiceTest {
             entity.status == ReferralStatus.DRAFT &&
             entity.title == "New Title" &&
             entity.type == com.medicalsystem.backend.model.ReferralType.INITIAL &&
-            entity.referredByName == ReferralService.SYSTEM_USER
+            entity.referredBy == mockUser
         })
     }
 
@@ -122,9 +140,10 @@ class ReferralServiceTest {
             title = "Submit Title",
             reason = "Submit Reason",
             riskLevel = com.medicalsystem.backend.model.RiskStatus.MEDIUM,
-            actionType = "submit" // not draft
+            actionType = "submit"
         )
         whenever(studentRepository.findById(1L)).thenReturn(Optional.of(mockStudent))
+        whenever(userRepository.findAll()).thenReturn(listOf(mockUser))
         whenever(referralRepository.save(any())).thenReturn(mockReferralEntity)
         whenever(referralMapper.toDto(mockReferralEntity)).thenReturn(mockReferralDto)
 
@@ -134,7 +153,8 @@ class ReferralServiceTest {
         // Assert
         assertEquals(mockReferralDto, result)
         verify(referralRepository).save(argThat { entity ->
-            entity.status == ReferralStatus.AWAITING_APPROVAL
+            entity.status == ReferralStatus.AWAITING_APPROVAL &&
+            entity.referredBy == mockUser
         })
     }
 }

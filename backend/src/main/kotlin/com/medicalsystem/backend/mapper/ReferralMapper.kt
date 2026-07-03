@@ -20,7 +20,7 @@ class ReferralMapper {
             description = entity.description,
             riskLevel = entity.riskLevel,
             status = entity.status,
-            referredByName = entity.referredByName
+            referredByName = entity.referredBy.name
         )
     }
 
@@ -50,7 +50,7 @@ class ReferralMapper {
             description = entity.description,
             riskLevel = entity.riskLevel,
             status = entity.status,
-            referredBy = ReferredByDto(entity.referredByName)
+            referredBy = ReferredByDto(entity.referredBy.name)
         )
     }
 
@@ -60,7 +60,7 @@ class ReferralMapper {
                 hospital = dest.hospital?.name ?: "",
                 department = dest.department?.name ?: "",
                 doctor = dest.doctor?.name ?: "",
-                admin = dest.admin?.name ?: "",
+                admin = dest.triageAdmin?.name ?: "",
                 transferDate = dest.transferDate?.toString(),
                 appointmentTime = dest.appointmentTime?.toString()
             )

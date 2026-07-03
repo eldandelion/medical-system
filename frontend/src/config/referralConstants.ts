@@ -7,7 +7,7 @@ export const CLINICAL_STATUS_OPTIONS: { label: string; value: ClinicalStatusType
 ];
 
 export const RISK_FACTOR_OPTIONS: { label: string; value: SevereRiskFactorType }[] = [
-  { label: '自杀意念', value: 'Ideation' },
-  { label: '自杀企图', value: 'Attempt' },
-  { label: '自残行为', value: 'SelfHarm' },
+  { label: '自杀意念', value: 'SUICIDAL_IDEATION' },
+  { label: '自杀企图', value: 'SUICIDE_ATTEMPT' },
+  { label: '自残行为', value: 'SELF_HARM' },
 ];

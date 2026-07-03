@@ -2,7 +2,7 @@ export type ReferralStepStatus = 'completed' | 'issue' | 'pending' | 'active';
 export type ReferralStepType = 'initiation' | 'review' | 'triage' | 'scheduling' | 'evaluation' | 'feedback';
 
 export type ClinicalStatusType = 'FirstVisit' | 'Medicated' | 'PriorTherapy';
-export type SevereRiskFactorType = 'Ideation' | 'Attempt' | 'SelfHarm';
+export type SevereRiskFactorType = 'SUICIDAL_IDEATION' | 'SUICIDE_ATTEMPT' | 'SELF_HARM';
 
 export interface ReferralStep {
   id: string | number;

@@ -20,7 +20,7 @@ data class ReferralDestination(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dest_admin_id")
-    var admin: AdminEntity? = null,
+    var triageAdmin: TrialAdminEntity? = null,
 
     @Column(name = "dest_transfer_date")
     var transferDate: LocalDate? = null,

@@ -22,8 +22,15 @@ class StudentService(
 ) {
     private val logger = LoggerFactory.getLogger(StudentService::class.java)
 
-    fun getAllStudents(): List<StudentDto> {
-        return studentRepository.findAll()
+    fun getAllStudents(token: String? = null): List<StudentDto> {
+        val students = if (token?.contains("teacher_token_zhang") == true) {
+            // Mock: Teacher Zhang is assigned to College 1
+            studentRepository.findByMajorCollegeId(1L)
+        } else {
+            studentRepository.findAll()
+        }
+        
+        return students
             .map { studentMapper.toModel(it) }
             .map { studentMapper.toDto(it) }
     }

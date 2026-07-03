@@ -92,7 +92,7 @@ class ReferralControllerTest {
             referredBy = ReferredByDto("SYSTEM")
         )
 
-        `when`(referralService.createReferral(any())).thenReturn(savedDto)
+        org.mockito.kotlin.whenever(referralService.createReferral(any(), org.mockito.kotlin.anyOrNull())).thenReturn(savedDto)
 
         mockMvc.perform(
             post("/api/referrals")
