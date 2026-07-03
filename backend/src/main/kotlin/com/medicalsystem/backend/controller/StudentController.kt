@@ -14,23 +14,23 @@ import jakarta.validation.Valid
 class StudentController(private val studentService: StudentService) {
 
     @GetMapping
-    fun getAllStudents(@RequestHeader(value = "Authorization", required = false) token: String?): List<StudentDto> {
-        return studentService.getAllStudents(token)
-    }
-
-    @GetMapping("/{id}/psychometrics")
-    fun getPsychometrics(@PathVariable id: Long): PsychometricsSummaryDto {
-        return studentService.getPsychometrics(id)
+    fun fetchAllStudents(): List<StudentDto> {
+        return studentService.fetchAllStudents()
     }
 
     @GetMapping("/{id}")
-    fun getStudentById(@PathVariable id: Long): StudentDto {
-        return studentService.getStudentById(id)
+    fun fetchStudentDetails(@PathVariable id: Long): StudentDto {
+        return studentService.fetchStudentDetails(id)
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createStudent(@Valid @RequestBody dto: StudentDto): StudentDto {
-        return studentService.createStudent(dto)
+    fun registerStudent(@Valid @RequestBody dto: StudentDto): StudentDto {
+        return studentService.registerStudent(dto)
+    }
+
+    @GetMapping("/{id}/psychometrics")
+    fun fetchPsychometricSummary(@PathVariable id: Long): com.medicalsystem.backend.dto.PsychometricsSummaryDto {
+        return studentService.fetchPsychometricSummary(id)
     }
 }

@@ -14,23 +14,26 @@ class ReferralController(
     private val referralService: ReferralService
 ) {
     @GetMapping
-    fun getAllReferrals(): List<ReferralDto> {
-        return referralService.getAllReferrals()
+    fun fetchActiveReferrals(@RequestHeader(value = "Authorization", required = false) token: String?): List<ReferralDto> {
+        return referralService.fetchActiveReferrals(token)
     }
 
     @GetMapping("/{id}")
-    fun getReferralById(@PathVariable id: Long): ReferralDto {
-        return referralService.getReferralById(id)
+    fun fetchReferralDetails(@PathVariable id: Long): ReferralDto {
+        return referralService.fetchReferralDetails(id)
     }
 
     @GetMapping("/{id}/tracking")
-    fun getReferralTracking(@PathVariable id: Long): com.medicalsystem.backend.dto.ReferralTrackingDto {
-        return referralService.getReferralTracking(id)
+    fun fetchReferralTracking(@PathVariable id: Long): com.medicalsystem.backend.dto.ReferralTrackingDto {
+        return referralService.fetchReferralTracking(id)
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createReferral(@Valid @RequestBody dto: CreateReferralDto): ReferralDto {
-        return referralService.createReferral(dto)
+    fun initiateReferral(
+        @Valid @RequestBody dto: com.medicalsystem.backend.dto.CreateReferralDto,
+        @RequestHeader(value = "Authorization", required = false) token: String?
+    ): ReferralDto {
+        return referralService.initiateReferral(dto, token)
     }
 }

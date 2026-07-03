@@ -29,8 +29,8 @@ class Referral(
     val steps: MutableList<ReferralStep> = mutableListOf()
 ) {
     fun transition(newStatus: ReferralStatus, title: String, subtitle: String? = null, actorId: Long? = null) {
-        require(newStatus.canTransitionFrom(this.status)) {
-            "Invalid transition from ${this.status} to $newStatus"
+        if (!newStatus.canTransitionFrom(this.status)) {
+            throw com.medicalsystem.backend.exception.InvalidReferralTransitionException(this.status.name, newStatus.name)
         }
 
         val endStatus = if (newStatus == ReferralStatus.REJECTED || newStatus == ReferralStatus.RECALLED) {

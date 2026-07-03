@@ -24,7 +24,7 @@ class StudentService(
 ) {
     private val logger = LoggerFactory.getLogger(StudentService::class.java)
 
-    fun getAllStudents(token: String? = null): List<StudentDto> {
+    fun fetchAllStudents(token: String? = null): List<StudentDto> {
         val students = if (token?.contains("teacher_token_zhang") == true) {
             // Mock: Teacher Zhang is assigned to College 1
             studentRepository.findByMajorCollegeId(1L)
@@ -32,24 +32,23 @@ class StudentService(
             studentRepository.findAll()
         }
         
-        return students
-            .map { studentMapper.toDto(it) }
+        return students.map { studentMapper.toDto(it) }
     }
 
-    fun getStudentById(id: Long): StudentDto {
+    fun fetchStudentDetails(id: Long): StudentDto {
         val model = studentRepository.findById(id)
-            .orElseThrow { ResourceNotFoundException("Student with ID $id not found") }
+            .orElseThrow { com.medicalsystem.backend.exception.StudentNotFoundException(id) }
         return studentMapper.toDto(model)
     }
 
     @Transactional
-    fun createStudent(dto: StudentDto): StudentDto {
+    fun registerStudent(dto: StudentDto): StudentDto {
         if (dto.majorId == null) {
             throw ValidationException("majorId must not be null")
         }
 
         if (studentRepository.existsByStudentNumber(dto.studentNumber)) {
-            throw ConflictException("Student with number ${dto.studentNumber} already exists")
+            throw com.medicalsystem.backend.exception.DuplicateStudentException(dto.studentNumber)
         }
 
         dto.demographics?.email?.let { email ->
@@ -74,25 +73,23 @@ class StudentService(
         
         val savedModel = studentRepository.save(model)
         
-        healthProfileRepository.save(com.medicalsystem.backend.model.StudentHealthProfile(
-            id = 0,
+        val healthProfile = com.medicalsystem.backend.model.StudentHealthProfileFactory.createInitialProfile(
             studentId = savedModel.id,
-            riskStatus = dto.riskLevel ?: RiskStatus.LOW,
-            scidDiagnosis = null,
-            riskFlags = mutableListOf(),
-            psychometricTests = mutableListOf()
-        ))
-        logger.info("Successfully created student with ID: ${savedModel.id} and number: ${savedModel.studentNumber}")
+            riskLevelStr = dto.riskLevel?.name
+        )
+        healthProfileRepository.save(healthProfile)
+        
+        logger.info("Successfully registered student with ID: ${savedModel.id} and number: ${savedModel.studentNumber}")
         
         return studentMapper.toDto(savedModel)
     }
 
     @Transactional(readOnly = true)
-    fun getPsychometrics(id: Long): com.medicalsystem.backend.dto.PsychometricsSummaryDto {
+    fun fetchPsychometricSummary(id: Long): com.medicalsystem.backend.dto.PsychometricsSummaryDto {
         val entity = studentRepository.findById(id)
             .orElseThrow {
                 logger.error("Student with ID $id not found when fetching psychometrics.")
-                ResourceNotFoundException("Student with ID $id not found")
+                com.medicalsystem.backend.exception.StudentNotFoundException(id)
             }
             
         val profile = healthProfileRepository.findByStudentId(id).orElse(null)
@@ -147,4 +144,3 @@ class StudentService(
         )
     }
 }
-
