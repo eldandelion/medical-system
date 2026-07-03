@@ -3,7 +3,7 @@ package com.medicalsystem.backend.service
 import com.medicalsystem.backend.dto.CreateReferralDto
 import com.medicalsystem.backend.dto.ReferralDto
 import com.medicalsystem.backend.dto.ReferralTrackingDto
-import com.medicalsystem.backend.entity.ReferralEntity
+import com.medicalsystem.backend.model.Referral
 import com.medicalsystem.backend.model.ReferralStatus
 import com.medicalsystem.backend.mapper.ReferralMapper
 import com.medicalsystem.backend.repository.ReferralRepository
@@ -33,21 +33,20 @@ class ReferralService(
 
     fun getAllReferrals(): List<ReferralDto> {
         return referralRepository.findAll()
-            .map { referralMapper.toModel(it) }
             .map { referralMapper.toDto(it) }
     }
 
     fun getReferralById(id: Long): ReferralDto {
-        val entity = referralRepository.findById(id)
+        val model = referralRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
-        return referralMapper.toDto(referralMapper.toModel(entity))
+        return referralMapper.toDto(model)
     }
 
     fun getReferralTracking(id: Long): ReferralTrackingDto {
-        val entity = referralRepository.findById(id)
+        val model = referralRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
         
-        return referralMapper.toTrackingDto(entity)
+        return referralMapper.toTrackingDto(model)
     }
 
     @Transactional
@@ -65,38 +64,39 @@ class ReferralService(
                 ?: throw ValidationException("No user found in database for fallback")
         }
 
-        val entity = ReferralEntity(
-            student = student,
+        val model = Referral(
+            id = null,
+            studentId = student.id,
             type = com.medicalsystem.backend.model.ReferralType.INITIAL,
             title = dto.title,
             description = dto.reason,
             riskLevel = dto.riskLevel,
             status = com.medicalsystem.backend.model.ReferralStatus.DRAFT,
-            referredBy = user,
-            createdAt = LocalDateTime.now(),
+            referredById = user.id,
+            date = LocalDateTime.now(),
             clinicalStatus = dto.clinicalStatus.toMutableList(),
             severeRiskFactors = dto.severeRiskFactors.toMutableList()
         )
 
         dto.attachments.forEach { attachmentDto ->
-            val attachmentEntity = com.medicalsystem.backend.entity.AttachmentEntity(
+            val attachment = com.medicalsystem.backend.model.Attachment(
+                id = null,
                 name = attachmentDto.name,
-                size = attachmentDto.size,
-                referral = entity
+                size = attachmentDto.size
             )
-            entity.attachments.add(attachmentEntity)
+            model.attachments.add(attachment)
         }
 
         if (dto.actionType != ACTION_DRAFT) {
-            entity.transition(
+            model.transition(
                 newStatus = ReferralStatus.AWAITING_APPROVAL,
                 title = "发起转诊",
                 subtitle = "由辅导员提交",
-                actor = null
+                actorId = null
             )
         }
 
-        val saved = referralRepository.save(entity)
+        val saved = referralRepository.save(model)
         return referralMapper.toDto(saved)
     }
 }

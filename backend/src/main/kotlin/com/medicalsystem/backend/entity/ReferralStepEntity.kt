@@ -32,7 +32,6 @@ class ReferralStepEntity(
     @Column(nullable = false, length = 30)
     var status: ReferralStepStatus,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "actor_id")
-    var actor: UserEntity? = null
+    @Column(name = "actor_id")
+    var actorId: Long? = null
 )

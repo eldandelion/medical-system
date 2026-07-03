@@ -12,22 +12,25 @@ import com.medicalsystem.backend.repository.SchoolRepository
 import org.springframework.stereotype.Component
 import java.time.LocalDate
 import java.time.Period
+import com.medicalsystem.backend.repository.StudentHealthProfileRepository
 
 @Component
 class StudentMapper(
     private val majorMapper: MajorMapper,
     private val academicYearCalculator: AcademicYearCalculator,
     private val ethnicityRepository: EthnicityRepository,
-    private val schoolRepository: SchoolRepository
+    private val schoolRepository: SchoolRepository,
+    private val healthProfileRepository: StudentHealthProfileRepository
 ) {
     fun toModel(entity: StudentEntity): Student {
+        val profile = healthProfileRepository.findByStudentId(entity.id).orElse(null)
         return Student(
             id = entity.id,
             studentNumber = entity.studentNumber,
             name = entity.name,
             major = majorMapper.toModel(entity.major),
             enrollmentDate = entity.enrollmentDate,
-            riskStatus = entity.riskStatus,
+            riskStatus = profile?.riskStatus ?: com.medicalsystem.backend.model.RiskStatus.LOW,
             demographics = entity.demographics?.let {
                 Demographics(
                     gender = it.gender,
@@ -80,7 +83,6 @@ class StudentMapper(
             name = model.name,
             major = majorMapper.toEntity(model.major),
             enrollmentDate = model.enrollmentDate,
-            riskStatus = model.riskStatus,
             demographics = model.demographics?.let {
                 StudentDemographics(
                     gender = it.gender,

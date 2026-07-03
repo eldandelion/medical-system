@@ -13,9 +13,8 @@ class ReferralEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false)
-    var student: StudentEntity,
+    @Column(name = "student_id", nullable = false)
+    var studentId: Long,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -35,9 +34,8 @@ class ReferralEntity(
     @Column(nullable = false)
     var status: ReferralStatus,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "referred_by_id", nullable = false)
-    var referredBy: UserEntity,
+    @Column(name = "referred_by_id", nullable = false)
+    var referredById: Long,
 
     @Column(nullable = false)
     var createdAt: LocalDateTime = LocalDateTime.now(),
@@ -64,7 +62,7 @@ class ReferralEntity(
     var steps: MutableList<ReferralStepEntity> = mutableListOf()
 ) {
 
-    fun transition(newStatus: ReferralStatus, title: String, subtitle: String? = null, actor: UserEntity? = null) {
+    fun transition(newStatus: ReferralStatus, title: String, subtitle: String? = null, actorId: Long? = null) {
         require(newStatus.canTransitionFrom(this.status)) {
             "Invalid transition from ${this.status} to $newStatus"
         }
@@ -89,7 +87,7 @@ class ReferralEntity(
                 subtitle = subtitle,
                 time = LocalDateTime.now(),
                 status = com.medicalsystem.backend.model.ReferralStepStatus.ACTIVE,
-                actor = actor
+                actorId = actorId
             )
             this.steps.add(step)
         }

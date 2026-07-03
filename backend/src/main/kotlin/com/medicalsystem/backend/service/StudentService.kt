@@ -12,13 +12,15 @@ import com.medicalsystem.backend.exception.ConflictException
 import com.medicalsystem.backend.exception.ValidationException
 import org.slf4j.LoggerFactory
 import com.medicalsystem.backend.repository.MajorRepository
+import com.medicalsystem.backend.repository.StudentHealthProfileRepository
 
 @Service
 @Transactional(readOnly = true)
 class StudentService(
     private val studentRepository: StudentRepository,
     private val majorRepository: MajorRepository,
-    private val studentMapper: StudentMapper
+    private val studentMapper: StudentMapper,
+    private val healthProfileRepository: StudentHealthProfileRepository
 ) {
     private val logger = LoggerFactory.getLogger(StudentService::class.java)
 
@@ -65,13 +67,21 @@ class StudentService(
             studentNumber = dto.studentNumber,
             name = dto.name,
             major = major,
-            enrollmentDate = dto.enrollmentDate,
-            riskStatus = dto.riskLevel ?: RiskStatus.LOW
+            enrollmentDate = dto.enrollmentDate
         )
         
         // Note: demographics are not mapped here yet as dto to entity mapper for student creation needs a complete model
         
         val savedEntity = studentRepository.save(entity)
+        
+        healthProfileRepository.save(com.medicalsystem.backend.model.StudentHealthProfile(
+            id = 0,
+            studentId = savedEntity.id,
+            riskStatus = dto.riskLevel ?: RiskStatus.LOW,
+            scidDiagnosis = null,
+            riskFlags = mutableListOf(),
+            psychometricTests = mutableListOf()
+        ))
         logger.info("Successfully created student with ID: ${savedEntity.id} and number: ${savedEntity.studentNumber}")
         
         return studentMapper.toDto(studentMapper.toModel(savedEntity))
@@ -85,8 +95,10 @@ class StudentService(
                 ResourceNotFoundException("Student with ID $id not found")
             }
             
+        val profile = healthProfileRepository.findByStudentId(id).orElse(null)
+            
         // Map Risk Flags guaranteeing all 3 exist
-        val existingFlags = entity.riskFlags.associateBy { it.name }
+        val existingFlags = profile?.riskFlags?.associateBy { it.name } ?: emptyMap()
         val riskFlags = com.medicalsystem.backend.model.RiskFlagName.entries.map { flagName ->
             val entityFlag = existingFlags[flagName]
             com.medicalsystem.backend.dto.RiskFlagDto(
@@ -96,7 +108,7 @@ class StudentService(
         }
         
         // Map Raw Tests
-        val tests = entity.psychometricTests.sortedByDescending { it.testDate }
+        val tests = profile?.getLatestTests() ?: emptyList()
         val testDtos = tests.map { test ->
             com.medicalsystem.backend.dto.PsychometricTestDto(
                 name = test.testResultName.displayName,
@@ -117,7 +129,7 @@ class StudentService(
         }
         
         // Compute Radar Data from latest unique tests
-        val latestTests = tests.groupBy { it.testResultName }.mapValues { it.value.first() }
+        val latestTests = profile?.getUniqueLatestTests() ?: emptyMap()
         val radarData = latestTests.values.map { test ->
             com.medicalsystem.backend.dto.RadarDataDto(
                 subject = test.testResultName.displayName.substringBefore(" ("), // E.g. "PHQ-9"
@@ -127,7 +139,7 @@ class StudentService(
         }
         
         return com.medicalsystem.backend.dto.PsychometricsSummaryDto(
-            scidDiagnosis = entity.scidDiagnosis,
+            scidDiagnosis = profile?.scidDiagnosis,
             riskFlags = riskFlags,
             scores = scores,
             radarData = radarData,

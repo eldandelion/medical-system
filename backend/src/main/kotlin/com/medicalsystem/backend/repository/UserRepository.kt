@@ -1,22 +1,12 @@
 package com.medicalsystem.backend.repository
 
-import com.medicalsystem.backend.entity.UserEntity
-import com.medicalsystem.backend.entity.TeacherEntity
-import com.medicalsystem.backend.entity.HeadCounsellorEntity
-import com.medicalsystem.backend.entity.TrialAdminEntity
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
+import com.medicalsystem.backend.model.User
+import java.util.Optional
 
-@Repository
-interface UserRepository : JpaRepository<UserEntity, Long> {
-    fun findByName(name: String): UserEntity?
+interface UserRepository {
+    fun findById(id: Long): Optional<User>
+    fun findByName(name: String): User?
+    fun findAll(): List<User>
+    fun save(user: User): User
+    fun deleteAll()
 }
-
-@Repository
-interface TeacherRepository : JpaRepository<TeacherEntity, Long>
-
-@Repository
-interface HeadCounsellorRepository : JpaRepository<HeadCounsellorEntity, Long>
-
-@Repository
-interface TrialAdminRepository : JpaRepository<TrialAdminEntity, Long>

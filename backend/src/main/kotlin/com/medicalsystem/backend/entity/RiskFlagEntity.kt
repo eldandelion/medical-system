@@ -19,6 +19,6 @@ data class RiskFlagEntity(
     val status: FlagStatus,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false)
-    val student: StudentEntity
+    @JoinColumn(name = "health_profile_id", nullable = false)
+    var healthProfile: StudentHealthProfileEntity? = null
 )
