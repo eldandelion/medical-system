@@ -7,7 +7,7 @@ import com.medicalsystem.backend.model.ReferralType
 import com.medicalsystem.backend.model.RiskStatus
 
 @Entity
-@Table(name = "referral_entity")
+@Table(name = "referral_entity", indexes = [Index(name = "idx_referral_student_status", columnList = "student_id, status")])
 class ReferralEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,11 +26,9 @@ class ReferralEntity(
     @Column(nullable = false, length = 1000)
     var description: String,
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var riskLevel: RiskStatus,
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var status: ReferralStatus,
 
@@ -45,13 +43,11 @@ class ReferralEntity(
 
     @ElementCollection
     @CollectionTable(name = "referral_clinical_status", joinColumns = [JoinColumn(name = "referral_id")])
-    @Enumerated(EnumType.STRING)
     @Column(name = "clinical_status")
     var clinicalStatus: MutableList<com.medicalsystem.backend.model.ClinicalStatusType> = mutableListOf(),
 
     @ElementCollection
     @CollectionTable(name = "referral_severe_risk_factors", joinColumns = [JoinColumn(name = "referral_id")])
-    @Enumerated(EnumType.STRING)
     @Column(name = "risk_flag_name")
     var severeRiskFactors: MutableList<com.medicalsystem.backend.model.RiskFlagName> = mutableListOf(),
 

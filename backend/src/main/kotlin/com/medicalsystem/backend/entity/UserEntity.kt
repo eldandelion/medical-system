@@ -14,7 +14,6 @@ abstract class UserEntity(
     var name: String,
 
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
     var role: UserRole,
 
     @Column(length = 100)

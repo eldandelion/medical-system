@@ -6,10 +6,10 @@ COPY pom.xml .
 RUN mvn dependency:go-offline -B
 COPY src ./src
 # Package the application skipping tests for speed
-RUN mvn package -DskipTests
+RUN mvn package -Dmaven.test.skip=true
 
 # Stage 2: Run the backend
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080

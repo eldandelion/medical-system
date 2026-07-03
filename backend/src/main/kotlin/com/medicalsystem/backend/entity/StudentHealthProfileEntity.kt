@@ -12,7 +12,6 @@ class StudentHealthProfileEntity(
     @Column(name = "student_id", unique = true, nullable = false)
     val studentId: Long,
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var riskStatus: RiskStatus = RiskStatus.LOW,
 

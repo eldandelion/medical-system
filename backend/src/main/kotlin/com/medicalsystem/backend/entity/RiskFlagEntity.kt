@@ -10,11 +10,9 @@ data class RiskFlagEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     val name: com.medicalsystem.backend.model.RiskFlagName,
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     val status: FlagStatus,
 

@@ -6,7 +6,6 @@ import java.time.LocalDate
 
 @Embeddable
 data class StudentDemographics(
-    @Enumerated(EnumType.STRING)
     @Column(length = 20)
     var gender: Gender? = null,
 

@@ -6,7 +6,7 @@ import jakarta.persistence.*
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "referral_steps")
+@Table(name = "referral_steps", indexes = [Index(name = "idx_referral_step_ref_type", columnList = "referral_id, type")])
 class ReferralStepEntity(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
@@ -15,7 +15,6 @@ class ReferralStepEntity(
     @JoinColumn(name = "referral_id", nullable = false)
     var referral: ReferralEntity,
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     var type: ReferralStepType,
 
@@ -28,7 +27,6 @@ class ReferralStepEntity(
     @Column(nullable = false)
     var time: LocalDateTime,
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     var status: ReferralStepStatus,
 

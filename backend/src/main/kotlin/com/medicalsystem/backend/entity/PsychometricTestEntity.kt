@@ -11,7 +11,6 @@ data class PsychometricTestEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     val testResultName: TestResultName,
 
