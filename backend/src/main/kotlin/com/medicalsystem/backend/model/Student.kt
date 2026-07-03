@@ -10,4 +10,16 @@ data class Student(
     val enrollmentDate: LocalDate,
     val riskStatus: RiskStatus,
     val demographics: Demographics? = null
-)
+) : AggregateRoot() {
+    
+    fun register(riskLevel: String?) {
+        if (this.id != 0L) {
+            registerEvent(
+                com.medicalsystem.backend.event.StudentRegisteredEvent(
+                    studentId = this.id,
+                    riskLevel = riskLevel
+                )
+            )
+        }
+    }
+}

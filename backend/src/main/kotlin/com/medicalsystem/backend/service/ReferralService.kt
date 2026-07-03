@@ -23,7 +23,8 @@ class ReferralService(
     private val referralRepository: ReferralRepository,
     private val studentRepository: StudentRepository,
     private val userRepository: UserRepository,
-    private val referralMapper: ReferralMapper
+    private val referralMapper: ReferralMapper,
+    private val eventPublisher: com.medicalsystem.backend.event.DomainEventPublisher
 ) {
     private val logger = LoggerFactory.getLogger(ReferralService::class.java)
 
@@ -75,6 +76,17 @@ class ReferralService(
         )
 
         val saved = referralRepository.save(model)
+        
+        eventPublisher.publish(
+            com.medicalsystem.backend.event.ReferralInitiatedEvent(
+                referralId = saved.id!!,
+                studentId = saved.studentId,
+                riskLevel = saved.riskLevel.name
+            )
+        )
+        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
+        saved.clearDomainEvents()
+        
         return referralMapper.toDto(saved)
     }
 }

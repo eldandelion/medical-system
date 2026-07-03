@@ -20,7 +20,8 @@ class StudentService(
     private val studentRepository: StudentRepository,
     private val majorRepository: MajorRepository,
     private val studentMapper: StudentMapper,
-    private val healthProfileRepository: StudentHealthProfileRepository
+    private val healthProfileRepository: StudentHealthProfileRepository,
+    private val eventPublisher: com.medicalsystem.backend.event.DomainEventPublisher
 ) {
     private val logger = LoggerFactory.getLogger(StudentService::class.java)
 
@@ -72,6 +73,9 @@ class StudentService(
         )
         
         val savedModel = studentRepository.save(model)
+        savedModel.register(dto.riskLevel?.name)
+        savedModel.getDomainEvents().forEach { eventPublisher.publish(it) }
+        savedModel.clearDomainEvents()
         
         val healthProfile = com.medicalsystem.backend.model.StudentHealthProfileFactory.createInitialProfile(
             studentId = savedModel.id,

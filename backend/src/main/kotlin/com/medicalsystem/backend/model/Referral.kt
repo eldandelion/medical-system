@@ -27,7 +27,7 @@ class Referral(
     var destination: ReferralDestination? = null,
     val attachments: MutableList<Attachment> = mutableListOf(),
     val steps: MutableList<ReferralStep> = mutableListOf()
-) {
+) : AggregateRoot() {
     fun transition(newStatus: ReferralStatus, title: String, subtitle: String? = null, actorId: Long? = null) {
         if (!newStatus.canTransitionFrom(this.status)) {
             throw com.medicalsystem.backend.exception.InvalidReferralTransitionException(this.status.name, newStatus.name)
@@ -43,7 +43,19 @@ class Referral(
             it.status = endStatus
         }
 
+        val oldStatus = this.status
         this.status = newStatus
+        
+        if (oldStatus != newStatus && this.id != null) {
+            registerEvent(
+                com.medicalsystem.backend.event.ReferralStatusChangedEvent(
+                    referralId = this.id,
+                    oldStatus = oldStatus,
+                    newStatus = newStatus,
+                    studentId = this.studentId
+                )
+            )
+        }
 
         newStatus.requiresStepType?.let { stepType ->
             val step = ReferralStep(
