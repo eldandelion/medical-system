@@ -66,7 +66,7 @@ class ReferralMapper {
             )
         }
 
-        val steps = entity.steps.map { step ->
+        val mappedSteps = entity.steps.map { step ->
             com.medicalsystem.backend.dto.ReferralStepDto(
                 id = step.id.toString(),
                 type = step.type.toValue(),
@@ -75,7 +75,43 @@ class ReferralMapper {
                 time = step.time.toString(),
                 status = step.status.toValue()
             )
-        }.ifEmpty { null }
+        }.toMutableList()
+
+        if (entity.status != com.medicalsystem.backend.model.ReferralStatus.REJECTED && 
+            entity.status != com.medicalsystem.backend.model.ReferralStatus.RECALLED && 
+            entity.status != com.medicalsystem.backend.model.ReferralStatus.CLOSED) {
+            
+            val standardSequence = listOf(
+                com.medicalsystem.backend.model.ReferralStepType.INITIATION to "发起转诊",
+                com.medicalsystem.backend.model.ReferralStepType.REVIEW to "转诊审核",
+                com.medicalsystem.backend.model.ReferralStepType.TRIAGE to "分诊评估",
+                com.medicalsystem.backend.model.ReferralStepType.SCHEDULING to "预约安排",
+                com.medicalsystem.backend.model.ReferralStepType.EVALUATION to "医生评估",
+                com.medicalsystem.backend.model.ReferralStepType.FEEDBACK to "反馈跟进"
+            )
+
+            val lastActualStepType = entity.steps.lastOrNull()?.type
+            val nextIndex = if (lastActualStepType != null) {
+                standardSequence.indexOfFirst { it.first == lastActualStepType } + 1
+            } else 0
+
+            if (nextIndex in 1 until standardSequence.size) {
+                for (i in nextIndex until standardSequence.size) {
+                    mappedSteps.add(
+                        com.medicalsystem.backend.dto.ReferralStepDto(
+                            id = "pending_$i",
+                            type = standardSequence[i].first.toValue(),
+                            title = standardSequence[i].second,
+                            subtitle = "等待进行",
+                            time = "",
+                            status = "pending"
+                        )
+                    )
+                }
+            }
+        }
+
+        val steps = mappedSteps.ifEmpty { null }
 
         return com.medicalsystem.backend.dto.ReferralTrackingDto(
             destination = dest,

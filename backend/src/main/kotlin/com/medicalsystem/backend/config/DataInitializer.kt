@@ -160,6 +160,36 @@ class DataInitializer {
             referredByName = "艾米丽·沃森",
             createdAt = LocalDateTime.now().minusDays(2)
         )
+
+        val ref2Step1 = ReferralStepEntity(
+            referral = ref2,
+            type = ReferralStepType.INITIATION,
+            title = "发起转诊",
+            subtitle = "由辅导员提交",
+            time = LocalDateTime.now().minusDays(2),
+            status = ReferralStepStatus.COMPLETED,
+            actor = admin
+        )
+        val ref2Step2 = ReferralStepEntity(
+            referral = ref2,
+            type = ReferralStepType.REVIEW,
+            title = "转诊审核",
+            subtitle = "等待院级审批",
+            time = LocalDateTime.now().minusHours(24),
+            status = ReferralStepStatus.COMPLETED,
+            actor = admin
+        )
+        val ref2Step3 = ReferralStepEntity(
+            referral = ref2,
+            type = ReferralStepType.TRIAGE,
+            title = "分诊评估",
+            subtitle = "等待分诊安排",
+            time = LocalDateTime.now().minusHours(12),
+            status = ReferralStepStatus.ACTIVE,
+            actor = admin
+        )
+        ref2.steps.addAll(listOf(ref2Step1, ref2Step2, ref2Step3))
+
         referralRepository.saveAll(listOf(ref1, ref2))
 
         println("Initialized Colleges, Majors, Students, and Referrals into the database.")

@@ -46,4 +46,36 @@ class ReferralEntity(
 
     @OneToMany(mappedBy = "referral", cascade = [CascadeType.ALL], orphanRemoval = true)
     var steps: MutableList<ReferralStepEntity> = mutableListOf()
-)
+) {
+
+    fun transition(newStatus: ReferralStatus, title: String, subtitle: String? = null, actor: AdminEntity? = null) {
+        require(newStatus.canTransitionFrom(this.status)) {
+            "Invalid transition from ${this.status} to $newStatus"
+        }
+
+        val endStatus = if (newStatus == ReferralStatus.REJECTED || newStatus == ReferralStatus.RECALLED) {
+            com.medicalsystem.backend.model.ReferralStepStatus.ISSUE
+        } else {
+            com.medicalsystem.backend.model.ReferralStepStatus.COMPLETED
+        }
+
+        this.steps.filter { it.status == com.medicalsystem.backend.model.ReferralStepStatus.ACTIVE }.forEach {
+            it.status = endStatus
+        }
+
+        this.status = newStatus
+
+        newStatus.requiresStepType?.let { stepType ->
+            val step = ReferralStepEntity(
+                referral = this,
+                type = stepType,
+                title = title,
+                subtitle = subtitle,
+                time = LocalDateTime.now(),
+                status = com.medicalsystem.backend.model.ReferralStepStatus.ACTIVE,
+                actor = actor
+            )
+            this.steps.add(step)
+        }
+    }
+}

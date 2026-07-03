@@ -49,22 +49,25 @@ class ReferralService(
         val student = studentRepository.findById(dto.studentId)
             .orElseThrow { ResourceNotFoundException("Student not found with id: ${dto.studentId}") }
 
-        val status = if (dto.actionType == ACTION_DRAFT) {
-            ReferralStatus.DRAFT
-        } else {
-            ReferralStatus.AWAITING_APPROVAL
-        }
-
         val entity = ReferralEntity(
             student = student,
             type = ReferralType.INITIAL,
             title = dto.title,
             description = dto.reason,
             riskLevel = dto.riskLevel,
-            status = status,
+            status = ReferralStatus.DRAFT,
             referredByName = SYSTEM_USER,
             createdAt = LocalDateTime.now()
         )
+
+        if (dto.actionType != ACTION_DRAFT) {
+            entity.transition(
+                newStatus = ReferralStatus.AWAITING_APPROVAL,
+                title = "发起转诊",
+                subtitle = "由辅导员提交",
+                actor = null
+            )
+        }
 
         val saved = referralRepository.save(entity)
         return referralMapper.toDto(saved)
