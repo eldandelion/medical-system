@@ -100,7 +100,7 @@ class ReferralMapper(
                 size = it.size,
                 referral = entity
             )
-        }.toMutableList()
+        }.toMutableSet()
 
         entity.steps = model.steps.map {
             ReferralStepEntity(
@@ -113,7 +113,7 @@ class ReferralMapper(
                 status = it.status,
                 actorId = it.actorId
             )
-        }.toMutableList()
+        }.toMutableSet()
 
         return entity
     }
@@ -152,7 +152,23 @@ class ReferralMapper(
             )
         }
 
-        val mappedSteps = model.steps.map { step ->
+        val standardSequence = listOf(
+            com.medicalsystem.backend.model.ReferralStepType.INITIATION to "发起转诊",
+            com.medicalsystem.backend.model.ReferralStepType.REVIEW to "转诊审核",
+            com.medicalsystem.backend.model.ReferralStepType.TRIAGE to "分诊评估",
+            com.medicalsystem.backend.model.ReferralStepType.SCHEDULING to "预约安排",
+            com.medicalsystem.backend.model.ReferralStepType.EVALUATION to "医生评估",
+            com.medicalsystem.backend.model.ReferralStepType.FEEDBACK to "反馈跟进"
+        )
+
+        val typeIndices = standardSequence.mapIndexed { index, pair -> pair.first to index }.toMap()
+
+        val sortedModelSteps = model.steps.sortedWith(
+            compareBy<com.medicalsystem.backend.model.ReferralStep> { typeIndices[it.type] ?: 999 }
+                .thenBy { it.time }
+        )
+
+        val mappedSteps = sortedModelSteps.map { step ->
             com.medicalsystem.backend.dto.ReferralStepDto(
                 id = step.id.toString(),
                 type = step.type.toValue(),
@@ -166,17 +182,8 @@ class ReferralMapper(
         if (model.status != com.medicalsystem.backend.model.ReferralStatus.REJECTED && 
             model.status != com.medicalsystem.backend.model.ReferralStatus.RECALLED && 
             model.status != com.medicalsystem.backend.model.ReferralStatus.CLOSED) {
-            
-            val standardSequence = listOf(
-                com.medicalsystem.backend.model.ReferralStepType.INITIATION to "发起转诊",
-                com.medicalsystem.backend.model.ReferralStepType.REVIEW to "转诊审核",
-                com.medicalsystem.backend.model.ReferralStepType.TRIAGE to "分诊评估",
-                com.medicalsystem.backend.model.ReferralStepType.SCHEDULING to "预约安排",
-                com.medicalsystem.backend.model.ReferralStepType.EVALUATION to "医生评估",
-                com.medicalsystem.backend.model.ReferralStepType.FEEDBACK to "反馈跟进"
-            )
 
-            val lastActualStepType = model.steps.lastOrNull()?.type
+            val lastActualStepType = sortedModelSteps.lastOrNull()?.type
             val nextIndex = if (lastActualStepType != null) {
                 standardSequence.indexOfFirst { it.first == lastActualStepType } + 1
             } else 0

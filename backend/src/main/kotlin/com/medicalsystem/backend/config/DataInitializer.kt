@@ -31,15 +31,16 @@ class DataInitializer {
         studentHealthProfileRepository: StudentHealthProfileJpaRepository
     ) = CommandLineRunner {
         referralRepository.deleteAll()
+        studentHealthProfileRepository.deleteAll()
         studentRepository.deleteAll()
+        userRepository.deleteAll()
+        doctorRepository.deleteAll()
+        departmentRepository.deleteAll()
+        hospitalRepository.deleteAll()
         majorRepository.deleteAll()
         collegeRepository.deleteAll()
         ethnicityRepository.deleteAll()
         schoolRepository.deleteAll()
-        hospitalRepository.deleteAll()
-        departmentRepository.deleteAll()
-        doctorRepository.deleteAll()
-        userRepository.deleteAll()
 
         val medCollege = collegeRepository.save(CollegeEntity(name = "医学院"))
         val csCollege = collegeRepository.save(CollegeEntity(name = "计算机学院"))
@@ -111,7 +112,7 @@ class DataInitializer {
             title = "期中考试后急性焦虑",
             description = "期中考试后出现急性恐慌发作和睡眠剥夺",
             riskLevel = RiskStatus.HIGH,
-            status = ReferralStatus.AWAITING_FEEDBACK_APPROVAL,
+            status = ReferralStatus.WAITING_FOR_SCHEDULING,
             referredById = referrer.id,
             createdAt = LocalDateTime.now().minusDays(1),
             destination = dest

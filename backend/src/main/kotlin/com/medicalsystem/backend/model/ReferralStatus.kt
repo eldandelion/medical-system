@@ -6,8 +6,8 @@ enum class ReferralStatus(
     val value: String,
     val requiresStepType: ReferralStepType? = null
 ) {
-    DRAFT("Draft", null),
-    AWAITING_APPROVAL("AwaitingApproval", ReferralStepType.INITIATION),
+    DRAFT("Draft", ReferralStepType.INITIATION),
+    AWAITING_APPROVAL("AwaitingApproval", ReferralStepType.REVIEW),
     AWAITING_TRIAGE("AwaitingTriage", ReferralStepType.TRIAGE),
     WAITING_FOR_SCHEDULING("WaitingForScheduling", ReferralStepType.SCHEDULING),
     WAITING_FOR_APPOINTMENT("WaitingForAppointment", ReferralStepType.EVALUATION),

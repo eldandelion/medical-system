@@ -26,7 +26,18 @@ object ReferralFactory {
             referredById = referredById,
             clinicalStatus = clinicalStatus.toMutableList(),
             severeRiskFactors = severeRiskFactors.toMutableList(),
-            attachments = attachments.toMutableList()
+            attachments = attachments.toMutableList(),
+            steps = mutableListOf(
+                ReferralStep(
+                    id = null,
+                    type = ReferralStepType.INITIATION,
+                    title = "发起转诊",
+                    subtitle = if (isDraft) "草稿" else null,
+                    time = LocalDateTime.now(),
+                    status = ReferralStepStatus.ACTIVE,
+                    actorId = referredById
+                )
+            )
         )
 
         if (!isDraft) {

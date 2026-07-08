@@ -52,10 +52,10 @@ class ReferralEntity(
     var severeRiskFactors: MutableList<com.medicalsystem.backend.model.RiskFlagName> = mutableListOf(),
 
     @OneToMany(mappedBy = "referral", cascade = [CascadeType.ALL], orphanRemoval = true)
-    var attachments: MutableList<AttachmentEntity> = mutableListOf(),
+    var attachments: MutableSet<AttachmentEntity> = mutableSetOf(),
 
     @OneToMany(mappedBy = "referral", cascade = [CascadeType.ALL], orphanRemoval = true)
-    var steps: MutableList<ReferralStepEntity> = mutableListOf()
+    var steps: MutableSet<ReferralStepEntity> = mutableSetOf()
 ) {
 
     fun transition(newStatus: ReferralStatus, title: String, subtitle: String? = null, actorId: Long? = null) {

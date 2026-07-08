@@ -1,71 +1,66 @@
 # GEMINI.md - Project Context Summary
 
 ## Project Overview
-**Name**: University Medical Screening System (Frontend)
-**Purpose**: A medical screening and referral management system for universities, supporting multiple user roles (Student, Teacher, Head Councillor).
+**Name**: University Medical Screening System (Full Stack)
+**Purpose**: A comprehensive medical screening and referral management system for universities, supporting multiple user roles (Student, Teacher, Head Councillor, Admin, Doctors).
 
 ## Technology Stack
+### Frontend
 - **Core**: [React 19](https://react.dev/) (Functional Components, Hooks)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Build Tool**: [Vite 6](https://vitejs.dev/)
-- **Styling**:
-  - [Tailwind CSS 4](https://tailwindcss.com/)
-  - [Material Design 3](https://m3.material.io/) via [Material Web Components](https://github.com/material-components/material-web)
-  - Custom CSS variables for Material Design tokens (`var(--md-sys-color-*)`)
-- **Icons**: [Material Symbols](https://fonts.google.com/icons) & [Lucide React](https://lucide.dev/)
-- **Animations**: [Motion](https://motion.dev/) (Framer Motion)
-- **Charts**: [Recharts](https://recharts.org/)
-- **AI**: [@google/genai](https://www.npmjs.com/package/@google/genai) for AI-driven features
+- **Styling**: Tailwind CSS 4, Material Design 3 (Material Web Components), Custom CSS variables
+- **Libraries**: Motion (Framer Motion), Recharts, @google/genai
 
-## Architecture Pattern
-- **Role-Based Orchestration**: The application uses a role-based navigation model. `App.tsx` switches between `StudentPage`, `TeacherPage`, and `HeadCouncillorPage`.
-- **State Management**: 
-  - **Local State**: React `useState` and `useReducer` within components.
-  - **Global State**: React Context API (`ThemeContext`, `SidebarContext`, `CreationContext`).
-- **Component Hierarchy**:
-  - `pages/`: Orchestrate the overall layout and navigation for a specific user role.
-  - `components/`: Domain-organized components (e.g., `records/`, `students/`, `layout/`).
-  - `components/common/`: Atomic and reusable UI elements (e.g., `DataTable.tsx`, `DetailsPanel.tsx`, `GenericDialog.tsx`).
-- **Theming**: Dynamic theme switching (Light/Dark/System) managed via `ThemeContext` and applied through CSS variables.
+### Backend & Infrastructure
+- **Core**: [Spring Boot](https://spring.io/projects/spring-boot)
+- **Language**: [Kotlin](https://kotlinlang.org/)
+- **Data Access**: Spring Data JPA / Hibernate
+- **Database**: MySQL 8
+- **Infrastructure**: Docker & Docker Compose
+
+## Architecture & Design Patterns
+- **Frontend Architecture**: 
+  - Role-Based Orchestration (`App.tsx` routes to `StudentPage`, `TeacherPage`, etc.)
+  - Domain-organized components (`components/records`, `components/students`, etc.)
+- **Backend Architecture (Domain-Driven Design)**:
+  - **Pure Domain Models**: Business logic strictly uses pure Kotlin `enum class` and rich domain types.
+  - **Infrastructure Isolation**: JPA `@AttributeConverter` is utilized to map complex domain types (like enums) to highly optimized database structures (e.g., standard integers) without polluting the Domain layer.
+- **Database Standards**:
+  - Uses `BIGINT UNSIGNED` / `INT UNSIGNED` for primary and foreign keys.
+  - Strictly avoids MySQL native `ENUM` types in favor of integer-backed application lookups or dedicated lookup tables.
+  - Strategically uses composite indexes for common query patterns (e.g., `idx_referral_student_status`).
+
+## Installed Agent Skills & Best Practices
+1. **Test-Driven Development (TDD)**:
+   - **The Iron Law**: NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST.
+   - Always Red -> Green -> Refactor. 
+2. **MySQL Expertise**:
+   - Focuses on highly optimized schemas, covering indexes, and avoiding technical debt (like native Enums).
+3. **Domain-Driven Design (DDD)**:
+   - Maintains ubiquitous language and bounded contexts.
+4. **Clean Code**:
+   - High standards for readability, small focused methods, and maintainability.
 
 ## Directory Structure
 ```text
 /
-├── src/
-│   ├── components/       # UI components organized by domain/purpose
-│   │   ├── layout/       # App shell: Sidebar, Header, NavItem, etc.
-│   │   ├── common/       # Reusable UI: ActionComponents, DataTable, etc.
-│   │   ├── dashboard/    # Dashboard-specific widgets
-│   │   ├── records/      # RecordsView, ReferralManagement, etc.
-│   │   ├── students/     # Student views and details
-│   │   ├── staff/        # Staff management and details
-│   │   ├── assessments/  # SelfAssessments, AssessmentCard
-│   │   ├── profile/      # Profile views and details
-│   │   ├── notifications/# NotificationsView, NotificationItem
-│   │   ├── security/     # SecurityConsentView
-│   │   └── creation-overlay/ # Specialized creation flow components
-│   ├── contexts/         # React Context providers (Theme, Sidebar, etc.)
-│   ├── pages/            # Role-specific entry point components
-│   ├── types/            # TypeScript interfaces and shared types
-│   ├── App.tsx           # Root component with role-based routing logic
-│   ├── main.tsx          # Application entry point
-│   └── index.css         # Global styles and Material Design 3 token definitions
-├── public/               # Static assets
-├── vite.config.ts        # Vite configuration
-├── tsconfig.json         # TypeScript configuration
-└── package.json          # Dependencies and scripts
+├── frontend/             # Vite React Application
+│   ├── src/              # React source code (components, pages, contexts)
+│   ├── public/           # Static assets
+│   └── package.json      # Frontend dependencies
+├── backend/              # Spring Boot Kotlin Application
+│   ├── src/main/kotlin/  # Kotlin source code (controllers, services, models, entities, converters)
+│   ├── src/test/kotlin/  # TDD Test Suite
+│   └── pom.xml           # Maven dependencies
+├── .agent/skills/        # AI Agent Skills (TDD, MySQL, DDD, Clean Code)
+└── docker-compose.yml    # Deployment orchestration (db, frontend, backend)
 ```
 
 ## Coding Conventions
-- **Component Structure**: Always use Functional Components with Hooks.
+- **Component Structure (React)**: Always use Functional Components with Hooks.
 - **Naming**:
-  - Components: `PascalCase` (e.g., `ReferralDetailsView.tsx`)
-  - Utilities/Functions: `camelCase`
-  - Types/Interfaces: `PascalCase` (e.g., `HeaderProps`)
-- **Styling**:
-  - Prefer Material Design 3 tokens (`var(--md-sys-color-*)`) for colors and elevation.
-  - Use Tailwind CSS for layout, spacing, and responsive design.
-  - Utilize Material Web components (`<md-icon>`, `<md-button>`) for standard UI elements.
-- **Type Safety**: Strictly define interfaces for all component props and state objects. Avoid `any` where possible (unless for specific demo/legacy hooks).
-- **Organization**: Group related sub-components into folders (e.g., `creation-overlay`) or keep them in `components/` if they are shared across views.
-
+  - React Components/Types: `PascalCase`
+  - Kotlin Classes/Entities: `PascalCase`
+  - Utilities/Functions/Variables: `camelCase`
+- **Testing**: Tests must accurately reflect the behavior of the new services/controllers, using strict mock verification.
