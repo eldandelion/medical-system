@@ -42,4 +42,21 @@ class ReferralController(
     ): ReferralDto {
         return referralService.initiateReferral(dto, token)
     }
+
+    @PostMapping("/{id}/approve")
+    fun approveReferral(
+        @PathVariable id: Long,
+        @RequestHeader(value = "Authorization", required = false) token: String?
+    ): ReferralDto {
+        return referralService.approveReferral(id, token)
+    }
+
+    @PostMapping("/{id}/reject")
+    fun rejectReferral(
+        @PathVariable id: Long,
+        @Valid @RequestBody dto: com.medicalsystem.backend.dto.RejectReferralDto,
+        @RequestHeader(value = "Authorization", required = false) token: String?
+    ): ReferralDto {
+        return referralService.rejectReferral(id, dto, token)
+    }
 }

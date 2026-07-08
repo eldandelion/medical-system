@@ -235,6 +235,7 @@ export const handlers = [
     return HttpResponse.json({ success: true });
   }),
 
+  /*
   http.post(api('/api/referrals/:id/approve'), async ({ request, params }) => {
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';
@@ -254,13 +255,13 @@ export const handlers = [
 
     referral.status = 'AwaitingTriage';
     if ((referral as any).extendedData?.steps) {
-      const reviewStep = (referral as any).extendedData.steps.find(s => s.type === 'review');
+      const reviewStep = (referral as any).extendedData.steps.find((s: any) => s.type === 'review');
       if (reviewStep) {
         reviewStep.status = 'completed';
         reviewStep.subtitle = '审核已通过';
         reviewStep.time = new Date().toISOString();
       }
-      const triageStep = (referral as any).extendedData.steps.find(s => s.type === 'triage');
+      const triageStep = (referral as any).extendedData.steps.find((s: any) => s.type === 'triage');
       if (triageStep) {
         triageStep.status = 'active';
         triageStep.subtitle = '正在处理分诊信息...';
@@ -288,7 +289,7 @@ export const handlers = [
       if (referral.status !== 'AwaitingTriage') {
         return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting triage referrals can be rejected by trial admin' });
       }
-      const triageStep = (referral as any).extendedData?.steps?.find(s => s.type === 'triage');
+      const triageStep = (referral as any).extendedData?.steps?.find((s: any) => s.type === 'triage');
       if (triageStep?.status !== 'active') {
         return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Triage must be active' });
       }
@@ -317,27 +318,27 @@ export const handlers = [
 
     if ((referral as any).extendedData?.steps) {
       if (authHeader.includes('head_councillor')) {
-        const reviewStep = (referral as any).extendedData.steps.find(s => s.type === 'review');
+        const reviewStep = (referral as any).extendedData.steps.find((s: any) => s.type === 'review');
         if (reviewStep) {
           reviewStep.status = 'issue';
           reviewStep.subtitle = `申请被拒绝: ${reason}`;
           reviewStep.time = new Date().toISOString();
         }
       } else if (authHeader.includes('trial_admin')) {
-        const triageStep = (referral as any).extendedData.steps.find(s => s.type === 'triage');
+        const triageStep = (referral as any).extendedData.steps.find((s: any) => s.type === 'triage');
         if (triageStep) {
           triageStep.status = 'issue';
           triageStep.subtitle = `分诊被拒绝: ${reason}`;
           triageStep.time = new Date().toISOString();
         }
       } else if (authHeader.includes('doctor')) {
-        const schedulingStep = (referral as any).extendedData.steps.find(s => s.type === 'scheduling');
+        const schedulingStep = (referral as any).extendedData.steps.find((s: any) => s.type === 'scheduling');
         if (schedulingStep) {
           schedulingStep.status = 'issue';
           schedulingStep.subtitle = `排诊被拒绝: ${reason}`;
           schedulingStep.time = new Date().toISOString();
         }
-        const triageStep = (referral as any).extendedData.steps.find(s => s.type === 'triage');
+        const triageStep = (referral as any).extendedData.steps.find((s: any) => s.type === 'triage');
         if (triageStep) {
           triageStep.status = 'active';
           triageStep.subtitle = '等待重新分配医生';
@@ -347,6 +348,7 @@ export const handlers = [
 
     return HttpResponse.json({ success: true });
   }),
+  */
 
   http.post(api('/api/referrals/:id/assign'), async ({ request, params }) => {
     const { id } = params;

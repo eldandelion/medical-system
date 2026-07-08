@@ -18,5 +18,6 @@ data class ReferralStepDto(
     val id: String,
     val type: String,
     val time: String,
-    val status: String
+    val status: String,
+    val reason: String? = null
 )

@@ -59,7 +59,8 @@ class ReferralMapper(
                     type = it.type,
                     time = it.time,
                     status = it.status,
-                    actorId = it.actorId
+                    actorId = it.actorId,
+                    reason = it.reason
                 )
             }.toMutableList()
         )
@@ -107,7 +108,8 @@ class ReferralMapper(
                 type = it.type,
                 time = it.time,
                 status = it.status,
-                actorId = it.actorId
+                actorId = it.actorId,
+                reason = it.reason
             )
         }.toMutableSet()
 
@@ -206,7 +208,8 @@ class ReferralMapper(
                 id = step.id.toString(),
                 type = step.type.toValue(),
                 time = step.time.toString(),
-                status = step.status.toValue()
+                status = step.status.toValue(),
+                reason = step.reason
             )
         }.toMutableList()
 

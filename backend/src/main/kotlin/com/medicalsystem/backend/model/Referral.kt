@@ -7,7 +7,8 @@ data class ReferralStep(
     val type: ReferralStepType,
     val time: LocalDateTime,
     var status: ReferralStepStatus,
-    val actorId: Long?
+    val actorId: Long?,
+    val reason: String? = null
 )
 
 class Referral(
@@ -26,7 +27,7 @@ class Referral(
     val attachments: MutableList<Attachment> = mutableListOf(),
     val steps: MutableList<ReferralStep> = mutableListOf()
 ) : AggregateRoot() {
-    fun transition(newStatus: ReferralStatus, actorId: Long? = null) {
+    fun transition(newStatus: ReferralStatus, actorId: Long? = null, reason: String? = null) {
         if (!newStatus.canTransitionFrom(this.status)) {
             throw com.medicalsystem.backend.exception.InvalidReferralTransitionException(this.status.name, newStatus.name)
         }
@@ -61,7 +62,8 @@ class Referral(
                 type = stepType,
                 time = LocalDateTime.now(),
                 status = ReferralStepStatus.ACTIVE,
-                actorId = actorId
+                actorId = actorId,
+                reason = reason
             )
             this.steps.add(step)
         }

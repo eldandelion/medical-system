@@ -25,5 +25,8 @@ class ReferralStepEntity(
     var status: ReferralStepStatus,
 
     @Column(name = "actor_id")
-    var actorId: Long? = null
+    var actorId: Long? = null,
+
+    @Column(length = 500)
+    var reason: String? = null
 )
