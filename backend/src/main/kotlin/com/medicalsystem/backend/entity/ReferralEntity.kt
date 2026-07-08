@@ -58,7 +58,7 @@ class ReferralEntity(
     var steps: MutableSet<ReferralStepEntity> = mutableSetOf()
 ) {
 
-    fun transition(newStatus: ReferralStatus, title: String, subtitle: String? = null, actorId: Long? = null) {
+    fun transition(newStatus: ReferralStatus, actorId: Long? = null) {
         require(newStatus.canTransitionFrom(this.status)) {
             "Invalid transition from ${this.status} to $newStatus"
         }
@@ -79,8 +79,6 @@ class ReferralEntity(
             val step = ReferralStepEntity(
                 referral = this,
                 type = stepType,
-                title = title,
-                subtitle = subtitle,
                 time = LocalDateTime.now(),
                 status = com.medicalsystem.backend.model.ReferralStepStatus.ACTIVE,
                 actorId = actorId

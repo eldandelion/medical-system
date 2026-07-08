@@ -31,8 +31,6 @@ object ReferralFactory {
                 ReferralStep(
                     id = null,
                     type = ReferralStepType.INITIATION,
-                    title = "发起转诊",
-                    subtitle = if (isDraft) "草稿" else null,
                     time = LocalDateTime.now(),
                     status = ReferralStepStatus.ACTIVE,
                     actorId = referredById
@@ -41,7 +39,7 @@ object ReferralFactory {
         )
 
         if (!isDraft) {
-            referral.transition(ReferralStatus.AWAITING_APPROVAL, "Referral Submitted")
+            referral.transition(ReferralStatus.AWAITING_APPROVAL)
         }
         return referral
     }

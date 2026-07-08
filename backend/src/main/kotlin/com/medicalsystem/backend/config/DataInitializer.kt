@@ -121,8 +121,6 @@ class DataInitializer {
         val step1 = ReferralStepEntity(
             referral = ref1,
             type = ReferralStepType.INITIATION,
-            title = "发起转诊",
-            subtitle = "由辅导员提交",
             time = LocalDateTime.now().minusDays(1),
             status = ReferralStepStatus.COMPLETED,
             actorId = referrer.id
@@ -130,8 +128,6 @@ class DataInitializer {
         val step2 = ReferralStepEntity(
             referral = ref1,
             type = ReferralStepType.REVIEW,
-            title = "转诊审核",
-            subtitle = "等待院级审批",
             time = LocalDateTime.now().minusHours(20),
             status = ReferralStepStatus.COMPLETED,
             actorId = referrer.id
@@ -139,8 +135,6 @@ class DataInitializer {
         val step3 = ReferralStepEntity(
             referral = ref1,
             type = ReferralStepType.TRIAGE,
-            title = "分诊评估",
-            subtitle = "分诊至市精神卫生中心",
             time = LocalDateTime.now().minusHours(18),
             status = ReferralStepStatus.COMPLETED,
             actorId = triageAdmin.id
@@ -148,8 +142,6 @@ class DataInitializer {
         val step4 = ReferralStepEntity(
             referral = ref1,
             type = ReferralStepType.SCHEDULING,
-            title = "预约安排",
-            subtitle = "等待预约确认",
             time = LocalDateTime.now().minusHours(5),
             status = ReferralStepStatus.ACTIVE,
             actorId = triageAdmin.id
@@ -171,8 +163,6 @@ class DataInitializer {
         val ref2Step1 = ReferralStepEntity(
             referral = ref2,
             type = ReferralStepType.INITIATION,
-            title = "发起转诊",
-            subtitle = "由辅导员提交",
             time = LocalDateTime.now().minusDays(2),
             status = ReferralStepStatus.COMPLETED,
             actorId = referrer.id
@@ -180,8 +170,6 @@ class DataInitializer {
         val ref2Step2 = ReferralStepEntity(
             referral = ref2,
             type = ReferralStepType.REVIEW,
-            title = "转诊审核",
-            subtitle = "等待院级审批",
             time = LocalDateTime.now().minusHours(24),
             status = ReferralStepStatus.COMPLETED,
             actorId = referrer.id
@@ -189,8 +177,6 @@ class DataInitializer {
         val ref2Step3 = ReferralStepEntity(
             referral = ref2,
             type = ReferralStepType.TRIAGE,
-            title = "分诊评估",
-            subtitle = "等待分诊安排",
             time = LocalDateTime.now().minusHours(12),
             status = ReferralStepStatus.ACTIVE,
             actorId = triageAdmin.id

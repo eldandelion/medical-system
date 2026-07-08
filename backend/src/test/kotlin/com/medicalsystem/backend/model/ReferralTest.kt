@@ -21,7 +21,6 @@ class ReferralTest {
         val step = referral.steps[0]
         assertEquals(ReferralStepType.INITIATION, step.type)
         assertEquals(ReferralStepStatus.ACTIVE, step.status)
-        assertEquals("草稿", step.subtitle)
         assertEquals(2L, step.actorId)
     }
 
@@ -42,7 +41,6 @@ class ReferralTest {
         val step1 = referral.steps[0]
         assertEquals(ReferralStepType.INITIATION, step1.type)
         assertEquals(ReferralStepStatus.COMPLETED, step1.status)
-        assertNull(step1.subtitle)
         
         val step2 = referral.steps[1]
         assertEquals(ReferralStepType.REVIEW, step2.type)
@@ -60,7 +58,7 @@ class ReferralTest {
             isDraft = false
         )
 
-        referral.transition(ReferralStatus.AWAITING_TRIAGE, "Triage Started")
+        referral.transition(ReferralStatus.AWAITING_TRIAGE)
 
         assertEquals(ReferralStatus.AWAITING_TRIAGE, referral.status)
         assertEquals(3, referral.steps.size)

@@ -59,6 +59,45 @@ export const getIconForType = (type: ReferralStepType) => {
   }
 };
 
+export const getStepTitle = (type: ReferralStepType) => {
+  switch (type) {
+    case 'initiation': return '发起转诊';
+    case 'review': return '转诊审核';
+    case 'triage': return '分诊评估';
+    case 'scheduling': return '预约安排';
+    case 'evaluation': return '医生评估';
+    case 'feedback': return '反馈跟进';
+    default: return '未知步骤';
+  }
+};
+
+export const getStepSubtitle = (type: ReferralStepType, status: ReferralStepStatus) => {
+  if (status === 'pending') {
+    return '等待进行';
+  }
+  
+  if (status === 'issue') {
+    return '出现问题';
+  }
+
+  switch (type) {
+    case 'initiation': 
+      return status === 'completed' ? '转诊已发起' : '草稿';
+    case 'review': 
+      return status === 'active' ? '等待院级审批' : '审批已完成';
+    case 'triage': 
+      return status === 'active' ? '等待分诊安排' : '分诊已完成';
+    case 'scheduling': 
+      return status === 'active' ? '等待预约确认' : '预约已安排';
+    case 'evaluation': 
+      return status === 'active' ? '等待医生评估' : '评估已完成';
+    case 'feedback': 
+      return status === 'active' ? '等待反馈填写' : '反馈已完成';
+    default: 
+      return '';
+  }
+};
+
 const getIconStyles = (status: ReferralStepStatus) => {
   if (status === 'issue') {
     return {
@@ -135,7 +174,7 @@ export function ReferralTracker({ steps }: ReferralTrackerProps) {
                   <div className="flex-1 pt-1.5">
                     <div className="flex justify-between items-center mb-3">
                       <h3 className={`text-[17px] font-medium tracking-tight ${styles.titleText}`}>
-                        {step.title}
+                        {getStepTitle(step.type)}
                       </h3>
                       <span className={`text-[15px] whitespace-nowrap ${styles.timeText}`}>
                         {formatDateToChinese(step.time)}
@@ -145,7 +184,7 @@ export function ReferralTracker({ steps }: ReferralTrackerProps) {
                     <div className="flex items-start gap-1.5">
                       <Info size={14} className={`mt-0.5 shrink-0 ${styles.subText}`} />
                       <p className={`text-[13px] leading-relaxed ${styles.subText}`}>
-                        {step.subtitle}
+                        {getStepSubtitle(step.type, step.status)}
                       </p>
                     </div>
                   </div>

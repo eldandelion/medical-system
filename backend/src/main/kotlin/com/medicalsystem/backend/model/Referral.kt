@@ -5,8 +5,6 @@ import java.time.LocalDateTime
 data class ReferralStep(
     val id: Long?,
     val type: ReferralStepType,
-    val title: String,
-    val subtitle: String?,
     val time: LocalDateTime,
     var status: ReferralStepStatus,
     val actorId: Long?
@@ -28,7 +26,7 @@ class Referral(
     val attachments: MutableList<Attachment> = mutableListOf(),
     val steps: MutableList<ReferralStep> = mutableListOf()
 ) : AggregateRoot() {
-    fun transition(newStatus: ReferralStatus, title: String, subtitle: String? = null, actorId: Long? = null) {
+    fun transition(newStatus: ReferralStatus, actorId: Long? = null) {
         if (!newStatus.canTransitionFrom(this.status)) {
             throw com.medicalsystem.backend.exception.InvalidReferralTransitionException(this.status.name, newStatus.name)
         }
@@ -61,8 +59,6 @@ class Referral(
             val step = ReferralStep(
                 id = null,
                 type = stepType,
-                title = title,
-                subtitle = subtitle,
                 time = LocalDateTime.now(),
                 status = ReferralStepStatus.ACTIVE,
                 actorId = actorId

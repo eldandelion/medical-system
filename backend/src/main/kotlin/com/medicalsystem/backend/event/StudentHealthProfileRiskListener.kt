@@ -7,7 +7,10 @@ import org.springframework.context.event.EventListener
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 
+import org.springframework.transaction.annotation.Transactional
+
 @Component
+@Transactional
 class StudentHealthProfileRiskListener(
     private val healthProfileRepository: StudentHealthProfileRepository
 ) {

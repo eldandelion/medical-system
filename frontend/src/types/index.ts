@@ -7,8 +7,6 @@ export type SevereRiskFactorType = 'SUICIDAL_IDEATION' | 'SUICIDE_ATTEMPT' | 'SE
 export interface ReferralStep {
   id: string | number;
   type: ReferralStepType;
-  title: string;
-  subtitle: string;
   time: string;
   status: ReferralStepStatus;
 }

@@ -18,12 +18,6 @@ class ReferralStepEntity(
     @Column(nullable = false, length = 30)
     var type: ReferralStepType,
 
-    @Column(nullable = false, length = 100)
-    var title: String,
-
-    @Column(length = 255)
-    var subtitle: String? = null,
-
     @Column(nullable = false)
     var time: LocalDateTime,
 

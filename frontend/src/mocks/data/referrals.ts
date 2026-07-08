@@ -125,48 +125,36 @@ const generateTrackerSteps = (referral: Referral): ReferralStep[] => {
     {
       id: `${referral.id}-1`,
       type: 'initiation',
-      title: '发起转诊',
-      subtitle: isDraft ? '等待提交' : `${referral.referredBy?.name || '未知系统'} 提交了转诊申请`,
       time: isDraft ? '' : referral.date,
       status: isDraft ? 'pending' : 'completed'
     },
     {
       id: `${referral.id}-2`,
       type: 'review',
-      title: '辅导员审核',
-      subtitle: isDraft ? '等待提交申请' : (isAwaiting ? '等待辅导员审核中' : '审核已通过'),
       time: isDraft ? '' : (isAwaiting ? '等待中' : '2026年4月29日'),
       status: isDraft ? 'pending' : (isAwaiting ? 'active' : 'completed')
     },
     {
       id: `${referral.id}-3`,
       type: 'triage',
-      title: '心理中心分诊',
-      subtitle: (isDraft || isAwaiting) ? '等待审核完成' : (isAwaitingTriage ? (hasDoctorRejection ? '等待重新分配医生' : '等待分配医生') : '分诊已完成，已分配对应科室'),
       time: (isDraft || isAwaiting) ? '' : (isAwaitingTriage ? '进行中' : '2026年4月30日'),
       status: (isDraft || isAwaiting) ? 'pending' : (isAwaitingTriage ? 'active' : 'completed')
     },
     {
       id: `${referral.id}-3.5`,
       type: 'scheduling',
-      title: '预约排诊',
-      subtitle: (isDraft || isAwaiting || isAwaitingTriage) ? (hasDoctorRejection ? '医生已拒绝排诊' : '等待分诊完成') : (isWaitingForScheduling ? '等待医生安排就诊时间' : '已预约时间'),
       time: (isDraft || isAwaiting || isAwaitingTriage || isWaitingForScheduling) ? '' : '2026年4月30日',
       status: (isDraft || isAwaiting || isAwaitingTriage) ? (hasDoctorRejection && isAwaitingTriage ? 'issue' : 'pending') : (isWaitingForScheduling ? 'active' : 'completed')
     },
     {
       id: `${referral.id}-4`,
       type: 'evaluation',
-      title: '医生评估',
-      subtitle: (isDraft || isAwaiting || isAwaitingTriage || isWaitingForScheduling) ? '等待排诊完成' : (isWaitingForAppointment ? '等待医生评估' : '医生已完成初步评估'),
       time: (isDraft || isAwaiting || isAwaitingTriage || isWaitingForScheduling || isWaitingForAppointment) ? '' : '2026年5月1日',
       status: (isDraft || isAwaiting || isAwaitingTriage || isWaitingForScheduling) ? 'pending' : (isWaitingForAppointment ? 'active' : 'completed')
     },
     {
       id: `${referral.id}-5`,
       type: 'feedback',
-      title: '评估反馈与随访计划',
-      subtitle: isClosed ? '已出具随访计划并反馈' : (isAwaitingFeedbackApproval ? '等待辅导员确认反馈' : '等待医生评估完成'),
       time: isClosed ? '2026年5月2日' : '',
       status: isClosed ? 'completed' : (isAwaitingFeedbackApproval ? 'active' : 'pending')
     }
@@ -175,15 +163,12 @@ const generateTrackerSteps = (referral: Referral): ReferralStep[] => {
   // Add a specific mock issue for Chen Siyu to showcase the "issue" status
   if (referral.id === '4') {
     steps[2].status = 'issue';
-    steps[2].subtitle = '需要进一步确认风险情况';
     steps[2].time = '2026年4月19日';
     
     // Ensure subsequent steps remain pending/empty
     steps[3].status = 'pending';
-    steps[3].subtitle = '等待分诊问题解决';
     steps[3].time = '';
     steps[4].status = 'pending';
-    steps[4].subtitle = '等待前置步骤完成';
     steps[4].time = '';
   }
 

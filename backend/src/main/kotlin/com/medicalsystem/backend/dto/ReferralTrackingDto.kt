@@ -17,8 +17,6 @@ data class DestinationDto(
 data class ReferralStepDto(
     val id: String,
     val type: String,
-    val title: String,
-    val subtitle: String?,
     val time: String,
     val status: String
 )

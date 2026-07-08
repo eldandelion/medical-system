@@ -57,8 +57,6 @@ class ReferralMapper(
                 ReferralStep(
                     id = it.id,
                     type = it.type,
-                    title = it.title,
-                    subtitle = it.subtitle,
                     time = it.time,
                     status = it.status,
                     actorId = it.actorId
@@ -107,8 +105,6 @@ class ReferralMapper(
                 id = it.id ?: 0,
                 referral = entity,
                 type = it.type,
-                title = it.title,
-                subtitle = it.subtitle,
                 time = it.time,
                 status = it.status,
                 actorId = it.actorId
@@ -153,15 +149,15 @@ class ReferralMapper(
         }
 
         val standardSequence = listOf(
-            com.medicalsystem.backend.model.ReferralStepType.INITIATION to "发起转诊",
-            com.medicalsystem.backend.model.ReferralStepType.REVIEW to "转诊审核",
-            com.medicalsystem.backend.model.ReferralStepType.TRIAGE to "分诊评估",
-            com.medicalsystem.backend.model.ReferralStepType.SCHEDULING to "预约安排",
-            com.medicalsystem.backend.model.ReferralStepType.EVALUATION to "医生评估",
-            com.medicalsystem.backend.model.ReferralStepType.FEEDBACK to "反馈跟进"
+            com.medicalsystem.backend.model.ReferralStepType.INITIATION,
+            com.medicalsystem.backend.model.ReferralStepType.REVIEW,
+            com.medicalsystem.backend.model.ReferralStepType.TRIAGE,
+            com.medicalsystem.backend.model.ReferralStepType.SCHEDULING,
+            com.medicalsystem.backend.model.ReferralStepType.EVALUATION,
+            com.medicalsystem.backend.model.ReferralStepType.FEEDBACK
         )
 
-        val typeIndices = standardSequence.mapIndexed { index, pair -> pair.first to index }.toMap()
+        val typeIndices = standardSequence.mapIndexed { index, type -> type to index }.toMap()
 
         val sortedModelSteps = model.steps.sortedWith(
             compareBy<com.medicalsystem.backend.model.ReferralStep> { typeIndices[it.type] ?: 999 }
@@ -172,8 +168,6 @@ class ReferralMapper(
             com.medicalsystem.backend.dto.ReferralStepDto(
                 id = step.id.toString(),
                 type = step.type.toValue(),
-                title = step.title,
-                subtitle = step.subtitle,
                 time = step.time.toString(),
                 status = step.status.toValue()
             )
@@ -185,7 +179,7 @@ class ReferralMapper(
 
             val lastActualStepType = sortedModelSteps.lastOrNull()?.type
             val nextIndex = if (lastActualStepType != null) {
-                standardSequence.indexOfFirst { it.first == lastActualStepType } + 1
+                standardSequence.indexOf(lastActualStepType) + 1
             } else 0
 
             if (nextIndex in 1 until standardSequence.size) {
@@ -193,9 +187,7 @@ class ReferralMapper(
                     mappedSteps.add(
                         com.medicalsystem.backend.dto.ReferralStepDto(
                             id = "pending_$i",
-                            type = standardSequence[i].first.toValue(),
-                            title = standardSequence[i].second,
-                            subtitle = "等待进行",
+                            type = standardSequence[i].toValue(),
                             time = "",
                             status = "pending"
                         )
