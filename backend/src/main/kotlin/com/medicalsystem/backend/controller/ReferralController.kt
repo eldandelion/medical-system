@@ -19,12 +19,18 @@ class ReferralController(
     }
 
     @GetMapping("/{id}")
-    fun fetchReferralDetails(@PathVariable id: Long): ReferralDto {
-        return referralService.fetchReferralDetails(id)
+    fun fetchReferralDetails(
+        @PathVariable id: Long,
+        @RequestHeader(value = "Authorization", required = false) token: String?
+    ): com.medicalsystem.backend.dto.ReferralDetailsDto {
+        return referralService.fetchReferralDetails(id, token)
     }
 
     @GetMapping("/{id}/tracking")
-    fun fetchReferralTracking(@PathVariable id: Long): com.medicalsystem.backend.dto.ReferralTrackingDto {
+    fun fetchReferralTracking(
+        @PathVariable id: Long,
+        @RequestHeader(value = "Authorization", required = false) token: String?
+    ): com.medicalsystem.backend.dto.ReferralTrackingDto {
         return referralService.fetchReferralTracking(id)
     }
 

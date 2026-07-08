@@ -114,7 +114,7 @@ class ReferralMapper(
         return entity
     }
 
-    fun toDto(model: Referral): ReferralDto {
+    fun toDto(model: Referral, currentUser: com.medicalsystem.backend.model.User? = null): ReferralDto {
         val student = studentRepository.findById(model.studentId).orElse(null)
         val user = userRepository.findById(model.referredById).orElse(null)
         return ReferralDto(
@@ -127,7 +127,44 @@ class ReferralMapper(
             description = model.description,
             riskLevel = model.riskLevel,
             status = model.status,
-            referredBy = ReferredByDto(user?.name ?: "Unknown")
+            referredBy = ReferredByDto(user?.name ?: "Unknown"),
+            availableActions = currentUser?.let { model.getAllowedActions(it).map { action -> action.name.lowercase() } } ?: emptyList()
+        )
+    }
+
+    fun toDetailsDto(model: Referral, currentUser: com.medicalsystem.backend.model.User? = null): com.medicalsystem.backend.dto.ReferralDetailsDto {
+        val baseInfo = toDto(model, currentUser)
+        val student = studentRepository.findById(model.studentId).orElse(null)
+        
+        val studentDemographics = com.medicalsystem.backend.dto.StudentDemographicsDto(
+            studentId = student?.studentNumber ?: "Unknown",
+            school = "未知学院",
+            grade = "未知年级",
+            phone = "未知电话",
+            age = 20, // Default mock value since backend doesn't store this yet
+            gender = "未知"
+        )
+
+        val triageInfo = com.medicalsystem.backend.dto.TriageInfoDto(
+            isFirstVisit = model.clinicalStatus.contains(com.medicalsystem.backend.model.ClinicalStatusType.FIRST_VISIT),
+            isMedicated = model.clinicalStatus.contains(com.medicalsystem.backend.model.ClinicalStatusType.MEDICATED),
+            priorTherapy = if (model.clinicalStatus.contains(com.medicalsystem.backend.model.ClinicalStatusType.PRIOR_THERAPY)) "有" else "无",
+            fullDescription = model.description
+        )
+
+        val riskAssessment = com.medicalsystem.backend.dto.RiskAssessmentDto(
+            ideation = model.severeRiskFactors.contains(com.medicalsystem.backend.model.RiskFlagName.SUICIDAL_IDEATION),
+            attempt = model.severeRiskFactors.contains(com.medicalsystem.backend.model.RiskFlagName.SUICIDE_ATTEMPT),
+            selfHarm = model.severeRiskFactors.contains(com.medicalsystem.backend.model.RiskFlagName.SELF_HARM),
+            notes = null
+        )
+
+        return com.medicalsystem.backend.dto.ReferralDetailsDto(
+            baseInfo = baseInfo,
+            studentDemographics = studentDemographics,
+            triageInfo = triageInfo,
+            riskAssessment = riskAssessment,
+            feedback = null
         )
     }
 

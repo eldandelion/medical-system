@@ -35,7 +35,7 @@ export function RecordsView({ onRecordSelect, selectedRecordId, header }: Record
       });
       if (!res.ok) throw new Error('Failed to fetch referrals');
       const rawData = await res.json();
-      return rawData.map(enrichReferralStatus);
+      return rawData.map((r: any) => enrichReferralStatus(r));
     }
   });
   const records = recordsData || [];

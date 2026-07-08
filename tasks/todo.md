@@ -1,0 +1,7 @@
+- [ ] Task 1: Define ReferralAction Enum and Domain Logic
+- [ ] Checkpoint: Backend Domain
+- [ ] Task 2: Update DTOs and Mapper
+- [ ] Checkpoint: Backend APIs
+- [ ] Task 3: Refactor Frontend Types & Mock Handlers
+- [ ] Task 4: Update UI Consumer
+- [ ] Checkpoint: Complete

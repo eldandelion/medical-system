@@ -111,8 +111,7 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, h
       if (!res.ok) throw new Error('Failed to fetch referrals');
       const rawData: Referral[] = await res.json();
       
-      // Removed unnecessary useCallback and processed directly
-      return rawData.map(enrichReferralStatus);
+      return rawData.map((r: any) => enrichReferralStatus(r));
     }
   });
   

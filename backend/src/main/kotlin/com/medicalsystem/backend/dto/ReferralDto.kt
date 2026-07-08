@@ -15,7 +15,8 @@ data class ReferralDto(
     val description: String,
     val riskLevel: RiskStatus,
     val status: ReferralStatus,
-    val referredBy: ReferredByDto
+    val referredBy: ReferredByDto,
+    val availableActions: List<String> = emptyList()
 )
 
 data class ReferredByDto(

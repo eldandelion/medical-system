@@ -8,9 +8,11 @@ const ACTIVE_STEP_STATUS_MAP: Record<string, string> = {
   'feedback': 'AwaitingFeedbackApproval',
 };
 
-export function enrichReferralStatus(referral: Referral): Referral {
-  const steps = referral.extendedData?.steps;
-
+export function enrichReferralStatus(
+  referral: Referral,
+  steps?: any[],
+  appointmentTime?: string
+): Referral {
   // Guard Clause: If there are no steps or it's already explicitly rejected, skip processing
   if (!steps || referral.status === 'Rejected') {
     return { ...referral, displayStatus: referral.status };
@@ -29,8 +31,8 @@ export function enrichReferralStatus(referral: Referral): Referral {
     : referral.status;
 
   // Rule 3: For evaluation step, if the scheduled time is reached, change status to Pending
-  if (activeStep?.type === 'evaluation' && referral.extendedData?.destination?.appointmentTime) {
-    const apptTime = new Date(referral.extendedData.destination.appointmentTime).getTime();
+  if (activeStep?.type === 'evaluation' && appointmentTime) {
+    const apptTime = new Date(appointmentTime).getTime();
     if (Date.now() >= apptTime) {
       displayStatus = 'Pending';
     }

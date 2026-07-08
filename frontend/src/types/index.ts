@@ -40,41 +40,40 @@ export interface Referral {
     name: string;
     avatar?: string;
   };
-  extendedData?: {
-    age: number;
-    gender: string;
+}
+
+export interface Attachment {
+  name: String;
+  size: String;
+}
+
+export interface ReferralDetails {
+  baseInfo: Referral;
+  studentDemographics: {
+    age?: number;
+    gender?: string;
     studentId: string;
     school: string;
     grade: string;
     phone: string;
-    triage: {
-      isFirstVisit: boolean;
-      isMedicated: boolean;
-      priorTherapy: string;
-      scidDiagnosis: string;
-      fullDescription: string;
-    };
-    risk: {
-      ideation: boolean;
-      attempt: boolean;
-      selfHarm: boolean;
-      notes: string;
-    };
-    scores: {
-      name: string;
-      value: number;
-      max: number;
-      level: string;
-    }[];
-    feedback: {
-      summary: string;
-      followUp: string;
-      attachments: {
-        name: string;
-        size: string;
-      }[];
-    };
-    rejectedBy?: string[];
+  };
+  triageInfo: {
+    isFirstVisit: boolean;
+    isMedicated: boolean;
+    priorTherapy: string;
+    scidDiagnosis?: string;
+    fullDescription: string;
+  };
+  riskAssessment: {
+    ideation: boolean;
+    attempt: boolean;
+    selfHarm: boolean;
+    notes?: string;
+  };
+  feedback?: {
+    summary: string;
+    followUp: string;
+    attachments: Attachment[];
   };
 }
 

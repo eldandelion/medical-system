@@ -2,6 +2,15 @@ import React from 'react';
 import { ReferralStep } from '../../types';
 import { getIconForType } from './ReferralTracker';
 
+const STEP_TITLES: Record<string, string> = {
+  'initiation': '转诊发起',
+  'review': '辅导员审批',
+  'triage': '中心分诊',
+  'scheduling': '预约排期',
+  'evaluation': '医生评估',
+  'feedback': '诊疗反馈'
+};
+
 interface ReferralStatusCardProps {
   activeStep?: ReferralStep;
   onClick?: () => void;
@@ -46,7 +55,7 @@ export function ReferralStatusCard({ activeStep, onClick }: ReferralStatusCardPr
           )}
         </div>
         <span className={`text-[17px] font-medium tracking-tight ${titleText}`}>
-          {activeStep ? activeStep.title : '转诊处理中'}
+          {activeStep ? (STEP_TITLES[activeStep.type] || activeStep.type) : '转诊处理中'}
         </span>
       </div>
       <span className="material-symbols-outlined opacity-90 transition-transform">

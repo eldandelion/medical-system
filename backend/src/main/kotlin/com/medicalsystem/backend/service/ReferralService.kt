@@ -32,15 +32,37 @@ class ReferralService(
         const val ACTION_DRAFT = "draft"
     }
 
-    fun fetchActiveReferrals(token: String? = null): List<ReferralDto> {
-        return referralRepository.findAll()
-            .map { referralMapper.toDto(it) }
+    private fun resolveUser(token: String?): com.medicalsystem.backend.model.User? {
+        if (token == null) return null
+        return if (token.contains("teacher_token_zhang")) {
+            userRepository.findByName("艾米丽·沃森")
+        } else if (token.contains("head_councillor")) {
+            // Provide a mock user for head councillor if needed. Assuming TrialAdmin or Teacher for now, 
+            // since we just need a user object.
+            userRepository.findAll().firstOrNull { it.role == com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR } 
+                ?: userRepository.findAll().firstOrNull()
+        } else if (token.contains("trial_admin")) {
+            userRepository.findAll().firstOrNull { it.role == com.medicalsystem.backend.model.UserRole.TRIAL_ADMIN }
+                ?: userRepository.findAll().firstOrNull()
+        } else if (token.contains("doctor")) {
+            userRepository.findAll().firstOrNull { it.role == com.medicalsystem.backend.model.UserRole.DOCTOR }
+                ?: userRepository.findAll().firstOrNull()
+        } else {
+            userRepository.findAll().firstOrNull()
+        }
     }
 
-    fun fetchReferralDetails(id: Long): ReferralDto {
+    fun fetchActiveReferrals(token: String? = null): List<ReferralDto> {
+        val user = resolveUser(token)
+        return referralRepository.findAll()
+            .map { referralMapper.toDto(it, user) }
+    }
+
+    fun fetchReferralDetails(id: Long, token: String? = null): com.medicalsystem.backend.dto.ReferralDetailsDto {
         val model = referralRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
-        return referralMapper.toDto(model)
+        val user = resolveUser(token)
+        return referralMapper.toDetailsDto(model, user)
     }
 
     fun fetchReferralTracking(id: Long): ReferralTrackingDto {
@@ -55,14 +77,7 @@ class ReferralService(
         val student = studentRepository.findById(dto.studentId)
             .orElseThrow { com.medicalsystem.backend.exception.StudentNotFoundException(dto.studentId) }
             
-        // Mock identity resolution
-        val user = if (token?.contains("teacher_token_zhang") == true) {
-            userRepository.findByName("艾米丽·沃森") 
-                ?: throw ValidationException("Authorized user not found in database")
-        } else {
-            userRepository.findAll().firstOrNull()
-                ?: throw ValidationException("No user found in database for fallback")
-        }
+        val user = resolveUser(token) ?: throw ValidationException("Authorized user not found")
             
         val model = com.medicalsystem.backend.model.ReferralFactory.initiate(
             studentId = dto.studentId,
