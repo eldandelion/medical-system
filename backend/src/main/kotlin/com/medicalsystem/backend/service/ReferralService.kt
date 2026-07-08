@@ -37,16 +37,14 @@ class ReferralService(
         return if (token.contains("teacher_token_zhang")) {
             userRepository.findByName("艾米丽·沃森")
         } else if (token.contains("head_councillor")) {
-            // Provide a mock user for head councillor if needed. Assuming TrialAdmin or Teacher for now, 
-            // since we just need a user object.
             userRepository.findAll().firstOrNull { it.role == com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR } 
-                ?: userRepository.findAll().firstOrNull()
+                ?: com.medicalsystem.backend.model.HeadCounsellor(id = 999L, name = "Mock Head Councillor", email = "head@univ.edu.cn")
         } else if (token.contains("trial_admin")) {
             userRepository.findAll().firstOrNull { it.role == com.medicalsystem.backend.model.UserRole.TRIAL_ADMIN }
-                ?: userRepository.findAll().firstOrNull()
+                ?: com.medicalsystem.backend.model.TrialAdmin(id = 998L, name = "Mock Trial Admin", email = "admin@univ.edu.cn")
         } else if (token.contains("doctor")) {
             userRepository.findAll().firstOrNull { it.role == com.medicalsystem.backend.model.UserRole.DOCTOR }
-                ?: userRepository.findAll().firstOrNull()
+                ?: com.medicalsystem.backend.model.Doctor(id = 997L, name = "Mock Doctor", email = "doctor@univ.edu.cn", departmentId = 1L, phone = null)
         } else {
             userRepository.findAll().firstOrNull()
         }
