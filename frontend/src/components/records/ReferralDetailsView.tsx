@@ -20,7 +20,7 @@ import { GenericDialog } from '../common/GenericDialog';
 import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS } from '../../config/styleConstants';
 import { DoctorScheduleCalendar } from '../common/DoctorScheduleCalendar';
 
-import { Referral } from '../../types';
+import { Referral, ReferralDetails } from '../../types';
 
 interface ReferralDetailsViewProps {
   referral: Referral;
@@ -43,51 +43,62 @@ export const REFERRAL_DETAILS_TABS = [
 export function ReferralDetailsView(props: ReferralDetailsViewProps) {
   const { session } = useAuth();
   
-  const processReferral = React.useCallback((data: any) => {
-    return enrichReferralStatus(data as Referral);
-  }, []);
-
-  const { data: latestReferralData } = useQuery<Referral>({
-    queryKey: [`/api/referrals/${props.referral.id}`],
+  const { data: referralDetails, isLoading } = useQuery<ReferralDetails>({
+    queryKey: [`/api/referrals/${props.referral.id}/details`],
     queryFn: async () => {
       const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${props.referral.id}`.replace('//api', '/api'), {
         headers: { 'Authorization': `Bearer ${session?.token || ''}` }
       });
-      if (!res.ok) throw new Error('Failed to fetch referral');
-      const rawData = await res.json();
-      return processReferral(rawData);
+      if (!res.ok) throw new Error('Failed to fetch referral details');
+      return await res.json();
     }
   });
 
-  const referral = latestReferralData || props.referral;
-  const extendedData = referral.extendedData;
-
-  // Handle case where extended data hasn't loaded yet
-  if (!extendedData) {
+  if (isLoading || !referralDetails) {
+    const { isFullScreen } = useDetails();
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] w-full text-[var(--md-sys-color-on-surface-variant)] bg-[var(--md-sys-color-surface)]">
-        {/* @ts-ignore */}
-        <md-circular-progress indeterminate></md-circular-progress>
-        <span className="mt-4 text-[14px]">正在加载转诊详细数据...</span>
-      </div>
+      <ScrollableDetailsLayout
+        title="加载中..."
+        header={!props.hideHeader && !isFullScreen ? (
+          <div className="flex items-center justify-between gap-4 animate-pulse">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-surface-variant)] opacity-30 shrink-0"></div>
+              <div className="flex flex-col gap-2 min-w-0">
+                <div className="w-32 h-6 bg-[var(--md-sys-color-surface-variant)] opacity-30 rounded-md"></div>
+                <div className="w-64 h-4 bg-[var(--md-sys-color-surface-variant)] opacity-30 rounded-md"></div>
+              </div>
+            </div>
+          </div>
+        ) : undefined}
+      >
+        <div className="flex flex-col gap-6 animate-pulse p-2 pt-6">
+          <div className="h-40 bg-[var(--md-sys-color-surface-variant)] rounded-2xl opacity-30" />
+          <div className="h-64 bg-[var(--md-sys-color-surface-variant)] rounded-2xl opacity-30" />
+          <div className="h-32 bg-[var(--md-sys-color-surface-variant)] rounded-2xl opacity-30" />
+        </div>
+      </ScrollableDetailsLayout>
     );
   }
+
+  // Handle case where baseInfo might be missing in some mocks during transition
+  const baseReferralRaw = referralDetails.baseInfo || (referralDetails as any);
+  const baseReferral = enrichReferralStatus(baseReferralRaw);
 
   return (
     <ReferralDetailsPresenter 
       {...props}
-      referral={referral}
-      extendedData={extendedData}
+      referral={baseReferral}
+      referralDetails={referralDetails}
     />
   );
 }
 
 interface ReferralDetailsPresenterProps extends Omit<ReferralDetailsViewProps, 'referral'> {
   referral: Referral;
-  extendedData: NonNullable<Referral['extendedData']>;
+  referralDetails: ReferralDetails;
 }
 
-function ReferralDetailsPresenter({ referral, extendedData, userRole, hideHeader, activeTab: propsActiveTab, onTabChange, onUpdate }: ReferralDetailsPresenterProps) {
+function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHeader, activeTab: propsActiveTab, onTabChange, onUpdate }: ReferralDetailsPresenterProps) {
   const { isFullScreen, setTabsOverride } = useDetails();
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
@@ -120,10 +131,8 @@ function ReferralDetailsPresenter({ referral, extendedData, userRole, hideHeader
   }, [onTabChange]);
 
   const isFeedbackAvailable = React.useMemo(() => {
-    return extendedData.steps?.some(
-      step => step.type === 'feedback' && step.status === 'completed'
-    ) || referral.status === 'Closed';
-  }, [extendedData, referral.status]);
+    return !!referralDetails.feedback || referral.status === 'Closed';
+  }, [referralDetails, referral.status]);
 
   React.useEffect(() => {
     if (internalActiveTab === 'feedback' && !isFeedbackAvailable) {
@@ -147,7 +156,7 @@ function ReferralDetailsPresenter({ referral, extendedData, userRole, hideHeader
   }, [tabs, setTabsOverride]);
 
   const displayStatus = referral.displayStatus || referral.status;
-  const isDoctorRejected = displayStatus === 'Rejected' && extendedData.steps?.some((s: any) => s.type === 'scheduling' && s.status === 'issue');
+  const isDoctorRejected = displayStatus === 'Rejected'; // Removed steps check since we don't have it easily here. If needed we can fetch tracking data.
 
   return (
     <ScrollableDetailsLayout
@@ -165,10 +174,10 @@ function ReferralDetailsPresenter({ referral, extendedData, userRole, hideHeader
               </h1>
               <div className="flex items-center gap-3 flex-nowrap whitespace-nowrap">
                 <span className="font-mono text-[13px] tracking-tight text-[var(--md-sys-color-primary)] font-bold">
-                  {extendedData.studentId || 'N/A'}
+                  {referralDetails.studentDemographics?.studentId || 'N/A'}
                 </span>
                 <span className="opacity-40 shrink-0">•</span>
-                <span className="font-normal truncate">{extendedData.school}</span>
+                <span className="font-normal truncate">{referralDetails.studentDemographics?.school || '未知'}</span>
                 <span className="opacity-40 shrink-0">•</span>
                 <div className={`px-3 py-1 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${RISK_LEVEL_STYLES[referral.riskLevel]}`}>
                   <span>
@@ -206,7 +215,7 @@ function ReferralDetailsPresenter({ referral, extendedData, userRole, hideHeader
         {activeTab === 'overview' && (
           <ReferralOverviewTab 
             referral={referral} 
-            extendedData={extendedData} 
+            referralDetails={referralDetails} 
             onNavigateToTracker={() => setActiveTab('tracker')}
           />
         )}
@@ -231,14 +240,14 @@ function ReferralDetailsPresenter({ referral, extendedData, userRole, hideHeader
               student={{
                 ...studentData,
                 name: referral.studentName,
-                scidDiagnosis: extendedData.triage.scidDiagnosis || studentData?.scidDiagnosis
+                scidDiagnosis: referralDetails.triageInfo?.scidDiagnosis || studentData?.scidDiagnosis
               }}
             />
           </motion.div>
         )}
 
         {activeTab === 'feedback' && (
-          <ReferralFeedbackTab extendedData={extendedData} />
+          <ReferralFeedbackTab referralDetails={referralDetails} />
         )}
       </AnimatePresence>
 

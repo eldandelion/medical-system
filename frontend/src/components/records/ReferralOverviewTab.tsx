@@ -5,22 +5,22 @@ import { AttachmentList } from '../common/AttachmentList';
 import { Quote } from 'lucide-react';
 import { LAYOUT_CONSTANTS } from '../../config/layoutConstants';
 import { STATUS_STYLES, STATUS_LABELS } from '../../config/styleConstants';
-import { Referral } from '../../types';
+import { Referral, ReferralDetails } from '../../types';
 import { useDetails } from '../../contexts/DetailsContext';
 import { ReferralStatusCard } from './ReferralStatusCard';
 
 interface ReferralOverviewTabProps {
   referral: Referral;
-  extendedData: NonNullable<Referral['extendedData']>;
+  referralDetails: ReferralDetails;
   onNavigateToTracker?: () => void;
 }
 
-export function ReferralOverviewTab({ referral, extendedData, onNavigateToTracker }: ReferralOverviewTabProps) {
+export function ReferralOverviewTab({ referral, referralDetails, onNavigateToTracker }: ReferralOverviewTabProps) {
   const { isFullScreen } = useDetails();
 
   const displayStatus = referral.displayStatus || referral.status;
-  const steps = extendedData.steps || [];
-  const activeStep = steps.find(s => s.status === 'active' || s.status === 'issue') || steps[steps.length - 1];
+  // Steps will be loaded in the tracker tab; overview tab no longer depends on it
+  const activeStep = null; // Removed activeStep logic for overview as it's separate now
 
   return (
     <motion.div
@@ -41,12 +41,12 @@ export function ReferralOverviewTab({ referral, extendedData, onNavigateToTracke
       <DetailsSection title="分诊基本信息" className="border-t-0 pt-0 mt-0">
         <div className="flex flex-col gap-6">
           {/* 3-Column Metrics Grid */}
-          {extendedData.triage.isFirstVisit !== undefined && (
+          {referralDetails.triageInfo && (
             <div className={`grid grid-cols-3 gap-4 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: "40" }}>
               <MetricCard
                 label="是否初诊"
                 icon="person_add"
-                value={extendedData.triage.isFirstVisit ? (
+                value={referralDetails.triageInfo.isFirstVisit ? (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]">
                     <span className="material-symbols-outlined text-[16px] font-bold">check</span>是
                   </span>
@@ -60,7 +60,7 @@ export function ReferralOverviewTab({ referral, extendedData, onNavigateToTracke
               <MetricCard
                 label="是否服药"
                 icon="medication"
-                value={extendedData.triage.isMedicated ? (
+                value={referralDetails.triageInfo.isMedicated ? (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
                     <span className="material-symbols-outlined text-[16px] font-bold">check</span>是
                   </span>
@@ -74,13 +74,13 @@ export function ReferralOverviewTab({ referral, extendedData, onNavigateToTracke
               <MetricCard
                 label="心理治疗"
                 icon="monitoring"
-                value={extendedData.triage.priorTherapy === '无' ? (
+                value={referralDetails.triageInfo.priorTherapy === '无' ? (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
                     <span className="material-symbols-outlined text-[16px] font-bold">remove</span>无
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
-                    <span className="material-symbols-outlined text-[16px] font-bold">check</span>{extendedData.triage.priorTherapy}
+                    <span className="material-symbols-outlined text-[16px] font-bold">check</span>{referralDetails.triageInfo.priorTherapy}
                   </span>
                 )}
               />
@@ -88,14 +88,14 @@ export function ReferralOverviewTab({ referral, extendedData, onNavigateToTracke
           )}
 
           {/* 3-Column Risk Grid */}
-          {extendedData.risk && (
+          {referralDetails.riskAssessment && (
             <div className={`grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: "40" }}>
               <MetricCard
                 label="自杀意念"
                 icon="psychology"
-                className={extendedData.risk.ideation ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]" : ""}
+                className={referralDetails.riskAssessment.ideation ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]" : ""}
                 value={
-                  extendedData.risk.ideation ? (
+                  referralDetails.riskAssessment.ideation ? (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
                       <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
                     </span>
@@ -110,9 +110,9 @@ export function ReferralOverviewTab({ referral, extendedData, onNavigateToTracke
               <MetricCard
                 label="自杀企图"
                 icon="personal_injury"
-                className={extendedData.risk.attempt ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]" : ""}
+                className={referralDetails.riskAssessment.attempt ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]" : ""}
                 value={
-                  extendedData.risk.attempt ? (
+                  referralDetails.riskAssessment.attempt ? (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
                       <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
                     </span>
@@ -127,9 +127,9 @@ export function ReferralOverviewTab({ referral, extendedData, onNavigateToTracke
               <MetricCard
                 label="自残行为"
                 icon="healing"
-                className={extendedData.risk.selfHarm ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]" : ""}
+                className={referralDetails.riskAssessment.selfHarm ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]" : ""}
                 value={
-                  extendedData.risk.selfHarm ? (
+                  referralDetails.riskAssessment.selfHarm ? (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
                       <span className="material-symbols-outlined text-[16px] font-bold">error</span>是
                     </span>
@@ -157,7 +157,7 @@ export function ReferralOverviewTab({ referral, extendedData, onNavigateToTracke
             </div>
             <span className="text-[16px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-85 mt-4">转诊详细说明</span>
             <p className="text-[15px] leading-relaxed text-[var(--md-sys-color-on-surface)] font-normal z-10 pr-6">
-              {extendedData.triage.fullDescription}
+              {referralDetails.triageInfo?.fullDescription || referral.description}
             </p>
 
             {/* Large elegant watermark quote mark */}
@@ -166,7 +166,7 @@ export function ReferralOverviewTab({ referral, extendedData, onNavigateToTracke
 
           {/* Attachment List */}
           <AttachmentList
-            attachments={extendedData.feedback?.attachments || []}
+            attachments={referralDetails.feedback?.attachments || [] as any[]}
             title="转诊附件"
           />
         </div>

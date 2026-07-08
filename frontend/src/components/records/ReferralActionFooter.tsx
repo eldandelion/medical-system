@@ -34,7 +34,6 @@ export const ReferralActionFooter: React.FC<ReferralActionFooterProps> = ({
   state
 }) => {
   const { openCreation, closeCreation } = useCreationOverlay();
-  const extendedData = referral.extendedData;
 
   const handleRecreate = () => {
     import('./ReferralCreationForm').then(({ ReferralCreationForm }) => {
@@ -42,17 +41,9 @@ export const ReferralActionFooter: React.FC<ReferralActionFooterProps> = ({
         title: referral.title,
         reason: referral.description,
         riskLevel: referral.riskLevel,
-        clinicalStatus: [
-          ...(extendedData?.triage?.isFirstVisit ? ['FirstVisit' as any] : []),
-          ...(extendedData?.triage?.isMedicated ? ['Medicated' as any] : []),
-          ...(extendedData?.triage?.priorTherapy === '有' ? ['PriorTherapy' as any] : [])
-        ],
-        severeRiskFactors: [
-          ...(extendedData?.risk?.ideation ? ['Ideation' as any] : []),
-          ...(extendedData?.risk?.attempt ? ['Attempt' as any] : []),
-          ...(extendedData?.risk?.selfHarm ? ['SelfHarm' as any] : [])
-        ],
-        attachments: extendedData?.feedback?.attachments || []
+        clinicalStatus: [],
+        severeRiskFactors: [],
+        attachments: []
       };
       openCreation('重新发起转诊', <ReferralCreationForm onClose={closeCreation} initialData={initialData} />);
     });

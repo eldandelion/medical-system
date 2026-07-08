@@ -56,16 +56,11 @@ export const handlers = [
       const { bypass } = await import('msw');
       const res = await fetch(bypass(request));
       if (res.ok) {
-        const realReferral = await res.json();
-        // Add dummy extendedData to real backend referral
-        const dummyExtended = mockReferralsDb[0].extendedData;
-        const enrichedReferral = {
-          ...realReferral,
-          extendedData: dummyExtended
-        };
+        const realReferralDetails = await res.json();
+        // Return structured details data
         return HttpResponse.json({
-          ...enrichedReferral,
-          availableActions: computeAvailableActions(enrichedReferral, authHeader)
+          ...realReferralDetails,
+          availableActions: computeAvailableActions(realReferralDetails.baseInfo || realReferralDetails, authHeader)
         });
       }
     } catch (e) {
@@ -89,8 +84,29 @@ export const handlers = [
     }
 
     return HttpResponse.json({
-      ...referral,
-      extendedData: referral.extendedData || undefined,
+      baseInfo: referral,
+      studentDemographics: {
+        studentId: referral.studentNumber,
+        school: '计算机科学与技术学院',
+        grade: '大二',
+        phone: '138-0000-0000',
+        age: 21,
+        gender: '未知'
+      },
+      triageInfo: {
+        isFirstVisit: true,
+        isMedicated: false,
+        priorTherapy: '无',
+        scidDiagnosis: '待诊断',
+        fullDescription: referral.description
+      },
+      riskAssessment: {
+        ideation: referral.riskLevel === 'High',
+        attempt: false,
+        selfHarm: referral.riskLevel === 'High',
+        notes: ''
+      },
+      feedback: (referral as any).extendedData?.feedback || null,
       availableActions: computeAvailableActions(referral, authHeader)
     });
   }),
@@ -113,7 +129,7 @@ export const handlers = [
     const referral = mockReferralsDb.find((r) => r.id === id);
     if (!referral) {
       // Return dummy tracking data if not found
-      const fallback = mockReferralsDb[0].extendedData;
+      const fallback = (mockReferralsDb[0] as any).extendedData;
       return HttpResponse.json({
         destination: fallback?.destination,
         steps: fallback?.steps
@@ -121,8 +137,8 @@ export const handlers = [
     }
 
     return HttpResponse.json({
-      destination: referral.extendedData?.destination,
-      steps: referral.extendedData?.steps
+      destination: (referral as any).extendedData?.destination,
+      steps: (referral as any).extendedData?.steps
     });
   }),
 
@@ -190,14 +206,14 @@ export const handlers = [
     }
 
     referral.status = 'AwaitingTriage';
-    if (referral.extendedData?.steps) {
-      const reviewStep = referral.extendedData.steps.find(s => s.type === 'review');
+    if ((referral as any).extendedData?.steps) {
+      const reviewStep = (referral as any).extendedData.steps.find(s => s.type === 'review');
       if (reviewStep) {
         reviewStep.status = 'completed';
         reviewStep.subtitle = '审核已通过';
         reviewStep.time = new Date().toISOString();
       }
-      const triageStep = referral.extendedData.steps.find(s => s.type === 'triage');
+      const triageStep = (referral as any).extendedData.steps.find(s => s.type === 'triage');
       if (triageStep) {
         triageStep.status = 'active';
         triageStep.subtitle = '正在处理分诊信息...';
@@ -225,7 +241,7 @@ export const handlers = [
       if (referral.status !== 'AwaitingTriage') {
         return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting triage referrals can be rejected by trial admin' });
       }
-      const triageStep = referral.extendedData?.steps?.find(s => s.type === 'triage');
+      const triageStep = (referral as any).extendedData?.steps?.find(s => s.type === 'triage');
       if (triageStep?.status !== 'active') {
         return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Triage must be active' });
       }
@@ -242,39 +258,39 @@ export const handlers = [
 
     if (authHeader.includes('doctor')) {
       referral.status = 'AwaitingTriage';
-      if (referral.extendedData) {
-        if (!referral.extendedData.rejectedBy) {
-          referral.extendedData.rejectedBy = [];
+      if ((referral as any).extendedData) {
+        if (!(referral as any).extendedData.rejectedBy) {
+          (referral as any).extendedData.rejectedBy = [];
         }
-        referral.extendedData.rejectedBy.push('李医生');
+        (referral as any).extendedData.rejectedBy.push('李医生');
       }
     } else {
       referral.status = 'Rejected';
     }
 
-    if (referral.extendedData?.steps) {
+    if ((referral as any).extendedData?.steps) {
       if (authHeader.includes('head_councillor')) {
-        const reviewStep = referral.extendedData.steps.find(s => s.type === 'review');
+        const reviewStep = (referral as any).extendedData.steps.find(s => s.type === 'review');
         if (reviewStep) {
           reviewStep.status = 'issue';
           reviewStep.subtitle = `申请被拒绝: ${reason}`;
           reviewStep.time = new Date().toISOString();
         }
       } else if (authHeader.includes('trial_admin')) {
-        const triageStep = referral.extendedData.steps.find(s => s.type === 'triage');
+        const triageStep = (referral as any).extendedData.steps.find(s => s.type === 'triage');
         if (triageStep) {
           triageStep.status = 'issue';
           triageStep.subtitle = `分诊被拒绝: ${reason}`;
           triageStep.time = new Date().toISOString();
         }
       } else if (authHeader.includes('doctor')) {
-        const schedulingStep = referral.extendedData.steps.find(s => s.type === 'scheduling');
+        const schedulingStep = (referral as any).extendedData.steps.find(s => s.type === 'scheduling');
         if (schedulingStep) {
           schedulingStep.status = 'issue';
           schedulingStep.subtitle = `排诊被拒绝: ${reason}`;
           schedulingStep.time = new Date().toISOString();
         }
-        const triageStep = referral.extendedData.steps.find(s => s.type === 'triage');
+        const triageStep = (referral as any).extendedData.steps.find(s => s.type === 'triage');
         if (triageStep) {
           triageStep.status = 'active';
           triageStep.subtitle = '等待重新分配医生';
@@ -315,24 +331,24 @@ export const handlers = [
 
     targetReferral.status = 'WaitingForScheduling';
 
-    if (targetReferral.extendedData?.steps) {
-      const triageStep = targetReferral.extendedData.steps.find(s => s.type === 'triage');
+    if ((targetReferral as any).extendedData?.steps) {
+      const triageStep = (targetReferral as any).extendedData.steps.find(s => s.type === 'triage');
       if (triageStep && (triageStep.status === 'active' || triageStep.status === 'completed')) {
         triageStep.status = 'completed';
         triageStep.subtitle = '已分诊';
         triageStep.time = new Date().toISOString();
       }
-      const schedulingStep = targetReferral.extendedData.steps.find(s => s.type === 'scheduling');
+      const schedulingStep = (targetReferral as any).extendedData.steps.find(s => s.type === 'scheduling');
       if (schedulingStep) {
         schedulingStep.status = 'active';
         schedulingStep.subtitle = '等待医生安排就诊时间';
         schedulingStep.time = '进行中';
       }
       
-      if (!targetReferral.extendedData.destination) {
-        targetReferral.extendedData.destination = { hospital: '待分配', department: '待分配', doctor: doctorId || '未知医生', admin: '待分配', transferDate: '' };
+      if (!(targetReferral as any).extendedData.destination) {
+        (targetReferral as any).extendedData.destination = { hospital: '待分配', department: '待分配', doctor: doctorId || '未知医生', admin: '待分配', transferDate: '' };
       } else {
-        targetReferral.extendedData.destination.doctor = doctorId || '未知医生';
+        (targetReferral as any).extendedData.destination.doctor = doctorId || '未知医生';
       }
     }
 
@@ -355,10 +371,10 @@ export const handlers = [
     // Dynamically calculate occupied slots from mockReferralsDb
     const occupiedSlots = mockReferralsDb
       .filter(r => 
-        r.extendedData?.destination?.doctor?.includes(id as string) &&
-        r.extendedData?.destination?.appointmentTime
+        (r as any).extendedData?.destination?.doctor?.includes(id as string) &&
+        (r as any).extendedData?.destination?.appointmentTime
       )
-      .map(r => r.extendedData!.destination!.appointmentTime!);
+      .map(r => (r as any).extendedData!.destination!.appointmentTime!);
 
     return HttpResponse.json({ occupiedSlots });
   }),
@@ -385,20 +401,20 @@ export const handlers = [
     
     referral.status = 'WaitingForAppointment';
 
-    if (referral.extendedData) {
-      if (!referral.extendedData.destination) {
-        referral.extendedData.destination = { hospital: '', department: '', doctor: '', admin: '', transferDate: '' };
+    if ((referral as any).extendedData) {
+      if (!(referral as any).extendedData.destination) {
+        (referral as any).extendedData.destination = { hospital: '', department: '', doctor: '', admin: '', transferDate: '' };
       }
-      referral.extendedData.destination.appointmentTime = appointmentTime;
+      (referral as any).extendedData.destination.appointmentTime = appointmentTime;
 
-      if (referral.extendedData.steps) {
-        const schedulingStep = referral.extendedData.steps.find(s => s.type === 'scheduling');
+      if ((referral as any).extendedData.steps) {
+        const schedulingStep = (referral as any).extendedData.steps.find(s => s.type === 'scheduling');
         if (schedulingStep && schedulingStep.status === 'active') {
           schedulingStep.status = 'completed';
           schedulingStep.subtitle = `已预约: ${new Date(appointmentTime).toLocaleString('zh-CN')}`;
           schedulingStep.time = new Date().toISOString();
         }
-        const evaluationStep = referral.extendedData.steps.find(s => s.type === 'evaluation');
+        const evaluationStep = (referral as any).extendedData.steps.find(s => s.type === 'evaluation');
         if (evaluationStep) {
           evaluationStep.status = 'active';
           evaluationStep.subtitle = '等待医生评估';
@@ -423,22 +439,22 @@ export const handlers = [
 
     referral.status = 'AwaitingFeedbackApproval';
 
-    if (referral.extendedData) {
-      if (!referral.extendedData.feedback) {
-        referral.extendedData.feedback = { summary: '', followUp: '', attachments: [] };
+    if ((referral as any).extendedData) {
+      if (!(referral as any).extendedData.feedback) {
+        (referral as any).extendedData.feedback = { summary: '', followUp: '', attachments: [] };
       }
-      referral.extendedData.feedback.summary = feedback;
-      referral.extendedData.feedback.attachments = attachments || [];
+      (referral as any).extendedData.feedback.summary = feedback;
+      (referral as any).extendedData.feedback.attachments = attachments || [];
 
-      if (referral.extendedData.steps) {
-        const evaluationStep = referral.extendedData.steps.find((s: any) => s.type === 'evaluation');
+      if ((referral as any).extendedData.steps) {
+        const evaluationStep = (referral as any).extendedData.steps.find((s: any) => s.type === 'evaluation');
         if (evaluationStep) {
           evaluationStep.status = 'completed';
           evaluationStep.subtitle = '医生已完成评估';
           evaluationStep.time = new Date().toISOString();
         }
 
-        const feedbackStep = referral.extendedData.steps.find((s: any) => s.type === 'feedback');
+        const feedbackStep = (referral as any).extendedData.steps.find((s: any) => s.type === 'feedback');
         if (feedbackStep) {
           feedbackStep.status = 'active';
           feedbackStep.subtitle = '等待辅导员确认反馈';
@@ -469,8 +485,8 @@ export const handlers = [
 
     referral.status = 'Closed';
     
-    if (referral.extendedData?.steps) {
-      const feedbackStep = referral.extendedData.steps.find(s => s.type === 'feedback');
+    if ((referral as any).extendedData?.steps) {
+      const feedbackStep = (referral as any).extendedData.steps.find(s => s.type === 'feedback');
       if (feedbackStep) {
         feedbackStep.status = 'completed';
         feedbackStep.subtitle = '已出具随访计划并反馈';
