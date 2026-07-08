@@ -52,8 +52,12 @@ class ReferralService(
 
     fun fetchActiveReferrals(token: String? = null): List<ReferralDto> {
         val user = resolveUser(token)
-        return referralRepository.findAll()
-            .map { referralMapper.toDto(it, user) }
+        val referrals = if (user != null) {
+            referralRepository.findVisibleReferralsFor(user)
+        } else {
+            referralRepository.findAll()
+        }
+        return referrals.map { referralMapper.toDto(it, user) }
     }
 
     fun fetchReferralDetails(id: Long, token: String? = null): com.medicalsystem.backend.dto.ReferralDetailsDto {

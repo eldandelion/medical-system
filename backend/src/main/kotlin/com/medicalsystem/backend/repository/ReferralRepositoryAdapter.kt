@@ -15,6 +15,12 @@ class ReferralRepositoryAdapter(
         return jpaRepository.findAll().map { mapper.toModel(it) }
     }
 
+    override fun findVisibleReferralsFor(user: com.medicalsystem.backend.model.User): List<Referral> {
+        val criteria = com.medicalsystem.backend.model.ReferralVisibilityPolicy.getVisibilityCriteria(user)
+        val spec = ReferralJpaSpecification.fromVisibilityCriteria(criteria)
+        return jpaRepository.findAll(spec).map { mapper.toModel(it) }
+    }
+
     override fun findById(id: Long): Optional<Referral> {
         return jpaRepository.findById(id).map { mapper.toModel(it) }
     }
