@@ -68,6 +68,8 @@ class UserMapper(
                 name = model.name,
                 email = model.email
             )
+            is StudentUser -> throw UnsupportedOperationException("StudentUser cannot be converted to UserEntity")
+            is SystemAdmin -> throw UnsupportedOperationException("SystemAdmin cannot be converted to UserEntity")
         }
     }
 }

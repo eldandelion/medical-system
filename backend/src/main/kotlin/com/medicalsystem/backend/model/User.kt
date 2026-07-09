@@ -33,3 +33,15 @@ data class TrialAdmin(
     override val name: String,
     override val email: String?
 ) : User(id, name, email, UserRole.TRIAL_ADMIN)
+
+data class StudentUser(
+    override val id: Long,
+    override val name: String,
+    override val email: String?
+) : User(id, name, email, UserRole.STUDENT)
+
+data class SystemAdmin(
+    override val id: Long,
+    override val name: String,
+    override val email: String?
+) : User(id, name, email, UserRole.SYSTEM_ADMIN)

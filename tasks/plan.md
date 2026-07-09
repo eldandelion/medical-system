@@ -1,42 +1,42 @@
-# Implementation Plan: Role-Based Referral Visibility Filtering
+# Implementation Plan: Complete Referral Visibility Policy Update
 
 ## Overview
-Implement domain-driven role-based visibility filtering for the referrals system. This will restrict users from seeing referrals that they are not permitted to see based on their role and the referral's status/assignee, particularly preventing the Trial Admin from seeing rejected referrals. This requires defining a Domain Policy for visibility criteria, extending the repository interface, mapping these rules to JPA specifications, and updating the application service.
+Implement the finalized, comprehensive role-based visibility policy across all user types (Student, Teacher, Head Counsellor, Trial Admin, Doctor, System Admin). This includes updating the domain policy to support new criteria (like step-history checking for Trial Admins and subject-checking for Students), and mapping these new criteria into JPA Specifications.
 
 ## Architecture Decisions
-- **Specification Pattern for Queries:** Encapsulate visibility rules in a Domain object (`ReferralVisibilityPolicy` returning `VisibilityCriteria`) rather than leaky abstractions like list of statuses in the application layer.
-- **Spring Data JPA Specifications:** The infrastructure layer will translate the domain `VisibilityCriteria` into a highly-optimized JPA Specification query to prevent fetching unwanted records into memory.
-- **TDD:** Write unit and integration tests before implementing the production code.
+- **Step-History Checking for Trial Admin:** Instead of complex status tracking for rejections, the Trial Admin's visibility will be determined by whether the referral has ever reached a specific step in its lifecycle (`TRIAGE`, `SCHEDULING`, etc.). This cleanly encapsulates scope regardless of the current status (`REJECTED` or `ERROR`).
+- **Student Visibility:** Students will query based on `studentId` and explicitly exclude `DRAFT` and `RECALLED` statuses.
 
 ## Task List
 
-### Phase 1: Domain Foundation
-- [ ] Task 1: Create Domain Visibility Criteria & Policy
-- [ ] Task 2: Extend Domain Repository Interface
+### Phase 1: Domain Foundation Updates
+- [ ] **Task 1: Update `VisibilityCriteria`**
+  - Add `BySubject(val studentId: Long)` for students.
+  - Add `HasReachedStep(val stepTypes: List<ReferralStepType>)` for trial admins.
+- [ ] **Task 2: Update `ReferralVisibilityPolicy`**
+  - Map `UserRole.STUDENT` to `BySubject`.
+  - Map `UserRole.TRIAL_ADMIN` to `HasReachedStep`.
+- [ ] **Task 3: Update Domain Unit Tests**
+  - Expand `ReferralVisibilityPolicyTest.kt` to cover the new behaviors for Students and Trial Admins.
 
 ### Checkpoint: Domain Foundation
-- [ ] `ReferralVisibilityPolicyTest` passes.
-- [ ] Domain is completely free of Spring/JPA dependencies.
+- [ ] All unit tests in `ReferralVisibilityPolicyTest` pass.
+- [ ] Domain logic remains free of infrastructure/Spring dependencies.
 
 ### Phase 2: Infrastructure Translation
-- [ ] Task 3: Implement JPA Specifications for Visibility
-- [ ] Task 4: Implement Repository Adapter
-
-### Checkpoint: Infrastructure
-- [ ] Adapter integration tests pass (verifies correct SQL is generated and rows filtered).
-
-### Phase 3: Application Integration
-- [ ] Task 5: Update `ReferralService` 
+- [ ] **Task 4: Update `ReferralJpaSpecification`**
+  - Implement SQL mapping for `BySubject` (filter by `studentId` and exclude `DRAFT`/`RECALLED`).
+  - Implement SQL mapping for `HasReachedStep` (use a JPA join or subquery on the `steps` collection to check if any step matches the provided types).
 
 ### Checkpoint: Complete
-- [ ] Application service tests pass.
-- [ ] E2E flow verified. Trial Admin cannot see rejected referrals.
+- [ ] Compile successfully.
+- [ ] Backend test suite passes (`./mvnw clean test`), verifying the JPA specifications run correctly against the database.
+- [ ] Ready for review.
 
 ## Risks and Mitigations
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| N+1 queries from JPA Spec | Medium | Ensure fetch joins are used if eager loading of destination/attachments is needed in the `findAll(Spec)` query. |
-| Complex SQL generation | Medium | Rely heavily on repository integration tests against an in-memory DB or test containers to verify the JPA specification translates accurately. |
+| Collection Join Performance | Low/Medium | Joining on the `steps` collection for `HasReachedStep` might duplicate rows if not distinct. We must ensure `query.distinct(true)` is used in the Specification to prevent returning the same referral multiple times if it has multiple matching steps. |
 
 ## Open Questions
-- None. Requirements clarified by user.
+- None. Requirements finalized in `docs/specs/complete-visibility-policy.md`.

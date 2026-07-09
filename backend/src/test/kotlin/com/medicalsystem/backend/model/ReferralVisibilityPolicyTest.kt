@@ -11,7 +11,8 @@ class ReferralVisibilityPolicyTest {
             UserRole.TEACHER -> Teacher(id, "Test User", "test@test.com", null)
             UserRole.HEAD_COUNSELLOR -> HeadCounsellor(id, "Test User", "test@test.com")
             UserRole.TRIAL_ADMIN -> TrialAdmin(id, "Test User", "test@test.com")
-            else -> throw IllegalArgumentException("Role not supported for mock: $role")
+            UserRole.STUDENT -> StudentUser(id, "Test User", "test@test.com")
+            UserRole.SYSTEM_ADMIN -> SystemAdmin(id, "Test User", "test@test.com")
         }
     }
 
@@ -36,14 +37,29 @@ class ReferralVisibilityPolicyTest {
         val user = createUser(UserRole.TRIAL_ADMIN)
         val criteria = ReferralVisibilityPolicy.getVisibilityCriteria(user)
         
-        val expectedStatuses = listOf(
-            ReferralStatus.AWAITING_TRIAGE,
-            ReferralStatus.WAITING_FOR_SCHEDULING,
-            ReferralStatus.WAITING_FOR_APPOINTMENT,
-            ReferralStatus.AWAITING_FEEDBACK_APPROVAL,
-            ReferralStatus.CLOSED
+        val expectedSteps = listOf(
+            ReferralStepType.TRIAGE,
+            ReferralStepType.SCHEDULING,
+            ReferralStepType.EVALUATION,
+            ReferralStepType.FEEDBACK
         )
-        assertEquals(VisibilityCriteria.ByStatuses(expectedStatuses), criteria)
+        assertEquals(VisibilityCriteria.HasReachedStep(expectedSteps), criteria)
+    }
+
+    @Test
+    fun `student sees referrals about them excluding drafts`() {
+        val user = createUser(UserRole.STUDENT, 500L)
+        val criteria = ReferralVisibilityPolicy.getVisibilityCriteria(user)
+        
+        assertEquals(VisibilityCriteria.BySubject(500L, listOf(ReferralStatus.DRAFT, ReferralStatus.RECALLED)), criteria)
+    }
+
+    @Test
+    fun `system admin sees all referrals`() {
+        val user = createUser(UserRole.SYSTEM_ADMIN, 600L)
+        val criteria = ReferralVisibilityPolicy.getVisibilityCriteria(user)
+        
+        assertEquals(VisibilityCriteria.All, criteria)
     }
 
     @Test

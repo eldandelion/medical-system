@@ -28,6 +28,18 @@ object ReferralJpaSpecification {
                     val statusPredicate = root.get<Enum<*>>("status").`in`(criteria.statuses)
                     cb.or(initiatedPredicate, statusPredicate)
                 }
+
+                is VisibilityCriteria.BySubject -> {
+                    val studentPredicate = cb.equal(root.get<Long>("studentId"), criteria.studentId)
+                    val notExcludedStatuses = cb.not(root.get<Enum<*>>("status").`in`(criteria.excludedStatuses))
+                    cb.and(studentPredicate, notExcludedStatuses)
+                }
+
+                is VisibilityCriteria.HasReachedStep -> {
+                    query.distinct(true)
+                    val stepsJoin = root.join<Any, Any>("steps")
+                    stepsJoin.get<Enum<*>>("type").`in`(criteria.stepTypes)
+                }
             }
         }
     }
