@@ -96,6 +96,7 @@ class DataInitializer {
         val doc = doctorRepository.save(DoctorEntity(name = "王建国", department = dept, phone = "13912345678", email = "wang@hospital.com"))
         val triageAdmin = userRepository.save(TrialAdminEntity(name = "张老师", email = "zhang@univ.edu.cn"))
         val referrer = userRepository.save(TeacherEntity(name = "艾米丽·沃森", email = "emily@univ.edu.cn", college = medCollege))
+        val headCounsellor = userRepository.save(HeadCounsellorEntity(name = "李主任", email = "head@univ.edu.cn"))
 
         val dest = ReferralDestination(
             hospital = hosp,
