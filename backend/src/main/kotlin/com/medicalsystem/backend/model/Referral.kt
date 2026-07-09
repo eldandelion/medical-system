@@ -87,7 +87,7 @@ class Referral(
             UserRole.HEAD_COUNSELLOR -> {
                 if (status == ReferralStatus.DRAFT && isOwner) actions.addAll(listOf(ReferralAction.RECREATE, ReferralAction.DELETE_DRAFT))
                 if (status == ReferralStatus.AWAITING_APPROVAL) actions.addAll(listOf(ReferralAction.APPROVE_REFERRAL, ReferralAction.REJECT_REFERRAL))
-                if (status == ReferralStatus.AWAITING_FEEDBACK_APPROVAL) actions.add(ReferralAction.ACKNOWLEDGE_FEEDBACK)
+                if (status == ReferralStatus.AWAITING_FEEDBACK_APPROVAL) actions.addAll(listOf(ReferralAction.ACKNOWLEDGE_FEEDBACK, ReferralAction.REQUEST_FEEDBACK_REVISION))
             }
             UserRole.TRIAL_ADMIN -> {
                 if (status == ReferralStatus.AWAITING_TRIAGE) {
@@ -98,7 +98,7 @@ class Referral(
             }
             UserRole.DOCTOR -> {
                 if (status == ReferralStatus.WAITING_FOR_SCHEDULING) actions.addAll(listOf(ReferralAction.SCHEDULE_APPOINTMENT, ReferralAction.REQUEST_REASSIGNMENT))
-                if (status == ReferralStatus.WAITING_FOR_APPOINTMENT) actions.addAll(listOf(ReferralAction.WRITE_FEEDBACK, ReferralAction.REPORT_PROBLEM))
+                if (status == ReferralStatus.WAITING_FOR_APPOINTMENT) actions.addAll(listOf(ReferralAction.WRITE_FEEDBACK, ReferralAction.REPORT_PROBLEM, ReferralAction.RESCHEDULE_APPOINTMENT))
             }
             else -> {}
         }
