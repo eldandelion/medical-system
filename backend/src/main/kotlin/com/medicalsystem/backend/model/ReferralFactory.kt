@@ -3,7 +3,7 @@ package com.medicalsystem.backend.model
 import java.time.LocalDateTime
 
 object ReferralFactory {
-    fun initiate(
+    fun createDraft(
         studentId: Long,
         title: String,
         reason: String,
@@ -11,8 +11,7 @@ object ReferralFactory {
         referredById: Long,
         clinicalStatus: List<ClinicalStatusType> = emptyList(),
         severeRiskFactors: List<RiskFlagName> = emptyList(),
-        attachments: List<Attachment> = emptyList(),
-        isDraft: Boolean = false
+        attachments: List<Attachment> = emptyList()
     ): Referral {
         val referral = Referral(
             id = null,
@@ -38,9 +37,6 @@ object ReferralFactory {
             )
         )
 
-        if (!isDraft) {
-            referral.transition(ReferralStatus.AWAITING_APPROVAL)
-        }
         return referral
     }
 }

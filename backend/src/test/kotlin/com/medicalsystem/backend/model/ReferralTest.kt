@@ -6,14 +6,13 @@ import org.junit.jupiter.api.Test
 class ReferralTest {
 
     @Test
-    fun `initiate adds INITIATION step for draft`() {
-        val referral = ReferralFactory.initiate(
+    fun `createDraft adds INITIATION step for draft`() {
+        val referral = ReferralFactory.createDraft(
             studentId = 1L,
             title = "Test",
             reason = "Test reason",
             riskLevel = RiskStatus.LOW,
-            referredById = 2L,
-            isDraft = true
+            referredById = 2L
         )
 
         assertEquals(ReferralStatus.DRAFT, referral.status)
@@ -25,15 +24,15 @@ class ReferralTest {
     }
 
     @Test
-    fun `initiate transitions to AWAITING_APPROVAL and adds REVIEW step for non-draft`() {
-        val referral = ReferralFactory.initiate(
+    fun `submit transitions to AWAITING_APPROVAL and adds REVIEW step for regular user`() {
+        val referral = ReferralFactory.createDraft(
             studentId = 1L,
             title = "Test",
             reason = "Test reason",
             riskLevel = RiskStatus.LOW,
-            referredById = 2L,
-            isDraft = false
+            referredById = 2L
         )
+        referral.submit(UserRole.TEACHER, 2L)
 
         assertEquals(ReferralStatus.AWAITING_APPROVAL, referral.status)
         assertEquals(2, referral.steps.size)
@@ -48,15 +47,38 @@ class ReferralTest {
     }
 
     @Test
-    fun `transition marks previous active step as completed and adds new step`() {
-        val referral = ReferralFactory.initiate(
+    fun `submit transitions directly to AWAITING_TRIAGE for head counsellor`() {
+        val referral = ReferralFactory.createDraft(
             studentId = 1L,
             title = "Test",
             reason = "Test reason",
             riskLevel = RiskStatus.LOW,
-            referredById = 2L,
-            isDraft = false
+            referredById = 2L
         )
+        referral.submit(UserRole.HEAD_COUNSELLOR, 2L)
+
+        assertEquals(ReferralStatus.AWAITING_TRIAGE, referral.status)
+        assertEquals(2, referral.steps.size)
+        
+        val step1 = referral.steps[0]
+        assertEquals(ReferralStepType.INITIATION, step1.type)
+        assertEquals(ReferralStepStatus.COMPLETED, step1.status)
+        
+        val step2 = referral.steps[1]
+        assertEquals(ReferralStepType.TRIAGE, step2.type)
+        assertEquals(ReferralStepStatus.ACTIVE, step2.status)
+    }
+
+    @Test
+    fun `transition marks previous active step as completed and adds new step`() {
+        val referral = ReferralFactory.createDraft(
+            studentId = 1L,
+            title = "Test",
+            reason = "Test reason",
+            riskLevel = RiskStatus.LOW,
+            referredById = 2L
+        )
+        referral.submit(UserRole.TEACHER, 2L)
 
         referral.transition(ReferralStatus.AWAITING_TRIAGE)
 
@@ -73,14 +95,14 @@ class ReferralTest {
 
     @Test
     fun `transition to NEEDS_REASSIGNMENT marks previous step as ISSUE and saves reason`() {
-        val referral = ReferralFactory.initiate(
+        val referral = ReferralFactory.createDraft(
             studentId = 1L,
             title = "Test",
             reason = "Test reason",
             riskLevel = RiskStatus.LOW,
-            referredById = 2L,
-            isDraft = false
+            referredById = 2L
         )
+        referral.submit(UserRole.TEACHER, 2L)
 
         referral.transition(ReferralStatus.AWAITING_TRIAGE)
         referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING)
@@ -98,14 +120,14 @@ class ReferralTest {
 
     @Test
     fun `getAllowedActions for TRIAL_ADMIN returns REASSIGN_DOCTOR when NEEDS_REASSIGNMENT`() {
-        val referral = ReferralFactory.initiate(
+        val referral = ReferralFactory.createDraft(
             studentId = 1L,
             title = "Test",
             reason = "Test reason",
             riskLevel = RiskStatus.LOW,
-            referredById = 2L,
-            isDraft = false
+            referredById = 2L
         )
+        referral.submit(UserRole.TEACHER, 2L)
 
         referral.transition(ReferralStatus.AWAITING_TRIAGE)
         referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING)

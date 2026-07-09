@@ -81,16 +81,19 @@ class ReferralService(
             
         val user = resolveUser(token) ?: throw ValidationException("Authorized user not found")
             
-        val model = com.medicalsystem.backend.model.ReferralFactory.initiate(
+        val model = com.medicalsystem.backend.model.ReferralFactory.createDraft(
             studentId = dto.studentId,
             title = dto.title,
             reason = dto.reason,
             riskLevel = dto.riskLevel,
             referredById = user.id,
             clinicalStatus = dto.clinicalStatus,
-            severeRiskFactors = dto.severeRiskFactors,
-            isDraft = dto.actionType == "draft"
+            severeRiskFactors = dto.severeRiskFactors
         )
+
+        if (dto.actionType != ACTION_DRAFT) {
+            model.submit(user.role, user.id)
+        }
 
         val saved = referralRepository.save(model)
         

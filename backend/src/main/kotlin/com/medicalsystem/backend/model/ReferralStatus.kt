@@ -28,7 +28,7 @@ enum class ReferralStatus(
         return when (this) {
             DRAFT -> false
             AWAITING_APPROVAL -> previousStatus == DRAFT || previousStatus == RECALLED
-            AWAITING_TRIAGE -> previousStatus == AWAITING_APPROVAL
+            AWAITING_TRIAGE -> previousStatus == AWAITING_APPROVAL || previousStatus == DRAFT
             WAITING_FOR_SCHEDULING -> previousStatus == AWAITING_TRIAGE || previousStatus == NEEDS_REASSIGNMENT
             WAITING_FOR_APPOINTMENT -> previousStatus == WAITING_FOR_SCHEDULING
             AWAITING_FEEDBACK_APPROVAL -> previousStatus == WAITING_FOR_APPOINTMENT

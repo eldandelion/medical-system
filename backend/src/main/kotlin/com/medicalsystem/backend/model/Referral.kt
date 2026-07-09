@@ -72,6 +72,20 @@ class Referral(
         }
     }
 
+    fun submit(actorRole: UserRole, actorId: Long) {
+        if (this.status != ReferralStatus.DRAFT) {
+            throw com.medicalsystem.backend.exception.ValidationException("Only drafts can be submitted")
+        }
+        
+        val nextStatus = if (actorRole == UserRole.HEAD_COUNSELLOR) {
+            ReferralStatus.AWAITING_TRIAGE
+        } else {
+            ReferralStatus.AWAITING_APPROVAL
+        }
+        
+        this.transition(nextStatus, actorId = actorId)
+    }
+
     fun getAllowedActions(user: User): List<ReferralAction> {
         val actions = mutableListOf<ReferralAction>()
         val isOwner = this.referredById == user.id

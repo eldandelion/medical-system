@@ -1,42 +1,41 @@
-# Implementation Plan: Complete Referral Visibility Policy Update
+# Implementation Plan: Referral State Machine Update (Head Counsellor Bypass)
 
 ## Overview
-Implement the finalized, comprehensive role-based visibility policy across all user types (Student, Teacher, Head Counsellor, Trial Admin, Doctor, System Admin). This includes updating the domain policy to support new criteria (like step-history checking for Trial Admins and subject-checking for Students), and mapping these new criteria into JPA Specifications.
+We need to update the Referral state machine so that referrals submitted by a Head Counsellor bypass the `AWAITING_APPROVAL` status and go directly to `AWAITING_TRIAGE` (where Trial Admins can act on them). We will apply Domain-Driven Design and Clean Code principles by encapsulating the submission transition rules inside the `Referral` Aggregate Root and updating the factory and application service accordingly.
 
 ## Architecture Decisions
-- **Step-History Checking for Trial Admin:** Instead of complex status tracking for rejections, the Trial Admin's visibility will be determined by whether the referral has ever reached a specific step in its lifecycle (`TRIAGE`, `SCHEDULING`, etc.). This cleanly encapsulates scope regardless of the current status (`REJECTED` or `ERROR`).
-- **Student Visibility:** Students will query based on `studentId` and explicitly exclude `DRAFT` and `RECALLED` statuses.
+- **Domain logic in Aggregate Root**: The `Referral` entity will gain a `submit(actorRole, actorId)` method. This encapsulates state machine transitions within the domain model rather than the Application Service or Factory.
+- **Factory handles only creation**: `ReferralFactory.initiate` will be renamed to `createDraft` and will solely be responsible for instantiating the entity in its initial `DRAFT` state without handling submission side-effects.
+- **Application Service as Orchestrator**: `ReferralService.initiateReferral` will coordinate creating the draft and (if applicable) submitting it immediately, maintaining separation of concerns.
 
 ## Task List
 
-### Phase 1: Domain Foundation Updates
-- [ ] **Task 1: Update `VisibilityCriteria`**
-  - Add `BySubject(val studentId: Long)` for students.
-  - Add `HasReachedStep(val stepTypes: List<ReferralStepType>)` for trial admins.
-- [ ] **Task 2: Update `ReferralVisibilityPolicy`**
-  - Map `UserRole.STUDENT` to `BySubject`.
-  - Map `UserRole.TRIAL_ADMIN` to `HasReachedStep`.
-- [ ] **Task 3: Update Domain Unit Tests**
-  - Expand `ReferralVisibilityPolicyTest.kt` to cover the new behaviors for Students and Trial Admins.
+### Phase 1: Foundation (Domain Models)
+- [ ] **Task 1: Add `submit()` method to `Referral` entity**
+- [ ] **Task 2: Refactor `ReferralFactory` to only create drafts**
+- [ ] **Task 3: Update `ReferralStatus` transition rules**
 
-### Checkpoint: Domain Foundation
-- [ ] All unit tests in `ReferralVisibilityPolicyTest` pass.
-- [ ] Domain logic remains free of infrastructure/Spring dependencies.
+### Checkpoint: Foundation
+- [ ] Code compiles and domain logic is encapsulated.
 
-### Phase 2: Infrastructure Translation
-- [ ] **Task 4: Update `ReferralJpaSpecification`**
-  - Implement SQL mapping for `BySubject` (filter by `studentId` and exclude `DRAFT`/`RECALLED`).
-  - Implement SQL mapping for `HasReachedStep` (use a JPA join or subquery on the `steps` collection to check if any step matches the provided types).
+### Phase 2: Service Layer Refactoring
+- [ ] **Task 4: Update `ReferralService.initiateReferral` orchestration**
+
+### Checkpoint: Core Features
+- [ ] Application builds without errors.
+
+### Phase 3: Testing & Verification
+- [ ] **Task 5: Update and add Unit Tests**
 
 ### Checkpoint: Complete
-- [ ] Compile successfully.
-- [ ] Backend test suite passes (`./mvnw clean test`), verifying the JPA specifications run correctly against the database.
+- [ ] All tests pass: `mvn test` in the backend directory.
 - [ ] Ready for review.
 
 ## Risks and Mitigations
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Collection Join Performance | Low/Medium | Joining on the `steps` collection for `HasReachedStep` might duplicate rows if not distinct. We must ensure `query.distinct(true)` is used in the Specification to prevent returning the same referral multiple times if it has multiple matching steps. |
+| Existing tests breaking due to Factory changes | Medium | Perform a holistic test run and update tests in Phase 3. |
+| Missing edge cases where previousStatus might be null | Low | The `DRAFT` status is strictly enforced by the factory, so `submit()` will always transition from `DRAFT`. |
 
 ## Open Questions
-- None. Requirements finalized in `docs/specs/complete-visibility-policy.md`.
+- None at this time.
