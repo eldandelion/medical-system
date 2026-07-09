@@ -144,4 +144,22 @@ class ReferralService(
 
         return referralMapper.toDto(saved)
     }
+    @Transactional
+    fun requestReassignment(id: Long, dto: com.medicalsystem.backend.dto.RejectReferralDto, token: String? = null): ReferralDto {
+        val user = resolveUser(token) ?: throw ValidationException("Authorized user not found")
+        val referral = referralRepository.findById(id)
+            .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
+
+        if (!referral.getAllowedActions(user).contains(com.medicalsystem.backend.model.ReferralAction.REQUEST_REASSIGNMENT)) {
+            throw ValidationException("User not authorized to request reassignment")
+        }
+
+        referral.transition(ReferralStatus.NEEDS_REASSIGNMENT, actorId = user.id, reason = dto.reason)
+        val saved = referralRepository.save(referral)
+        
+        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
+        saved.clearDomainEvents()
+
+        return referralMapper.toDto(saved)
+    }
 }

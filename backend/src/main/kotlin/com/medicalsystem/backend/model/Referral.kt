@@ -8,7 +8,7 @@ data class ReferralStep(
     val time: LocalDateTime,
     var status: ReferralStepStatus,
     val actorId: Long?,
-    val reason: String? = null
+    var reason: String? = null
 )
 
 class Referral(
@@ -32,7 +32,7 @@ class Referral(
             throw com.medicalsystem.backend.exception.InvalidReferralTransitionException(this.status.name, newStatus.name)
         }
 
-        val endStatus = if (newStatus == ReferralStatus.REJECTED || newStatus == ReferralStatus.RECALLED) {
+        val endStatus = if (newStatus == ReferralStatus.REJECTED || newStatus == ReferralStatus.RECALLED || newStatus == ReferralStatus.NEEDS_REASSIGNMENT) {
             ReferralStepStatus.ISSUE
         } else {
             ReferralStepStatus.COMPLETED
@@ -40,6 +40,9 @@ class Referral(
 
         this.steps.filter { it.status == ReferralStepStatus.ACTIVE }.forEach {
             it.status = endStatus
+            if (endStatus == ReferralStepStatus.ISSUE && reason != null) {
+                it.reason = reason
+            }
         }
 
         val oldStatus = this.status
@@ -88,16 +91,13 @@ class Referral(
             }
             UserRole.TRIAL_ADMIN -> {
                 if (status == ReferralStatus.AWAITING_TRIAGE) {
-                    val isDoctorRejected = this.status == ReferralStatus.REJECTED
-                    if (isDoctorRejected) {
-                        actions.addAll(listOf(ReferralAction.REASSIGN_DOCTOR, ReferralAction.REJECT_REFERRAL))
-                    } else {
-                        actions.addAll(listOf(ReferralAction.ASSIGN_DOCTOR, ReferralAction.REJECT_REFERRAL))
-                    }
+                    actions.addAll(listOf(ReferralAction.ASSIGN_DOCTOR, ReferralAction.REJECT_REFERRAL))
+                } else if (status == ReferralStatus.NEEDS_REASSIGNMENT) {
+                    actions.addAll(listOf(ReferralAction.REASSIGN_DOCTOR, ReferralAction.REJECT_REFERRAL))
                 }
             }
             UserRole.DOCTOR -> {
-                if (status == ReferralStatus.WAITING_FOR_SCHEDULING) actions.addAll(listOf(ReferralAction.SCHEDULE_APPOINTMENT, ReferralAction.REJECT_REFERRAL))
+                if (status == ReferralStatus.WAITING_FOR_SCHEDULING) actions.addAll(listOf(ReferralAction.SCHEDULE_APPOINTMENT, ReferralAction.REQUEST_REASSIGNMENT))
                 if (status == ReferralStatus.WAITING_FOR_APPOINTMENT) actions.addAll(listOf(ReferralAction.WRITE_FEEDBACK, ReferralAction.REPORT_PROBLEM))
             }
             else -> {}

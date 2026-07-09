@@ -70,4 +70,52 @@ class ReferralTest {
         assertEquals(ReferralStepType.TRIAGE, step3.type)
         assertEquals(ReferralStepStatus.ACTIVE, step3.status)
     }
+
+    @Test
+    fun `transition to NEEDS_REASSIGNMENT marks previous step as ISSUE and saves reason`() {
+        val referral = ReferralFactory.initiate(
+            studentId = 1L,
+            title = "Test",
+            reason = "Test reason",
+            riskLevel = RiskStatus.LOW,
+            referredById = 2L,
+            isDraft = false
+        )
+
+        referral.transition(ReferralStatus.AWAITING_TRIAGE)
+        referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING)
+        
+        // Doctor requests reassignment
+        referral.transition(ReferralStatus.NEEDS_REASSIGNMENT, actorId = 3L, reason = "Doctor needs more info")
+
+        assertEquals(ReferralStatus.NEEDS_REASSIGNMENT, referral.status)
+        
+        // Active step before rejection was SCHEDULING (step 4)
+        val schedulingStep = referral.steps.find { it.type == ReferralStepType.SCHEDULING }!!
+        assertEquals(ReferralStepStatus.ISSUE, schedulingStep.status)
+        assertEquals("Doctor needs more info", schedulingStep.reason)
+    }
+
+    @Test
+    fun `getAllowedActions for TRIAL_ADMIN returns REASSIGN_DOCTOR when NEEDS_REASSIGNMENT`() {
+        val referral = ReferralFactory.initiate(
+            studentId = 1L,
+            title = "Test",
+            reason = "Test reason",
+            riskLevel = RiskStatus.LOW,
+            referredById = 2L,
+            isDraft = false
+        )
+
+        referral.transition(ReferralStatus.AWAITING_TRIAGE)
+        referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING)
+        referral.transition(ReferralStatus.NEEDS_REASSIGNMENT, actorId = 3L, reason = "Doctor needs more info")
+
+        val trialAdmin = TrialAdmin(id = 4L, name = "Admin", email = "admin@test.com")
+        
+        val actions = referral.getAllowedActions(trialAdmin)
+        assertTrue(actions.contains(ReferralAction.REASSIGN_DOCTOR))
+        assertTrue(actions.contains(ReferralAction.REJECT_REFERRAL))
+        assertFalse(actions.contains(ReferralAction.ASSIGN_DOCTOR))
+    }
 }
