@@ -26,7 +26,7 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
   
   const [rejectionReason, setRejectionReason] = useState('');
   const [scheduleDateTime, setScheduleDateTime] = useState('');
-  const [selectedDoctorId, setSelectedDoctorId] = useState('李医生');
+  const [selectedDoctorId, setSelectedDoctorId] = useState('');
   const [isActionCompleted, setIsActionCompleted] = useState(false);
 
   const queryClient = useQueryClient();
@@ -89,8 +89,12 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
   };
 
   const handleAssign = async () => {
+    if (!selectedDoctorId) {
+      showSnackbar({ message: '请选择医生', duration: 3000 });
+      return;
+    }
     setIsAssignDialogOpen(false);
-    await executeAction('/assign', 'POST', '转诊已分配', '分配失败，请稍后重试', { doctorId: selectedDoctorId });
+    await executeAction('/assign', 'POST', '转诊已分配', '分配失败，请稍后重试', { doctorId: parseInt(selectedDoctorId, 10) });
   };
 
   const handleSchedule = async () => {

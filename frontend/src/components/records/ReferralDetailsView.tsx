@@ -44,7 +44,7 @@ export function ReferralDetailsView(props: ReferralDetailsViewProps) {
   const { session } = useAuth();
   
   const { data: referralDetails, isLoading } = useQuery<ReferralDetails>({
-    queryKey: [`/api/referrals/${props.referral.id}/details`],
+    queryKey: ['/api/referrals', props.referral.id, 'details'],
     queryFn: async () => {
       const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${props.referral.id}`.replace('//api', '/api'), {
         headers: { 'Authorization': `Bearer ${session?.token || ''}` }
@@ -104,6 +104,20 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
 
   const { state, actions } = useReferralActions({ referralId: referral.id, onUpdate });
+
+  const { session } = useAuth();
+  
+  const { data: doctors = [] } = useQuery({
+    queryKey: ['/api/doctors'],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/doctors`.replace('//api', '/api'), {
+        headers: { 'Authorization': `Bearer ${session?.token || ''}` }
+      });
+      if (!res.ok) throw new Error('Failed to fetch doctors');
+      return await res.json();
+    },
+    enabled: state.isAssignDialogOpen,
+  });
 
   const [studentData, setStudentData] = React.useState<any>(null);
 
@@ -349,22 +363,12 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
               value={state.selectedDoctorId}
               onChange={(e: any) => state.setSelectedDoctorId(e.target.value)}
             >
-              <md-select-option value="李医生">
-                <div slot="headline">李医生</div>
-                <div slot="supporting-text" className="text-[12px] opacity-70">医学院</div>
-              </md-select-option>
-              <md-select-option value="李娜">
-                <div slot="headline">李娜</div>
-                <div slot="supporting-text" className="text-[12px] opacity-70">工学院</div>
-              </md-select-option>
-              <md-select-option value="王明">
-                <div slot="headline">王明</div>
-                <div slot="supporting-text" className="text-[12px] opacity-70">经济学院</div>
-              </md-select-option>
-              <md-select-option value="陈佳">
-                <div slot="headline">陈佳</div>
-                <div slot="supporting-text" className="text-[12px] opacity-70">艺术学院</div>
-              </md-select-option>
+              {doctors.map((doc: any) => (
+                <md-select-option key={doc.id} value={String(doc.id)}>
+                  <div slot="headline">{doc.name}</div>
+                  <div slot="supporting-text" className="text-[12px] opacity-70">{doc.departmentName}</div>
+                </md-select-option>
+              ))}
             </md-outlined-select>
           </div>
         </div>

@@ -350,6 +350,7 @@ export const handlers = [
   }),
   */
 
+  /*
   http.post(api('/api/referrals/:id/assign'), async ({ request, params }) => {
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';
@@ -403,6 +404,7 @@ export const handlers = [
 
     return HttpResponse.json({ success: true, newId: targetReferral.id });
   }),
+  */
 
   http.get(api('/api/doctors/:id/calendar'), async ({ request, params }) => {
     const { id } = params;

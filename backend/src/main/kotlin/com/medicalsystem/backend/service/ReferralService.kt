@@ -147,6 +147,42 @@ class ReferralService(
 
         return referralMapper.toDto(saved)
     }
+    
+    @Transactional
+    fun assignDoctor(id: Long, dto: com.medicalsystem.backend.dto.AssignDoctorDto, token: String? = null): ReferralDto {
+        val user = resolveUser(token) ?: throw ValidationException("Authorized user not found")
+        val referral = referralRepository.findById(id)
+            .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
+
+        if (!referral.getAllowedActions(user).contains(com.medicalsystem.backend.model.ReferralAction.ASSIGN_DOCTOR) &&
+            !referral.getAllowedActions(user).contains(com.medicalsystem.backend.model.ReferralAction.REASSIGN_DOCTOR)) {
+            throw ValidationException("User not authorized to assign doctor")
+        }
+
+        val doctor = userRepository.findById(dto.doctorId)
+            .orElseThrow { ResourceNotFoundException("Doctor with ID ${dto.doctorId} not found") }
+        
+        if (doctor.role != com.medicalsystem.backend.model.UserRole.DOCTOR) {
+            throw ValidationException("Assigned user is not a doctor")
+        }
+
+        referral.destination = com.medicalsystem.backend.model.ReferralDestination(
+            hospitalId = null,
+            departmentId = (doctor as? com.medicalsystem.backend.model.Doctor)?.departmentId,
+            doctorId = doctor.id,
+            triageAdminId = user.id,
+            transferDate = null,
+            appointmentTime = null
+        )
+
+        referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING, actorId = user.id)
+        val saved = referralRepository.save(referral)
+        
+        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
+        saved.clearDomainEvents()
+
+        return referralMapper.toDto(saved)
+    }
     @Transactional
     fun requestReassignment(id: Long, dto: com.medicalsystem.backend.dto.RejectReferralDto, token: String? = null): ReferralDto {
         val user = resolveUser(token) ?: throw ValidationException("Authorized user not found")

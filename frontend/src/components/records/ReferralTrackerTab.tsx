@@ -16,7 +16,7 @@ export function ReferralTrackerTab({ referralId }: ReferralTrackerTabProps) {
   const { session } = useAuth();
 
   const { data, isLoading, error } = useQuery<ReferralTrackingData>({
-    queryKey: [`/api/referrals/${referralId}/tracking`],
+    queryKey: ['/api/referrals', referralId, 'tracking'],
     queryFn: async () => {
       const url = `${import.meta.env.BASE_URL}/api/referrals/${referralId}/tracking`.replace('//api', '/api');
       const response = await fetch(url, {

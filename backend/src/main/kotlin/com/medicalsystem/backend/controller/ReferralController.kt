@@ -67,4 +67,13 @@ class ReferralController(
     ): ReferralDto {
         return referralService.requestReassignment(id, dto, token)
     }
+
+    @PostMapping("/{id}/assign")
+    fun assignDoctor(
+        @PathVariable id: Long,
+        @Valid @RequestBody dto: com.medicalsystem.backend.dto.AssignDoctorDto,
+        @RequestHeader(value = "Authorization", required = false) token: String?
+    ): ReferralDto {
+        return referralService.assignDoctor(id, dto, token)
+    }
 }

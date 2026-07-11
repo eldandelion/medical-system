@@ -18,7 +18,7 @@ export function RecordDetailsView({ record }: RecordDetailsViewProps) {
   const { session } = useAuth();
 
   const { data: referralDetails, isLoading } = useQuery<ReferralDetails>({
-    queryKey: [`/api/referrals/${record.id}/details`],
+    queryKey: ['/api/referrals', record.id, 'details'],
     queryFn: async () => {
       const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals/${record.id}`.replace('//api', '/api'), {
         headers: { 'Authorization': `Bearer ${session?.token || ''}` }

@@ -1,110 +1,97 @@
-## Task 1: Add `submit()` method to `Referral` entity
+## Task 1: Create Doctor Controller and fetch endpoint
 
-**Description:** Add a `submit(actorRole: UserRole, actorId: Long)` method to the `Referral` aggregate to encapsulate the transition logic.
+**Description:** Add an endpoint to list all available doctors with their department names.
 
 **Acceptance criteria:**
--[x] Method checks that the current status is `DRAFT`.
--[x] If `actorRole` is `HEAD_COUNSELLOR`, transitions to `AWAITING_TRIAGE`.
--[x] Otherwise, transitions to `AWAITING_APPROVAL`.
+- [ ] New `DoctorController` exposes `GET /api/doctors`
+- [ ] Endpoint returns list of doctors containing ID, name, and department name
 
 **Verification:**
--[x] Manual review of `Referral.kt`
+- [ ] Build succeeds: `mvn test`
 
 **Dependencies:** None
 
 **Files likely touched:**
-- `backend/src/main/kotlin/com/medicalsystem/backend/model/Referral.kt`
+- `backend/src/main/kotlin/com/medicalsystem/backend/controller/DoctorController.kt`
 
 **Estimated scope:** Small
 
 ---
 
-## Task 2: Refactor `ReferralFactory` to only create drafts
+## Task 2: Implement and expose assignDoctor in ReferralController
 
-**Description:** Rename `ReferralFactory.initiate` to `createDraft` and remove the `isDraft` logic, meaning the factory will only ever output a draft `Referral`.
+**Description:** Add the API endpoint for assigning doctors.
 
 **Acceptance criteria:**
--[x] Renamed `initiate` to `createDraft`.
--[x] Removed `isDraft` parameter and the subsequent `if (!isDraft)` transition logic.
+- [ ] `ReferralController` exposes `POST /api/referrals/{id}/assign`
+- [ ] Validates user is TrialAdmin and delegates to `ReferralService.assignDoctor`
 
 **Verification:**
--[x] Backend compiles after this change (ignoring the service layer which is updated in Task 4).
+- [ ] Build succeeds: `mvn test`
 
 **Dependencies:** None
 
 **Files likely touched:**
-- `backend/src/main/kotlin/com/medicalsystem/backend/model/ReferralFactory.kt`
+- `backend/src/main/kotlin/com/medicalsystem/backend/controller/ReferralController.kt`
 
 **Estimated scope:** Small
 
 ---
 
-## Task 3: Update `ReferralStatus` transition rules
+## Task 3: Update useReferralActions default state
 
-**Description:** Modify the `canTransitionFrom` logic in `ReferralStatus` to allow the `AWAITING_TRIAGE` state to be reached directly from `DRAFT`.
+**Description:** Make the default selected doctor ID numeric and dynamic.
 
 **Acceptance criteria:**
--[x] `AWAITING_TRIAGE` allows `previousStatus == DRAFT`.
+- [ ] Initial state for selected doctor handles numeric mapping
+- [ ] Sends proper format in API request
 
 **Verification:**
--[x] Manual review of `ReferralStatus.kt`.
+- [ ] Type checks pass: `npm run tsc`
 
 **Dependencies:** None
 
 **Files likely touched:**
-- `backend/src/main/kotlin/com/medicalsystem/backend/model/ReferralStatus.kt`
+- `frontend/src/hooks/useReferralActions.ts`
 
 **Estimated scope:** XS
 
 ---
 
-## Checkpoint: Foundation
+## Task 4: Update ReferralDetailsView.tsx to fetch GET /api/doctors
 
--[x] Review changes in `Referral.kt`, `ReferralFactory.kt`, and `ReferralStatus.kt`.
-
----
-
-## Task 4: Update `ReferralService.initiateReferral` orchestration
-
-**Description:** Connect the newly decoupled factory and entity logic in the application service.
+**Description:** Replace the hardcoded `<md-select-option>` list with dynamically fetched data.
 
 **Acceptance criteria:**
--[x] Uses `ReferralFactory.createDraft(...)`.
--[x] Calls `model.submit(user.role, user.id)` if `dto.actionType != "draft"`.
+- [ ] Uses `useQuery` to fetch `/api/doctors`
+- [ ] Maps fetched list into `<md-select-option>` elements using doctor ID as value, displaying name and department name
 
 **Verification:**
--[x] Backend builds without compilation errors.
+- [ ] Frontend builds cleanly
 
-**Dependencies:** Task 1, Task 2, Task 3
+**Dependencies:** Task 1, Task 3
 
 **Files likely touched:**
-- `backend/src/main/kotlin/com/medicalsystem/backend/service/ReferralService.kt`
+- `frontend/src/components/records/ReferralDetailsView.tsx`
 
 **Estimated scope:** Small
 
 ---
 
-## Checkpoint: Core Features
+## Task 5: Verify existing Rejection endpoint and frontend payload
 
--[x] Execute `mvn clean compile` in the `backend` folder.
-
----
-
-## Task 5: Update and add Unit Tests
-
-**Description:** Update existing tests that reference `ReferralFactory.initiate` and add tests verifying the head counsellor bypass logic.
+**Description:** Ensure that the rejection workflow is complete and functioning.
 
 **Acceptance criteria:**
--[x] `ReferralFactoryTest` (or similar) is updated to test `createDraft`.
--[x] `ReferralServiceTest` tests the `submit` logic for both regular users and head counsellors.
+- [ ] Trial Admin rejection triggers transition to `REJECTED`
+- [ ] Reason is recorded
 
 **Verification:**
--[x] `mvn test` runs successfully.
+- [ ] Manual verification in UI
 
-**Dependencies:** Task 4
+**Dependencies:** None
 
 **Files likely touched:**
-- `backend/src/test/kotlin/com/medicalsystem/backend/model/ReferralFactoryTest.kt` (if exists)
-- `backend/src/test/kotlin/com/medicalsystem/backend/service/ReferralServiceTest.kt`
+- None (just verification)
 
-**Estimated scope:** Medium
+**Estimated scope:** XS

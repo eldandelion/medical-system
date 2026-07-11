@@ -1,41 +1,42 @@
-# Implementation Plan: Referral State Machine Update (Head Counsellor Bypass)
+# Implementation Plan: Trial Admin Doctor Assignment & Referral Rejection
 
 ## Overview
-We need to update the Referral state machine so that referrals submitted by a Head Counsellor bypass the `AWAITING_APPROVAL` status and go directly to `AWAITING_TRIAGE` (where Trial Admins can act on them). We will apply Domain-Driven Design and Clean Code principles by encapsulating the submission transition rules inside the `Referral` Aggregate Root and updating the factory and application service accordingly.
+Implement the doctor assignment and referral rejection workflow for Trial Admins. This includes exposing the assignment endpoints in the backend, dynamically fetching available doctors, updating the frontend dialogue to use this dynamic list, and ensuring rejection payloads are transmitted correctly.
 
 ## Architecture Decisions
-- **Domain logic in Aggregate Root**: The `Referral` entity will gain a `submit(actorRole, actorId)` method. This encapsulates state machine transitions within the domain model rather than the Application Service or Factory.
-- **Factory handles only creation**: `ReferralFactory.initiate` will be renamed to `createDraft` and will solely be responsible for instantiating the entity in its initial `DRAFT` state without handling submission side-effects.
-- **Application Service as Orchestrator**: `ReferralService.initiateReferral` will coordinate creating the draft and (if applicable) submitting it immediately, maintaining separation of concerns.
+- **RESTful Endpoints**: Adding `GET /api/doctors` for fetching available doctors, and `POST /api/referrals/{id}/assign` to finalize the assignment.
+- **Frontend State Management**: Transitioning `useReferralActions` to expect numerical string IDs (`"1"`) instead of mock strings (`"李医生"`) and fetching doctor options asynchronously using `@tanstack/react-query`.
+- **Domain Modeling**: The `AssignDoctorDto` strictly consumes `doctorId` (Long). The domain layer (`ReferralService`) derives `departmentId` implicitly via the `UserRepository`.
 
 ## Task List
 
-### Phase 1: Foundation (Domain Models)
-- [ ] **Task 1: Add `submit()` method to `Referral` entity**
-- [ ] **Task 2: Refactor `ReferralFactory` to only create drafts**
-- [ ] **Task 3: Update `ReferralStatus` transition rules**
+### Phase 1: Foundation (Backend)
+- [ ] Task 1: Create Doctor Controller and fetch endpoint
+- [ ] Task 2: Implement and expose `assignDoctor` in ReferralController
 
 ### Checkpoint: Foundation
-- [ ] Code compiles and domain logic is encapsulated.
+- [ ] Maven tests for controllers pass
+- [ ] Backend API endpoints are successfully mapped
 
-### Phase 2: Service Layer Refactoring
-- [ ] **Task 4: Update `ReferralService.initiateReferral` orchestration**
+### Phase 2: Core Features (Frontend Integration)
+- [ ] Task 3: Update `useReferralActions` default state
+- [ ] Task 4: Update `ReferralDetailsView.tsx` to fetch `GET /api/doctors` and populate `<md-select-option>` dynamically
 
 ### Checkpoint: Core Features
-- [ ] Application builds without errors.
+- [ ] End-to-end flow works in frontend (fetch doctors -> select doctor -> assign -> verify state updates to WAITING_FOR_SCHEDULING)
 
-### Phase 3: Testing & Verification
-- [ ] **Task 5: Update and add Unit Tests**
+### Phase 3: Polish (Referral Rejection Validation)
+- [ ] Task 5: Verify the existing Rejection endpoint and frontend payload
 
 ### Checkpoint: Complete
-- [ ] All tests pass: `mvn test` in the backend directory.
-- [ ] Ready for review.
+- [ ] All acceptance criteria met
+- [ ] Ready for review
 
 ## Risks and Mitigations
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Existing tests breaking due to Factory changes | Medium | Perform a holistic test run and update tests in Phase 3. |
-| Missing edge cases where previousStatus might be null | Low | The `DRAFT` status is strictly enforced by the factory, so `submit()` will always transition from `DRAFT`. |
+| Frontend parsing of `md-select-option` value | Medium | Explicitly pass `e.target.value` as `String` containing the `Long` ID and ensure backend correctly parses string inputs into `Long`. |
+| Missing mock doctors during testing | Low | Backend `UserRepository` mocks doctor creation if none exist when fetching. |
 
 ## Open Questions
-- None at this time.
+- None.
