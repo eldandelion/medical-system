@@ -16,22 +16,37 @@ const WORKING_HOURS = [
 
 const WEEKDAYS_ZH = ['周一', '周二', '周三', '周四', '周五'];
 
-const getCurrentWeekWorkingDays = () => {
-  const today = new Date();
-  const dayOfWeek = today.getDay(); // 0 is Sunday, 1 is Monday
-  const distanceToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+const SUNDAY = 0;
+const SATURDAY = 6;
+const DAYS_IN_WEEK = 7;
+const WORKING_DAYS_COUNT = 5;
+
+const getStartOfTargetWeek = (date: Date): Date => {
+  const dayOfWeek = date.getDay();
+  const isWeekend = dayOfWeek === SUNDAY || dayOfWeek === SATURDAY;
+  const distanceToMonday = dayOfWeek === SUNDAY ? -6 : 1 - dayOfWeek;
+  const weekOffset = isWeekend ? DAYS_IN_WEEK : 0;
   
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + distanceToMonday);
-  monday.setHours(0, 0, 0, 0); // normalize
+  const targetMonday = new Date(date);
+  targetMonday.setDate(date.getDate() + distanceToMonday + weekOffset);
+  targetMonday.setHours(0, 0, 0, 0); 
   
+  return targetMonday;
+};
+
+const generateWorkingDays = (startDate: Date): Date[] => {
   const days = [];
-  for (let i = 0; i < 5; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    days.push(d);
+  for (let i = 0; i < WORKING_DAYS_COUNT; i++) {
+    const day = new Date(startDate);
+    day.setDate(startDate.getDate() + i);
+    days.push(day);
   }
   return days;
+};
+
+const getUpcomingWorkingDays = (): Date[] => {
+  const targetMonday = getStartOfTargetWeek(new Date());
+  return generateWorkingDays(targetMonday);
 };
 
 // Formatting helper
@@ -44,7 +59,7 @@ const formatDate = (date: Date) => {
 
 export function DoctorScheduleCalendar({ doctorId, selectedDateTime, onSelectDateTime }: DoctorScheduleCalendarProps) {
   const { session } = useAuth();
-  const days = React.useMemo(() => getCurrentWeekWorkingDays(), []);
+  const days = React.useMemo(() => getUpcomingWorkingDays(), []);
   
   const { data, isLoading, error } = useQuery({
     queryKey: [`/api/doctors/${doctorId}/calendar`, session?.token],

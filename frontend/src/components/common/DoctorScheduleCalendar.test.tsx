@@ -35,10 +35,15 @@ describe('DoctorScheduleCalendar', () => {
     global.fetch = vi.fn();
     queryClient.clear();
     (auth.useAuth as any).mockReturnValue({ session: { token: 'mock-token' } });
+    
+    // Default to a weekday (Wednesday) so tests are deterministic
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-07-08T12:00:00Z'));
   });
 
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -200,5 +205,59 @@ describe('DoctorScheduleCalendar', () => {
 
     // It should not fetch or show loading
     expect(document.querySelector('md-circular-progress')).toBeNull();
+  });
+
+  describe('Weekend logic', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('should show next week Monday-Friday if today is Saturday', () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      // Set to a Saturday: 2026-07-11 is a Saturday
+      vi.setSystemTime(new Date('2026-07-11T12:00:00Z'));
+      
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => ({ occupiedSlots: [] })
+      });
+
+      render(
+        <DoctorScheduleCalendar 
+          doctorId="doctor-123" 
+          selectedDateTime="" 
+          onSelectDateTime={vi.fn()} 
+        />,
+        { wrapper }
+      );
+      
+      // The week following 2026-07-11 is Monday 07/13 to Friday 07/17
+      expect(screen.getByText('07/13')).toBeDefined();
+      expect(screen.getByText('07/17')).toBeDefined();
+    });
+
+    it('should show next week Monday-Friday if today is Sunday', () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      // Set to a Sunday: 2026-07-12 is a Sunday
+      vi.setSystemTime(new Date('2026-07-12T12:00:00Z'));
+      
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => ({ occupiedSlots: [] })
+      });
+
+      render(
+        <DoctorScheduleCalendar 
+          doctorId="doctor-123" 
+          selectedDateTime="" 
+          onSelectDateTime={vi.fn()} 
+        />,
+        { wrapper }
+      );
+      
+      // The week following 2026-07-12 is Monday 07/13 to Friday 07/17
+      expect(screen.getByText('07/13')).toBeDefined();
+      expect(screen.getByText('07/17')).toBeDefined();
+    });
   });
 });
