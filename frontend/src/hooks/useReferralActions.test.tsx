@@ -33,7 +33,7 @@ describe('useReferralActions', () => {
     
     expect(result.current.state.isRejectionDialogOpen).toBe(false);
     expect(result.current.state.rejectionReason).toBe('');
-    expect(result.current.state.selectedDoctorId).toBe('李医生');
+    expect(result.current.state.selectedDoctorId).toBe('');
   });
 
   it('should update state when toggled', () => {
@@ -101,22 +101,22 @@ describe('useReferralActions', () => {
     );
     
     expect(result.current.state.isApprovalDialogOpen).toBe(false);
-    expect(mockShowSnackbar).toHaveBeenCalledWith({ message: '批准失败，请稍后重试', duration: 3000 });
+    expect(mockShowSnackbar).toHaveBeenCalledWith({ message: '批准失败，请稍后重试', duration: 5000 });
     expect(mockOnUpdate).not.toHaveBeenCalled();
     expect(queryClient.invalidateQueries).not.toHaveBeenCalled();
   });
 
   it('should handle fetch throwing an error', async () => {
     const mockOnUpdate = vi.fn();
-    (global.fetch as any).mockRejectedValue(new Error('Network disconnected'));
+    (global.fetch as any).mockRejectedValueOnce(new Error('Network disconnected'));
 
-    const { result } = renderHook(() => useReferralActions({ referralId: '123', onUpdate: mockOnUpdate }), { wrapper });
+    const { result } = renderHook(() => useReferralActions({ referralId: '1', onUpdate: mockOnUpdate }), { wrapper });
 
     await act(async () => {
       await result.current.actions.handleApprove();
     });
 
-    expect(mockShowSnackbar).toHaveBeenCalledWith({ message: '批准失败，请稍后重试', duration: 3000 });
+    expect(mockShowSnackbar).toHaveBeenCalledWith({ message: '批准失败，请稍后重试: Network disconnected', duration: 5000 });
     expect(mockOnUpdate).not.toHaveBeenCalled();
     expect(queryClient.invalidateQueries).not.toHaveBeenCalled();
   });
@@ -127,7 +127,7 @@ describe('useReferralActions', () => {
     const { result } = renderHook(() => useReferralActions({ referralId: '123' }), { wrapper });
 
     act(() => {
-      result.current.state.setSelectedDoctorId('doctor-456');
+      result.current.state.setSelectedDoctorId('456');
     });
 
     await act(async () => {
@@ -138,7 +138,7 @@ describe('useReferralActions', () => {
       expect.stringContaining('/api/referrals/123/assign'),
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ doctorId: 'doctor-456' })
+        body: JSON.stringify({ doctorId: 456 })
       })
     );
     expect(result.current.state.isAssignDialogOpen).toBe(false);

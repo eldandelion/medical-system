@@ -140,4 +140,65 @@ class ReferralTest {
         assertTrue(actions.contains(ReferralAction.REJECT_REFERRAL))
         assertFalse(actions.contains(ReferralAction.ASSIGN_DOCTOR))
     }
+
+    @Test
+    fun `scheduleAppointment creates Appointment, transitions state and emits event`() {
+        val referral = ReferralFactory.createDraft(
+            studentId = 100L,
+            title = "Test",
+            reason = "Test reason",
+            riskLevel = RiskStatus.LOW,
+            referredById = 2L
+        )
+        // Transition to WAITING_FOR_SCHEDULING to make it valid for scheduling
+        referral.status = ReferralStatus.WAITING_FOR_SCHEDULING
+        
+        // Ensure ID is set for event generation
+        val referralSpy = Referral(
+            id = 500L,
+            studentId = referral.studentId,
+            type = referral.type,
+            date = referral.date,
+            title = referral.title,
+            description = referral.description,
+            riskLevel = referral.riskLevel,
+            status = referral.status,
+            referredById = referral.referredById,
+            steps = referral.steps
+        )
+        
+        referralSpy.destination = com.medicalsystem.backend.model.ReferralDestination(
+            hospitalId = null,
+            departmentId = null,
+            doctorId = 3L,
+            triageAdminId = null,
+            transferDate = null
+        )
+
+        val appointmentTime = java.time.LocalDateTime.now().plusDays(2)
+        referralSpy.scheduleAppointment(doctorId = 3L, time = appointmentTime, actorId = 3L)
+
+        // Verify state transition
+        assertEquals(ReferralStatus.WAITING_FOR_APPOINTMENT, referralSpy.status)
+        
+        // Verify Appointment created
+        assertNotNull(referralSpy.appointment)
+        assertEquals(3L, referralSpy.appointment?.doctorId)
+        assertEquals(appointmentTime.toInstant(java.time.ZoneOffset.UTC), referralSpy.appointment?.appointmentTime)
+        assertEquals(AppointmentStatus.SCHEDULED, referralSpy.appointment?.status)
+        
+        // Verify Step created (EVALUATION step should become ACTIVE because WAITING_FOR_APPOINTMENT requires EVALUATION step type)
+        val activeStep = referralSpy.steps.find { it.status == ReferralStepStatus.ACTIVE }
+        assertNotNull(activeStep)
+        assertEquals(ReferralStepType.EVALUATION, activeStep?.type)
+
+        // Verify Event Emitted
+        val events = referralSpy.getDomainEvents()
+        val scheduledEvent = events.filterIsInstance<com.medicalsystem.backend.event.AppointmentScheduledEvent>().firstOrNull()
+        assertNotNull(scheduledEvent)
+        assertEquals(500L, scheduledEvent?.referralId)
+        assertEquals(100L, scheduledEvent?.studentId)
+        assertEquals(3L, scheduledEvent?.doctorId)
+        assertEquals(appointmentTime, scheduledEvent?.appointmentTime)
+    }
 }

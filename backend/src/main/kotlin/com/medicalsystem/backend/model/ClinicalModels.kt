@@ -21,8 +21,7 @@ data class ReferralDestination(
     val departmentId: Long?,
     val doctorId: Long?,
     val triageAdminId: Long?,
-    val transferDate: LocalDate?,
-    val appointmentTime: LocalDateTime?
+    val transferDate: LocalDate?
 )
 
 data class Attachment(

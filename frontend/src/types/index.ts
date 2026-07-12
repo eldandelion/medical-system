@@ -40,6 +40,13 @@ export interface Referral {
     name: string;
     avatar?: string;
   };
+  appointment?: Appointment;
+}
+
+export interface Appointment {
+  doctorId: number;
+  appointmentTime: string;
+  status: string;
 }
 
 export interface Attachment {

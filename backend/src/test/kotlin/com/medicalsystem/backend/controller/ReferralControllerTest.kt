@@ -21,7 +21,27 @@ class ReferralControllerTest {
     private lateinit var referralController: ReferralController
 
     @Test
-    fun `fetchReferrals returns list`() {
-        assertTrue(true)
+    fun `scheduleAppointment returns mapped dto`() {
+        val dto = com.medicalsystem.backend.dto.ScheduleAppointmentDto(appointmentTime = java.time.LocalDateTime.now().plusDays(1))
+        val referralDto = ReferralDto(
+            id = "1",
+            studentName = "John Doe",
+            studentNumber = "STU123",
+            type = com.medicalsystem.backend.model.ReferralType.INITIAL,
+            date = java.time.LocalDateTime.now(),
+            title = "Test",
+            description = "Test",
+            riskLevel = com.medicalsystem.backend.model.RiskStatus.LOW,
+            status = com.medicalsystem.backend.model.ReferralStatus.WAITING_FOR_APPOINTMENT,
+            referredBy = com.medicalsystem.backend.dto.ReferredByDto("Teacher"),
+            availableActions = emptyList()
+        )
+        
+        `when`(referralService.scheduleAppointment(1L, dto, "token")).thenReturn(referralDto)
+
+        val result = referralController.scheduleAppointment(1L, dto, "token")
+        
+        assertEquals(com.medicalsystem.backend.model.ReferralStatus.WAITING_FOR_APPOINTMENT, result.status)
+        assertEquals("1", result.id)
     }
 }

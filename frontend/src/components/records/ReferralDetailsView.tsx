@@ -235,7 +235,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
         )}
 
         {activeTab === 'tracker' && (
-          <ReferralTrackerTab referralId={referral.id} />
+          <ReferralTrackerTab referralId={referral.id} referral={referral} />
         )}
 
 
@@ -393,7 +393,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
           </p>
           <div className="mt-2">
             <DoctorScheduleCalendar 
-              doctorId={state.selectedDoctorId}
+              doctorId={state.selectedDoctorId || String((referralDetails as any).extendedData?.destination?.doctor || (referral as any).extendedData?.destination?.doctor || '1')}
               selectedDateTime={state.scheduleDateTime}
               onSelectDateTime={(val) => state.setScheduleDateTime(val)}
             />

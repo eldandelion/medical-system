@@ -76,4 +76,27 @@ class ReferralServiceTest {
         assertEquals(ReferralStatus.REJECTED, referral.status)
         assertTrue(referral.steps.any { it.type == ReferralStepType.TRIAGE && it.reason == "Not needed" })
     }
+
+    @Test
+    fun `scheduleAppointment validates role, delegates to Referral and saves`() {
+        val doctor = Doctor(id = 2L, name = "Dr. Smith", email = "doc@univ.edu.cn", departmentId = 1L, phone = null)
+        val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
+        referral.submit(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, 1L)
+        referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING)
+        referral.destination = com.medicalsystem.backend.model.ReferralDestination(
+            hospitalId = null, departmentId = null, doctorId = 2L, triageAdminId = null, transferDate = null
+        )
+        
+        `when`(userRepository.findAll()).thenReturn(listOf(doctor))
+        `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
+        `when`(referralRepository.save(org.mockito.kotlin.any())).thenAnswer { it.arguments[0] }
+
+        val time = java.time.LocalDateTime.now().plusDays(2)
+        referralService.scheduleAppointment(1L, com.medicalsystem.backend.dto.ScheduleAppointmentDto(appointmentTime = time), "doctor")
+
+        assertEquals(ReferralStatus.WAITING_FOR_APPOINTMENT, referral.status)
+        assertNotNull(referral.appointment)
+        assertEquals(2L, referral.appointment?.doctorId)
+        assertEquals(time.toInstant(java.time.ZoneOffset.UTC), referral.appointment?.appointmentTime)
+    }
 }

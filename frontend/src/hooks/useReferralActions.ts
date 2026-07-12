@@ -41,7 +41,22 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
         },
         ...(body ? { body: JSON.stringify(body) } : {})
       });
-      if (!res.ok) throw new Error(`Failed to ${endpoint}`);
+      if (!res.ok) {
+        let errorMessage = `Failed to ${endpoint}`;
+        try {
+          const errorData = await res.json();
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error && errorData.details) {
+            errorMessage = Object.values(errorData.details).join(', ');
+          } else if (typeof errorData === 'string') {
+            errorMessage = errorData;
+          }
+        } catch (e) {
+          // ignore parsing error
+        }
+        throw new Error(errorMessage);
+      }
       return res;
     },
     onSuccess: async (_, { successMsg }) => {
@@ -51,8 +66,10 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
       setIsActionCompleted(false);
       onUpdate?.();
     },
-    onError: (_, { errorMsg }) => {
-      showSnackbar({ message: errorMsg, duration: 3000 });
+    onError: (error: any, { errorMsg, endpoint }: any) => {
+      const isGeneric = error.message === `Failed to ${endpoint}`;
+      const displayMsg = !isGeneric && error.message ? `${errorMsg}: ${error.message}` : errorMsg;
+      showSnackbar({ message: displayMsg, duration: 5000 });
     }
   });
 

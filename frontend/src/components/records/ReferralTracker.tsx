@@ -31,7 +31,7 @@ const getCardStyles = (status: ReferralStepStatus) => {
       };
     case 'active':
       return {
-        bg: "bg-[var(--md-sys-color-primary-container)] shadow-sm",
+        bg: "bg-[var(--md-sys-color-primary-container)]",
         titleText: "text-[var(--md-sys-color-on-primary-container)] font-bold",
         subText: "text-[var(--md-sys-color-on-primary-container)] opacity-90",
         timeText: "text-[var(--md-sys-color-on-primary-container)] font-semibold"

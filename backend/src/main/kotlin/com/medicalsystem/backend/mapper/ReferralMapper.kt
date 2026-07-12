@@ -9,6 +9,7 @@ import com.medicalsystem.backend.entity.ReferralStepEntity
 import com.medicalsystem.backend.model.Attachment
 import com.medicalsystem.backend.model.Referral
 import com.medicalsystem.backend.model.ReferralStep
+import com.medicalsystem.backend.model.Appointment
 import org.springframework.stereotype.Component
 
 import com.medicalsystem.backend.repository.*
@@ -42,8 +43,14 @@ class ReferralMapper(
                     departmentId = dest.department?.id,
                     doctorId = dest.doctor?.id,
                     triageAdminId = dest.triageAdmin?.id,
-                    transferDate = dest.transferDate,
-                    appointmentTime = dest.appointmentTime
+                    transferDate = dest.transferDate
+                )
+            },
+            appointment = entity.appointment?.let { app ->
+                Appointment(
+                    doctorId = app.doctorId,
+                    appointmentTime = app.appointmentTime,
+                    status = app.status
                 )
             },
             attachments = entity.attachments.map {
@@ -87,8 +94,16 @@ class ReferralMapper(
                 department = dest.departmentId?.let { departmentRepository.findById(it).orElse(null) },
                 doctor = dest.doctorId?.let { doctorRepository.findById(it).orElse(null) },
                 triageAdmin = dest.triageAdminId?.let { trialAdminRepository.findById(it).orElse(null) },
-                transferDate = dest.transferDate,
-                appointmentTime = dest.appointmentTime
+                transferDate = dest.transferDate
+            )
+        }
+
+        entity.appointment = model.appointment?.let { app ->
+            com.medicalsystem.backend.entity.AppointmentEntity(
+                referral = entity,
+                doctorId = app.doctorId,
+                appointmentTime = app.appointmentTime,
+                status = app.status
             )
         }
 
@@ -183,7 +198,7 @@ class ReferralMapper(
                 doctor = doctor?.name ?: "",
                 admin = admin?.name ?: "",
                 transferDate = dest.transferDate?.toString(),
-                appointmentTime = dest.appointmentTime?.toString()
+                appointmentTime = model.appointment?.appointmentTime?.toString()
             )
         }
 

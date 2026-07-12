@@ -24,6 +24,7 @@ class Referral(
     val clinicalStatus: MutableList<ClinicalStatusType> = mutableListOf(),
     val severeRiskFactors: MutableList<RiskFlagName> = mutableListOf(),
     var destination: ReferralDestination? = null,
+    var appointment: Appointment? = null,
     val attachments: MutableList<Attachment> = mutableListOf(),
     val steps: MutableList<ReferralStep> = mutableListOf()
 ) : AggregateRoot() {
@@ -117,5 +118,34 @@ class Referral(
             else -> {}
         }
         return actions
+    }
+
+    fun scheduleAppointment(doctorId: Long, time: LocalDateTime, actorId: Long) {
+        if (this.status != ReferralStatus.WAITING_FOR_SCHEDULING) {
+            throw com.medicalsystem.backend.exception.ValidationException("Appointment can only be scheduled for referrals waiting for scheduling")
+        }
+        
+        if (this.destination?.doctorId != doctorId) {
+            throw com.medicalsystem.backend.exception.ValidationException("Doctor ID does not match the assigned doctor in destination")
+        }
+        
+        this.appointment = Appointment(
+            doctorId = doctorId,
+            appointmentTime = time.toInstant(java.time.ZoneOffset.UTC),
+            status = AppointmentStatus.SCHEDULED
+        )
+        
+        this.transition(ReferralStatus.WAITING_FOR_APPOINTMENT, actorId = actorId)
+        
+        if (this.id != null) {
+            registerEvent(
+                com.medicalsystem.backend.event.AppointmentScheduledEvent(
+                    referralId = this.id,
+                    studentId = this.studentId,
+                    doctorId = doctorId,
+                    appointmentTime = time
+                )
+            )
+        }
     }
 }

@@ -127,7 +127,11 @@ export const handlers = [
     }
 
     const mockActions = mockComputeAvailableActions(referral, authHeader);
-    const referralWithActions = { ...referral, availableActions: mockActions };
+    const referralWithActions = { 
+      ...referral, 
+      availableActions: mockActions,
+      appointment: (referral as any).extendedData?.appointment
+    };
 
     return HttpResponse.json({
       baseInfo: referralWithActions,
@@ -191,6 +195,11 @@ export const handlers = [
 
 
   http.post(api('/api/referrals/:id/recall'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      const { passthrough } = await import('msw');
+      return passthrough();
+    }
+
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';
     
@@ -214,6 +223,11 @@ export const handlers = [
   }),
 
   http.delete(api('/api/referrals/:id'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      const { passthrough } = await import('msw');
+      return passthrough();
+    }
+
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';
     
@@ -235,8 +249,12 @@ export const handlers = [
     return HttpResponse.json({ success: true });
   }),
 
-  /*
   http.post(api('/api/referrals/:id/approve'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      const { passthrough } = await import('msw');
+      return passthrough();
+    }
+
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';
     
@@ -273,6 +291,11 @@ export const handlers = [
   }),
 
   http.post(api('/api/referrals/:id/reject'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      const { passthrough } = await import('msw');
+      return passthrough();
+    }
+
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';
     
@@ -348,10 +371,13 @@ export const handlers = [
 
     return HttpResponse.json({ success: true });
   }),
-  */
 
-  /*
   http.post(api('/api/referrals/:id/assign'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      const { passthrough } = await import('msw');
+      return passthrough();
+    }
+
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';
     
@@ -382,13 +408,13 @@ export const handlers = [
     targetReferral.status = 'WaitingForScheduling';
 
     if ((targetReferral as any).extendedData?.steps) {
-      const triageStep = (targetReferral as any).extendedData.steps.find(s => s.type === 'triage');
+      const triageStep = (targetReferral as any).extendedData.steps.find((s: any) => s.type === 'triage');
       if (triageStep && (triageStep.status === 'active' || triageStep.status === 'completed')) {
         triageStep.status = 'completed';
         triageStep.subtitle = '已分诊';
         triageStep.time = new Date().toISOString();
       }
-      const schedulingStep = (targetReferral as any).extendedData.steps.find(s => s.type === 'scheduling');
+      const schedulingStep = (targetReferral as any).extendedData.steps.find((s: any) => s.type === 'scheduling');
       if (schedulingStep) {
         schedulingStep.status = 'active';
         schedulingStep.subtitle = '等待医生安排就诊时间';
@@ -404,9 +430,20 @@ export const handlers = [
 
     return HttpResponse.json({ success: true, newId: targetReferral.id });
   }),
-  */
 
   http.get(api('/api/doctors/:id/calendar'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not fetch real calendar data, falling back to mock");
+      }
+    }
+
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';
     
@@ -421,16 +458,21 @@ export const handlers = [
 
     // Dynamically calculate occupied slots from mockReferralsDb
     const occupiedSlots = mockReferralsDb
-      .filter(r => 
-        (r as any).extendedData?.destination?.doctor?.includes(id as string) &&
-        (r as any).extendedData?.destination?.appointmentTime
-      )
-      .map(r => (r as any).extendedData!.destination!.appointmentTime!);
+      .filter(r => {
+        const appointment = (r as any).extendedData?.appointment;
+        return appointment && String(appointment.doctorId) === String(id) && appointment.appointmentTime;
+      })
+      .map(r => (r as any).extendedData!.appointment!.appointmentTime);
 
     return HttpResponse.json({ occupiedSlots });
   }),
 
   http.post(api('/api/referrals/:id/schedule'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      const { passthrough } = await import('msw');
+      return passthrough();
+    }
+
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';
     
@@ -453,10 +495,11 @@ export const handlers = [
     referral.status = 'WaitingForAppointment';
 
     if ((referral as any).extendedData) {
-      if (!(referral as any).extendedData.destination) {
-        (referral as any).extendedData.destination = { hospital: '', department: '', doctor: '', admin: '', transferDate: '' };
-      }
-      (referral as any).extendedData.destination.appointmentTime = appointmentTime;
+      (referral as any).extendedData.appointment = {
+        doctorId: 1, // Mock doctor ID
+        appointmentTime: appointmentTime,
+        status: 'SCHEDULED'
+      };
 
       if ((referral as any).extendedData.steps) {
         const schedulingStep = (referral as any).extendedData.steps.find(s => s.type === 'scheduling');
@@ -478,6 +521,11 @@ export const handlers = [
   }),
 
   http.post(api('/api/feedback'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      const { passthrough } = await import('msw');
+      return passthrough();
+    }
+
     await delay(MOCK_DELAY_MS);
     
     const data = await request.json() as any;
@@ -518,6 +566,11 @@ export const handlers = [
   }),
 
   http.post(api('/api/referrals/:id/acknowledge-feedback'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      const { passthrough } = await import('msw');
+      return passthrough();
+    }
+
     const { id } = params;
     const authHeader = request.headers.get('Authorization') || '';
     

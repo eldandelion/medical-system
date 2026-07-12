@@ -79,3 +79,9 @@ class TestResultNameConverter : AttributeConverter<TestResultName, Int> {
     override fun convertToDatabaseColumn(attribute: TestResultName?) = getIdFromEnum(attribute)
     override fun convertToEntityAttribute(dbData: Int?) = getEnumFromId<TestResultName>(dbData)
 }
+
+@Converter(autoApply = true)
+class AppointmentStatusConverter : AttributeConverter<AppointmentStatus, Int> {
+    override fun convertToDatabaseColumn(attribute: AppointmentStatus?) = getIdFromEnum(attribute)
+    override fun convertToEntityAttribute(dbData: Int?) = getEnumFromId<AppointmentStatus>(dbData)
+}

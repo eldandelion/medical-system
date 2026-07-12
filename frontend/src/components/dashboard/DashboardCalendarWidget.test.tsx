@@ -48,9 +48,12 @@ describe('DashboardCalendarWidget', () => {
   it('renders the calendar grid with occupied slots', async () => {
     const today = new Date();
     const dayOfWeek = today.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     const distanceToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const weekOffset = isWeekend ? 7 : 0;
+    
     const monday = new Date(today);
-    monday.setDate(today.getDate() + distanceToMonday);
+    monday.setDate(today.getDate() + distanceToMonday + weekOffset);
     
     const yyyy = monday.getFullYear();
     const mm = String(monday.getMonth() + 1).padStart(2, '0');

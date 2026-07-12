@@ -12,10 +12,12 @@ const WORKING_HOURS = ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16
 const getCurrentWeekWorkingDays = () => {
   const today = new Date();
   const dayOfWeek = today.getDay(); // 0 is Sunday, 1 is Monday
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
   const distanceToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const weekOffset = isWeekend ? 7 : 0;
   
   const monday = new Date(today);
-  monday.setDate(today.getDate() + distanceToMonday);
+  monday.setDate(today.getDate() + distanceToMonday + weekOffset);
   monday.setHours(0, 0, 0, 0); // normalize
   
   const days = [];
@@ -52,7 +54,11 @@ export function DashboardCalendarWidget({ doctorId }: DashboardCalendarWidgetPro
     enabled: !!doctorId
   });
 
-  const occupiedSlots = React.useMemo(() => new Set<string>(data?.occupiedSlots || []), [data]);
+  const occupiedSlots = React.useMemo(() => {
+    if (!data?.occupiedSlots) return new Set<string>();
+    const normalized = data.occupiedSlots.map((iso: string) => iso.substring(0, 16));
+    return new Set(normalized);
+  }, [data]);
 
   return (
     <div className="w-full h-full min-h-[300px] bg-[var(--md-sys-color-surface-container-low)] py-4 relative flex flex-col">

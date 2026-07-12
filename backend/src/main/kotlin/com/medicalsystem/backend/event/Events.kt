@@ -23,3 +23,11 @@ data class StudentRegisteredEvent(
     val riskLevel: String?,
     override val occurredOn: LocalDateTime = LocalDateTime.now()
 ) : DomainEvent
+
+data class AppointmentScheduledEvent(
+    val referralId: Long,
+    val studentId: Long,
+    val doctorId: Long,
+    val appointmentTime: LocalDateTime,
+    override val occurredOn: LocalDateTime = LocalDateTime.now()
+) : DomainEvent

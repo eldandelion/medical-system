@@ -23,8 +23,5 @@ data class ReferralDestination(
     var triageAdmin: TrialAdminEntity? = null,
 
     @Column(name = "dest_transfer_date")
-    var transferDate: LocalDate? = null,
-
-    @Column(name = "dest_appointment_time")
-    var appointmentTime: LocalDateTime? = null
+    var transferDate: LocalDate? = null
 )

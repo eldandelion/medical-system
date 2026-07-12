@@ -103,8 +103,7 @@ class DataInitializer {
             department = dept,
             doctor = doc,
             triageAdmin = triageAdmin,
-            transferDate = LocalDate.now().plusDays(2),
-            appointmentTime = LocalDateTime.now().plusDays(2).withHour(10).withMinute(0)
+            transferDate = LocalDate.now().plusDays(2)
         )
 
         val ref1 = ReferralEntity(

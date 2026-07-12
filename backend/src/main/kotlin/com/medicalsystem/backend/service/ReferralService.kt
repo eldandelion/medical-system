@@ -171,8 +171,7 @@ class ReferralService(
             departmentId = (doctor as? com.medicalsystem.backend.model.Doctor)?.departmentId,
             doctorId = doctor.id,
             triageAdminId = user.id,
-            transferDate = null,
-            appointmentTime = null
+            transferDate = null
         )
 
         referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING, actorId = user.id)
@@ -194,6 +193,32 @@ class ReferralService(
         }
 
         referral.transition(ReferralStatus.NEEDS_REASSIGNMENT, actorId = user.id, reason = dto.reason)
+        val saved = referralRepository.save(referral)
+        
+        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
+        saved.clearDomainEvents()
+
+        return referralMapper.toDto(saved)
+    }
+
+    @Transactional
+    fun scheduleAppointment(id: Long, dto: com.medicalsystem.backend.dto.ScheduleAppointmentDto, token: String? = null): ReferralDto {
+        val user = resolveUser(token) ?: throw ValidationException("Authorized user not found")
+        val referral = referralRepository.findById(id)
+            .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
+
+        if (!referral.getAllowedActions(user).contains(com.medicalsystem.backend.model.ReferralAction.SCHEDULE_APPOINTMENT)) {
+            throw ValidationException("User not authorized to schedule appointment")
+        }
+
+        if (user.role != com.medicalsystem.backend.model.UserRole.DOCTOR) {
+            throw ValidationException("Only doctors can schedule appointments")
+        }
+
+        val time = dto.appointmentTime ?: throw ValidationException("Appointment time is required")
+
+        referral.scheduleAppointment(doctorId = user.id, time = time, actorId = user.id)
+        
         val saved = referralRepository.save(referral)
         
         saved.getDomainEvents().forEach { eventPublisher.publish(it) }

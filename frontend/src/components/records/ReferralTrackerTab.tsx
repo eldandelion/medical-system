@@ -9,9 +9,10 @@ import { useAuth } from '../../contexts/AuthContext';
 
 interface ReferralTrackerTabProps {
   referralId: string;
+  referral?: import('../../types').Referral;
 }
 
-export function ReferralTrackerTab({ referralId }: ReferralTrackerTabProps) {
+export function ReferralTrackerTab({ referralId, referral }: ReferralTrackerTabProps) {
   const { isFullScreen } = useDetails();
   const { session } = useAuth();
 
@@ -98,6 +99,37 @@ export function ReferralTrackerTab({ referralId }: ReferralTrackerTabProps) {
           ))}
         </div>
       </div>
+
+      {/* Appointment Card */}
+      {referral?.appointment && (
+        <div className="p-5 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-xl">event_available</span>
+              <span className="text-sm font-bold uppercase tracking-widest">就诊预约</span>
+            </div>
+            <div className="px-3 py-1 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] rounded-full text-[10px] font-bold uppercase tracking-tighter">
+              {referral.appointment.status === 'SCHEDULED' ? '已预约' : referral.appointment.status}
+            </div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-4 py-3 border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 last:border-0 group px-3 -mx-3">
+              <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center shrink-0 shadow-sm">
+                <span className="material-symbols-outlined text-xl">calendar_clock</span>
+              </div>
+              <div className="flex flex-col flex-1">
+                <span className="text-[11px] font-bold opacity-70 uppercase tracking-tight">预约时间</span>
+                <span className="text-[15px] font-medium leading-tight mt-0.5">
+                  {new Date(referral.appointment.appointmentTime).toLocaleString('zh-CN', {
+                    year: 'numeric', month: '2-digit', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit'
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

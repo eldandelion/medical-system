@@ -4,7 +4,10 @@ import com.medicalsystem.backend.dto.DoctorDto
 import com.medicalsystem.backend.model.Doctor
 import com.medicalsystem.backend.repository.DepartmentRepository
 import com.medicalsystem.backend.repository.UserRepository
+import com.medicalsystem.backend.service.DoctorService
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -12,7 +15,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/doctors")
 class DoctorController(
     private val userRepository: UserRepository,
-    private val departmentRepository: DepartmentRepository
+    private val departmentRepository: DepartmentRepository,
+    private val doctorService: DoctorService
 ) {
     @GetMapping
     fun getAllDoctors(): List<DoctorDto> {
@@ -40,6 +44,12 @@ class DoctorController(
                 departmentName = departmentName
             )
         }
+    }
+
+    @GetMapping("/{id}/calendar")
+    fun getDoctorCalendar(@PathVariable id: Long): ResponseEntity<Map<String, List<String>>> {
+        val occupiedSlots = doctorService.getOccupiedSlotsForCurrentWeek(id)
+        return ResponseEntity.ok(mapOf("occupiedSlots" to occupiedSlots))
     }
 
     private fun getMockDepartmentName(id: Long): String {

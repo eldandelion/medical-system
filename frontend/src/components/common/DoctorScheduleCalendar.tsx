@@ -75,7 +75,11 @@ export function DoctorScheduleCalendar({ doctorId, selectedDateTime, onSelectDat
     enabled: !!doctorId
   });
 
-  const occupiedSlots = React.useMemo(() => new Set(data?.occupiedSlots || []), [data]);
+  const occupiedSlots = React.useMemo(() => {
+    if (!data?.occupiedSlots) return new Set<string>();
+    const normalized = data.occupiedSlots.map((iso: string) => iso.substring(0, 16));
+    return new Set(normalized);
+  }, [data]);
 
   const handleSlotClick = (dateStr: string, timeStr: string, isOccupied: boolean) => {
     if (isOccupied || isLoading || error) return;

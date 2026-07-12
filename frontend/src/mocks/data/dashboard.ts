@@ -10,6 +10,7 @@ export interface DashboardData {
     employeeId?: string;
     department?: string;
     accessLevel?: string;
+    doctorId?: number;
   };
   metrics: Record<string, number>;
   activityTitle: string;
@@ -156,7 +157,8 @@ export const mockDashboardDb: Record<string, DashboardData> = {
       title: "李医生",
       subtitle: "精神科主治医师",
       employeeId: "DR-5005",
-      accessLevel: "医生权限"
+      accessLevel: "医生权限",
+      doctorId: 1
     },
     metrics: {
       referralsCount: 6,

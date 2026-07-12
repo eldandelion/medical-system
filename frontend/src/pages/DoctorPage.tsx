@@ -150,7 +150,7 @@ export function DoctorPage() {
             }))}
             activityTitle={dashboardData.activityTitle}
             activities={dashboardData.activities}
-            rightWidget={<DashboardCalendarWidget doctorId={dashboardData.profileSummary.name || '李医生'} />}
+            rightWidget={<DashboardCalendarWidget doctorId={String(dashboardData.profileSummary.doctorId || 1)} />}
           />
         </>) : null;
       default:

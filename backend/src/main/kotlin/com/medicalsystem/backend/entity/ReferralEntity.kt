@@ -55,7 +55,10 @@ class ReferralEntity(
     var attachments: MutableSet<AttachmentEntity> = mutableSetOf(),
 
     @OneToMany(mappedBy = "referral", cascade = [CascadeType.ALL], orphanRemoval = true)
-    var steps: MutableSet<ReferralStepEntity> = mutableSetOf()
+    var steps: MutableSet<ReferralStepEntity> = mutableSetOf(),
+
+    @OneToOne(mappedBy = "referral", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var appointment: AppointmentEntity? = null
 ) {
 
     fun transition(newStatus: ReferralStatus, actorId: Long? = null) {
