@@ -1,7 +1,5 @@
 package com.medicalsystem.backend.model
 
-import com.fasterxml.jackson.annotation.JsonValue
-
 enum class AcademicYear(val value: String) {
     NEW_STUDENT("新生"),
     FRESHMAN("大一"),
@@ -11,6 +9,5 @@ enum class AcademicYear(val value: String) {
     FIFTH_YEAR("大五"),
     GRADUATED("毕业");
 
-    @JsonValue
     fun toValue(): String = value
 }

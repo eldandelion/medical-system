@@ -1,7 +1,5 @@
 package com.medicalsystem.backend.model
 
-import com.fasterxml.jackson.annotation.JsonValue
-
 enum class ReferralStatus(
     val value: String,
     val requiresStepType: ReferralStepType? = null
@@ -18,7 +16,6 @@ enum class ReferralStatus(
     CLOSED("Closed", null),
     ERROR("Error", null);
 
-    @JsonValue
     fun toValue(): String = value
 
     fun canTransitionFrom(previousStatus: ReferralStatus?): Boolean {

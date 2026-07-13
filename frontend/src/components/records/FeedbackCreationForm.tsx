@@ -25,19 +25,19 @@ export function FeedbackCreationForm({ onClose, initialReferralId }: { onClose: 
 
   const [formData, setFormData] = React.useState({
     referralId: initialReferralId || '',
-    feedback: '',
+    content: '',
     attachments: [] as { name: string; size: string }[]
   });
 
   const [errors, setErrors] = React.useState({
     referralId: false,
-    feedback: false
+    content: false
   });
 
   const handleSubmit = async () => {
     const newErrors = {
       referralId: !formData.referralId,
-      feedback: !formData.feedback.trim()
+      content: !formData.content.trim()
     };
 
     setErrors(newErrors);
@@ -56,7 +56,11 @@ export function FeedbackCreationForm({ onClose, initialReferralId }: { onClose: 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.token || ''}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          referralId: formData.referralId,
+          content: formData.content,
+          attachments: [] // Send empty array since attachments are disabled
+        })
       });
 
       setIsSubmitting(false);
@@ -114,7 +118,7 @@ export function FeedbackCreationForm({ onClose, initialReferralId }: { onClose: 
 
   React.useEffect(() => {
     setOnCloseInterceptor(() => () => {
-      const isDirty = formData.referralId !== '' || formData.feedback.trim() !== '' || formData.attachments.length > 0;
+      const isDirty = formData.referralId !== '' || formData.content.trim() !== '' || formData.attachments.length > 0;
       if (isDirty) {
         setIsCloseWarningOpen(true);
         return false; // intercept close
@@ -216,14 +220,14 @@ export function FeedbackCreationForm({ onClose, initialReferralId }: { onClose: 
                 label="诊疗反馈意见"
                 className="w-full"
                 supporting-text={`* 请详细填写诊断情况、治疗建议及后续随访计划。`}
-                value={formData.feedback}
+                value={formData.content}
                 onInput={(e: any) => {
                   const val = e.target.value;
-                  setFormData(prev => ({ ...prev, feedback: val }));
-                  if (errors.feedback) setErrors(prev => ({ ...prev, feedback: false }));
+                  setFormData(prev => ({ ...prev, content: val }));
+                  if (errors.content) setErrors(prev => ({ ...prev, content: false }));
                 }}
                 disabled={isSubmitting}
-                error={errors.feedback || undefined}
+                error={errors.content || undefined}
                 error-text="此项为必填项"
               >
               
@@ -239,7 +243,7 @@ export function FeedbackCreationForm({ onClose, initialReferralId }: { onClose: 
               <div className="flex flex-col gap-4">
                 <div>
                   
-                  <md-filled-tonal-button className="[&::part(button)]:px-0" disabled={isSubmitting}>
+                  <md-filled-tonal-button className="[&::part(button)]:px-0" disabled={true}>
                     
                     <md-icon slot="icon" className="ml-4">upload</md-icon>
                     <span className="mr-4">上传病历或处方附件</span>
