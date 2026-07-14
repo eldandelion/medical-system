@@ -1,10 +1,12 @@
 package com.medicalsystem.backend.model
 
+import java.time.LocalDateTime
+
 data class ReferralStepModel(
-    val id: String,
-    val type: String,
+    val id: Long,
+    val type: ReferralStepType,
     val title: String,
     val subtitle: String?,
-    val time: String,
-    val status: String
+    val time: LocalDateTime,
+    val status: ReferralStepStatus
 )
