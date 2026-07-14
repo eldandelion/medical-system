@@ -9,6 +9,8 @@ import com.medicalsystem.backend.model.Demographics
 import com.medicalsystem.backend.util.AcademicYearCalculator
 import com.medicalsystem.backend.repository.EthnicityRepository
 import com.medicalsystem.backend.repository.SchoolRepository
+import com.medicalsystem.backend.model.Ethnicity
+import com.medicalsystem.backend.model.School
 import org.springframework.stereotype.Component
 import java.time.LocalDate
 import java.time.Period
@@ -35,14 +37,14 @@ class StudentMapper(
                 Demographics(
                     gender = it.gender,
                     dateOfBirth = it.dateOfBirth,
-                    ethnicity = it.ethnicity?.name,
+                    ethnicity = it.ethnicity?.let { e -> Ethnicity(e.id ?: 0L, e.name) },
                     idCardNumber = it.idCardNumber,
                     contactNumber = it.contactNumber,
                     email = it.email,
                     homeAddress = it.homeAddress,
                     emergencyContactName = it.emergencyContactName,
                     emergencyContactPhone = it.emergencyContactPhone,
-                    school = it.school?.name
+                    school = it.school?.let { s -> School(s.id ?: 0L, s.name) }
                 )
             }
         )
@@ -63,14 +65,14 @@ class StudentMapper(
                 DemographicsDto(
                     gender = it.gender?.name,
                     age = it.dateOfBirth?.let { dob -> Period.between(dob, LocalDate.now()).years },
-                    ethnicity = it.ethnicity,
+                    ethnicity = it.ethnicity?.name,
                     idCardNumber = it.idCardNumber,
                     contactNumber = it.contactNumber,
                     email = it.email,
                     homeAddress = it.homeAddress,
                     emergencyContactName = it.emergencyContactName,
                     emergencyContactPhone = it.emergencyContactPhone,
-                    school = it.school
+                    school = it.school?.name
                 )
             }
         )
@@ -87,14 +89,14 @@ class StudentMapper(
                 StudentDemographics(
                     gender = it.gender,
                     dateOfBirth = it.dateOfBirth,
-                    ethnicity = it.ethnicity?.let { name -> ethnicityRepository.findByName(name).orElse(null) },
+                    ethnicity = it.ethnicity?.name?.let { name -> ethnicityRepository.findByName(name).orElse(null) },
                     idCardNumber = it.idCardNumber,
                     contactNumber = it.contactNumber,
                     email = it.email,
                     homeAddress = it.homeAddress,
                     emergencyContactName = it.emergencyContactName,
                     emergencyContactPhone = it.emergencyContactPhone,
-                    school = it.school?.let { name -> schoolRepository.findByName(name).orElse(null) }
+                    school = it.school?.name?.let { name -> schoolRepository.findByName(name).orElse(null) }
                 )
             }
         )

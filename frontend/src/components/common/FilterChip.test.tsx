@@ -63,7 +63,7 @@ describe('FilterChipSet Component', () => {
   it('renders multiple chips and correctly manages open state between them', () => {
     const chips = [
       { label: 'Status', options: ['Active'] },
-      { label: 'Priority', options: ['High'] }
+      { label: 'Priority', options: ['HIGH'] }
     ];
     
     render(<FilterChipSet chips={chips} />);

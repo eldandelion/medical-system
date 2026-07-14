@@ -7,6 +7,7 @@ import { ActionFooter } from '../common/ActionFooter';
 import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS } from '../../config/styleConstants';
 import { useCreationOverlay } from '../../contexts/CreationContext';
 import { LAYOUT_CONSTANTS } from '../../config/layoutConstants';
+import { ACADEMIC_YEAR_LABELS } from '../../config/referralConstants';
 import { useDetails } from '../../contexts/DetailsContext';
 import { PrimaryTabs } from '../common/Tabs';
 import { PsychometricsTabContent } from '../assessments/PsychometricsTabContent';
@@ -88,8 +89,8 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
                 <span className="font-normal truncate">{student.major}</span>
                 <span className="opacity-40 shrink-0">•</span>
                 {/* Critical Status: Risk Level Chip */}
-                <div className={`px-3 py-1 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${RISK_LEVEL_STYLES[student.riskLevel || 'Low']}`}>
-                  {RISK_LEVEL_LABELS[student.riskLevel || 'Low']}
+                <div className={`px-3 py-1 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${RISK_LEVEL_STYLES[student.riskLevel || 'LOW']}`}>
+                  {RISK_LEVEL_LABELS[student.riskLevel || 'LOW']}
                 </div>
               </div>
             </div>
@@ -159,7 +160,7 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
                 <DetailsSection title="学籍信息" className="border-t-0">
                   <div className={`grid grid-cols-4 gap-4 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: 48 }}>
                     <MetricCard label="学号" value={student.studentNumber || 'N/A'} icon="numbers" className="col-span-2" copyable={true} />
-                    <MetricCard label="年级" value={student.year || 'N/A'} icon="school" className="col-span-2" />
+                    <MetricCard label="年级" value={student.year ? (ACADEMIC_YEAR_LABELS[student.year] || student.year) : 'N/A'} icon="school" className="col-span-2" />
                     <MetricCard label="学校" value={student.demographics?.school || 'N/A'} icon="account_balance" className="col-span-2" />
                     <MetricCard label="就读专业" value={student.major || 'N/A'} icon="menu_book" className="col-span-2" />
                   </div>

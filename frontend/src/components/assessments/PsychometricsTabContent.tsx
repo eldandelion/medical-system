@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { RISK_FACTOR_LABELS, TEST_NAME_LABELS } from '../../config/referralConstants';
 import { DetailsSection } from '../common/DetailsPanel';
 import { PsychometricTable } from '../common/PsychometricTable';
 import {
@@ -117,7 +118,7 @@ export function PsychometricsTabContent({ student }: PsychometricsTabContentProp
                 <div className="grid grid-cols-1 gap-2.5">
                   {data.riskFlags.map((flag: any, idx: number) => (
                     <div key={idx} className="flex items-center justify-between px-4 py-3 rounded-xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)] border-opacity-50 transition-all hover:bg-[var(--md-sys-color-surface-container-low)]">
-                      <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">{flag.label}</span>
+                      <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">{RISK_FACTOR_LABELS[flag.label] || flag.label}</span>
                       <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold ${flag.value
                         ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
                         : 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)] opacity-40'
@@ -158,7 +159,7 @@ export function PsychometricsTabContent({ student }: PsychometricsTabContentProp
       )}
 
       {data.tests && data.tests.length > 0 ? (
-        <PsychometricTable scores={data.tests} />
+        <PsychometricTable scores={data.tests.map(t => ({ ...t, name: TEST_NAME_LABELS[t.name] || t.name }))} />
       ) : (
         <div className="py-8 text-center text-sm text-[var(--md-sys-color-on-surface-variant)] opacity-60">暂无量表数据</div>
       )}

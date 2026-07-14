@@ -14,6 +14,7 @@ import { DashboardView } from '../components/dashboard/DashboardView';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { StudentDetailsView, STUDENT_DETAILS_TABS } from '../components/students/StudentDetailsView';
 import { ReferralDetailsView, REFERRAL_DETAILS_TABS } from '../components/records/ReferralDetailsView';
+import { REFERRAL_TYPE_LABELS } from '../config/styleConstants';
 import { StaffManagementView } from '../components/staff/StaffManagementView';
 import { StaffDetailsView, STAFF_DETAILS_TABS } from '../components/staff/StaffDetailsView';
 import { useCreationOverlay } from '../contexts/CreationContext';
@@ -210,8 +211,8 @@ export function HeadCouncillorPage() {
             <DetailsPanel
               isOpen={!!selectedItem}
               onClose={() => setSelectedItem(null)}
-              title={selectedItem?.employeeId ? '人员详情' : (selectedItem?.name ? '学生详情' : (selectedItem?.type || '转诊详情'))}
-              subtitle={selectedItem?.major || selectedItem?.type || selectedItem?.department || ''}
+              title={selectedItem?.employeeId ? '人员详情' : (selectedItem?.name ? '学生详情' : (selectedItem?.type ? (REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type) : '转诊详情'))}
+              subtitle={selectedItem?.major || (selectedItem?.type ? REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type : '') || selectedItem?.department || ''}
               headerAvatar={
                 (selectedItem?.name || selectedItem?.studentName) ? (
                   <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[14px] font-medium">

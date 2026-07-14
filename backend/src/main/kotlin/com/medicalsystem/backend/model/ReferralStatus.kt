@@ -1,22 +1,19 @@
 package com.medicalsystem.backend.model
 
 enum class ReferralStatus(
-    val value: String,
     val requiresStepType: ReferralStepType? = null
 ) {
-    DRAFT("Draft", ReferralStepType.INITIATION),
-    AWAITING_APPROVAL("AwaitingApproval", ReferralStepType.REVIEW),
-    AWAITING_TRIAGE("AwaitingTriage", ReferralStepType.TRIAGE),
-    WAITING_FOR_SCHEDULING("WaitingForScheduling", ReferralStepType.SCHEDULING),
-    WAITING_FOR_APPOINTMENT("WaitingForAppointment", ReferralStepType.EVALUATION),
-    AWAITING_FEEDBACK_APPROVAL("AwaitingFeedbackApproval", ReferralStepType.FEEDBACK),
-    NEEDS_REASSIGNMENT("NeedsReassignment", ReferralStepType.TRIAGE),
-    REJECTED("Rejected", null),
-    RECALLED("Recalled", null),
-    CLOSED("Closed", null),
-    ERROR("Error", null);
-
-    fun toValue(): String = value
+    DRAFT(ReferralStepType.INITIATION),
+    AWAITING_APPROVAL(ReferralStepType.REVIEW),
+    AWAITING_TRIAGE(ReferralStepType.TRIAGE),
+    WAITING_FOR_SCHEDULING(ReferralStepType.SCHEDULING),
+    WAITING_FOR_APPOINTMENT(ReferralStepType.EVALUATION),
+    AWAITING_FEEDBACK_APPROVAL(ReferralStepType.FEEDBACK),
+    NEEDS_REASSIGNMENT(ReferralStepType.TRIAGE),
+    REJECTED(null),
+    RECALLED(null),
+    CLOSED(null),
+    ERROR(null);
 
     fun canTransitionFrom(previousStatus: ReferralStatus?): Boolean {
         // null means initial creation

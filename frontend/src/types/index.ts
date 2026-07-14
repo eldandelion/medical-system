@@ -1,7 +1,7 @@
-export type ReferralStepStatus = 'completed' | 'issue' | 'pending' | 'active';
-export type ReferralStepType = 'initiation' | 'review' | 'triage' | 'scheduling' | 'evaluation' | 'feedback';
+export type ReferralStepStatus = 'COMPLETED' | 'ISSUE' | 'PENDING' | 'ACTIVE';
+export type ReferralStepType = 'INITIATION' | 'REVIEW' | 'TRIAGE' | 'SCHEDULING' | 'EVALUATION' | 'FEEDBACK';
 
-export type ClinicalStatusType = 'FirstVisit' | 'Medicated' | 'PriorTherapy';
+export type ClinicalStatusType = 'FIRST_VISIT' | 'MEDICATED' | 'PRIOR_THERAPY';
 export type SevereRiskFactorType = 'SUICIDAL_IDEATION' | 'SUICIDE_ATTEMPT' | 'SELF_HARM';
 
 export interface ReferralStep {
@@ -28,12 +28,12 @@ export interface Referral {
   id: string;
   studentName: string;
   studentNumber: string;
-  type: '初次转诊' | '复诊转诊' | '紧急转诊' | string;
+  type: 'INITIAL' | 'FOLLOW_UP' | 'EMERGENCY' | string;
   date: string;
   title: string;
   description: string;
-  riskLevel: 'High' | 'Medium' | 'Low';
-  status: 'Draft' | 'Closed' | 'AwaitingTriage' | 'AwaitingApproval' | 'Recalled' | 'AwaitingFeedbackApproval' | 'Error' | 'Rejected' | 'WaitingForScheduling' | 'WaitingForAppointment';
+  riskLevel: 'HIGH' | 'MEDIUM' | 'LOW';
+  status: 'DRAFT' | 'CLOSED' | 'AWAITING_TRIAGE' | 'AWAITING_REVIEW' | 'RECALLED' | 'AWAITING_FEEDBACK_APPROVAL' | 'ERROR' | 'REJECTED' | 'WAITING_FOR_SCHEDULING' | 'WAITING_FOR_APPOINTMENT';
   displayStatus?: string;
   availableActions?: ReferralAction[];
   referredBy?: {
@@ -103,7 +103,7 @@ export interface Student {
   major: string;
   year: string;
   status: 'Active' | 'Inactive';
-  riskLevel?: 'High' | 'Medium' | 'Low';
+  riskLevel?: 'HIGH' | 'MEDIUM' | 'LOW';
   riskReason?: string;
   referralReason?: string;
   scidDiagnosis?: string;

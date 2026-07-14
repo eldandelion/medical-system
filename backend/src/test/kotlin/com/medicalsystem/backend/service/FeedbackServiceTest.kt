@@ -157,7 +157,7 @@ class FeedbackServiceTest {
             id = 100L,
             referralId = referralId,
             content = validRequest.content,
-            attachments = listOf(FeedbackAttachment(id = 1L, name = "scan.pdf", sizeBytes = 1024L, fileUrl = null))
+            attachments = listOf(FeedbackAttachment(id = 1L, file = com.medicalsystem.backend.model.FileReference("scan.pdf", 1024L, java.net.URI("http://mock-url.com"))))
         )
         
         `when`(feedbackRepository.save(any())).thenReturn(savedFeedback)
@@ -173,8 +173,8 @@ class FeedbackServiceTest {
         assertEquals(referralId, capturedFeedback.referralId)
         assertEquals(validRequest.content, capturedFeedback.content)
         assertEquals(1, capturedFeedback.attachments.size)
-        assertEquals("scan.pdf", capturedFeedback.attachments[0].name)
-        assertEquals(1024L, capturedFeedback.attachments[0].sizeBytes)
+        assertEquals("scan.pdf", capturedFeedback.attachments[0].file.name)
+        assertEquals(1024L, capturedFeedback.attachments[0].file.sizeBytes)
 
         // Assert - Referral State Transition
         assertEquals(ReferralStatus.AWAITING_FEEDBACK_APPROVAL, validReferral.status)

@@ -4,7 +4,7 @@ export interface PsychiatricRecord {
   type: PsychiatricRecordType;
   reason: string;
   date: string;
-  status: 'Pending' | 'Closed';
+  status: 'Pending' | 'CLOSED';
   detailedReason?: string;
   hospitalSummary?: string;
   followUpArrangement?: string;
@@ -18,7 +18,7 @@ export const mockPsychiatricRecordsDb: PsychiatricRecord[] = [
     type: '初诊转诊',
     reason: '焦虑与惊恐发作评估',
     date: '2026年4月12日',
-    status: 'Closed',
+    status: 'CLOSED',
     detailedReason: '患者报告在临床环境中持续存在注意力集中和情绪调节困难。建议进一步进行广泛症状筛查。',
     hospitalSummary: '该学生已完成初步评估。心理测评结果显示中度困扰水平。目前阶段未启动药物治疗。',
     followUpArrangement: '已安排每两周一次的咨询环节。下次复核定于 2026年6月。',
@@ -62,7 +62,7 @@ export const mockPsychiatricRecordsDb: PsychiatricRecord[] = [
     type: '随访',
     reason: '认知行为疗法（CBT）第 4 次会谈',
     date: '2026年3月15日',
-    status: 'Closed',
+    status: 'CLOSED',
     detailedReason: '第四次CBT会谈，主要关注灾难化思维挑战与负面核心信念的重构练习。',
     hospitalSummary: '患者在课业压力下的自动思维识别有显著进步，能运用苏格拉底提问法进行自我辩驳。',
     followUpArrangement: '继续进行情绪日记的记录，并尝试暴露疗法作业。下周同一时间继续。',
@@ -76,7 +76,7 @@ export const mockPsychiatricRecordsDb: PsychiatricRecord[] = [
     type: '随访',
     reason: '睡眠障碍与失眠复查',
     date: '2026年3月01日',
-    status: 'Closed',
+    status: 'CLOSED',
     detailedReason: '睡眠监测复查。入睡困难（潜伏期超过60分钟）伴夜间易醒。',
     hospitalSummary: '建议实施睡眠限制疗法（SRT）和刺激控制疗法，限制非睡眠时间的在床时间。',
     followUpArrangement: '要求记录 7 天睡眠日记，于下次随访时进行数据对比与床铺习惯评估。',

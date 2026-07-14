@@ -24,7 +24,7 @@ describe('Tabs Component', () => {
     
     // We expect the second md-primary-tab to have an active attribute assigned
     const secondTab = screen.getByText('Second Tab').closest('md-primary-tab');
-    expect(secondTab?.hasAttribute('active')).toBe(true);
+    expect(secondTab?.hasAttribute('ACTIVE')).toBe(true);
   });
 
   it('triggers onTabChange when a tab is selected', () => {

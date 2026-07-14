@@ -180,16 +180,28 @@ export const handlers = [
     const referral = mockReferralsDb.find((r) => r.id === id);
     if (!referral) {
       // Return dummy tracking data if not found
-      const fallback = (mockReferralsDb[0] as any).extendedData;
+      const fallback = mockReferralsDb[0];
       return HttpResponse.json({
-        destination: fallback?.destination,
-        steps: fallback?.steps
+        destination: ['APPROVED', 'AWAITING_FEEDBACK_APPROVAL', 'CLOSED'].includes(fallback.status) ? {
+          hospital: '中央大学医学中心',
+          department: '精神医学与行为科学科',
+          doctor: '李医生',
+          admin: '系统处理程序 (自动分配)',
+          transferDate: fallback.date
+        } : undefined,
+        steps: generateTrackerSteps(fallback)
       });
     }
 
     return HttpResponse.json({
-      destination: (referral as any).extendedData?.destination,
-      steps: (referral as any).extendedData?.steps
+      destination: ['APPROVED', 'AWAITING_FEEDBACK_APPROVAL', 'CLOSED'].includes(referral.status) ? {
+          hospital: '中央大学医学中心',
+          department: '精神医学与行为科学科',
+          doctor: ['2', '5', '9'].includes(referral.id) ? '李医生' : '张医生 (总住院医师)',
+          admin: '系统处理程序 (自动分配)',
+          transferDate: referral.date
+      } : undefined,
+      steps: generateTrackerSteps(referral)
     });
   }),
 

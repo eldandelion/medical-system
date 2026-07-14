@@ -1,8 +1,6 @@
 package com.medicalsystem.backend.model
 
-data class School(
+data class Ethnicity(
     val id: Long,
     val name: String
 )
-
-

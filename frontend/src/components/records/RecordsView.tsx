@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { RecordHeader } from './RecordHeader';
-import { STATUS_STYLES, STATUS_LABELS } from '../../config/styleConstants';
+import { STATUS_STYLES, STATUS_LABELS, REFERRAL_TYPE_LABELS } from '../../config/styleConstants';
 
 import { enrichReferralStatus } from '../../utils/referralUtils';
 
@@ -56,7 +56,7 @@ export function RecordsView({ onRecordSelect, selectedRecordId, header }: Record
           >
             {getRecordIcon(item.type)}
           </span>
-          <span className="text-[14px] font-normal truncate">{item.type}</span>
+          <span className="text-[14px] font-normal truncate">{REFERRAL_TYPE_LABELS[item.type] || item.type}</span>
         </div>
       )
     },

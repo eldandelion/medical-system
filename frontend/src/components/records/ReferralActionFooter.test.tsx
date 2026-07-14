@@ -20,7 +20,7 @@ describe('ReferralActionFooter', () => {
     status: 'Pending',
     title: 'Test',
     description: 'Test',
-    riskLevel: 'Low',
+    riskLevel: 'LOW',
     timestamp: '2023-01-01',
     extendedData: {
       triage: { isFirstVisit: true, isMedicated: false, priorTherapy: '无' },
@@ -144,7 +144,7 @@ describe('ReferralActionFooter', () => {
   });
 
   it('handles recreate action for Draft status', async () => {
-    renderComponent(['recreate'], 'Draft');
+    renderComponent(['recreate'], 'DRAFT');
     const recreateBtn = screen.getByText('继续编辑');
     fireEvent.click(recreateBtn);
     
@@ -155,7 +155,7 @@ describe('ReferralActionFooter', () => {
   });
 
   it('handles recreate action for non-Draft status', async () => {
-    renderComponent(['recreate'], 'Rejected');
+    renderComponent(['recreate'], 'REJECTED');
     const recreateBtn = screen.getByText('基于此重新创建');
     fireEvent.click(recreateBtn);
     

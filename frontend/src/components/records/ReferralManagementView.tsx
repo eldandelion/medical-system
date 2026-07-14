@@ -5,7 +5,7 @@ import { FilterChipSet } from '../common/FilterChip';
 import { useAuth } from '../../contexts/AuthContext';
 import { enrichReferralStatus } from '../../utils/referralUtils';
 import { formatDateToChinese } from '../../utils/dateUtils';
-import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS, STATUS_STYLES, STATUS_LABELS } from '../../config/styleConstants';
+import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS, STATUS_STYLES, STATUS_LABELS, REFERRAL_TYPE_LABELS } from '../../config/styleConstants';
 
 import { Referral } from '../../types';
 
@@ -36,7 +36,7 @@ const columns: ColumnDefinition<Referral>[] = [
           <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-xs font-medium">
             {item.studentName.charAt(0)}
           </div>
-          {item.status === 'AwaitingApproval' && (
+          {item.status === 'AWAITING_REVIEW' && (
             <div className="absolute -left-3.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[var(--md-sys-color-error)] shadow-[0_0_8px_rgba(179,38,30,0.4)]" />
           )}
         </div>
@@ -57,7 +57,7 @@ const columns: ColumnDefinition<Referral>[] = [
           {item.title}
         </span>
         <div className={`text-[12px] mt-0.5 flex items-center gap-2 ${isSelected ? 'opacity-90' : 'text-[var(--md-sys-color-on-surface-variant)] opacity-70'}`}>
-          <span className="shrink-0">{formatDateToChinese(item.date)} • {item.type}</span>
+          <span className="shrink-0">{formatDateToChinese(item.date)} • {REFERRAL_TYPE_LABELS[item.type] || item.type}</span>
           <div className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-[var(--md-sys-color-surface-container)] shrink-0">
             <div className="w-4 h-4 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center text-[9px] font-bold">
               {item.referredBy?.name?.charAt(0) || '?'}
@@ -159,7 +159,7 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, h
             onFilterChange={setActiveFilters}
             chips={[
               { label: '状态', options: ['全部', '进行中', '已批准', '已拒绝', '待审批'] },
-              { label: '类型', options: ['全部', '初次转诊', '随访'] },
+              { label: '类型', options: ['全部', 'INITIAL', '随访'] },
               { label: '优先级', options: ['全部', '高', '中', '低'] },
               { label: '时间', options: ['从新到旧', '从旧到新'] }
             ]}

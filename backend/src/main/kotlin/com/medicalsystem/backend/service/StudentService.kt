@@ -103,7 +103,7 @@ class StudentService(
         val riskFlags = com.medicalsystem.backend.model.RiskFlagName.entries.map { flagName ->
             val entityFlag = existingFlags[flagName]
             com.medicalsystem.backend.dto.RiskFlagDto(
-                label = flagName.displayName,
+                label = flagName.name,
                 value = entityFlag?.status == com.medicalsystem.backend.model.FlagStatus.POSITIVE
             )
         }
@@ -112,7 +112,7 @@ class StudentService(
         val tests = profile?.getLatestTests() ?: emptyList()
         val testDtos = tests.map { test ->
             com.medicalsystem.backend.dto.PsychometricTestDto(
-                name = test.testResultName.displayName,
+                name = test.testResultName.name,
                 value = test.score,
                 max = test.maxScore,
                 level = test.level,
@@ -133,7 +133,7 @@ class StudentService(
         val latestTests = profile?.getUniqueLatestTests() ?: emptyMap()
         val radarData = latestTests.values.map { test ->
             com.medicalsystem.backend.dto.RadarDataDto(
-                subject = test.testResultName.displayName.substringBefore(" ("), // E.g. "PHQ-9"
+                subject = test.testResultName.name,
                 A = test.score,
                 fullMark = test.maxScore
             )

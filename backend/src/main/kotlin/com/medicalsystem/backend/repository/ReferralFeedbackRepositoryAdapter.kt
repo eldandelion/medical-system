@@ -37,9 +37,9 @@ fun ReferralFeedback.toEntity(): ReferralFeedbackEntity {
 fun FeedbackAttachment.toEntity(): FeedbackAttachmentEntity {
     return FeedbackAttachmentEntity(
         id = if (this.id == 0L) null else this.id,
-        name = this.name,
-        sizeBytes = this.sizeBytes,
-        fileUrl = this.fileUrl
+        name = this.file.name,
+        sizeBytes = this.file.sizeBytes,
+        fileUrl = this.file.url.toString()
     )
 }
 
@@ -56,8 +56,10 @@ fun ReferralFeedbackEntity.toDomain(): ReferralFeedback {
 fun FeedbackAttachmentEntity.toDomain(): FeedbackAttachment {
     return FeedbackAttachment(
         id = this.id ?: 0L,
-        name = this.name,
-        sizeBytes = this.sizeBytes,
-        fileUrl = this.fileUrl
+        file = com.medicalsystem.backend.model.FileReference(
+            name = this.name,
+            sizeBytes = this.sizeBytes,
+            url = java.net.URI(this.fileUrl ?: "http://mock-url.com")
+        )
     )
 }

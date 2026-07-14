@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { FilterChipSet } from '../common/FilterChip';
 import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS } from '../../config/styleConstants';
+import { ACADEMIC_YEAR_LABELS } from '../../config/referralConstants';
 
 interface Student {
   id: string;
@@ -11,7 +12,7 @@ interface Student {
   major: string;
   year: string;
   status: 'Active' | 'Inactive';
-  riskLevel?: 'High' | 'Medium' | 'Low';
+  riskLevel?: 'HIGH' | 'MEDIUM' | 'LOW';
 }
 
 interface StudentsViewProps {
@@ -61,7 +62,7 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
       label: '年级',
       width: 'w-[15%]',
       render: (item, isSelected) => (
-        <span className={`text-[14px] ${isSelected ? 'opacity-90' : 'opacity-70'}`}>{item.year}</span>
+        <span className={`text-[14px] ${isSelected ? 'opacity-90' : 'opacity-70'}`}>{ACADEMIC_YEAR_LABELS[item.year] || item.year}</span>
       )
     },
     {
@@ -69,7 +70,7 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
       label: '风险',
       width: 'w-[15%]',
       render: (item) => {
-        const risk = item.riskLevel || 'Low';
+        const risk = item.riskLevel || 'LOW';
         const style = RISK_LEVEL_STYLES[risk] || RISK_LEVEL_STYLES.Low;
         const label = RISK_LEVEL_LABELS[risk] || '低';
         

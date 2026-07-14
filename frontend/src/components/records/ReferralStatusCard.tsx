@@ -3,12 +3,12 @@ import { ReferralStep } from '../../types';
 import { getIconForType } from './ReferralTracker';
 
 const STEP_TITLES: Record<string, string> = {
-  'initiation': '转诊发起',
-  'review': '辅导员审批',
-  'triage': '中心分诊',
-  'scheduling': '预约排期',
-  'evaluation': '医生评估',
-  'feedback': '诊疗反馈'
+  'INITIATION': '转诊发起',
+  'REVIEW': '辅导员审批',
+  'TRIAGE': '中心分诊',
+  'SCHEDULING': '预约排期',
+  'EVALUATION': '医生评估',
+  'FEEDBACK': '诊疗反馈'
 };
 
 interface ReferralStatusCardProps {
@@ -17,7 +17,7 @@ interface ReferralStatusCardProps {
 }
 
 export function ReferralStatusCard({ activeStep, onClick }: ReferralStatusCardProps) {
-  const isError = activeStep?.status === 'issue';
+  const isError = activeStep?.status === 'ISSUE';
   const IconComponent = activeStep ? getIconForType(activeStep.type) : null;
 
   // Use the exact colors from the tracker container logic (primary container and error container)

@@ -54,10 +54,13 @@ class ReferralMapper(
                 )
             },
             attachments = entity.attachments.map {
-                Attachment(
+                ReferralAttachment(
                     id = it.id,
-                    name = it.name,
-                    size = it.size
+                    file = com.medicalsystem.backend.model.FileReference(
+                        name = it.name,
+                        sizeBytes = it.size.toLongOrNull() ?: 0L,
+                        url = java.net.URI("http://mock-url.com")
+                    )
                 )
             }.toMutableList(),
             steps = entity.steps.map {
@@ -110,8 +113,8 @@ class ReferralMapper(
         entity.attachments = model.attachments.map {
             AttachmentEntity(
                 id = it.id,
-                name = it.name,
-                size = it.size,
+                name = it.file.name,
+                size = it.file.sizeBytes.toString(),
                 referral = entity
             )
         }.toMutableSet()

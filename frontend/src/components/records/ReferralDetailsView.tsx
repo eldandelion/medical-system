@@ -17,7 +17,7 @@ import { enrichReferralStatus } from '../../utils/referralUtils';
 import { useReferralActions } from '../../hooks/useReferralActions';
 import { ReferralActionFooter } from './ReferralActionFooter';
 import { GenericDialog } from '../common/GenericDialog';
-import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS } from '../../config/styleConstants';
+import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS, REFERRAL_TYPE_LABELS } from '../../config/styleConstants';
 import { DoctorScheduleCalendar } from '../common/DoctorScheduleCalendar';
 
 import { Referral, ReferralDetails } from '../../types';
@@ -31,13 +31,13 @@ interface ReferralDetailsViewProps {
   onUpdate?: () => void;
 }
 
-type TabType = 'overview' | 'tracker' | 'psychometrics' | 'feedback';
+type TabType = 'overview' | 'tracker' | 'psychometrics' | 'FEEDBACK';
 
 export const REFERRAL_DETAILS_TABS = [
   { id: 'overview', label: '转诊概览', icon: 'clinical_notes' },
   { id: 'tracker', label: '转诊进度', icon: 'timeline' },
   { id: 'psychometrics', label: '量表数据', icon: 'analytics' },
-  { id: 'feedback', label: '诊疗反馈', icon: 'history_edu' },
+  { id: 'FEEDBACK', label: '诊疗反馈', icon: 'history_edu' },
 ];
 
 export function ReferralDetailsView(props: ReferralDetailsViewProps) {
@@ -145,17 +145,17 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
   }, [onTabChange]);
 
   const isFeedbackAvailable = React.useMemo(() => {
-    return !!referralDetails.feedback || referral.status === 'Closed';
+    return !!referralDetails.feedback || referral.status === 'CLOSED';
   }, [referralDetails, referral.status]);
 
   React.useEffect(() => {
-    if (internalActiveTab === 'feedback' && !isFeedbackAvailable) {
+    if (internalActiveTab === 'FEEDBACK' && !isFeedbackAvailable) {
       setActiveTab('overview');
     }
   }, [internalActiveTab, isFeedbackAvailable, setActiveTab]);
 
   const tabs = React.useMemo(() => REFERRAL_DETAILS_TABS.filter(
-    tab => tab.id !== 'feedback' || isFeedbackAvailable
+    tab => tab.id !== 'FEEDBACK' || isFeedbackAvailable
   ), [isFeedbackAvailable]);
 
   React.useEffect(() => {
@@ -170,7 +170,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
   }, [tabs, setTabsOverride]);
 
   const displayStatus = referral.displayStatus || referral.status;
-  const isDoctorRejected = displayStatus === 'Rejected'; // Removed steps check since we don't have it easily here. If needed we can fetch tracking data.
+  const isDoctorRejected = displayStatus === 'REJECTED'; // Removed steps check since we don't have it easily here. If needed we can fetch tracking data.
 
   return (
     <ScrollableDetailsLayout
@@ -260,7 +260,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
           </motion.div>
         )}
 
-        {activeTab === 'feedback' && (
+        {activeTab === 'FEEDBACK' && (
           <ReferralFeedbackTab referralDetails={referralDetails} />
         )}
       </AnimatePresence>

@@ -48,8 +48,11 @@ class FeedbackService(
 
         val attachments = request.attachments.map {
             FeedbackAttachment(
-                name = it.name,
-                sizeBytes = it.sizeBytes
+                file = com.medicalsystem.backend.model.FileReference(
+                    name = it.name,
+                    sizeBytes = it.sizeBytes,
+                    url = java.net.URI("http://mock-url.com")
+                )
             )
         }
 

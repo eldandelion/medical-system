@@ -39,8 +39,8 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
     studentId: initialData?.studentId || '',
     title: initialData?.title || '',
     reason: initialData?.reason || '',
-    riskLevel: initialData?.riskLevel || 'Low',
-    clinicalStatus: initialData?.clinicalStatus || (['Medicated', 'PriorTherapy'] as ClinicalStatusType[]),
+    riskLevel: initialData?.riskLevel || 'LOW',
+    clinicalStatus: initialData?.clinicalStatus || (['MEDICATED', 'PRIOR_THERAPY'] as ClinicalStatusType[]),
     severeRiskFactors: initialData?.severeRiskFactors || ([] as SevereRiskFactorType[]),
     attachments: initialData?.attachments || [
       { name: 'Patient_Intake_Scan_v2.pdf', size: '2.4 MB' },
@@ -224,10 +224,10 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
                     <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)] mb-2">风险因素</span>
                     <div className={`px-3 py-1 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${RISK_LEVEL_STYLES[selectedStudent.riskLevel as keyof typeof RISK_LEVEL_STYLES]}`}>
                       <md-icon style={{ fontSize: '16px' }}>
-                        {selectedStudent.riskLevel === 'High' ? 'warning' : 'info'}
+                        {selectedStudent.riskLevel === 'HIGH' ? 'warning' : 'info'}
                       </md-icon>
                       <span>
-                        {selectedStudent.riskLevel === 'High' ? '高风险' : '中低风险'}
+                        {selectedStudent.riskLevel === 'HIGH' ? '高风险' : '中低风险'}
                       </span>
                     </div>
                   </div>
@@ -289,28 +289,28 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
                   type="button"
                   disabled={isSubmitting}
                   onClick={() => {
-                    setFormData(prev => ({ ...prev, riskLevel: 'Low' }));
+                    setFormData(prev => ({ ...prev, riskLevel: 'LOW' }));
                     if (errors.riskLevel) setErrors(prev => ({ ...prev, riskLevel: false }));
                   }}
-                  className={`px-6 py-2.5 text-[14px] font-medium transition-colors border-r border-[var(--md-sys-color-outline)] ${formData.riskLevel === 'Low' ? RISK_LEVEL_STYLES['Low'] : 'hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)]'}`}
+                  className={`px-6 py-2.5 text-[14px] font-medium transition-colors border-r border-[var(--md-sys-color-outline)] ${formData.riskLevel === 'LOW' ? RISK_LEVEL_STYLES['LOW'] : 'hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)]'}`}
                 >低风险</button>
                 <button
                   type="button"
                   disabled={isSubmitting}
                   onClick={() => {
-                    setFormData(prev => ({ ...prev, riskLevel: 'Medium' }));
+                    setFormData(prev => ({ ...prev, riskLevel: 'MEDIUM' }));
                     if (errors.riskLevel) setErrors(prev => ({ ...prev, riskLevel: false }));
                   }}
-                  className={`px-6 py-2.5 text-[14px] font-medium transition-colors border-r border-[var(--md-sys-color-outline)] ${formData.riskLevel === 'Medium' ? RISK_LEVEL_STYLES['Medium'] : 'hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)]'}`}
+                  className={`px-6 py-2.5 text-[14px] font-medium transition-colors border-r border-[var(--md-sys-color-outline)] ${formData.riskLevel === 'MEDIUM' ? RISK_LEVEL_STYLES['MEDIUM'] : 'hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)]'}`}
                 >中风险</button>
                 <button
                   type="button"
                   disabled={isSubmitting}
                   onClick={() => {
-                    setFormData(prev => ({ ...prev, riskLevel: 'High' }));
+                    setFormData(prev => ({ ...prev, riskLevel: 'HIGH' }));
                     if (errors.riskLevel) setErrors(prev => ({ ...prev, riskLevel: false }));
                   }}
-                  className={`px-6 py-2.5 text-[14px] font-medium transition-colors ${formData.riskLevel === 'High' ? RISK_LEVEL_STYLES['High'] : 'hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)]'}`}
+                  className={`px-6 py-2.5 text-[14px] font-medium transition-colors ${formData.riskLevel === 'HIGH' ? RISK_LEVEL_STYLES['HIGH'] : 'hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)]'}`}
                 >高风险</button>
               </div>
               {errors.riskLevel && <span className="text-[12px] text-[var(--md-sys-color-error)] mt-1">此项为必填项</span>}

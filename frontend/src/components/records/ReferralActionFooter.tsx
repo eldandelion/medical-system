@@ -67,7 +67,7 @@ export const ReferralActionFooter: React.FC<ReferralActionFooterProps> = ({
         {availableActions.map((action) => {
           switch (action) {
             case 'recreate':
-              return <PrimaryButton key={action} icon={referral.status === 'Draft' ? "edit" : "restart_alt"} label={referral.status === 'Draft' ? "继续编辑" : "基于此重新创建"} onClick={handleRecreate} />;
+              return <PrimaryButton key={action} icon={referral.status === 'DRAFT' ? "edit" : "restart_alt"} label={referral.status === 'DRAFT' ? "继续编辑" : "基于此重新创建"} onClick={handleRecreate} />;
             case 'delete_draft':
               return <DestructiveButton key={action} icon="delete" label="删除草案" onClick={() => state.setIsDeleteDialogOpen(true)} />;
             case 'approve_referral':

@@ -31,7 +31,7 @@ export function ReferralOverviewTab({ referral, referralDetails, onNavigateToTra
       transition={{ duration: 0.2 }}
       className="flex flex-col gap-6"
     >
-      {referral.status !== 'Draft' && (
+      {referral.status !== 'DRAFT' && (
         <ReferralStatusCard 
           activeStep={activeStep} 
           onClick={onNavigateToTracker} 

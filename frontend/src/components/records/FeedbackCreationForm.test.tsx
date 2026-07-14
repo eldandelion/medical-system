@@ -48,7 +48,7 @@ describe('FeedbackCreationForm', () => {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve([
-            { id: 'ref-1', studentName: 'Test Student', status: 'WaitingForAppointment', date: '2023-01-01' }
+            { id: 'ref-1', studentName: 'Test Student', status: 'WAITING_FOR_APPOINTMENT', date: '2023-01-01' }
           ])
         });
       }
@@ -57,7 +57,7 @@ describe('FeedbackCreationForm', () => {
       }
       return Promise.reject(new Error('Not mocked'));
     });
-    global.fetch = fetchMock;
+    global.fetch = fetchMock as any;
   });
 
   afterEach(() => {
@@ -101,7 +101,7 @@ describe('FeedbackCreationForm', () => {
       if (url.includes('/api/referrals')) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve([{ id: 'ref-1', studentName: 'Test Student', status: 'WaitingForAppointment', date: '2023-01-01' }])
+          json: () => Promise.resolve([{ id: 'ref-1', studentName: 'Test Student', status: 'WAITING_FOR_APPOINTMENT', date: '2023-01-01' }])
         });
       }
       if (url.includes('/api/feedback')) {
@@ -134,7 +134,7 @@ describe('FeedbackCreationForm', () => {
       if (url.includes('/api/referrals')) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve([{ id: 'ref-1', studentName: 'Test Student', status: 'WaitingForAppointment', date: '2023-01-01' }])
+          json: () => Promise.resolve([{ id: 'ref-1', studentName: 'Test Student', status: 'WAITING_FOR_APPOINTMENT', date: '2023-01-01' }])
         });
       }
       if (url.includes('/api/feedback')) {
@@ -173,7 +173,7 @@ describe('FeedbackCreationForm', () => {
       if (url.includes('/api/referrals')) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve([{ id: 'ref-1', studentName: 'Test Student', status: 'WaitingForAppointment', date: '2023-01-01' }])
+          json: () => Promise.resolve([{ id: 'ref-1', studentName: 'Test Student', status: 'WAITING_FOR_APPOINTMENT', date: '2023-01-01' }])
         });
       }
       if (url.includes('/api/feedback')) {
