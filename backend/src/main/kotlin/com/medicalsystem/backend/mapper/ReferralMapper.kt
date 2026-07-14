@@ -38,13 +38,22 @@ class ReferralMapper(
             clinicalStatus = entity.clinicalStatus.toMutableList(),
             severeRiskFactors = entity.severeRiskFactors.toMutableList(),
             destination = entity.destination?.let { dest ->
-                com.medicalsystem.backend.model.ReferralDestination(
-                    hospitalId = dest.hospital?.id,
-                    departmentId = dest.department?.id,
-                    doctorId = dest.doctor?.id,
-                    triageAdminId = dest.triageAdmin?.id,
-                    transferDate = dest.transferDate
-                )
+                if (dest.hospital != null) {
+                    if (dest.triageAdmin != null && dest.department != null && dest.doctor != null) {
+                        com.medicalsystem.backend.model.ReferralDestination.Triaged(
+                            hospitalId = com.medicalsystem.backend.model.HospitalId(dest.hospital!!.id),
+                            triageAdminId = com.medicalsystem.backend.model.TriageAdminId(dest.triageAdmin!!.id),
+                            departmentId = com.medicalsystem.backend.model.DepartmentId(dest.department!!.id),
+                            doctorId = com.medicalsystem.backend.model.DoctorId(dest.doctor!!.id),
+                            transferDate = dest.transferDate
+                        )
+                    } else {
+                        com.medicalsystem.backend.model.ReferralDestination.Submitted(
+                            hospitalId = com.medicalsystem.backend.model.HospitalId(dest.hospital!!.id),
+                            transferDate = dest.transferDate
+                        )
+                    }
+                } else null
             },
             appointment = entity.appointment?.let { app ->
                 Appointment(
@@ -92,13 +101,19 @@ class ReferralMapper(
         )
 
         entity.destination = model.destination?.let { dest ->
-            ReferralDestination(
-                hospital = dest.hospitalId?.let { hospitalRepository.findById(it).orElse(null) },
-                department = dest.departmentId?.let { departmentRepository.findById(it).orElse(null) },
-                doctor = dest.doctorId?.let { doctorRepository.findById(it).orElse(null) },
-                triageAdmin = dest.triageAdminId?.let { trialAdminRepository.findById(it).orElse(null) },
-                transferDate = dest.transferDate
-            )
+            when (dest) {
+                is com.medicalsystem.backend.model.ReferralDestination.Submitted -> ReferralDestination(
+                    hospital = hospitalRepository.findById(dest.hospitalId.value).orElse(null),
+                    transferDate = dest.transferDate
+                )
+                is com.medicalsystem.backend.model.ReferralDestination.Triaged -> ReferralDestination(
+                    hospital = hospitalRepository.findById(dest.hospitalId.value).orElse(null),
+                    department = departmentRepository.findById(dest.departmentId.value).orElse(null),
+                    doctor = doctorRepository.findById(dest.doctorId.value).orElse(null),
+                    triageAdmin = trialAdminRepository.findById(dest.triageAdminId.value).orElse(null),
+                    transferDate = dest.transferDate
+                )
+            }
         }
 
         entity.appointment = model.appointment?.let { app ->
@@ -190,10 +205,14 @@ class ReferralMapper(
 
     fun toTrackingDto(model: Referral): com.medicalsystem.backend.dto.ReferralTrackingDto {
         val dest = model.destination?.let { dest ->
-            val hospital = dest.hospitalId?.let { hospitalRepository.findById(it).orElse(null) }
-            val department = dest.departmentId?.let { departmentRepository.findById(it).orElse(null) }
-            val doctor = dest.doctorId?.let { doctorRepository.findById(it).orElse(null) }
-            val admin = dest.triageAdminId?.let { trialAdminRepository.findById(it).orElse(null) }
+            val hospitalId = when (dest) {
+                is com.medicalsystem.backend.model.ReferralDestination.Submitted -> dest.hospitalId
+                is com.medicalsystem.backend.model.ReferralDestination.Triaged -> dest.hospitalId
+            }
+            val hospital = hospitalRepository.findById(hospitalId.value).orElse(null)
+            val department = (dest as? com.medicalsystem.backend.model.ReferralDestination.Triaged)?.departmentId?.let { departmentRepository.findById(it.value).orElse(null) }
+            val doctor = (dest as? com.medicalsystem.backend.model.ReferralDestination.Triaged)?.doctorId?.let { doctorRepository.findById(it.value).orElse(null) }
+            val admin = (dest as? com.medicalsystem.backend.model.ReferralDestination.Triaged)?.triageAdminId?.let { trialAdminRepository.findById(it.value).orElse(null) }
             
             com.medicalsystem.backend.dto.DestinationDto(
                 hospital = hospital?.name ?: "",

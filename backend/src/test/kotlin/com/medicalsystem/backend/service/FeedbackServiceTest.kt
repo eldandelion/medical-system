@@ -65,7 +65,7 @@ class FeedbackServiceTest {
             riskLevel = RiskStatus.HIGH,
             status = ReferralStatus.WAITING_FOR_APPOINTMENT,
             referredById = 3L,
-            destination = ReferralDestination(doctorId = doctorId, departmentId = null, hospitalId = null, triageAdminId = null, transferDate = null),
+            destination = ReferralDestination.Triaged(doctorId = DoctorId(doctorId), departmentId = DepartmentId(1L), hospitalId = HospitalId(1L), triageAdminId = TriageAdminId(1L), transferDate = null),
             appointment = Appointment(doctorId = doctorId, appointmentTime = java.time.Instant.now(), status = AppointmentStatus.SCHEDULED)
         )
 

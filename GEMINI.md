@@ -58,6 +58,7 @@
 ```
 
 ## Coding Conventions
+- **Git Workflow**: Always checkout to a new branch when implementing a new feature or fixing a bug.
 - **Component Structure (React)**: Always use Functional Components with Hooks.
 - **Naming**:
   - React Components/Types: `PascalCase`

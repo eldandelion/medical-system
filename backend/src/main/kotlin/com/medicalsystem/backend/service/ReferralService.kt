@@ -166,12 +166,19 @@ class ReferralService(
             throw ValidationException("Assigned user is not a doctor")
         }
 
-        referral.destination = com.medicalsystem.backend.model.ReferralDestination(
-            hospitalId = null,
-            departmentId = (doctor as? com.medicalsystem.backend.model.Doctor)?.departmentId,
-            doctorId = doctor.id,
-            triageAdminId = user.id,
-            transferDate = null
+        val existingHospitalId = (referral.destination as? com.medicalsystem.backend.model.ReferralDestination.Submitted)?.hospitalId 
+            ?: (referral.destination as? com.medicalsystem.backend.model.ReferralDestination.Triaged)?.hospitalId
+            ?: throw ValidationException("Hospital must be assigned before assigning a doctor")
+
+        val departmentIdRaw = (doctor as? com.medicalsystem.backend.model.Doctor)?.departmentId
+            ?: throw ValidationException("Assigned doctor has no department")
+
+        referral.destination = com.medicalsystem.backend.model.ReferralDestination.Triaged(
+            hospitalId = existingHospitalId,
+            triageAdminId = com.medicalsystem.backend.model.TriageAdminId(user.id),
+            departmentId = com.medicalsystem.backend.model.DepartmentId(departmentIdRaw),
+            doctorId = com.medicalsystem.backend.model.DoctorId(doctor.id),
+            transferDate = referral.destination?.transferDate
         )
 
         referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING, actorId = user.id)

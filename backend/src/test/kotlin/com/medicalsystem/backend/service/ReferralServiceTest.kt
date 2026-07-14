@@ -47,6 +47,10 @@ class ReferralServiceTest {
         val admin = TrialAdmin(id = 1L, name = "Admin", email = "admin@univ.edu.cn")
         val doctor = Doctor(id = 2L, name = "Dr. Smith", email = "doc@univ.edu.cn", departmentId = 1L, phone = null)
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
+        referral.destination = com.medicalsystem.backend.model.ReferralDestination.Submitted(
+            hospitalId = com.medicalsystem.backend.model.HospitalId(1L),
+            transferDate = null
+        )
         referral.submit(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, 1L)
         
         `when`(userRepository.findAll()).thenReturn(listOf(admin))
@@ -58,7 +62,8 @@ class ReferralServiceTest {
 
         assertEquals(ReferralStatus.WAITING_FOR_SCHEDULING, referral.status)
         assertNotNull(referral.destination)
-        assertEquals(2L, referral.destination?.doctorId)
+        val destDoctorId = (referral.destination as? com.medicalsystem.backend.model.ReferralDestination.Triaged)?.doctorId?.value
+        assertEquals(2L, destDoctorId)
     }
 
     @Test
@@ -83,8 +88,8 @@ class ReferralServiceTest {
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
         referral.submit(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, 1L)
         referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING)
-        referral.destination = com.medicalsystem.backend.model.ReferralDestination(
-            hospitalId = null, departmentId = null, doctorId = 2L, triageAdminId = null, transferDate = null
+        referral.destination = com.medicalsystem.backend.model.ReferralDestination.Triaged(
+            hospitalId = HospitalId(1L), departmentId = DepartmentId(1L), doctorId = DoctorId(2L), triageAdminId = TriageAdminId(1L), transferDate = null
         )
         
         `when`(userRepository.findAll()).thenReturn(listOf(doctor))

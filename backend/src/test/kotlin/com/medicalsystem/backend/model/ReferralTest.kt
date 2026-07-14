@@ -167,11 +167,11 @@ class ReferralTest {
             steps = referral.steps
         )
         
-        referralSpy.destination = com.medicalsystem.backend.model.ReferralDestination(
-            hospitalId = null,
-            departmentId = null,
-            doctorId = 3L,
-            triageAdminId = null,
+        referralSpy.destination = com.medicalsystem.backend.model.ReferralDestination.Triaged(
+            hospitalId = com.medicalsystem.backend.model.HospitalId(1L),
+            departmentId = com.medicalsystem.backend.model.DepartmentId(1L),
+            doctorId = com.medicalsystem.backend.model.DoctorId(3L),
+            triageAdminId = com.medicalsystem.backend.model.TriageAdminId(1L),
             transferDate = null
         )
 

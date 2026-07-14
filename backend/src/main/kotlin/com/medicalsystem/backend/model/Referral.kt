@@ -125,7 +125,8 @@ class Referral(
             throw com.medicalsystem.backend.exception.ValidationException("Appointment can only be scheduled for referrals waiting for scheduling")
         }
         
-        if (this.destination?.doctorId != doctorId) {
+        val destDoctorId = (this.destination as? ReferralDestination.Triaged)?.doctorId?.value
+        if (destDoctorId != doctorId) {
             throw com.medicalsystem.backend.exception.ValidationException("Doctor ID does not match the assigned doctor in destination")
         }
         
