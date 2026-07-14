@@ -11,7 +11,7 @@ object ReferralFactory {
         referredById: Long,
         clinicalStatus: List<ClinicalStatusType> = emptyList(),
         severeRiskFactors: List<RiskFlagName> = emptyList(),
-        attachments: List<Attachment> = emptyList()
+        attachments: List<ReferralAttachment> = emptyList()
     ): Referral {
         val referral = Referral(
             id = null,

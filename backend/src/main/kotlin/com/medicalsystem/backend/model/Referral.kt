@@ -25,7 +25,7 @@ class Referral(
     val severeRiskFactors: MutableList<RiskFlagName> = mutableListOf(),
     var destination: ReferralDestination? = null,
     var appointment: Appointment? = null,
-    val attachments: MutableList<Attachment> = mutableListOf(),
+    val attachments: MutableList<ReferralAttachment> = mutableListOf(),
     val steps: MutableList<ReferralStep> = mutableListOf()
 ) : AggregateRoot() {
     fun transition(newStatus: ReferralStatus, actorId: Long? = null, reason: String? = null) {

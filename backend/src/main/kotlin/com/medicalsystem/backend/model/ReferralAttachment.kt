@@ -1,6 +1,6 @@
 package com.medicalsystem.backend.model
 
-data class FeedbackAttachment(
+data class ReferralAttachment(
     val id: Long? = null,
     val file: FileReference
 )

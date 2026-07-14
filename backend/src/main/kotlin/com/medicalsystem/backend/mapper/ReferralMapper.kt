@@ -6,7 +6,7 @@ import com.medicalsystem.backend.entity.AttachmentEntity
 import com.medicalsystem.backend.entity.ReferralDestination
 import com.medicalsystem.backend.entity.ReferralEntity
 import com.medicalsystem.backend.entity.ReferralStepEntity
-import com.medicalsystem.backend.model.Attachment
+import com.medicalsystem.backend.model.ReferralAttachment
 import com.medicalsystem.backend.model.Referral
 import com.medicalsystem.backend.model.ReferralStep
 import com.medicalsystem.backend.model.Appointment
@@ -221,9 +221,9 @@ class ReferralMapper(
         val mappedSteps = sortedModelSteps.map { step ->
             com.medicalsystem.backend.dto.ReferralStepDto(
                 id = step.id.toString(),
-                type = step.type.toValue(),
+                type = step.type.name,
                 time = step.time.toString(),
-                status = step.status.toValue(),
+                status = step.status.name,
                 reason = step.reason
             )
         }.toMutableList()
@@ -242,9 +242,9 @@ class ReferralMapper(
                     mappedSteps.add(
                         com.medicalsystem.backend.dto.ReferralStepDto(
                             id = "pending_$i",
-                            type = standardSequence[i].toValue(),
+                            type = standardSequence[i].name,
                             time = "",
-                            status = "pending"
+                            status = "PENDING"
                         )
                     )
                 }
