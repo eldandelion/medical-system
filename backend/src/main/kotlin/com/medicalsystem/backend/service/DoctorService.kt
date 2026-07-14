@@ -18,21 +18,8 @@ class DoctorService(
     fun getOccupiedSlotsForCurrentWeek(doctorId: Long): List<String> {
         val now = ZonedDateTime.now(clock)
         
-        val currentDayOfWeek = now.dayOfWeek
-        
-        val targetMonday = if (currentDayOfWeek == DayOfWeek.SATURDAY || currentDayOfWeek == DayOfWeek.SUNDAY) {
-            now.with(TemporalAdjusters.next(DayOfWeek.MONDAY))
-        } else {
-            now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-        }
-        
-        val startOfWeek = targetMonday.truncatedTo(ChronoUnit.DAYS)
-            
-        val endOfWeek = startOfWeek.plusDays(6)
-            .withHour(23)
-            .withMinute(59)
-            .withSecond(59)
-            .withNano(999999999)
+        val startOfWeek = determineTargetWorkWeekStart(now)
+        val endOfWeek = determineTargetWorkWeekEnd(startOfWeek)
 
         val appointments = appointmentRepository.findActiveAppointmentsForDoctorWithinTimeframe(
             doctorId,
@@ -41,5 +28,26 @@ class DoctorService(
         )
         
         return appointments.map { it.appointmentTime.toString() }
+    }
+
+    private fun determineTargetWorkWeekStart(now: ZonedDateTime): ZonedDateTime {
+        val currentDayOfWeek = now.dayOfWeek
+        
+        val targetMonday = if (currentDayOfWeek == DayOfWeek.SATURDAY || currentDayOfWeek == DayOfWeek.SUNDAY) {
+            now.with(TemporalAdjusters.next(DayOfWeek.MONDAY))
+        } else {
+            now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        }
+        
+        return targetMonday.truncatedTo(ChronoUnit.DAYS)
+    }
+
+    private fun determineTargetWorkWeekEnd(startOfWeek: ZonedDateTime): ZonedDateTime {
+        return startOfWeek.plusWeeks(WEEK_OFFSET).minusNanos(NANOS_OFFSET)
+    }
+
+    companion object {
+        private const val WEEK_OFFSET = 1L
+        private const val NANOS_OFFSET = 1L
     }
 }
