@@ -38,13 +38,13 @@ class ReferralService(
             userRepository.findByName("艾米丽·沃森")
         } else if (token.contains("head_councillor")) {
             userRepository.findAll().firstOrNull { it.role == com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR } 
-                ?: com.medicalsystem.backend.model.HeadCounsellor(id = 999L, name = "Mock Head Councillor", email = "head@univ.edu.cn")
+                ?: com.medicalsystem.backend.model.HeadCounsellor(id = 999L, name = "Mock Head Councillor", email = com.medicalsystem.backend.model.EmailAddress("head@univ.edu.cn"))
         } else if (token.contains("trial_admin")) {
             userRepository.findAll().firstOrNull { it.role == com.medicalsystem.backend.model.UserRole.TRIAL_ADMIN }
-                ?: com.medicalsystem.backend.model.TrialAdmin(id = 998L, name = "Mock Trial Admin", email = "admin@univ.edu.cn")
+                ?: com.medicalsystem.backend.model.TrialAdmin(id = 998L, name = "Mock Trial Admin", email = com.medicalsystem.backend.model.EmailAddress("admin@univ.edu.cn"))
         } else if (token.contains("doctor")) {
             userRepository.findAll().firstOrNull { it.role == com.medicalsystem.backend.model.UserRole.DOCTOR }
-                ?: com.medicalsystem.backend.model.Doctor(id = 997L, name = "Mock Doctor", email = "doctor@univ.edu.cn", departmentId = 1L, phone = null)
+                ?: com.medicalsystem.backend.model.Doctor(id = 997L, name = "Mock Doctor", email = com.medicalsystem.backend.model.EmailAddress("doctor@univ.edu.cn"), departmentId = 1L, phone = null)
         } else {
             userRepository.findAll().firstOrNull()
         }

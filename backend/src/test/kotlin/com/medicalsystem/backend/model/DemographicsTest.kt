@@ -17,12 +17,12 @@ class DemographicsTest {
             gender = Gender.MALE,
             dateOfBirth = dateOfBirth,
             ethnicity = Ethnicity(1L, "汉族"),
-            idCardNumber = idCardNumber,
-            contactNumber = contactNumber,
-            email = email,
+            idCardNumber = idCardNumber?.let { com.medicalsystem.backend.model.IdCardNumber(it) },
+            contactNumber = contactNumber?.let { com.medicalsystem.backend.model.MobileNumber(it) },
+            email = email?.let { com.medicalsystem.backend.model.EmailAddress(it) },
             homeAddress = "Beijing",
             emergencyContactName = "John Doe",
-            emergencyContactPhone = emergencyContactPhone,
+            emergencyContactPhone = emergencyContactPhone?.let { com.medicalsystem.backend.model.PhoneNumber(it) },
             school = School(1L, "Test School")
         )
     }
@@ -95,6 +95,6 @@ class DemographicsTest {
         val ex = assertThrows(IllegalArgumentException::class.java) {
             createValidDemographics(emergencyContactPhone = "phone")
         }
-        assertTrue(ex.message!!.contains("Emergency contact", ignoreCase = true))
+        assertTrue(ex.message!!.contains("phone number", ignoreCase = true))
     }
 }

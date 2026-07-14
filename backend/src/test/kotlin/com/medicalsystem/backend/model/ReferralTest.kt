@@ -133,7 +133,7 @@ class ReferralTest {
         referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING)
         referral.transition(ReferralStatus.NEEDS_REASSIGNMENT, actorId = 3L, reason = "Doctor needs more info")
 
-        val trialAdmin = TrialAdmin(id = 4L, name = "Admin", email = "admin@test.com")
+        val trialAdmin = TrialAdmin(id = 4L, name = "Admin", email = com.medicalsystem.backend.model.EmailAddress("admin@test.com"))
         
         val actions = referral.getAllowedActions(trialAdmin)
         assertTrue(actions.contains(ReferralAction.REASSIGN_DOCTOR))

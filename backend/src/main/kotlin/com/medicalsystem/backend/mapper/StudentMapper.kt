@@ -38,12 +38,12 @@ class StudentMapper(
                     gender = it.gender,
                     dateOfBirth = it.dateOfBirth,
                     ethnicity = it.ethnicity?.let { e -> Ethnicity(e.id ?: 0L, e.name) },
-                    idCardNumber = it.idCardNumber,
-                    contactNumber = it.contactNumber,
-                    email = it.email,
+                    idCardNumber = it.idCardNumber?.let { num -> com.medicalsystem.backend.model.IdCardNumber(num) },
+                    contactNumber = it.contactNumber?.let { num -> com.medicalsystem.backend.model.MobileNumber(num) },
+                    email = it.email?.let { e -> com.medicalsystem.backend.model.EmailAddress(e) },
                     homeAddress = it.homeAddress,
                     emergencyContactName = it.emergencyContactName,
-                    emergencyContactPhone = it.emergencyContactPhone,
+                    emergencyContactPhone = it.emergencyContactPhone?.let { p -> com.medicalsystem.backend.model.PhoneNumber(p) },
                     school = it.school?.let { s -> School(s.id ?: 0L, s.name) }
                 )
             }
@@ -66,12 +66,12 @@ class StudentMapper(
                     gender = it.gender?.name,
                     age = it.dateOfBirth?.let { dob -> Period.between(dob, LocalDate.now()).years },
                     ethnicity = it.ethnicity?.name,
-                    idCardNumber = it.idCardNumber,
-                    contactNumber = it.contactNumber,
-                    email = it.email,
+                    idCardNumber = it.idCardNumber?.value,
+                    contactNumber = it.contactNumber?.value,
+                    email = it.email?.value,
                     homeAddress = it.homeAddress,
                     emergencyContactName = it.emergencyContactName,
-                    emergencyContactPhone = it.emergencyContactPhone,
+                    emergencyContactPhone = it.emergencyContactPhone?.value,
                     school = it.school?.name
                 )
             }
@@ -90,12 +90,12 @@ class StudentMapper(
                     gender = it.gender,
                     dateOfBirth = it.dateOfBirth,
                     ethnicity = it.ethnicity?.name?.let { name -> ethnicityRepository.findByName(name).orElse(null) },
-                    idCardNumber = it.idCardNumber,
-                    contactNumber = it.contactNumber,
-                    email = it.email,
+                    idCardNumber = it.idCardNumber?.value,
+                    contactNumber = it.contactNumber?.value,
+                    email = it.email?.value,
                     homeAddress = it.homeAddress,
                     emergencyContactName = it.emergencyContactName,
-                    emergencyContactPhone = it.emergencyContactPhone,
+                    emergencyContactPhone = it.emergencyContactPhone?.value,
                     school = it.school?.name?.let { name -> schoolRepository.findByName(name).orElse(null) }
                 )
             }

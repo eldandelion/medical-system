@@ -53,7 +53,7 @@ class FeedbackServiceTest {
 
     @BeforeEach
     fun setUp() {
-        doctor = Doctor(id = doctorId, name = "Dr. Right", email = "right@univ.edu", departmentId = 1L, phone = null)
+        doctor = Doctor(id = doctorId, name = "Dr. Right", email = com.medicalsystem.backend.model.EmailAddress("right@univ.edu"), departmentId = 1L, phone = null)
         
         validReferral = Referral(
             id = referralId,
@@ -85,7 +85,7 @@ class FeedbackServiceTest {
     fun `Given unassigned doctor, When submitFeedback is called, Then throws ForbiddenException`() {
         // Arrange
         val wrongDoctorId = 999L
-        val wrongDoctor = Doctor(id = wrongDoctorId, name = "Dr. Wrong", email = "wrong@univ.edu", departmentId = 1L, phone = null)
+        val wrongDoctor = Doctor(id = wrongDoctorId, name = "Dr. Wrong", email = com.medicalsystem.backend.model.EmailAddress("wrong@univ.edu"), departmentId = 1L, phone = null)
         
         `when`(userRepository.findById(wrongDoctorId)).thenReturn(Optional.of(wrongDoctor))
         `when`(referralRepository.findById(referralId)).thenReturn(Optional.of(validReferral))

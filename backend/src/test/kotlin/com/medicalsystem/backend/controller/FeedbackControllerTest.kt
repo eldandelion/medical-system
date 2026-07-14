@@ -48,7 +48,7 @@ class FeedbackControllerTest {
         val expectedDoctorId = 997L
         
         `when`(userRepository.findAll()).thenReturn(
-            listOf(Doctor(id = 997L, name = "Mock Doctor", email = "doctor@univ.edu.cn", departmentId = 1L, phone = null))
+            listOf(Doctor(id = 997L, name = "Mock Doctor", email = com.medicalsystem.backend.model.EmailAddress("doctor@univ.edu.cn"), departmentId = 1L, phone = null))
         )
 
         // Act

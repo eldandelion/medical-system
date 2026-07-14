@@ -16,25 +16,25 @@ class UserMapper(
             is DoctorEntity -> Doctor(
                 id = entity.id,
                 name = entity.name,
-                email = entity.email,
+                email = entity.email?.let { EmailAddress(it) },
                 departmentId = entity.department.id,
-                phone = entity.phone
+                phone = entity.phone?.let { PhoneNumber(it) }
             )
             is TeacherEntity -> Teacher(
                 id = entity.id,
                 name = entity.name,
-                email = entity.email,
+                email = entity.email?.let { EmailAddress(it) },
                 collegeId = entity.college?.id
             )
             is HeadCounsellorEntity -> HeadCounsellor(
                 id = entity.id,
                 name = entity.name,
-                email = entity.email
+                email = entity.email?.let { EmailAddress(it) }
             )
             is TrialAdminEntity -> TrialAdmin(
                 id = entity.id,
                 name = entity.name,
-                email = entity.email
+                email = entity.email?.let { EmailAddress(it) }
             )
             else -> throw IllegalArgumentException("Unknown UserEntity type: ${entity.javaClass.simpleName}")
         }
@@ -45,15 +45,15 @@ class UserMapper(
             is Doctor -> DoctorEntity(
                 id = model.id,
                 name = model.name,
-                email = model.email,
+                email = model.email?.value,
                 department = departmentRepository.findById(model.departmentId)
                     .orElseThrow { IllegalArgumentException("Department not found") },
-                phone = model.phone
+                phone = model.phone?.value
             )
             is Teacher -> TeacherEntity(
                 id = model.id,
                 name = model.name,
-                email = model.email,
+                email = model.email?.value,
                 college = model.collegeId?.let { 
                     collegeRepository.findById(it).orElse(null)
                 }
@@ -61,12 +61,12 @@ class UserMapper(
             is HeadCounsellor -> HeadCounsellorEntity(
                 id = model.id,
                 name = model.name,
-                email = model.email
+                email = model.email?.value
             )
             is TrialAdmin -> TrialAdminEntity(
                 id = model.id,
                 name = model.name,
-                email = model.email
+                email = model.email?.value
             )
             is StudentUser -> throw UnsupportedOperationException("StudentUser cannot be converted to UserEntity")
             is SystemAdmin -> throw UnsupportedOperationException("SystemAdmin cannot be converted to UserEntity")

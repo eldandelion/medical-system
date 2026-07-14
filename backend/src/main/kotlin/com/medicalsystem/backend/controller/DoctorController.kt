@@ -25,9 +25,9 @@ class DoctorController(
         // Use mocks if no real doctors found for easier testing per spec
         val finalDoctors = if (doctors.isEmpty()) {
             listOf(
-                Doctor(id = 997L, name = "李医生", email = "li@univ.edu.cn", departmentId = 1L, phone = null),
-                Doctor(id = 998L, name = "李娜", email = "lina@univ.edu.cn", departmentId = 2L, phone = null),
-                Doctor(id = 999L, name = "王明", email = "wangming@univ.edu.cn", departmentId = 3L, phone = null)
+                Doctor(id = 997L, name = "李医生", email = com.medicalsystem.backend.model.EmailAddress("li@univ.edu.cn"), departmentId = 1L, phone = null),
+                Doctor(id = 998L, name = "李娜", email = com.medicalsystem.backend.model.EmailAddress("lina@univ.edu.cn"), departmentId = 2L, phone = null),
+                Doctor(id = 999L, name = "王明", email = com.medicalsystem.backend.model.EmailAddress("wangming@univ.edu.cn"), departmentId = 3L, phone = null)
             )
         } else {
             doctors

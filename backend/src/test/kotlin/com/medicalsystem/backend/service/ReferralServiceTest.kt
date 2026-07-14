@@ -44,8 +44,8 @@ class ReferralServiceTest {
 
     @Test
     fun `assignDoctor transitions status to WAITING_FOR_SCHEDULING and sets destination`() {
-        val admin = TrialAdmin(id = 1L, name = "Admin", email = "admin@univ.edu.cn")
-        val doctor = Doctor(id = 2L, name = "Dr. Smith", email = "doc@univ.edu.cn", departmentId = 1L, phone = null)
+        val admin = TrialAdmin(id = 1L, name = "Admin", email = com.medicalsystem.backend.model.EmailAddress("admin@univ.edu.cn"))
+        val doctor = Doctor(id = 2L, name = "Dr. Smith", email = com.medicalsystem.backend.model.EmailAddress("doc@univ.edu.cn"), departmentId = 1L, phone = null)
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
         referral.destination = com.medicalsystem.backend.model.ReferralDestination.Submitted(
             hospitalId = com.medicalsystem.backend.model.HospitalId(1L),
@@ -68,7 +68,7 @@ class ReferralServiceTest {
 
     @Test
     fun `rejectReferral transitions status to REJECTED`() {
-        val admin = TrialAdmin(id = 1L, name = "Admin", email = "admin@univ.edu.cn")
+        val admin = TrialAdmin(id = 1L, name = "Admin", email = com.medicalsystem.backend.model.EmailAddress("admin@univ.edu.cn"))
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
         referral.submit(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, 1L)
         
@@ -84,7 +84,7 @@ class ReferralServiceTest {
 
     @Test
     fun `scheduleAppointment validates role, delegates to Referral and saves`() {
-        val doctor = Doctor(id = 2L, name = "Dr. Smith", email = "doc@univ.edu.cn", departmentId = 1L, phone = null)
+        val doctor = Doctor(id = 2L, name = "Dr. Smith", email = com.medicalsystem.backend.model.EmailAddress("doc@univ.edu.cn"), departmentId = 1L, phone = null)
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
         referral.submit(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, 1L)
         referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING)

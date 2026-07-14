@@ -27,13 +27,10 @@ data class Hospital(
     val id: HospitalId,
     val name: String,
     val address: String?,
-    val contactPhone: String?
+    val contactPhone: PhoneNumber?
 ) {
     init {
         require(name.isNotBlank()) { "Hospital name cannot be blank" }
-        contactPhone?.let {
-            require(it.matches(Regex("^[\\d\\+\\-\\s()]+$"))) { "Invalid phone number format" }
-        }
     }
 }
 
