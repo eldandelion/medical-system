@@ -1,6 +1,11 @@
 package com.medicalsystem.backend.service
 
+import com.medicalsystem.backend.dto.DoctorDto
+import com.medicalsystem.backend.model.Doctor
 import com.medicalsystem.backend.repository.AppointmentRepository
+import com.medicalsystem.backend.repository.DepartmentRepository
+import com.medicalsystem.backend.repository.UserRepository
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.time.Clock
 import java.time.DayOfWeek
@@ -12,8 +17,20 @@ import java.time.temporal.TemporalAdjusters
 @Service
 class DoctorService(
     private val appointmentRepository: AppointmentRepository,
+    private val userRepository: UserRepository,
+    private val departmentRepository: DepartmentRepository,
     private val clock: Clock = Clock.systemDefaultZone()
 ) {
+
+    fun getAllDoctors(): List<DoctorDto> =
+        userRepository.findAll().filterIsInstance<Doctor>().map { doctor ->
+            val departmentName = departmentRepository.findByIdOrNull(doctor.departmentId)?.name ?: "未知部门"
+            DoctorDto(
+                id = doctor.id,
+                name = doctor.name,
+                departmentName = departmentName
+            )
+        }
 
     fun getOccupiedSlotsForCurrentWeek(doctorId: Long): List<String> {
         val now = ZonedDateTime.now(clock)
