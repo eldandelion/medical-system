@@ -21,14 +21,14 @@ class StudentService(
     private val majorRepository: MajorRepository,
     private val studentMapper: StudentMapper,
     private val healthProfileRepository: StudentHealthProfileRepository,
-    private val eventPublisher: com.medicalsystem.backend.event.DomainEventPublisher
+    private val eventPublisher: com.medicalsystem.backend.event.DomainEventPublisher,
+    private val psychometricSummaryMapper: com.medicalsystem.backend.mapper.PsychometricSummaryMapper
 ) {
     private val logger = LoggerFactory.getLogger(StudentService::class.java)
 
-    fun fetchAllStudents(token: String? = null): List<StudentDto> {
-        val students = if (token?.contains("teacher_token_zhang") == true) {
-            // Mock: Teacher Zhang is assigned to College 1
-            studentRepository.findByMajorCollegeId(1L)
+    fun fetchAllStudents(collegeId: Long? = null): List<StudentDto> {
+        val students = if (collegeId != null) {
+            studentRepository.findByMajorCollegeId(collegeId)
         } else {
             studentRepository.findAll()
         }
@@ -52,12 +52,7 @@ class StudentService(
             throw com.medicalsystem.backend.exception.DuplicateStudentException(dto.studentNumber)
         }
 
-        dto.demographics?.email?.let { email ->
-            val emailRegex = "^[A-Za-z0-9+_.-]+@(.+)\$".toRegex()
-            if (!emailRegex.matches(email)) {
-                throw ValidationException("Invalid email format")
-            }
-        }
+
 
         val major = majorRepository.findById(dto.majorId)
             .orElseThrow { ResourceNotFoundException("Major with ID ${dto.majorId} not found") }
@@ -98,53 +93,6 @@ class StudentService(
             
         val profile = healthProfileRepository.findByStudentId(id).orElse(null)
             
-        // Map Risk Flags guaranteeing all 3 exist
-        val existingFlags = profile?.riskFlags?.associateBy { it.name } ?: emptyMap()
-        val riskFlags = com.medicalsystem.backend.model.RiskFlagName.entries.map { flagName ->
-            val entityFlag = existingFlags[flagName]
-            com.medicalsystem.backend.dto.RiskFlagDto(
-                label = flagName.name,
-                value = entityFlag?.status == com.medicalsystem.backend.model.FlagStatus.POSITIVE
-            )
-        }
-        
-        // Map Raw Tests
-        val tests = profile?.getLatestTests() ?: emptyList()
-        val testDtos = tests.map { test ->
-            com.medicalsystem.backend.dto.PsychometricTestDto(
-                name = test.testResultName.name,
-                value = test.score,
-                max = test.maxScore,
-                level = test.level,
-                date = test.testDate.toString()
-            )
-        }
-        
-        // Extract Trend (GAD-7 as an example)
-        val gad7Tests = tests.filter { it.testResultName == com.medicalsystem.backend.model.TestResultName.GAD_7 }.sortedBy { it.testDate }
-        val scores = gad7Tests.map { test ->
-            com.medicalsystem.backend.dto.ScoreTrendDto(
-                date = test.testDate.toString(),
-                value = test.score
-            )
-        }
-        
-        // Compute Radar Data from latest unique tests
-        val latestTests = profile?.getUniqueLatestTests() ?: emptyMap()
-        val radarData = latestTests.values.map { test ->
-            com.medicalsystem.backend.dto.RadarDataDto(
-                subject = test.testResultName.name,
-                A = test.score,
-                fullMark = test.maxScore
-            )
-        }
-        
-        return com.medicalsystem.backend.dto.PsychometricsSummaryDto(
-            scidDiagnosis = profile?.scidDiagnosis,
-            riskFlags = riskFlags,
-            scores = scores,
-            radarData = radarData,
-            tests = testDtos
-        )
+        return psychometricSummaryMapper.toDto(entity, profile)
     }
 }

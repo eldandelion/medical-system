@@ -37,6 +37,9 @@ class StudentServiceTest {
     
     @Mock
     private lateinit var eventPublisher: DomainEventPublisher
+    
+    @Mock
+    private lateinit var psychometricSummaryMapper: com.medicalsystem.backend.mapper.PsychometricSummaryMapper
 
     @InjectMocks
     private lateinit var studentService: StudentService

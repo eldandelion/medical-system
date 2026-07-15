@@ -1,6 +1,6 @@
 package com.medicalsystem.backend.dto
 
-import jakarta.validation.constraints.Email
+
 
 data class DemographicsDto(
     val gender: String?,
@@ -9,8 +9,7 @@ data class DemographicsDto(
     val idCardNumber: String?,
     val contactNumber: String?,
     
-    @field:Email(message = "Invalid email format")
-    val email: String?,
+    val email: com.medicalsystem.backend.model.EmailAddress?,
     
     val homeAddress: String?,
     val emergencyContactName: String?,
