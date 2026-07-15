@@ -49,10 +49,11 @@ class ReferralController(
     @PostMapping("/{id}/approve")
     fun approveReferral(
         @PathVariable id: Long,
+        @Valid @RequestBody dto: com.medicalsystem.backend.dto.ApproveReferralDto,
         @CurrentUser user: User?
     ): ReferralDto {
         if (user == null) throw ForbiddenException("Authorized user not found")
-        return referralService.approveReferral(id, user)
+        return referralService.approveReferral(id, dto, user)
     }
 
     @PostMapping("/{id}/reject")

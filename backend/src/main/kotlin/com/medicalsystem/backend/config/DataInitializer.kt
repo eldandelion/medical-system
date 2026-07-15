@@ -94,7 +94,7 @@ class DataInitializer {
         val hosp = hospitalRepository.save(HospitalEntity(name = "市精神卫生中心", address = "市中心大道1号", contactPhone = "021-12345678"))
         val dept = departmentRepository.save(DepartmentEntity(name = "临床心理科", hospital = hosp))
         val doc = doctorRepository.save(DoctorEntity(name = "王建国", department = dept, phone = "13912345678", email = "wang@hospital.com"))
-        val triageAdmin = userRepository.save(TrialAdminEntity(name = "张老师", email = "zhang@univ.edu.cn"))
+        val triageAdmin = userRepository.save(TrialAdminEntity(name = "张老师", email = "zhang@univ.edu.cn", hospital = hosp))
         val referrer = userRepository.save(TeacherEntity(name = "艾米丽·沃森", email = "emily@univ.edu.cn", college = medCollege))
         val headCounsellor = userRepository.save(HeadCounsellorEntity(name = "李主任", email = "head@univ.edu.cn"))
 

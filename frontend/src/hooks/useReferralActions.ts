@@ -25,6 +25,7 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
   const [reportProblemReason, setReportProblemReason] = useState('');
   
   const [rejectionReason, setRejectionReason] = useState('');
+  const [selectedHospitalId, setSelectedHospitalId] = useState('');
   const [scheduleDateTime, setScheduleDateTime] = useState('');
   const [selectedDoctorId, setSelectedDoctorId] = useState('');
   const [isActionCompleted, setIsActionCompleted] = useState(false);
@@ -93,8 +94,15 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
   };
 
   const handleApprove = async () => {
+    if (!selectedHospitalId) {
+      showSnackbar({ message: '请选择医院', duration: 3000 });
+      return;
+    }
     setIsApprovalDialogOpen(false);
-    await executeAction('/approve', 'POST', '转诊已批准', '批准失败，请稍后重试');
+    const success = await executeAction('/approve', 'POST', '转诊已批准', '批准失败，请稍后重试', { hospitalId: parseInt(selectedHospitalId, 10) });
+    if (success) {
+      setSelectedHospitalId('');
+    }
   };
 
   const handleReject = async () => {
@@ -153,6 +161,7 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
       rejectionReason, setRejectionReason,
       scheduleDateTime, setScheduleDateTime,
       selectedDoctorId, setSelectedDoctorId,
+      selectedHospitalId, setSelectedHospitalId,
       isActionCompleted,
     },
     actions: {

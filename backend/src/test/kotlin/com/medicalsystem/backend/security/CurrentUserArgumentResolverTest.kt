@@ -15,7 +15,7 @@ import org.springframework.web.method.support.ModelAndViewContainer
 
 class CurrentUserArgumentResolverTest {
 
-    private lateinit resolver: CurrentUserArgumentResolver
+    private lateinit var resolver: CurrentUserArgumentResolver
 
     @BeforeEach
     fun setUp() {
@@ -57,7 +57,7 @@ class CurrentUserArgumentResolverTest {
         val method = TestController::class.java.getMethod("testMethod", User::class.java)
         val parameter = MethodParameter(method, 0)
         
-        val mockUser = Teacher(id = 1L, name = "Test Teacher", email = EmailAddress("teacher@univ.edu.cn"), departmentId = 10L, phone = null)
+        val mockUser = Teacher(id = 1L, name = "Test Teacher", email = EmailAddress("teacher@univ.edu.cn"), collegeId = 10L)
         MockSecurityContextHolder.getContext().user = mockUser
         
         val result = resolver.resolveArgument(

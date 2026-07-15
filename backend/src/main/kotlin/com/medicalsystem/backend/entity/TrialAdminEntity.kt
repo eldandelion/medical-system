@@ -9,5 +9,9 @@ import com.medicalsystem.backend.model.UserRole
 class TrialAdminEntity(
     id: Long = 0,
     name: String,
-    email: String? = null
+    email: String? = null,
+    
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hospital_id", unique = true)
+    var hospital: HospitalEntity? = null
 ) : UserEntity(id = id, name = name, role = UserRole.TRIAL_ADMIN, email = email)

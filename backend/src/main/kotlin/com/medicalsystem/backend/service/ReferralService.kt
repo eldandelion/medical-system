@@ -90,13 +90,25 @@ class ReferralService(
     }
 
     @Transactional
-    fun approveReferral(id: Long, user: User): ReferralDto {
+    fun approveReferral(id: Long, dto: com.medicalsystem.backend.dto.ApproveReferralDto, user: User): ReferralDto {
         val referral = referralRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
 
         if (!referral.getAllowedActions(user).contains(com.medicalsystem.backend.model.ReferralAction.APPROVE_REFERRAL)) {
             throw ValidationException("User not authorized to approve referral")
         }
+        
+        val trialAdmins = userRepository.findAll().filterIsInstance<com.medicalsystem.backend.model.TrialAdmin>()
+        val hasTrialAdmin = trialAdmins.any { it.hospitalId == dto.hospitalId }
+        
+        if (!hasTrialAdmin) {
+            throw ValidationException("Selected hospital has no assigned Trial Admin")
+        }
+
+        referral.destination = com.medicalsystem.backend.model.ReferralDestination.Submitted(
+            hospitalId = com.medicalsystem.backend.model.HospitalId(dto.hospitalId),
+            transferDate = null
+        )
 
         referral.transition(ReferralStatus.AWAITING_TRIAGE, actorId = user.id)
         val saved = referralRepository.save(referral)

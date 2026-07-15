@@ -119,6 +119,18 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
     enabled: state.isAssignDialogOpen,
   });
 
+  const { data: hospitals = [] } = useQuery({
+    queryKey: ['/api/hospitals'],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/hospitals`.replace('//api', '/api'), {
+        headers: { 'Authorization': `Bearer ${session?.token || ''}` }
+      });
+      if (!res.ok) throw new Error('Failed to fetch hospitals');
+      return await res.json();
+    },
+    enabled: state.isApprovalDialogOpen,
+  });
+
   const [studentData, setStudentData] = React.useState<any>(null);
 
   React.useEffect(() => {
@@ -319,7 +331,34 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
           </>
         }
       >
-        <p className="text-[var(--md-sys-color-on-surface-variant)]">批准后，该转诊将自动进入心理中心分诊环节。是否确认批准？</p>
+        <div className="flex flex-col gap-4">
+          <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
+            请选择接诊医院。批准后，该转诊将自动分配给该医院的分诊管理员（Trial Admin）。
+          </p>
+          <div className="relative mt-2">
+            <md-outlined-select
+              label="选择接诊医院"
+              className="w-full relative"
+              value={state.selectedHospitalId}
+              onChange={(e: any) => state.setSelectedHospitalId(e.target.value)}
+            >
+              {hospitals.map((hospital: any) => (
+                <md-select-option 
+                  key={hospital.id} 
+                  value={String(hospital.id)}
+                  disabled={!hospital.hasTrialAdmin}
+                >
+                  <div slot="headline" className={!hospital.hasTrialAdmin ? "opacity-50" : ""}>{hospital.name}</div>
+                  {!hospital.hasTrialAdmin && (
+                    <div slot="supporting-text" className="text-[12px] text-[var(--md-sys-color-error)] opacity-80">
+                      该医院暂无分诊管理员，无法分配
+                    </div>
+                  )}
+                </md-select-option>
+              ))}
+            </md-outlined-select>
+          </div>
+        </div>
       </GenericDialog>
 
       {/* Delete Draft Dialog */}

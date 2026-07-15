@@ -31,7 +31,8 @@ data class HeadCounsellor(
 data class TrialAdmin(
     override val id: Long,
     override val name: String,
-    override val email: EmailAddress?
+    override val email: EmailAddress?,
+    val hospitalId: Long? = null
 ) : User(id, name, email, UserRole.TRIAL_ADMIN)
 
 data class StudentUser(

@@ -24,6 +24,31 @@ class ReferralControllerTest {
     private lateinit var referralController: ReferralController
 
     @Test
+    fun `approveReferral returns mapped dto`() {
+        val dto = com.medicalsystem.backend.dto.ApproveReferralDto(hospitalId = 1L)
+        val referralDto = ReferralDto(
+            id = "1",
+            studentName = "John Doe",
+            studentNumber = "STU123",
+            type = com.medicalsystem.backend.model.ReferralType.INITIAL,
+            date = java.time.LocalDateTime.now(),
+            title = "Test",
+            description = "Test",
+            riskLevel = com.medicalsystem.backend.model.RiskStatus.LOW,
+            status = com.medicalsystem.backend.model.ReferralStatus.AWAITING_TRIAGE,
+            referredBy = com.medicalsystem.backend.dto.ReferredByDto("Teacher"),
+            availableActions = emptyList()
+        )
+        val mockUser: User = com.medicalsystem.backend.model.HeadCounsellor(id = 1L, name = "HC", email = EmailAddress("hc@univ.edu.cn"))
+        `when`(referralService.approveReferral(1L, dto, mockUser)).thenReturn(referralDto)
+
+        val result = referralController.approveReferral(1L, dto, mockUser)
+        
+        assertEquals(com.medicalsystem.backend.model.ReferralStatus.AWAITING_TRIAGE, result.status)
+        assertEquals("1", result.id)
+    }
+
+    @Test
     fun `scheduleAppointment returns mapped dto`() {
         val dto = com.medicalsystem.backend.dto.ScheduleAppointmentDto(appointmentTime = java.time.LocalDateTime.now().plusDays(1))
         val referralDto = ReferralDto(

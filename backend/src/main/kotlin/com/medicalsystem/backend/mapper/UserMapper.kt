@@ -9,7 +9,8 @@ import org.springframework.stereotype.Component
 @Component
 class UserMapper(
     private val collegeRepository: com.medicalsystem.backend.repository.CollegeJpaRepository,
-    private val departmentRepository: com.medicalsystem.backend.repository.DepartmentRepository
+    private val departmentRepository: com.medicalsystem.backend.repository.DepartmentRepository,
+    private val hospitalRepository: com.medicalsystem.backend.repository.HospitalRepository
 ) {
     fun toModel(entity: UserEntity): User {
         return when (entity) {
@@ -34,7 +35,8 @@ class UserMapper(
             is TrialAdminEntity -> TrialAdmin(
                 id = entity.id,
                 name = entity.name,
-                email = entity.email?.let { EmailAddress(it) }
+                email = entity.email?.let { EmailAddress(it) },
+                hospitalId = entity.hospital?.id
             )
             else -> throw IllegalArgumentException("Unknown UserEntity type: ${entity.javaClass.simpleName}")
         }
@@ -66,7 +68,10 @@ class UserMapper(
             is TrialAdmin -> TrialAdminEntity(
                 id = model.id,
                 name = model.name,
-                email = model.email?.value
+                email = model.email?.value,
+                hospital = model.hospitalId?.let { 
+                    hospitalRepository.findById(it).orElse(null) 
+                }
             )
             is StudentUser -> throw UnsupportedOperationException("StudentUser cannot be converted to UserEntity")
             is SystemAdmin -> throw UnsupportedOperationException("SystemAdmin cannot be converted to UserEntity")

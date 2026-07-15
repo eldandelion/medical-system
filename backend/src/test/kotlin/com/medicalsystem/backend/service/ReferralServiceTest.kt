@@ -43,6 +43,40 @@ class ReferralServiceTest {
     }
 
     @Test
+    fun `approveReferral sets destination to Submitted and transitions to AWAITING_TRIAGE`() {
+        val councillor = HeadCounsellor(id = 1L, name = "HC", email = com.medicalsystem.backend.model.EmailAddress("hc@univ.edu.cn"))
+        val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
+        referral.submit(com.medicalsystem.backend.model.UserRole.TEACHER, 3L)
+        
+        val trialAdmin = TrialAdmin(id = 2L, name = "Admin", email = com.medicalsystem.backend.model.EmailAddress("admin@univ.edu.cn"), hospitalId = 123L)
+        
+        `when`(userRepository.findAll()).thenReturn(listOf(councillor, trialAdmin))
+        `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
+        `when`(referralRepository.save(org.mockito.kotlin.any())).thenAnswer { it.arguments[0] }
+
+        referralService.approveReferral(1L, com.medicalsystem.backend.dto.ApproveReferralDto(hospitalId = 123L), councillor)
+
+        assertEquals(ReferralStatus.AWAITING_TRIAGE, referral.status)
+        assertTrue(referral.destination is com.medicalsystem.backend.model.ReferralDestination.Submitted)
+        val submittedDest = referral.destination as com.medicalsystem.backend.model.ReferralDestination.Submitted
+        assertEquals(123L, submittedDest.hospitalId.value)
+    }
+
+    @Test
+    fun `approveReferral throws ValidationException if hospital lacks TrialAdmin`() {
+        val councillor = HeadCounsellor(id = 1L, name = "HC", email = com.medicalsystem.backend.model.EmailAddress("hc@univ.edu.cn"))
+        val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
+        referral.submit(com.medicalsystem.backend.model.UserRole.TEACHER, 3L)
+        
+        `when`(userRepository.findAll()).thenReturn(listOf(councillor)) // No trial admins included
+        `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
+
+        assertThrows(com.medicalsystem.backend.exception.ValidationException::class.java) {
+            referralService.approveReferral(1L, com.medicalsystem.backend.dto.ApproveReferralDto(hospitalId = 123L), councillor)
+        }
+    }
+
+    @Test
     fun `assignDoctor transitions status to WAITING_FOR_SCHEDULING and sets destination`() {
         val admin = TrialAdmin(id = 1L, name = "Admin", email = com.medicalsystem.backend.model.EmailAddress("admin@univ.edu.cn"))
         val doctor = Doctor(id = 2L, name = "Dr. Smith", email = com.medicalsystem.backend.model.EmailAddress("doc@univ.edu.cn"), departmentId = 1L, phone = null)
@@ -53,7 +87,6 @@ class ReferralServiceTest {
         )
         referral.submit(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, 1L)
         
-        `when`(userRepository.findAll()).thenReturn(listOf(admin))
         `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
         `when`(userRepository.findById(2L)).thenReturn(Optional.of(doctor))
         `when`(referralRepository.save(org.mockito.kotlin.any())).thenAnswer { it.arguments[0] }
@@ -72,7 +105,6 @@ class ReferralServiceTest {
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
         referral.submit(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, 1L)
         
-        `when`(userRepository.findAll()).thenReturn(listOf(admin))
         `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
         `when`(referralRepository.save(org.mockito.kotlin.any())).thenAnswer { it.arguments[0] }
 
@@ -92,7 +124,6 @@ class ReferralServiceTest {
             hospitalId = HospitalId(1L), departmentId = DepartmentId(1L), doctorId = DoctorId(2L), triageAdminId = TriageAdminId(1L), transferDate = null
         )
         
-        `when`(userRepository.findAll()).thenReturn(listOf(doctor))
         `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
         `when`(referralRepository.save(org.mockito.kotlin.any())).thenAnswer { it.arguments[0] }
 
