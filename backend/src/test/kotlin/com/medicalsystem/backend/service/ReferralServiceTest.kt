@@ -58,7 +58,7 @@ class ReferralServiceTest {
         `when`(userRepository.findById(2L)).thenReturn(Optional.of(doctor))
         `when`(referralRepository.save(org.mockito.kotlin.any())).thenAnswer { it.arguments[0] }
 
-        referralService.assignDoctor(1L, com.medicalsystem.backend.dto.AssignDoctorDto(doctorId = 2L), "trial_admin")
+        referralService.assignDoctor(1L, com.medicalsystem.backend.dto.AssignDoctorDto(doctorId = 2L), admin)
 
         assertEquals(ReferralStatus.WAITING_FOR_SCHEDULING, referral.status)
         assertNotNull(referral.destination)
@@ -76,7 +76,7 @@ class ReferralServiceTest {
         `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
         `when`(referralRepository.save(org.mockito.kotlin.any())).thenAnswer { it.arguments[0] }
 
-        referralService.rejectReferral(1L, com.medicalsystem.backend.dto.RejectReferralDto(reason = "Not needed"), "trial_admin")
+        referralService.rejectReferral(1L, com.medicalsystem.backend.dto.RejectReferralDto(reason = "Not needed"), admin)
 
         assertEquals(ReferralStatus.REJECTED, referral.status)
         assertTrue(referral.steps.any { it.type == ReferralStepType.TRIAGE && it.reason == "Not needed" })
@@ -97,7 +97,7 @@ class ReferralServiceTest {
         `when`(referralRepository.save(org.mockito.kotlin.any())).thenAnswer { it.arguments[0] }
 
         val time = java.time.LocalDateTime.now().plusDays(2)
-        referralService.scheduleAppointment(1L, com.medicalsystem.backend.dto.ScheduleAppointmentDto(appointmentTime = time), "doctor")
+        referralService.scheduleAppointment(1L, com.medicalsystem.backend.dto.ScheduleAppointmentDto(appointmentTime = time), doctor)
 
         assertEquals(ReferralStatus.WAITING_FOR_APPOINTMENT, referral.status)
         assertNotNull(referral.appointment)

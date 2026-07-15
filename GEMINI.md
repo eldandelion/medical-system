@@ -26,6 +26,7 @@
 - **Backend Architecture (Domain-Driven Design)**:
   - **Pure Domain Models**: Business logic strictly uses pure Kotlin `enum class` and rich domain types.
   - **Infrastructure Isolation**: JPA `@AttributeConverter` is utilized to map complex domain types (like enums) to highly optimized database structures (e.g., standard integers) without polluting the Domain layer.
+  - **Security Architecture (Black Box)**: Authentication is completely decoupled from controllers and business logic. A Servlet Filter resolves tokens and injects the authenticated entity via a `@CurrentUser` argument resolver. This mock security layer is designed as a drop-in replacement for future Spring Security (JWT) integration.
 - **Database Standards**:
   - Uses `BIGINT UNSIGNED` / `INT UNSIGNED` for primary and foreign keys.
   - Strictly avoids MySQL native `ENUM` types in favor of integer-backed application lookups or dedicated lookup tables.

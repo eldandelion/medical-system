@@ -2,6 +2,9 @@ package com.medicalsystem.backend.controller
 
 import com.medicalsystem.backend.dto.CreateReferralDto
 import com.medicalsystem.backend.dto.ReferralDto
+import com.medicalsystem.backend.security.CurrentUser
+import com.medicalsystem.backend.model.User
+import com.medicalsystem.backend.exception.ForbiddenException
 import com.medicalsystem.backend.service.ReferralService
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
@@ -14,22 +17,21 @@ class ReferralController(
     private val referralService: ReferralService
 ) {
     @GetMapping
-    fun fetchActiveReferrals(@RequestHeader(value = "Authorization", required = false) token: String?): List<ReferralDto> {
-        return referralService.fetchActiveReferrals(token)
+    fun fetchActiveReferrals(@CurrentUser user: User?): List<ReferralDto> {
+        return referralService.fetchActiveReferrals(user)
     }
 
     @GetMapping("/{id}")
     fun fetchReferralDetails(
         @PathVariable id: Long,
-        @RequestHeader(value = "Authorization", required = false) token: String?
+        @CurrentUser user: User?
     ): com.medicalsystem.backend.dto.ReferralDetailsDto {
-        return referralService.fetchReferralDetails(id, token)
+        return referralService.fetchReferralDetails(id, user)
     }
 
     @GetMapping("/{id}/tracking")
     fun fetchReferralTracking(
-        @PathVariable id: Long,
-        @RequestHeader(value = "Authorization", required = false) token: String?
+        @PathVariable id: Long
     ): com.medicalsystem.backend.dto.ReferralTrackingDto {
         return referralService.fetchReferralTracking(id)
     }
@@ -38,51 +40,58 @@ class ReferralController(
     @ResponseStatus(HttpStatus.CREATED)
     fun initiateReferral(
         @Valid @RequestBody dto: com.medicalsystem.backend.dto.CreateReferralDto,
-        @RequestHeader(value = "Authorization", required = false) token: String?
+        @CurrentUser user: User?
     ): ReferralDto {
-        return referralService.initiateReferral(dto, token)
+        if (user == null) throw ForbiddenException("Authorized user not found")
+        return referralService.initiateReferral(dto, user)
     }
 
     @PostMapping("/{id}/approve")
     fun approveReferral(
         @PathVariable id: Long,
-        @RequestHeader(value = "Authorization", required = false) token: String?
+        @CurrentUser user: User?
     ): ReferralDto {
-        return referralService.approveReferral(id, token)
+        if (user == null) throw ForbiddenException("Authorized user not found")
+        return referralService.approveReferral(id, user)
     }
 
     @PostMapping("/{id}/reject")
     fun rejectReferral(
         @PathVariable id: Long,
         @Valid @RequestBody dto: com.medicalsystem.backend.dto.RejectReferralDto,
-        @RequestHeader(value = "Authorization", required = false) token: String?
+        @CurrentUser user: User?
     ): ReferralDto {
-        return referralService.rejectReferral(id, dto, token)
+        if (user == null) throw ForbiddenException("Authorized user not found")
+        return referralService.rejectReferral(id, dto, user)
     }
+    
     @PostMapping("/{id}/request-reassignment")
     fun requestReassignment(
         @PathVariable id: Long,
         @Valid @RequestBody dto: com.medicalsystem.backend.dto.RejectReferralDto,
-        @RequestHeader(value = "Authorization", required = false) token: String?
+        @CurrentUser user: User?
     ): ReferralDto {
-        return referralService.requestReassignment(id, dto, token)
+        if (user == null) throw ForbiddenException("Authorized user not found")
+        return referralService.requestReassignment(id, dto, user)
     }
 
     @PostMapping("/{id}/assign")
     fun assignDoctor(
         @PathVariable id: Long,
         @Valid @RequestBody dto: com.medicalsystem.backend.dto.AssignDoctorDto,
-        @RequestHeader(value = "Authorization", required = false) token: String?
+        @CurrentUser user: User?
     ): ReferralDto {
-        return referralService.assignDoctor(id, dto, token)
+        if (user == null) throw ForbiddenException("Authorized user not found")
+        return referralService.assignDoctor(id, dto, user)
     }
 
     @PostMapping("/{id}/schedule")
     fun scheduleAppointment(
         @PathVariable id: Long,
         @Valid @RequestBody dto: com.medicalsystem.backend.dto.ScheduleAppointmentDto,
-        @RequestHeader(value = "Authorization", required = false) token: String?
+        @CurrentUser user: User?
     ): ReferralDto {
-        return referralService.scheduleAppointment(id, dto, token)
+        if (user == null) throw ForbiddenException("Authorized user not found")
+        return referralService.scheduleAppointment(id, dto, user)
     }
 }

@@ -2,6 +2,9 @@ package com.medicalsystem.backend.controller
 
 import com.medicalsystem.backend.dto.ReferralDto
 import com.medicalsystem.backend.service.ReferralService
+import com.medicalsystem.backend.model.User
+import com.medicalsystem.backend.model.TrialAdmin
+import com.medicalsystem.backend.model.EmailAddress
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
@@ -37,9 +40,10 @@ class ReferralControllerTest {
             availableActions = emptyList()
         )
         
-        `when`(referralService.scheduleAppointment(1L, dto, "token")).thenReturn(referralDto)
+        val mockUser: User = TrialAdmin(id = 1L, name = "Admin", email = EmailAddress("admin@univ.edu.cn"))
+        `when`(referralService.scheduleAppointment(1L, dto, mockUser)).thenReturn(referralDto)
 
-        val result = referralController.scheduleAppointment(1L, dto, "token")
+        val result = referralController.scheduleAppointment(1L, dto, mockUser)
         
         assertEquals(com.medicalsystem.backend.model.ReferralStatus.WAITING_FOR_APPOINTMENT, result.status)
         assertEquals("1", result.id)

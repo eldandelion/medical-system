@@ -24,9 +24,6 @@ class FeedbackControllerTest {
     @Mock
     private lateinit var feedbackService: FeedbackService
 
-    @Mock
-    private lateinit var userRepository: UserRepository
-
     @InjectMocks
     private lateinit var feedbackController: FeedbackController
 
@@ -44,15 +41,11 @@ class FeedbackControllerTest {
     @Test
     fun `Given valid payload, When submitFeedback is called, Then calls service and returns OK`() {
         // Arrange
-        val token = "doctor_token"
         val expectedDoctorId = 997L
-        
-        `when`(userRepository.findAll()).thenReturn(
-            listOf(Doctor(id = 997L, name = "Mock Doctor", email = com.medicalsystem.backend.model.EmailAddress("doctor@univ.edu.cn"), departmentId = 1L, phone = null))
-        )
+        val mockDoctor = Doctor(id = expectedDoctorId, name = "Mock Doctor", email = com.medicalsystem.backend.model.EmailAddress("doctor@univ.edu.cn"), departmentId = 1L, phone = null)
 
         // Act
-        val response = feedbackController.submitFeedback(validRequest, token)
+        val response = feedbackController.submitFeedback(validRequest, mockDoctor)
         
         // Assert
         assertEquals(HttpStatus.OK, response.statusCode)

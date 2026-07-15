@@ -16,6 +16,7 @@ import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import com.medicalsystem.backend.repository.UserRepository
 import com.medicalsystem.backend.exception.ValidationException
+import com.medicalsystem.backend.model.User
 
 @Service
 @Transactional(readOnly = true)
@@ -32,26 +33,7 @@ class ReferralService(
         const val ACTION_DRAFT = "draft"
     }
 
-    private fun resolveUser(token: String?): com.medicalsystem.backend.model.User? {
-        if (token == null) return null
-        return if (token.contains("teacher_token_zhang")) {
-            userRepository.findByName("艾米丽·沃森")
-        } else if (token.contains("head_councillor")) {
-            userRepository.findAll().firstOrNull { it.role == com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR } 
-                ?: com.medicalsystem.backend.model.HeadCounsellor(id = 999L, name = "Mock Head Councillor", email = com.medicalsystem.backend.model.EmailAddress("head@univ.edu.cn"))
-        } else if (token.contains("trial_admin")) {
-            userRepository.findAll().firstOrNull { it.role == com.medicalsystem.backend.model.UserRole.TRIAL_ADMIN }
-                ?: com.medicalsystem.backend.model.TrialAdmin(id = 998L, name = "Mock Trial Admin", email = com.medicalsystem.backend.model.EmailAddress("admin@univ.edu.cn"))
-        } else if (token.contains("doctor")) {
-            userRepository.findAll().firstOrNull { it.role == com.medicalsystem.backend.model.UserRole.DOCTOR }
-                ?: com.medicalsystem.backend.model.Doctor(id = 997L, name = "Mock Doctor", email = com.medicalsystem.backend.model.EmailAddress("doctor@univ.edu.cn"), departmentId = 1L, phone = null)
-        } else {
-            userRepository.findAll().firstOrNull()
-        }
-    }
-
-    fun fetchActiveReferrals(token: String? = null): List<ReferralDto> {
-        val user = resolveUser(token)
+    fun fetchActiveReferrals(user: User? = null): List<ReferralDto> {
         val referrals = if (user != null) {
             referralRepository.findVisibleReferralsFor(user)
         } else {
@@ -60,10 +42,9 @@ class ReferralService(
         return referrals.map { referralMapper.toDto(it, user) }
     }
 
-    fun fetchReferralDetails(id: Long, token: String? = null): com.medicalsystem.backend.dto.ReferralDetailsDto {
+    fun fetchReferralDetails(id: Long, user: User? = null): com.medicalsystem.backend.dto.ReferralDetailsDto {
         val model = referralRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
-        val user = resolveUser(token)
         return referralMapper.toDetailsDto(model, user)
     }
 
@@ -75,11 +56,9 @@ class ReferralService(
     }
 
     @Transactional
-    fun initiateReferral(dto: com.medicalsystem.backend.dto.CreateReferralDto, token: String? = null): ReferralDto {
+    fun initiateReferral(dto: com.medicalsystem.backend.dto.CreateReferralDto, user: User): ReferralDto {
         val student = studentRepository.findById(dto.studentId)
             .orElseThrow { com.medicalsystem.backend.exception.StudentNotFoundException(dto.studentId) }
-            
-        val user = resolveUser(token) ?: throw ValidationException("Authorized user not found")
             
         val model = com.medicalsystem.backend.model.ReferralFactory.createDraft(
             studentId = dto.studentId,
@@ -111,8 +90,7 @@ class ReferralService(
     }
 
     @Transactional
-    fun approveReferral(id: Long, token: String? = null): ReferralDto {
-        val user = resolveUser(token) ?: throw ValidationException("Authorized user not found")
+    fun approveReferral(id: Long, user: User): ReferralDto {
         val referral = referralRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
 
@@ -130,8 +108,7 @@ class ReferralService(
     }
 
     @Transactional
-    fun rejectReferral(id: Long, dto: com.medicalsystem.backend.dto.RejectReferralDto, token: String? = null): ReferralDto {
-        val user = resolveUser(token) ?: throw ValidationException("Authorized user not found")
+    fun rejectReferral(id: Long, dto: com.medicalsystem.backend.dto.RejectReferralDto, user: User): ReferralDto {
         val referral = referralRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
 
@@ -149,8 +126,7 @@ class ReferralService(
     }
     
     @Transactional
-    fun assignDoctor(id: Long, dto: com.medicalsystem.backend.dto.AssignDoctorDto, token: String? = null): ReferralDto {
-        val user = resolveUser(token) ?: throw ValidationException("Authorized user not found")
+    fun assignDoctor(id: Long, dto: com.medicalsystem.backend.dto.AssignDoctorDto, user: User): ReferralDto {
         val referral = referralRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
 
@@ -189,9 +165,9 @@ class ReferralService(
 
         return referralMapper.toDto(saved)
     }
+
     @Transactional
-    fun requestReassignment(id: Long, dto: com.medicalsystem.backend.dto.RejectReferralDto, token: String? = null): ReferralDto {
-        val user = resolveUser(token) ?: throw ValidationException("Authorized user not found")
+    fun requestReassignment(id: Long, dto: com.medicalsystem.backend.dto.RejectReferralDto, user: User): ReferralDto {
         val referral = referralRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
 
@@ -209,8 +185,7 @@ class ReferralService(
     }
 
     @Transactional
-    fun scheduleAppointment(id: Long, dto: com.medicalsystem.backend.dto.ScheduleAppointmentDto, token: String? = null): ReferralDto {
-        val user = resolveUser(token) ?: throw ValidationException("Authorized user not found")
+    fun scheduleAppointment(id: Long, dto: com.medicalsystem.backend.dto.ScheduleAppointmentDto, user: User): ReferralDto {
         val referral = referralRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
 
