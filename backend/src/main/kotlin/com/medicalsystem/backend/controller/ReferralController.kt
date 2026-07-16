@@ -95,4 +95,13 @@ class ReferralController(
         if (user == null) throw ForbiddenException("Authorized user not found")
         return referralService.scheduleAppointment(id, dto, user)
     }
+
+    @PostMapping("/{id}/acknowledge-feedback")
+    fun acknowledgeFeedback(
+        @PathVariable id: Long,
+        @CurrentUser user: User?
+    ): ReferralDto {
+        if (user == null) throw ForbiddenException("Authorized user not found")
+        return referralService.acknowledgeFeedback(id, user)
+    }
 }

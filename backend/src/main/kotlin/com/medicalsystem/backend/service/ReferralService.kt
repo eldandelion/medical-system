@@ -215,4 +215,25 @@ class ReferralService(
 
         return referralMapper.toDto(saved)
     }
+
+    @Transactional
+    fun acknowledgeFeedback(id: Long, user: User): ReferralDto {
+        val referral = referralRepository.findById(id)
+            .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
+
+        if (!referral.getAllowedActions(user).contains(com.medicalsystem.backend.model.ReferralAction.ACKNOWLEDGE_FEEDBACK)) {
+            throw ValidationException("User not authorized to acknowledge feedback")
+        }
+
+        referral.acknowledgeFeedback(actorId = user.id)
+        
+        return referralMapper.toDto(saveAndPublishEvents(referral))
+    }
+
+    private fun saveAndPublishEvents(referral: Referral): Referral {
+        val saved = referralRepository.save(referral)
+        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
+        saved.clearDomainEvents()
+        return saved
+    }
 }

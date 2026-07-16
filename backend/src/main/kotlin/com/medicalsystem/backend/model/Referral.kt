@@ -164,4 +164,12 @@ class Referral(
             )
         }
     }
+
+    fun acknowledgeFeedback(actorId: Long) {
+        if (this.status != ReferralStatus.AWAITING_FEEDBACK_APPROVAL) {
+            throw com.medicalsystem.backend.exception.ValidationException("Only referrals awaiting feedback approval can be acknowledged")
+        }
+        
+        this.transition(ReferralStatus.CLOSED, actorId = actorId)
+    }
 }
