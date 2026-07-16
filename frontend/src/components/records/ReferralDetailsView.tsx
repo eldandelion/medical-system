@@ -157,7 +157,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
   }, [onTabChange]);
 
   const isFeedbackAvailable = React.useMemo(() => {
-    return !!referralDetails.feedback || referral.status === 'CLOSED';
+    return !!referralDetails.feedback || referral.status === 'CLOSED' || referral.status === 'AWAITING_FEEDBACK_APPROVAL';
   }, [referralDetails, referral.status]);
 
   React.useEffect(() => {
