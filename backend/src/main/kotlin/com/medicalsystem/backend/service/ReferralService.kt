@@ -105,12 +105,7 @@ class ReferralService(
             throw ValidationException("Selected hospital has no assigned Trial Admin")
         }
 
-        referral.destination = com.medicalsystem.backend.model.ReferralDestination.Submitted(
-            hospitalId = com.medicalsystem.backend.model.HospitalId(dto.hospitalId),
-            transferDate = null
-        )
-
-        referral.transition(ReferralStatus.AWAITING_TRIAGE, actorId = user.id)
+        referral.approve(com.medicalsystem.backend.model.HospitalId(dto.hospitalId), actorId = user.id)
         val saved = referralRepository.save(referral)
         
         saved.getDomainEvents().forEach { eventPublisher.publish(it) }

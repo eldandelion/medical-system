@@ -47,7 +47,7 @@ class ReferralTest {
     }
 
     @Test
-    fun `submit transitions directly to AWAITING_TRIAGE for head counsellor`() {
+    fun `submit transitions to AWAITING_APPROVAL and adds REVIEW step for head counsellor`() {
         val referral = ReferralFactory.createDraft(
             studentId = 1L,
             title = "Test",
@@ -57,7 +57,7 @@ class ReferralTest {
         )
         referral.submit(UserRole.HEAD_COUNSELLOR, 2L)
 
-        assertEquals(ReferralStatus.AWAITING_TRIAGE, referral.status)
+        assertEquals(ReferralStatus.AWAITING_APPROVAL, referral.status)
         assertEquals(2, referral.steps.size)
         
         val step1 = referral.steps[0]
@@ -65,7 +65,7 @@ class ReferralTest {
         assertEquals(ReferralStepStatus.COMPLETED, step1.status)
         
         val step2 = referral.steps[1]
-        assertEquals(ReferralStepType.TRIAGE, step2.type)
+        assertEquals(ReferralStepType.REVIEW, step2.type)
         assertEquals(ReferralStepStatus.ACTIVE, step2.status)
     }
 
@@ -80,6 +80,11 @@ class ReferralTest {
         )
         referral.submit(UserRole.TEACHER, 2L)
 
+        // Assign a mock destination before transitioning to AWAITING_TRIAGE
+        referral.destination = ReferralDestination.Submitted(
+            hospitalId = HospitalId(1L),
+            transferDate = null
+        )
         referral.transition(ReferralStatus.AWAITING_TRIAGE)
 
         assertEquals(ReferralStatus.AWAITING_TRIAGE, referral.status)
@@ -104,7 +109,21 @@ class ReferralTest {
         )
         referral.submit(UserRole.TEACHER, 2L)
 
+        // Assign a mock destination before transitioning to AWAITING_TRIAGE
+        referral.destination = ReferralDestination.Submitted(
+            hospitalId = HospitalId(1L),
+            transferDate = null
+        )
         referral.transition(ReferralStatus.AWAITING_TRIAGE)
+        
+        // Mock Triaged destination before moving to scheduling
+        referral.destination = ReferralDestination.Triaged(
+            hospitalId = HospitalId(1L),
+            triageAdminId = TriageAdminId(1L),
+            departmentId = DepartmentId(1L),
+            doctorId = DoctorId(1L),
+            transferDate = null
+        )
         referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING)
         
         // Doctor requests reassignment
@@ -129,7 +148,21 @@ class ReferralTest {
         )
         referral.submit(UserRole.TEACHER, 2L)
 
+        // Assign a mock destination before transitioning to AWAITING_TRIAGE
+        referral.destination = ReferralDestination.Submitted(
+            hospitalId = HospitalId(1L),
+            transferDate = null
+        )
         referral.transition(ReferralStatus.AWAITING_TRIAGE)
+        
+        // Mock Triaged destination before moving to scheduling
+        referral.destination = ReferralDestination.Triaged(
+            hospitalId = HospitalId(1L),
+            triageAdminId = TriageAdminId(1L),
+            departmentId = DepartmentId(1L),
+            doctorId = DoctorId(1L),
+            transferDate = null
+        )
         referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING)
         referral.transition(ReferralStatus.NEEDS_REASSIGNMENT, actorId = 3L, reason = "Doctor needs more info")
 
@@ -200,5 +233,57 @@ class ReferralTest {
         assertEquals(100L, scheduledEvent?.studentId)
         assertEquals(3L, scheduledEvent?.doctorId)
         assertEquals(appointmentTime, scheduledEvent?.appointmentTime)
+    }
+
+    @Test
+    fun `approve sets destination and transitions to AWAITING_TRIAGE`() {
+        val referral = ReferralFactory.createDraft(
+            studentId = 1L,
+            title = "Test",
+            reason = "Test reason",
+            riskLevel = RiskStatus.LOW,
+            referredById = 2L
+        )
+        referral.submit(UserRole.TEACHER, 2L)
+
+        referral.approve(hospitalId = HospitalId(1L), actorId = 3L)
+
+        assertEquals(ReferralStatus.AWAITING_TRIAGE, referral.status)
+        assertNotNull(referral.destination)
+        assertTrue(referral.destination is ReferralDestination.Submitted)
+        assertEquals(1L, (referral.destination as ReferralDestination.Submitted).hospitalId.value)
+    }
+
+    @Test
+    fun `approve throws ValidationException when not in AWAITING_APPROVAL status`() {
+        val referral = ReferralFactory.createDraft(
+            studentId = 1L,
+            title = "Test",
+            reason = "Test reason",
+            riskLevel = RiskStatus.LOW,
+            referredById = 2L
+        )
+
+        val exception = assertThrows(com.medicalsystem.backend.exception.ValidationException::class.java) {
+            referral.approve(hospitalId = HospitalId(1L), actorId = 3L)
+        }
+        assertEquals("Only referrals awaiting approval can be approved", exception.message)
+    }
+
+    @Test
+    fun `transition throws ValidationException when transitioning to AWAITING_TRIAGE without a hospital destination`() {
+        val referral = ReferralFactory.createDraft(
+            studentId = 1L,
+            title = "Test",
+            reason = "Test reason",
+            riskLevel = RiskStatus.LOW,
+            referredById = 2L
+        )
+        referral.submit(UserRole.TEACHER, 2L)
+
+        val exception = assertThrows(com.medicalsystem.backend.exception.ValidationException::class.java) {
+            referral.transition(ReferralStatus.AWAITING_TRIAGE)
+        }
+        assertEquals("Referral must have an assigned hospital destination before moving past approval", exception.message)
     }
 }

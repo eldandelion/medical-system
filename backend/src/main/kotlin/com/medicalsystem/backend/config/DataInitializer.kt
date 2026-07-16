@@ -149,6 +149,14 @@ class DataInitializer {
         
         ref1.steps.addAll(listOf(step1, step2, step3, step4))
 
+        val dest2 = ReferralDestination(
+            hospital = hosp,
+            department = null,
+            doctor = null,
+            triageAdmin = null,
+            transferDate = null
+        )
+
         val ref2 = ReferralEntity(
             studentId = s2.id,
             type = ReferralType.FOLLOW_UP,
@@ -157,7 +165,8 @@ class DataInitializer {
             riskLevel = RiskStatus.MEDIUM,
             status = ReferralStatus.AWAITING_TRIAGE,
             referredById = referrer.id,
-            createdAt = LocalDateTime.now().minusDays(2)
+            createdAt = LocalDateTime.now().minusDays(2),
+            destination = dest2
         )
 
         val ref2Step1 = ReferralStepEntity(
