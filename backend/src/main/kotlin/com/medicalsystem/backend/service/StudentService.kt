@@ -13,6 +13,7 @@ import com.medicalsystem.backend.exception.ValidationException
 import org.slf4j.LoggerFactory
 import com.medicalsystem.backend.repository.MajorRepository
 import com.medicalsystem.backend.repository.StudentHealthProfileRepository
+import kotlin.jvm.optionals.getOrNull
 
 @Service
 @Transactional(readOnly = true)
@@ -44,18 +45,14 @@ class StudentService(
 
     @Transactional
     fun registerStudent(dto: StudentDto): StudentDto {
-        if (dto.majorId == null) {
-            throw ValidationException("majorId must not be null")
-        }
+        val majorId = dto.majorId ?: throw ValidationException("majorId must not be null")
 
         if (studentRepository.existsByStudentNumber(dto.studentNumber)) {
             throw com.medicalsystem.backend.exception.DuplicateStudentException(dto.studentNumber)
         }
 
-
-
-        val major = majorRepository.findById(dto.majorId)
-            .orElseThrow { ResourceNotFoundException("Major with ID ${dto.majorId} not found") }
+        val major = majorRepository.findById(majorId)
+            .orElseThrow { ResourceNotFoundException("Major with ID $majorId not found") }
 
         val model = com.medicalsystem.backend.model.Student(
             id = 0,
@@ -91,7 +88,7 @@ class StudentService(
                 com.medicalsystem.backend.exception.StudentNotFoundException(id)
             }
             
-        val profile = healthProfileRepository.findByStudentId(id).orElse(null)
+        val profile = healthProfileRepository.findByStudentId(id).getOrNull()
             
         return psychometricSummaryMapper.toDto(entity, profile)
     }
