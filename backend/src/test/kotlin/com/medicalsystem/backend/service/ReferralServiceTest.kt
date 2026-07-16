@@ -81,11 +81,8 @@ class ReferralServiceTest {
         val admin = TrialAdmin(id = 1L, name = "Admin", email = com.medicalsystem.backend.model.EmailAddress("admin@univ.edu.cn"))
         val doctor = Doctor(id = 2L, name = "Dr. Smith", email = com.medicalsystem.backend.model.EmailAddress("doc@univ.edu.cn"), departmentId = 1L, phone = null)
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
-        referral.destination = com.medicalsystem.backend.model.ReferralDestination.Submitted(
-            hospitalId = com.medicalsystem.backend.model.HospitalId(1L),
-            transferDate = null
-        )
         referral.submit(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, 1L)
+        referral.approve(com.medicalsystem.backend.model.HospitalId(1L), 1L)
         
         `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
         `when`(userRepository.findById(2L)).thenReturn(Optional.of(doctor))
@@ -104,6 +101,7 @@ class ReferralServiceTest {
         val admin = TrialAdmin(id = 1L, name = "Admin", email = com.medicalsystem.backend.model.EmailAddress("admin@univ.edu.cn"))
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
         referral.submit(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, 1L)
+        referral.approve(com.medicalsystem.backend.model.HospitalId(1L), 1L)
         
         `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
         `when`(referralRepository.save(org.mockito.kotlin.any())).thenAnswer { it.arguments[0] }
@@ -119,10 +117,13 @@ class ReferralServiceTest {
         val doctor = Doctor(id = 2L, name = "Dr. Smith", email = com.medicalsystem.backend.model.EmailAddress("doc@univ.edu.cn"), departmentId = 1L, phone = null)
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
         referral.submit(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, 1L)
-        referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING)
+        referral.approve(com.medicalsystem.backend.model.HospitalId(1L), 1L)
+        
+        // Mock Triaged destination before moving to scheduling
         referral.destination = com.medicalsystem.backend.model.ReferralDestination.Triaged(
             hospitalId = HospitalId(1L), departmentId = DepartmentId(1L), doctorId = DoctorId(2L), triageAdminId = TriageAdminId(1L), transferDate = null
         )
+        referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING)
         
         `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
         `when`(referralRepository.save(org.mockito.kotlin.any())).thenAnswer { it.arguments[0] }

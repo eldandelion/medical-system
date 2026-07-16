@@ -33,6 +33,12 @@ class Referral(
             throw com.medicalsystem.backend.exception.InvalidReferralTransitionException(this.status.name, newStatus.name)
         }
 
+        if (newStatus == ReferralStatus.AWAITING_TRIAGE || newStatus == ReferralStatus.WAITING_FOR_SCHEDULING) {
+            if (this.destination == null) {
+                throw com.medicalsystem.backend.exception.ValidationException("Referral must have an assigned hospital destination before moving past approval")
+            }
+        }
+
         val endStatus = if (newStatus == ReferralStatus.REJECTED || newStatus == ReferralStatus.RECALLED || newStatus == ReferralStatus.NEEDS_REASSIGNMENT) {
             ReferralStepStatus.ISSUE
         } else {
@@ -78,13 +84,22 @@ class Referral(
             throw com.medicalsystem.backend.exception.ValidationException("Only drafts can be submitted")
         }
         
-        val nextStatus = if (actorRole == UserRole.HEAD_COUNSELLOR) {
-            ReferralStatus.AWAITING_TRIAGE
-        } else {
-            ReferralStatus.AWAITING_APPROVAL
+        // Everyone, including Head Counsellors, submits to AWAITING_APPROVAL first, 
+        // to ensure they explicitly select a hospital through the approval process.
+        this.transition(ReferralStatus.AWAITING_APPROVAL, actorId = actorId)
+    }
+
+    fun approve(hospitalId: HospitalId, actorId: Long) {
+        if (this.status != ReferralStatus.AWAITING_APPROVAL) {
+            throw com.medicalsystem.backend.exception.ValidationException("Only referrals awaiting approval can be approved")
         }
         
-        this.transition(nextStatus, actorId = actorId)
+        this.destination = ReferralDestination.Submitted(
+            hospitalId = hospitalId,
+            transferDate = null
+        )
+        
+        this.transition(ReferralStatus.AWAITING_TRIAGE, actorId = actorId)
     }
 
     fun getAllowedActions(user: User): List<ReferralAction> {
