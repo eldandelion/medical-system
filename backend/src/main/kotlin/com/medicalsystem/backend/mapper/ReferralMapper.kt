@@ -57,6 +57,7 @@ class ReferralMapper(
             },
             appointment = entity.appointment?.let { app ->
                 Appointment(
+                    id = app.id,
                     doctorId = app.doctorId,
                     appointmentTime = app.appointmentTime,
                     status = app.status
@@ -118,6 +119,7 @@ class ReferralMapper(
 
         entity.appointment = model.appointment?.let { app ->
             com.medicalsystem.backend.entity.AppointmentEntity(
+                id = app.id,
                 referral = entity,
                 doctorId = app.doctorId,
                 appointmentTime = app.appointmentTime,

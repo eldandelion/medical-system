@@ -9,6 +9,7 @@ enum class AppointmentStatus {
 }
 
 data class Appointment(
+    val id: Long? = null,
     val doctorId: Long,
     val appointmentTime: Instant,
     val status: AppointmentStatus = AppointmentStatus.SCHEDULED
