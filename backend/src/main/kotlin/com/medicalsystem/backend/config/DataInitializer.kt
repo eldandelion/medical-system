@@ -5,7 +5,7 @@ import com.medicalsystem.backend.entity.*
 import com.medicalsystem.backend.model.*
 import com.medicalsystem.backend.repository.*
 import com.medicalsystem.backend.service.StudentService
-import com.medicalsystem.backend.entity.ReferralDestination
+import com.medicalsystem.backend.entity.ReferralDestinationEntity
 import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -58,10 +58,10 @@ class DataInitializer {
 
         val mainSchool = schoolRepository.save(SchoolEntity(name = "某重点大学"))
 
-        val s1Demo = StudentDemographics(gender = Gender.MALE, dateOfBirth = LocalDate.of(2004, 5, 12), ethnicity = han, idCardNumber = "110105200405123456", contactNumber = "13800138000", email = "liming@univ.edu.cn", homeAddress = "北京市朝阳区某街道", emergencyContactName = "李建国", emergencyContactPhone = "13900139000", school = mainSchool)
-        val s2Demo = StudentDemographics(gender = Gender.FEMALE, dateOfBirth = LocalDate.of(2003, 8, 24), ethnicity = hui, idCardNumber = "310101200308241234", contactNumber = "13700137000", email = "wangfang@univ.edu.cn", homeAddress = "上海市黄浦区某街道", emergencyContactName = "王强", emergencyContactPhone = "13600136000", school = mainSchool)
-        val s3Demo = StudentDemographics(gender = Gender.MALE, dateOfBirth = LocalDate.of(2005, 11, 2), ethnicity = han, idCardNumber = "440106200511025678", contactNumber = "13500135000", email = "zhangwei@univ.edu.cn", homeAddress = "广州市天河区某街道", emergencyContactName = "张明", emergencyContactPhone = "13400134000", school = mainSchool)
-        val s4Demo = StudentDemographics(gender = Gender.FEMALE, dateOfBirth = LocalDate.of(2002, 3, 15), ethnicity = man, idCardNumber = "210102200203158901", contactNumber = "13300133000", email = "chenxiu@univ.edu.cn", homeAddress = "沈阳市和平区某街道", emergencyContactName = "陈军", emergencyContactPhone = "13200132000", school = mainSchool)
+        val s1Demo = StudentDemographicsEntity(gender = Gender.MALE, dateOfBirth = LocalDate.of(2004, 5, 12), ethnicity = han, idCardNumber = "110105200405123456", contactNumber = "13800138000", email = "liming@univ.edu.cn", homeAddress = "北京市朝阳区某街道", emergencyContactName = "李建国", emergencyContactPhone = "13900139000", school = mainSchool)
+        val s2Demo = StudentDemographicsEntity(gender = Gender.FEMALE, dateOfBirth = LocalDate.of(2003, 8, 24), ethnicity = hui, idCardNumber = "310101200308241234", contactNumber = "13700137000", email = "wangfang@univ.edu.cn", homeAddress = "上海市黄浦区某街道", emergencyContactName = "王强", emergencyContactPhone = "13600136000", school = mainSchool)
+        val s3Demo = StudentDemographicsEntity(gender = Gender.MALE, dateOfBirth = LocalDate.of(2005, 11, 2), ethnicity = han, idCardNumber = "440106200511025678", contactNumber = "13500135000", email = "zhangwei@univ.edu.cn", homeAddress = "广州市天河区某街道", emergencyContactName = "张明", emergencyContactPhone = "13400134000", school = mainSchool)
+        val s4Demo = StudentDemographicsEntity(gender = Gender.FEMALE, dateOfBirth = LocalDate.of(2002, 3, 15), ethnicity = man, idCardNumber = "210102200203158901", contactNumber = "13300133000", email = "chenxiu@univ.edu.cn", homeAddress = "沈阳市和平区某街道", emergencyContactName = "陈军", emergencyContactPhone = "13200132000", school = mainSchool)
 
         val s1 = studentRepository.save(StudentEntity(studentNumber = "S2023001", name = "李明", major = csMajor, enrollmentDate = LocalDate.of(2024, 9, 1), demographics = s1Demo))
         val s2 = studentRepository.save(StudentEntity(studentNumber = "S2023002", name = "王芳", major = engMajor, enrollmentDate = LocalDate.of(2023, 9, 1), demographics = s2Demo))
@@ -98,7 +98,7 @@ class DataInitializer {
         val referrer = userRepository.save(TeacherEntity(name = "艾米丽·沃森", email = "emily@univ.edu.cn", college = medCollege))
         val headCounsellor = userRepository.save(HeadCounsellorEntity(name = "李主任", email = "head@univ.edu.cn"))
 
-        val dest = ReferralDestination(
+        val dest = ReferralDestinationEntity(
             hospital = hosp,
             department = dept,
             doctor = doc,
@@ -149,7 +149,7 @@ class DataInitializer {
         
         ref1.steps.addAll(listOf(step1, step2, step3, step4))
 
-        val dest2 = ReferralDestination(
+        val dest2 = ReferralDestinationEntity(
             hospital = hosp,
             department = null,
             doctor = null,

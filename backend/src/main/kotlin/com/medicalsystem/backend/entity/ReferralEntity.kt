@@ -39,7 +39,7 @@ class ReferralEntity(
     var createdAt: LocalDateTime = LocalDateTime.now(),
 
     @Embedded
-    var destination: ReferralDestination? = null,
+    var destination: ReferralDestinationEntity? = null,
 
     @ElementCollection
     @CollectionTable(name = "referral_clinical_status", joinColumns = [JoinColumn(name = "referral_id")])

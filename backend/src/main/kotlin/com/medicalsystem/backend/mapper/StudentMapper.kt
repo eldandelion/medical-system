@@ -3,7 +3,7 @@ package com.medicalsystem.backend.mapper
 import com.medicalsystem.backend.dto.StudentDto
 import com.medicalsystem.backend.dto.DemographicsDto
 import com.medicalsystem.backend.entity.StudentEntity
-import com.medicalsystem.backend.entity.StudentDemographics
+import com.medicalsystem.backend.entity.StudentDemographicsEntity
 import com.medicalsystem.backend.model.Student
 import com.medicalsystem.backend.model.Demographics
 import com.medicalsystem.backend.util.AcademicYearCalculator
@@ -86,7 +86,7 @@ class StudentMapper(
             major = majorMapper.toEntity(model.major),
             enrollmentDate = model.enrollmentDate,
             demographics = model.demographics?.let {
-                StudentDemographics(
+                StudentDemographicsEntity(
                     gender = it.gender,
                     dateOfBirth = it.dateOfBirth,
                     ethnicity = it.ethnicity?.name?.let { name -> ethnicityRepository.findByName(name).orElse(null) },

@@ -2,10 +2,9 @@ package com.medicalsystem.backend.entity
 
 import jakarta.persistence.*
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Embeddable
-data class ReferralDestination(
+data class ReferralDestinationEntity(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dest_hospital_id")
     var hospital: HospitalEntity? = null,

@@ -10,7 +10,7 @@ import com.medicalsystem.backend.entity.HospitalEntity
 import com.medicalsystem.backend.entity.DepartmentEntity
 import com.medicalsystem.backend.entity.DoctorEntity
 import com.medicalsystem.backend.entity.TrialAdminEntity
-import com.medicalsystem.backend.entity.ReferralDestination
+import com.medicalsystem.backend.entity.ReferralDestinationEntity
 
 @Repository
 class ReferralRepositoryAdapter(
@@ -38,11 +38,11 @@ class ReferralRepositoryAdapter(
         
         entity.destination = referral.destination?.let { dest ->
             when (dest) {
-                is com.medicalsystem.backend.model.ReferralDestination.Submitted -> ReferralDestination(
+                is com.medicalsystem.backend.model.ReferralDestination.Submitted -> ReferralDestinationEntity(
                     hospital = entityManager.getReference(HospitalEntity::class.java, dest.hospitalId.value),
                     transferDate = dest.transferDate
                 )
-                is com.medicalsystem.backend.model.ReferralDestination.Triaged -> ReferralDestination(
+                is com.medicalsystem.backend.model.ReferralDestination.Triaged -> ReferralDestinationEntity(
                     hospital = entityManager.getReference(HospitalEntity::class.java, dest.hospitalId.value),
                     department = entityManager.getReference(DepartmentEntity::class.java, dest.departmentId.value),
                     doctor = entityManager.getReference(DoctorEntity::class.java, dest.doctorId.value),

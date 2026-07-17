@@ -5,7 +5,7 @@ import jakarta.persistence.*
 import java.time.LocalDate
 
 @Embeddable
-data class StudentDemographics(
+data class StudentDemographicsEntity(
     @Column(length = 20)
     var gender: Gender? = null,
 

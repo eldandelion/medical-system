@@ -23,5 +23,5 @@ class StudentEntity(
     var enrollmentDate: java.time.LocalDate,
 
     @Embedded
-    var demographics: StudentDemographics? = null
+    var demographics: StudentDemographicsEntity? = null
 )
