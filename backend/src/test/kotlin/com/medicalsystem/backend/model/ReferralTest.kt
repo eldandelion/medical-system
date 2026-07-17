@@ -338,4 +338,57 @@ class ReferralTest {
             referral.addFeedback("Test", emptyList(), 99L)
         }
     }
+
+    @Test
+    fun `recall sets status to RECALLED and generates ReferralRecalledEvent`() {
+        val referral = ReferralFactory.createDraft(
+            studentId = 100L,
+            title = "Test",
+            reason = "Test reason",
+            riskLevel = RiskStatus.LOW,
+            referredById = 2L
+        )
+        referral.submit(UserRole.TEACHER, 2L)
+        
+        // Ensure ID is set for event generation
+        val referralSpy = Referral(
+            id = 500L,
+            studentId = referral.studentId,
+            type = referral.type,
+            date = referral.date,
+            title = referral.title,
+            description = referral.description,
+            riskLevel = referral.riskLevel,
+            status = referral.status,
+            referredById = referral.referredById,
+            steps = referral.steps
+        )
+
+        referralSpy.recall(actorId = 2L)
+
+        assertEquals(ReferralStatus.RECALLED, referralSpy.status)
+
+        val events = referralSpy.getDomainEvents()
+        val recalledEvent = events.filterIsInstance<com.medicalsystem.backend.event.ReferralRecalledEvent>().firstOrNull()
+        assertNotNull(recalledEvent)
+        assertEquals(500L, recalledEvent?.referralId)
+        assertEquals(100L, recalledEvent?.studentId)
+    }
+
+    @Test
+    fun `recall throws ValidationException when not in AWAITING_APPROVAL status`() {
+        val referral = ReferralFactory.createDraft(
+            studentId = 1L,
+            title = "Test",
+            reason = "Test reason",
+            riskLevel = RiskStatus.LOW,
+            referredById = 2L
+        )
+        // Currently DRAFT, not AWAITING_APPROVAL
+
+        val exception = assertThrows(com.medicalsystem.backend.exception.ValidationException::class.java) {
+            referral.recall(actorId = 2L)
+        }
+        assertEquals("Only referrals awaiting approval can be recalled", exception.message)
+    }
 }

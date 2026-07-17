@@ -74,7 +74,8 @@ class ReferralVisibilityPolicyTest {
             ReferralStatus.WAITING_FOR_APPOINTMENT,
             ReferralStatus.AWAITING_FEEDBACK_APPROVAL,
             ReferralStatus.CLOSED,
-            ReferralStatus.REJECTED
+            ReferralStatus.REJECTED,
+            ReferralStatus.RECALLED
         )
         assertEquals(VisibilityCriteria.InitiatedOrStatuses(300L, expectedStatuses), criteria)
     }

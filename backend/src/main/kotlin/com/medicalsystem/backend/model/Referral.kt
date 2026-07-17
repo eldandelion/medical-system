@@ -190,4 +190,21 @@ class Referral(
         
         this.transition(ReferralStatus.AWAITING_FEEDBACK_APPROVAL, actorId = actorId)
     }
+
+    fun recall(actorId: Long) {
+        if (status != ReferralStatus.AWAITING_APPROVAL) {
+            throw com.medicalsystem.backend.exception.ValidationException("Only referrals awaiting approval can be recalled")
+        }
+        
+        transition(ReferralStatus.RECALLED, actorId = actorId)
+        
+        id?.let {
+            registerEvent(
+                com.medicalsystem.backend.event.ReferralRecalledEvent(
+                    referralId = it,
+                    studentId = studentId
+                )
+            )
+        }
+    }
 }

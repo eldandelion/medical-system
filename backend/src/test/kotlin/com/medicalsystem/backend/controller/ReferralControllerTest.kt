@@ -73,4 +73,29 @@ class ReferralControllerTest {
         assertEquals(com.medicalsystem.backend.model.ReferralStatus.WAITING_FOR_APPOINTMENT, result.status)
         assertEquals("1", result.id)
     }
+
+    @Test
+    fun `recallReferral returns mapped dto`() {
+        val referralDto = ReferralDto(
+            id = "1",
+            studentName = "John Doe",
+            studentNumber = "STU123",
+            type = com.medicalsystem.backend.model.ReferralType.INITIAL,
+            date = java.time.LocalDateTime.now(),
+            title = "Test",
+            description = "Test",
+            riskLevel = com.medicalsystem.backend.model.RiskStatus.LOW,
+            status = com.medicalsystem.backend.model.ReferralStatus.RECALLED,
+            referredBy = com.medicalsystem.backend.dto.ReferredByDto("Teacher"),
+            availableActions = emptyList()
+        )
+        
+        val mockUser: User = com.medicalsystem.backend.model.Teacher(id = 1L, name = "Teacher", email = EmailAddress("teacher@univ.edu.cn"), collegeId = 1L)
+        `when`(referralService.recallReferral(1L, mockUser)).thenReturn(referralDto)
+
+        val result = referralController.recallReferral(1L, mockUser)
+        
+        assertEquals(com.medicalsystem.backend.model.ReferralStatus.RECALLED, result.status)
+        assertEquals("1", result.id)
+    }
 }

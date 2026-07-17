@@ -30,7 +30,20 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
   const [selectedDoctorId, setSelectedDoctorId] = useState('');
   const [isActionCompleted, setIsActionCompleted] = useState(false);
 
+  const [actionError, setActionError] = useState<string | null>(null);
+
   const queryClient = useQueryClient();
+
+  const ACTION_MESSAGES = {
+    RECALL: { success: '转诊申请已撤回', error: '撤回失败，该申请可能已被处理' },
+    DELETE: { success: '草案已删除', error: '删除失败，请稍后重试' },
+    APPROVE: { success: '转诊已批准', error: '批准失败，该申请可能已被撤回' },
+    REJECT: { success: '转诊已拒绝', error: '操作失败，该申请可能已被撤回' },
+    ASSIGN: { success: '转诊已分配', error: '分配失败，请稍后重试' },
+    SCHEDULE: { success: '预约已排期', error: '预约排期失败，请稍后重试' },
+    REPORT_PROBLEM: { success: '问题已报告', error: '报告失败，请稍后重试' },
+    ACKNOWLEDGE: { success: '反馈已确认，转诊已结案', error: '操作失败，请稍后重试' }
+  };
 
   const mutation = useMutation({
     mutationFn: async ({ endpoint, method, body }: any) => {
@@ -68,83 +81,89 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
       onUpdate?.();
     },
     onError: (error: any, { errorMsg, endpoint }: any) => {
+      // We don't always show snackbar here anymore because we'll show it in the dialog (if open)
+      // but for actions without dialogs (like ACKNOWLEDGE), we might need it.
       const isGeneric = error.message === `Failed to ${endpoint}`;
       const displayMsg = !isGeneric && error.message ? `${errorMsg}: ${error.message}` : errorMsg;
+      // We will let executeAction handle the state, but we can still show snackbar as a fallback or keep it.
+      // Keeping it for consistency, but maybe short duration.
       showSnackbar({ message: displayMsg, duration: 5000 });
     }
   });
 
   const executeAction = async (endpoint: string, method: string, successMsg: string, errorMsg: string, body?: any) => {
+    setActionError(null);
     try {
       await mutation.mutateAsync({ endpoint, method, body, successMsg, errorMsg });
       return true;
-    } catch {
+    } catch (e: any) {
+      setActionError(e.message || errorMsg);
       return false;
     }
   };
 
   const handleRecall = async () => {
-    setIsRecallDialogOpen(false);
-    await executeAction('/recall', 'POST', '转诊申请已撤回', '撤回失败，请稍后重试');
+    const success = await executeAction('/recall', 'POST', ACTION_MESSAGES.RECALL.success, ACTION_MESSAGES.RECALL.error);
+    if (success) setIsRecallDialogOpen(false);
   };
 
   const handleDelete = async () => {
-    setIsDeleteDialogOpen(false);
-    await executeAction('', 'DELETE', '草案已删除', '删除失败，请稍后重试');
+    const success = await executeAction('', 'DELETE', ACTION_MESSAGES.DELETE.success, ACTION_MESSAGES.DELETE.error);
+    if (success) setIsDeleteDialogOpen(false);
   };
 
   const handleApprove = async () => {
     if (!selectedHospitalId) {
-      showSnackbar({ message: '请选择医院', duration: 3000 });
+      setActionError('请选择医院');
       return;
     }
-    setIsApprovalDialogOpen(false);
-    const success = await executeAction('/approve', 'POST', '转诊已批准', '批准失败，请稍后重试', { hospitalId: parseInt(selectedHospitalId, 10) });
+    const success = await executeAction('/approve', 'POST', ACTION_MESSAGES.APPROVE.success, ACTION_MESSAGES.APPROVE.error, { hospitalId: parseInt(selectedHospitalId, 10) });
     if (success) {
+      setIsApprovalDialogOpen(false);
       setSelectedHospitalId('');
     }
   };
 
   const handleReject = async () => {
-    setIsRejectionDialogOpen(false);
-    const success = await executeAction('/reject', 'POST', '转诊已拒绝', '操作失败，请稍后重试', { reason: rejectionReason });
+    const success = await executeAction('/reject', 'POST', ACTION_MESSAGES.REJECT.success, ACTION_MESSAGES.REJECT.error, { reason: rejectionReason });
     if (success) {
+      setIsRejectionDialogOpen(false);
       setRejectionReason('');
     }
   };
 
   const handleAssign = async () => {
     if (!selectedDoctorId) {
-      showSnackbar({ message: '请选择医生', duration: 3000 });
+      setActionError('请选择医生');
       return;
     }
-    setIsAssignDialogOpen(false);
-    await executeAction('/assign', 'POST', '转诊已分配', '分配失败，请稍后重试', { doctorId: parseInt(selectedDoctorId, 10) });
+    const success = await executeAction('/assign-doctor', 'POST', ACTION_MESSAGES.ASSIGN.success, ACTION_MESSAGES.ASSIGN.error, { doctorId: parseInt(selectedDoctorId, 10) });
+    if (success) setIsAssignDialogOpen(false);
   };
 
   const handleSchedule = async () => {
     if (!scheduleDateTime) {
-      showSnackbar({ message: '请选择预约时间', duration: 3000 });
+      setActionError('请选择预约时间');
       return;
     }
-    setIsSchedulingDialogOpen(false);
-    const success = await executeAction('/schedule', 'POST', '预约已排期', '预约排期失败，请稍后重试', { appointmentTime: scheduleDateTime });
+    const success = await executeAction('/schedule', 'POST', ACTION_MESSAGES.SCHEDULE.success, ACTION_MESSAGES.SCHEDULE.error, { appointmentTime: scheduleDateTime });
     if (success) {
+      setIsSchedulingDialogOpen(false);
       setScheduleDateTime('');
     }
   };
 
   const handleReportProblem = async () => {
-    setIsReportProblemDialogOpen(false);
-    const success = await executeAction('/report-problem', 'POST', '问题已报告', '报告失败，请稍后重试', { reason: reportProblemReason });
+    const success = await executeAction('/report-problem', 'POST', ACTION_MESSAGES.REPORT_PROBLEM.success, ACTION_MESSAGES.REPORT_PROBLEM.error, { reason: reportProblemReason });
     if (success) {
+      setIsReportProblemDialogOpen(false);
       setReportProblemReason('');
     }
   };
 
   const handleAcknowledgeFeedback = async () => {
-    setIsAcknowledgeDialogOpen(false);
-    await executeAction('/acknowledge-feedback', 'POST', '反馈已确认，转诊已结案', '操作失败，请稍后重试');
+    const success = await executeAction('/acknowledge-feedback', 'POST', ACTION_MESSAGES.ACKNOWLEDGE.success, ACTION_MESSAGES.ACKNOWLEDGE.error);
+    if (success) setIsAcknowledgeDialogOpen(false);
   };
 
   return {
@@ -163,6 +182,7 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
       selectedDoctorId, setSelectedDoctorId,
       selectedHospitalId, setSelectedHospitalId,
       isActionCompleted,
+      actionError, setActionError,
     },
     actions: {
       handleRecall,

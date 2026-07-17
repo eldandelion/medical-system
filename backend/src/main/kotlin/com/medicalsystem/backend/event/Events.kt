@@ -31,3 +31,9 @@ data class AppointmentScheduledEvent(
     val appointmentTime: LocalDateTime,
     override val occurredOn: LocalDateTime = LocalDateTime.now()
 ) : DomainEvent
+
+data class ReferralRecalledEvent(
+    val referralId: Long,
+    val studentId: Long,
+    override val occurredOn: LocalDateTime = LocalDateTime.now()
+) : DomainEvent

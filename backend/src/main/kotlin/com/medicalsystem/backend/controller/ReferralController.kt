@@ -76,7 +76,16 @@ class ReferralController(
         return referralService.requestReassignment(id, dto, user)
     }
 
-    @PostMapping("/{id}/assign")
+    @PostMapping("/{id}/recall")
+    fun recallReferral(
+        @PathVariable id: Long,
+        @CurrentUser user: User?
+    ): ReferralDto {
+        val currentUser = user ?: throw ForbiddenException("Authorized user not found")
+        return referralService.recallReferral(id, currentUser)
+    }
+
+    @PostMapping("/{id}/assign-doctor")
     fun assignDoctor(
         @PathVariable id: Long,
         @Valid @RequestBody dto: com.medicalsystem.backend.dto.AssignDoctorDto,

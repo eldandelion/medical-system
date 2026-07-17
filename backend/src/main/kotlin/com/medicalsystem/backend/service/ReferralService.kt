@@ -171,6 +171,25 @@ class ReferralService(
 
         return mapToDto(saved)
     }
+
+    @Transactional
+    fun recallReferral(id: Long, user: User): ReferralDto {
+        val referral = referralRepository.findById(id)
+            .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
+
+        if (com.medicalsystem.backend.model.ReferralAction.RECALL_REFERRAL !in referral.getAllowedActions(user)) {
+            throw ValidationException("User not authorized to recall referral")
+        }
+
+        referral.recall(actorId = user.id)
+        
+        val saved = referralRepository.save(referral)
+        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
+        saved.clearDomainEvents()
+
+        return mapToDto(saved)
+    }
+
     
     @Transactional
     fun assignDoctor(id: Long, dto: com.medicalsystem.backend.dto.AssignDoctorDto, user: User): ReferralDto {

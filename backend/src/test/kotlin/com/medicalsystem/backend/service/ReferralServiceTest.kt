@@ -142,4 +142,38 @@ class ReferralServiceTest {
         assertEquals(2L, referral.appointment?.doctorId)
         assertEquals(time.toInstant(java.time.ZoneOffset.UTC), referral.appointment?.appointmentTime)
     }
+
+    @Test
+    fun `recallReferral transitions status to RECALLED when user is authorized`() {
+        val teacher = Teacher(id = 3L, name = "Teacher", email = com.medicalsystem.backend.model.EmailAddress("teacher@univ.edu.cn"), collegeId = 1L)
+        val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
+        referral.submit(com.medicalsystem.backend.model.UserRole.TEACHER, 3L)
+        
+        // Use reflection to set the ID so events are generated
+        val idField = Referral::class.java.getDeclaredField("id")
+        idField.isAccessible = true
+        idField.set(referral, 1L)
+        
+        `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
+        `when`(referralRepository.save(org.mockito.kotlin.any())).thenAnswer { it.arguments[0] }
+
+        referralService.recallReferral(1L, teacher)
+
+        assertEquals(ReferralStatus.RECALLED, referral.status)
+        org.mockito.Mockito.verify(eventPublisher, org.mockito.Mockito.atLeastOnce()).publish(org.mockito.kotlin.any())
+    }
+
+    @Test
+    fun `recallReferral throws ValidationException when user is not authorized`() {
+        val otherTeacher = Teacher(id = 99L, name = "Other", email = com.medicalsystem.backend.model.EmailAddress("other@univ.edu.cn"), collegeId = 1L)
+        val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
+        referral.submit(com.medicalsystem.backend.model.UserRole.TEACHER, 3L)
+        
+        `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
+
+        val exception = assertThrows(com.medicalsystem.backend.exception.ValidationException::class.java) {
+            referralService.recallReferral(1L, otherTeacher)
+        }
+        assertEquals("User not authorized to recall referral", exception.message)
+    }
 }

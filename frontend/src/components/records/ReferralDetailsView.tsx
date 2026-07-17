@@ -293,6 +293,11 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
           <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
             请提供拒绝该转诊申请的具体原因。此信息将通过通知发送给发起人。
           </p>
+          {state.actionError && (
+            <div className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-3 rounded-md text-sm">
+              {state.actionError}
+            </div>
+          )}
           <md-outlined-text-field
             type="textarea"
             rows={4}
@@ -316,7 +321,14 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
           </>
         }
       >
-        <p className="text-[var(--md-sys-color-on-surface-variant)]">撤回后，该转诊将变为“已撤回”状态。您可以在之后基于此记录重新提交。是否确认撤回？</p>
+        <div className="flex flex-col gap-4">
+          <p className="text-[var(--md-sys-color-on-surface-variant)]">撤回后，该转诊将变为“已撤回”状态。您可以在之后基于此记录重新提交。是否确认撤回？</p>
+          {state.actionError && (
+            <div className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-3 rounded-md text-sm">
+              {state.actionError}
+            </div>
+          )}
+        </div>
       </GenericDialog>
 
       {/* Approval Confirmation Dialog */}
@@ -335,6 +347,11 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
           <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
             请选择接诊医院。批准后，该转诊将自动分配给该医院的分诊管理员（Trial Admin）。
           </p>
+          {state.actionError && (
+            <div className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-3 rounded-md text-sm">
+              {state.actionError}
+            </div>
+          )}
           <div className="relative mt-2">
             <md-outlined-select
               label="选择接诊医院"
@@ -376,7 +393,14 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
           </>
         }
       >
-        <p className="text-[var(--md-sys-color-on-surface-variant)]">删除后，该草案将永久失效且无法恢复。是否确认删除？</p>
+        <div className="flex flex-col gap-4">
+          <p className="text-[var(--md-sys-color-on-surface-variant)]">删除后，该草案将永久失效且无法恢复。是否确认删除？</p>
+          {state.actionError && (
+            <div className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-3 rounded-md text-sm">
+              {state.actionError}
+            </div>
+          )}
+        </div>
       </GenericDialog>
 
       {/* Assign Doctor Dialog */}
@@ -395,6 +419,11 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
           <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
             请选择接诊的心理医生。分配后，该转诊将进入医生评估阶段。
           </p>
+          {state.actionError && (
+            <div className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-3 rounded-md text-sm">
+              {state.actionError}
+            </div>
+          )}
           <div className="relative mt-2">
             <md-outlined-select
               label="选择接诊医生"
@@ -430,6 +459,11 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
           <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
             请选择为该学生安排的就诊日期和时间。排期后，学生将收到通知。
           </p>
+          {state.actionError && (
+            <div className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-3 rounded-md text-sm">
+              {state.actionError}
+            </div>
+          )}
           <div className="mt-2">
             <DoctorScheduleCalendar 
               doctorId={state.selectedDoctorId || String((referralDetails as any).extendedData?.destination?.doctor || (referral as any).extendedData?.destination?.doctor || '1')}
@@ -456,6 +490,11 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
           <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
             请详细描述您遇到的问题（如：学生未按时就诊、联系方式有误等）。
           </p>
+          {state.actionError && (
+            <div className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-3 rounded-md text-sm">
+              {state.actionError}
+            </div>
+          )}
           <md-outlined-text-field
             type="textarea"
             rows={4}
@@ -483,6 +522,11 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
           <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
             您确定要确认这份诊疗反馈吗？确认后，该转诊流程将正式结案。
           </p>
+          {state.actionError && (
+            <div className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-3 rounded-md text-sm">
+              {state.actionError}
+            </div>
+          )}
         </div>
       </GenericDialog>
 
