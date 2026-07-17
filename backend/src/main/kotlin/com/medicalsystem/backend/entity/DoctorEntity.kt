@@ -14,7 +14,7 @@ class DoctorEntity(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id", nullable = false)
-    var department: DepartmentEntity,
+    var department: DepartmentEntity? = null,
 
     @Column(length = 20)
     var phone: String? = null

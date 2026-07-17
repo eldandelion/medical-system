@@ -7,18 +7,14 @@ import com.medicalsystem.backend.repository.DepartmentRepository
 import org.springframework.stereotype.Component
 
 @Component
-class UserMapper(
-    private val collegeRepository: com.medicalsystem.backend.repository.CollegeJpaRepository,
-    private val departmentRepository: com.medicalsystem.backend.repository.DepartmentRepository,
-    private val hospitalRepository: com.medicalsystem.backend.repository.HospitalRepository
-) {
+class UserMapper {
     fun toModel(entity: UserEntity): User {
         return when (entity) {
             is DoctorEntity -> Doctor(
                 id = entity.id,
                 name = entity.name,
                 email = entity.email?.let { EmailAddress(it) },
-                departmentId = entity.department.id,
+                departmentId = entity.department!!.id,
                 phone = entity.phone?.let { PhoneNumber(it) }
             )
             is TeacherEntity -> Teacher(
@@ -48,17 +44,12 @@ class UserMapper(
                 id = model.id,
                 name = model.name,
                 email = model.email?.value,
-                department = departmentRepository.findById(model.departmentId)
-                    .orElseThrow { IllegalArgumentException("Department not found") },
                 phone = model.phone?.value
             )
             is Teacher -> TeacherEntity(
                 id = model.id,
                 name = model.name,
-                email = model.email?.value,
-                college = model.collegeId?.let { 
-                    collegeRepository.findById(it).orElse(null)
-                }
+                email = model.email?.value
             )
             is HeadCounsellor -> HeadCounsellorEntity(
                 id = model.id,
@@ -68,10 +59,7 @@ class UserMapper(
             is TrialAdmin -> TrialAdminEntity(
                 id = model.id,
                 name = model.name,
-                email = model.email?.value,
-                hospital = model.hospitalId?.let { 
-                    hospitalRepository.findById(it).orElse(null) 
-                }
+                email = model.email?.value
             )
             is StudentUser -> throw UnsupportedOperationException("StudentUser cannot be converted to UserEntity")
             is SystemAdmin -> throw UnsupportedOperationException("SystemAdmin cannot be converted to UserEntity")
