@@ -9,5 +9,6 @@ interface StudentRepository {
     fun existsByStudentNumber(studentNumber: String): Boolean
     fun findByStudentNumber(studentNumber: String): Student?
     fun findByMajorCollegeId(collegeId: Long): List<Student>
+    fun findAllById(ids: Set<Long>): List<Student>
     fun save(student: Student): Student
 }

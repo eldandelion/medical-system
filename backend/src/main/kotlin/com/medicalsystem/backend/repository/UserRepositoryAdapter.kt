@@ -24,6 +24,10 @@ class UserRepositoryAdapter(
         return jpaRepository.findAll().map { mapper.toModel(it) }
     }
 
+    override fun findAllById(ids: Set<Long>): List<User> {
+        return jpaRepository.findAllById(ids).map { mapper.toModel(it) }
+    }
+
     override fun save(user: User): User {
         val entity = mapper.toEntity(user)
         val savedEntity = jpaRepository.save(entity)

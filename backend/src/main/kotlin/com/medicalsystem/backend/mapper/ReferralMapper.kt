@@ -3,7 +3,6 @@ package com.medicalsystem.backend.mapper
 import com.medicalsystem.backend.dto.ReferredByDto
 import com.medicalsystem.backend.dto.ReferralDto
 import com.medicalsystem.backend.entity.AttachmentEntity
-import com.medicalsystem.backend.entity.ReferralDestination
 import com.medicalsystem.backend.entity.ReferralEntity
 import com.medicalsystem.backend.entity.ReferralStepEntity
 import com.medicalsystem.backend.model.ReferralAttachment
@@ -12,17 +11,8 @@ import com.medicalsystem.backend.model.ReferralStep
 import com.medicalsystem.backend.model.Appointment
 import org.springframework.stereotype.Component
 
-import com.medicalsystem.backend.repository.*
-
 @Component
-class ReferralMapper(
-    private val studentRepository: StudentRepository,
-    private val userRepository: UserRepository,
-    private val hospitalRepository: HospitalRepository,
-    private val departmentRepository: DepartmentRepository,
-    private val doctorRepository: DoctorRepository,
-    private val trialAdminRepository: TrialAdminJpaRepository
-) {
+class ReferralMapper {
 
     fun toModel(entity: ReferralEntity): Referral {
         return Referral(
@@ -101,22 +91,6 @@ class ReferralMapper(
             severeRiskFactors = model.severeRiskFactors.toMutableList()
         )
 
-        entity.destination = model.destination?.let { dest ->
-            when (dest) {
-                is com.medicalsystem.backend.model.ReferralDestination.Submitted -> ReferralDestination(
-                    hospital = hospitalRepository.findById(dest.hospitalId.value).orElse(null),
-                    transferDate = dest.transferDate
-                )
-                is com.medicalsystem.backend.model.ReferralDestination.Triaged -> ReferralDestination(
-                    hospital = hospitalRepository.findById(dest.hospitalId.value).orElse(null),
-                    department = departmentRepository.findById(dest.departmentId.value).orElse(null),
-                    doctor = doctorRepository.findById(dest.doctorId.value).orElse(null),
-                    triageAdmin = trialAdminRepository.findById(dest.triageAdminId.value).orElse(null),
-                    transferDate = dest.transferDate
-                )
-            }
-        }
-
         entity.appointment = model.appointment?.let { app ->
             com.medicalsystem.backend.entity.AppointmentEntity(
                 id = app.id,
@@ -151,9 +125,7 @@ class ReferralMapper(
         return entity
     }
 
-    fun toDto(model: Referral, currentUser: com.medicalsystem.backend.model.User? = null): ReferralDto {
-        val student = studentRepository.findById(model.studentId).orElse(null)
-        val user = userRepository.findById(model.referredById).orElse(null)
+    fun toDto(model: Referral, student: com.medicalsystem.backend.model.Student?, referredBy: com.medicalsystem.backend.model.User?, currentUser: com.medicalsystem.backend.model.User? = null): ReferralDto {
         return ReferralDto(
             id = model.id.toString(),
             studentName = student?.name ?: "Unknown",
@@ -164,14 +136,13 @@ class ReferralMapper(
             description = model.description,
             riskLevel = model.riskLevel,
             status = model.status,
-            referredBy = ReferredByDto(user?.name ?: "Unknown"),
+            referredBy = ReferredByDto(referredBy?.name ?: "Unknown"),
             availableActions = currentUser?.let { model.getAllowedActions(it).map { action -> action.name.lowercase() } } ?: emptyList()
         )
     }
 
-    fun toDetailsDto(model: Referral, currentUser: com.medicalsystem.backend.model.User? = null): com.medicalsystem.backend.dto.ReferralDetailsDto {
-        val baseInfo = toDto(model, currentUser)
-        val student = studentRepository.findById(model.studentId).orElse(null)
+    fun toDetailsDto(model: Referral, student: com.medicalsystem.backend.model.Student?, referredBy: com.medicalsystem.backend.model.User?, currentUser: com.medicalsystem.backend.model.User? = null): com.medicalsystem.backend.dto.ReferralDetailsDto {
+        val baseInfo = toDto(model, student, referredBy, currentUser)
         
         val studentDemographics = com.medicalsystem.backend.dto.StudentDemographicsDto(
             studentId = student?.studentNumber ?: "Unknown",
@@ -205,22 +176,13 @@ class ReferralMapper(
         )
     }
 
-    fun toTrackingDto(model: Referral): com.medicalsystem.backend.dto.ReferralTrackingDto {
+    fun toTrackingDto(model: Referral, hospitalName: String? = null, departmentName: String? = null, doctorName: String? = null, adminName: String? = null): com.medicalsystem.backend.dto.ReferralTrackingDto {
         val dest = model.destination?.let { dest ->
-            val hospitalId = when (dest) {
-                is com.medicalsystem.backend.model.ReferralDestination.Submitted -> dest.hospitalId
-                is com.medicalsystem.backend.model.ReferralDestination.Triaged -> dest.hospitalId
-            }
-            val hospital = hospitalRepository.findById(hospitalId.value).orElse(null)
-            val department = (dest as? com.medicalsystem.backend.model.ReferralDestination.Triaged)?.departmentId?.let { departmentRepository.findById(it.value).orElse(null) }
-            val doctor = (dest as? com.medicalsystem.backend.model.ReferralDestination.Triaged)?.doctorId?.let { doctorRepository.findById(it.value).orElse(null) }
-            val admin = (dest as? com.medicalsystem.backend.model.ReferralDestination.Triaged)?.triageAdminId?.let { trialAdminRepository.findById(it.value).orElse(null) }
-            
             com.medicalsystem.backend.dto.DestinationDto(
-                hospital = hospital?.name ?: "",
-                department = department?.name ?: "",
-                doctor = doctor?.name ?: "",
-                admin = admin?.name ?: "",
+                hospital = hospitalName ?: "",
+                department = departmentName ?: "",
+                doctor = doctorName ?: "",
+                admin = adminName ?: "",
                 transferDate = dest.transferDate?.toString(),
                 appointmentTime = model.appointment?.appointmentTime?.toString()
             )

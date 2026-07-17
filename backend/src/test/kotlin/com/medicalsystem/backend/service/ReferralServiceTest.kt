@@ -28,6 +28,12 @@ class ReferralServiceTest {
     private lateinit var userRepository: UserRepository
     
     @Mock
+    private lateinit var hospitalRepository: HospitalRepository
+
+    @Mock
+    private lateinit var departmentRepository: DepartmentRepository
+    
+    @Mock
     private lateinit var referralMapper: ReferralMapper
     
     @Mock

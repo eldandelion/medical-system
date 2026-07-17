@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import com.medicalsystem.backend.repository.UserRepository
+import com.medicalsystem.backend.repository.HospitalRepository
+import com.medicalsystem.backend.repository.DepartmentRepository
 import com.medicalsystem.backend.exception.ValidationException
 import com.medicalsystem.backend.model.User
 
@@ -24,6 +26,8 @@ class ReferralService(
     private val referralRepository: ReferralRepository,
     private val studentRepository: StudentRepository,
     private val userRepository: UserRepository,
+    private val hospitalRepository: HospitalRepository,
+    private val departmentRepository: DepartmentRepository,
     private val referralMapper: ReferralMapper,
     private val eventPublisher: com.medicalsystem.backend.event.DomainEventPublisher
 ) {
@@ -33,26 +37,62 @@ class ReferralService(
         const val ACTION_DRAFT = "draft"
     }
 
+    private fun mapToDto(model: Referral, currentUser: User? = null): ReferralDto {
+        val student = studentRepository.findById(model.studentId).orElse(null)
+        val referredBy = userRepository.findById(model.referredById).orElse(null)
+        return referralMapper.toDto(model, student, referredBy, currentUser)
+    }
+
     fun fetchActiveReferrals(user: User? = null): List<ReferralDto> {
         val referrals = if (user != null) {
             referralRepository.findVisibleReferralsFor(user)
         } else {
             referralRepository.findAll()
         }
-        return referrals.map { referralMapper.toDto(it, user) }
+
+        val studentIds = referrals.map { it.studentId }.toSet()
+        val userIds = referrals.map { it.referredById }.toSet()
+
+        val students = studentRepository.findAllById(studentIds).associateBy { it.id }
+        val users = userRepository.findAllById(userIds).associateBy { it.id }
+
+        return referrals.map { referral -> 
+            referralMapper.toDto(referral, students[referral.studentId], users[referral.referredById], user)
+        }
     }
 
     fun fetchReferralDetails(id: Long, user: User? = null): com.medicalsystem.backend.dto.ReferralDetailsDto {
         val model = referralRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
-        return referralMapper.toDetailsDto(model, user)
+        val student = studentRepository.findById(model.studentId).orElse(null)
+        val referredBy = userRepository.findById(model.referredById).orElse(null)
+        return referralMapper.toDetailsDto(model, student, referredBy, user)
     }
 
     fun fetchReferralTracking(id: Long): ReferralTrackingDto {
         val model = referralRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
         
-        return referralMapper.toTrackingDto(model)
+        var hospitalName: String? = null
+        var departmentName: String? = null
+        var doctorName: String? = null
+        var adminName: String? = null
+
+        model.destination?.let { dest ->
+            val hospitalId = when (dest) {
+                is com.medicalsystem.backend.model.ReferralDestination.Submitted -> dest.hospitalId
+                is com.medicalsystem.backend.model.ReferralDestination.Triaged -> dest.hospitalId
+            }
+            hospitalName = hospitalRepository.findById(hospitalId.value).orElse(null)?.name
+            
+            if (dest is com.medicalsystem.backend.model.ReferralDestination.Triaged) {
+                departmentName = departmentRepository.findById(dest.departmentId.value).orElse(null)?.name
+                doctorName = userRepository.findById(dest.doctorId.value).orElse(null)?.name
+                adminName = userRepository.findById(dest.triageAdminId.value).orElse(null)?.name
+            }
+        }
+
+        return referralMapper.toTrackingDto(model, hospitalName, departmentName, doctorName, adminName)
     }
 
     @Transactional
@@ -86,7 +126,7 @@ class ReferralService(
         saved.getDomainEvents().forEach { eventPublisher.publish(it) }
         saved.clearDomainEvents()
         
-        return referralMapper.toDto(saved)
+        return mapToDto(saved)
     }
 
     @Transactional
@@ -111,7 +151,7 @@ class ReferralService(
         saved.getDomainEvents().forEach { eventPublisher.publish(it) }
         saved.clearDomainEvents()
 
-        return referralMapper.toDto(saved)
+        return mapToDto(saved)
     }
 
     @Transactional
@@ -129,7 +169,7 @@ class ReferralService(
         saved.getDomainEvents().forEach { eventPublisher.publish(it) }
         saved.clearDomainEvents()
 
-        return referralMapper.toDto(saved)
+        return mapToDto(saved)
     }
     
     @Transactional
@@ -170,7 +210,7 @@ class ReferralService(
         saved.getDomainEvents().forEach { eventPublisher.publish(it) }
         saved.clearDomainEvents()
 
-        return referralMapper.toDto(saved)
+        return mapToDto(saved)
     }
 
     @Transactional
@@ -188,7 +228,7 @@ class ReferralService(
         saved.getDomainEvents().forEach { eventPublisher.publish(it) }
         saved.clearDomainEvents()
 
-        return referralMapper.toDto(saved)
+        return mapToDto(saved)
     }
 
     @Transactional
@@ -213,7 +253,7 @@ class ReferralService(
         saved.getDomainEvents().forEach { eventPublisher.publish(it) }
         saved.clearDomainEvents()
 
-        return referralMapper.toDto(saved)
+        return mapToDto(saved)
     }
 
     @Transactional
@@ -227,7 +267,7 @@ class ReferralService(
 
         referral.acknowledgeFeedback(actorId = user.id)
         
-        return referralMapper.toDto(saveAndPublishEvents(referral))
+        return mapToDto(saveAndPublishEvents(referral))
     }
 
     private fun saveAndPublishEvents(referral: Referral): Referral {

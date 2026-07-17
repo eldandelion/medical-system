@@ -5,10 +5,18 @@ import com.medicalsystem.backend.model.Referral
 import org.springframework.stereotype.Repository
 import java.util.Optional
 
+import jakarta.persistence.EntityManager
+import com.medicalsystem.backend.entity.HospitalEntity
+import com.medicalsystem.backend.entity.DepartmentEntity
+import com.medicalsystem.backend.entity.DoctorEntity
+import com.medicalsystem.backend.entity.TrialAdminEntity
+import com.medicalsystem.backend.entity.ReferralDestination
+
 @Repository
 class ReferralRepositoryAdapter(
     private val jpaRepository: ReferralJpaRepository,
-    private val mapper: ReferralMapper
+    private val mapper: ReferralMapper,
+    private val entityManager: EntityManager
 ) : ReferralRepository {
 
     override fun findAll(): List<Referral> {
@@ -27,6 +35,23 @@ class ReferralRepositoryAdapter(
 
     override fun save(referral: Referral): Referral {
         val entity = mapper.toEntity(referral)
+        
+        entity.destination = referral.destination?.let { dest ->
+            when (dest) {
+                is com.medicalsystem.backend.model.ReferralDestination.Submitted -> ReferralDestination(
+                    hospital = entityManager.getReference(HospitalEntity::class.java, dest.hospitalId.value),
+                    transferDate = dest.transferDate
+                )
+                is com.medicalsystem.backend.model.ReferralDestination.Triaged -> ReferralDestination(
+                    hospital = entityManager.getReference(HospitalEntity::class.java, dest.hospitalId.value),
+                    department = entityManager.getReference(DepartmentEntity::class.java, dest.departmentId.value),
+                    doctor = entityManager.getReference(DoctorEntity::class.java, dest.doctorId.value),
+                    triageAdmin = entityManager.getReference(TrialAdminEntity::class.java, dest.triageAdminId.value),
+                    transferDate = dest.transferDate
+                )
+            }
+        }
+        
         val savedEntity = jpaRepository.save(entity)
         return mapper.toModel(savedEntity)
     }

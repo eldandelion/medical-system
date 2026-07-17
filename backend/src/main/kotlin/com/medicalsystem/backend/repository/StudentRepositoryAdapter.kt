@@ -31,6 +31,10 @@ class StudentRepositoryAdapter(
         return jpaRepository.findByMajorCollegeId(collegeId).map { mapper.toModel(it) }
     }
 
+    override fun findAllById(ids: Set<Long>): List<Student> {
+        return jpaRepository.findAllById(ids).map { mapper.toModel(it) }
+    }
+
     override fun save(student: Student): Student {
         val entity = mapper.toEntity(student)
         val savedEntity = jpaRepository.save(entity)
