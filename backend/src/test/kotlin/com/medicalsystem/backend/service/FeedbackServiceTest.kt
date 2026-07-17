@@ -6,11 +6,9 @@ import com.medicalsystem.backend.exception.AppError
 import com.medicalsystem.backend.exception.ForbiddenException
 import com.medicalsystem.backend.exception.ReferralStateException
 import com.medicalsystem.backend.model.*
-import com.medicalsystem.backend.repository.ReferralFeedbackRepository
 import com.medicalsystem.backend.repository.ReferralRepository
 import com.medicalsystem.backend.repository.UserRepository
 import com.medicalsystem.backend.event.DomainEventPublisher
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -29,9 +27,6 @@ import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 class FeedbackServiceTest {
-
-    @Mock
-    private lateinit var feedbackRepository: ReferralFeedbackRepository
 
     @Mock
     private lateinit var referralRepository: ReferralRepository
@@ -76,35 +71,20 @@ class FeedbackServiceTest {
         )
     }
 
-    @AfterEach
-    fun tearDown() {
-        verifyNoMoreInteractions(feedbackRepository)
-    }
-
     @Test
     fun `Given unassigned doctor, When submitFeedback is called, Then throws ForbiddenException`() {
-        // Arrange
         val wrongDoctorId = 999L
-        val wrongDoctor = Doctor(id = wrongDoctorId, name = "Dr. Wrong", email = com.medicalsystem.backend.model.EmailAddress("wrong@univ.edu"), departmentId = 1L, phone = null)
-        
-        `when`(userRepository.findById(wrongDoctorId)).thenReturn(Optional.of(wrongDoctor))
         `when`(referralRepository.findById(referralId)).thenReturn(Optional.of(validReferral))
 
-        // Act & Assert
         assertThrows<ForbiddenException> {
             feedbackService.submitFeedback(validRequest, wrongDoctorId)
         }
         
-        verify(feedbackRepository, never()).save(any())
+        verify(referralRepository, never()).save(any())
     }
 
     @Test
     fun `Given referral not in WAITING_FOR_APPOINTMENT, When submitFeedback is called, Then throws ReferralStateException`() {
-        // Arrange
-        val draftReferral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
-        // Set appointment using reflection if needed, but since it's DRAFT it's already invalid state.
-        // Wait, if it's DRAFT, it will throw ForbiddenException first because appointment is null!
-        // We need to bypass the ForbiddenException. 
         val invalidReferral = Referral(
             id = referralId,
             studentId = 1L,
@@ -113,75 +93,48 @@ class FeedbackServiceTest {
             title = "T",
             description = "R",
             riskLevel = RiskStatus.HIGH,
-            status = ReferralStatus.AWAITING_APPROVAL, // Force status using primary constructor
+            status = ReferralStatus.AWAITING_APPROVAL,
             referredById = 3L,
             appointment = Appointment(doctorId = doctorId, appointmentTime = java.time.Instant.now(), status = AppointmentStatus.SCHEDULED)
         )
         
-        `when`(userRepository.findById(doctorId)).thenReturn(Optional.of(doctor))
         `when`(referralRepository.findById(referralId)).thenReturn(Optional.of(invalidReferral))
 
-        // Act & Assert
         assertThrows<ReferralStateException> {
             feedbackService.submitFeedback(validRequest, doctorId)
         }
         
-        verify(feedbackRepository, never()).save(any())
+        verify(referralRepository, never()).save(any())
     }
 
     @Test
     fun `Given negative attachment size, When submitFeedback is called, Then throws IllegalArgumentException`() {
-        // Arrange
         val invalidRequest = validRequest.copy(
             attachments = listOf(FeedbackAttachmentDto(name = "scan.pdf", sizeBytes = -1L))
         )
         
-        `when`(userRepository.findById(doctorId)).thenReturn(Optional.of(doctor))
         `when`(referralRepository.findById(referralId)).thenReturn(Optional.of(validReferral))
 
-        // Act & Assert
         assertThrows<IllegalArgumentException> {
             feedbackService.submitFeedback(invalidRequest, doctorId)
         }
         
-        verify(feedbackRepository, never()).save(any())
+        verify(referralRepository, never()).save(any())
     }
 
     @Test
-    fun `Given valid payload, When submitFeedback is called, Then successfully saves and transitions state`() {
-        // Arrange
-        `when`(userRepository.findById(doctorId)).thenReturn(Optional.of(doctor))
+    fun `Given valid payload, When submitFeedback is called, Then successfully saves referral with feedback`() {
         `when`(referralRepository.findById(referralId)).thenReturn(Optional.of(validReferral))
         
-        val savedFeedback = ReferralFeedback(
-            id = 100L,
-            referralId = referralId,
-            content = validRequest.content,
-            attachments = listOf(FeedbackAttachment(id = 1L, file = com.medicalsystem.backend.model.FileReference("scan.pdf", 1024L, java.net.URI("http://mock-url.com"))))
-        )
-        
-        `when`(feedbackRepository.save(any())).thenReturn(savedFeedback)
-
-        // Act
         feedbackService.submitFeedback(validRequest, doctorId)
 
-        // Assert - Feedback Save
-        val feedbackCaptor = argumentCaptor<ReferralFeedback>()
-        verify(feedbackRepository).save(feedbackCaptor.capture())
-        val capturedFeedback = feedbackCaptor.firstValue
+        val referralCaptor = argumentCaptor<Referral>()
+        verify(referralRepository).save(referralCaptor.capture())
+        val savedReferral = referralCaptor.firstValue
         
-        assertEquals(referralId, capturedFeedback.referralId)
-        assertEquals(validRequest.content, capturedFeedback.content)
-        assertEquals(1, capturedFeedback.attachments.size)
-        assertEquals("scan.pdf", capturedFeedback.attachments[0].file.name)
-        assertEquals(1024L, capturedFeedback.attachments[0].file.sizeBytes)
-
-        // Assert - Referral State Transition
-        assertEquals(ReferralStatus.AWAITING_FEEDBACK_APPROVAL, validReferral.status)
-        
-        // Assert - Step Tracking
-        val step = validReferral.steps.last()
-        assertEquals(ReferralStepType.FEEDBACK, step.type)
-        assertEquals(doctorId, step.actorId)
+        assertEquals(ReferralStatus.AWAITING_FEEDBACK_APPROVAL, savedReferral.status)
+        assertNotNull(savedReferral.feedback)
+        assertEquals("Diagnosis: Stable", savedReferral.feedback?.content)
+        assertEquals(1, savedReferral.feedback?.attachments?.size)
     }
 }

@@ -15,8 +15,9 @@ class ReferralFeedbackEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
     
-    @Column(name = "referral_id", nullable = false)
-    var referralId: Long,
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "referral_id")
+    var referral: ReferralEntity? = null,
     
     @Column(columnDefinition = "TEXT", nullable = false)
     var content: String,

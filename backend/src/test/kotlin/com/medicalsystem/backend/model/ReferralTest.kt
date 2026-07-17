@@ -286,4 +286,56 @@ class ReferralTest {
         }
         assertEquals("Referral must have an assigned hospital destination before moving past approval", exception.message)
     }
+
+    private fun createReferralInAppointmentState(): Referral {
+        val referral = ReferralFactory.createDraft(
+            studentId = 100L,
+            title = "Test",
+            reason = "Test reason",
+            riskLevel = RiskStatus.LOW,
+            referredById = 2L
+        )
+        referral.status = ReferralStatus.WAITING_FOR_APPOINTMENT
+        referral.appointment = Appointment(
+            doctorId = 3L,
+            appointmentTime = java.time.Instant.now(),
+            status = AppointmentStatus.SCHEDULED
+        )
+        return referral
+    }
+
+    @Test
+    fun `addFeedback should successfully add feedback and transition state when valid`() {
+        val referral = createReferralInAppointmentState()
+        
+        referral.addFeedback("Patient shows improvement.", emptyList(), 3L)
+        
+        assertNotNull(referral.feedback)
+        assertEquals("Patient shows improvement.", referral.feedback?.content)
+        assertEquals(ReferralStatus.AWAITING_FEEDBACK_APPROVAL, referral.status)
+    }
+
+    @Test
+    fun `addFeedback should throw ReferralStateException when adding feedback in invalid state`() {
+        val referral = ReferralFactory.createDraft(
+            studentId = 1L,
+            title = "Test",
+            reason = "Test reason",
+            riskLevel = RiskStatus.LOW,
+            referredById = 2L
+        )
+        
+        assertThrows(com.medicalsystem.backend.exception.ReferralStateException::class.java) {
+            referral.addFeedback("Test", emptyList(), 2L)
+        }
+    }
+
+    @Test
+    fun `addFeedback should throw ForbiddenException when unassigned doctor adds feedback`() {
+        val referral = createReferralInAppointmentState()
+        
+        assertThrows(com.medicalsystem.backend.exception.ForbiddenException::class.java) {
+            referral.addFeedback("Test", emptyList(), 99L)
+        }
+    }
 }

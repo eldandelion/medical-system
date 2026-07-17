@@ -72,7 +72,24 @@ class ReferralMapper {
                     actorId = it.actorId,
                     reason = it.reason
                 )
-            }.toMutableList()
+            }.toMutableList(),
+            feedback = entity.feedback?.let {
+                com.medicalsystem.backend.model.ReferralFeedback(
+                    id = it.id ?: 0L,
+                    referralId = it.referral?.id ?: 0L,
+                    content = it.content,
+                    attachments = it.attachments.map { att ->
+                        com.medicalsystem.backend.model.FeedbackAttachment(
+                            file = com.medicalsystem.backend.model.FileReference(
+                                name = att.name,
+                                sizeBytes = att.sizeBytes,
+                                url = java.net.URI(att.fileUrl ?: "http://mock-url.com")
+                            )
+                        )
+                    },
+                    createdAt = it.createdAt
+                )
+            }
         )
     }
 
@@ -122,6 +139,21 @@ class ReferralMapper {
             )
         }.toMutableSet()
 
+        entity.feedback = model.feedback?.let {
+            com.medicalsystem.backend.entity.ReferralFeedbackEntity(
+                id = if (it.id == 0L) null else it.id,
+                referral = entity,
+                content = it.content,
+                attachments = it.attachments.map { att ->
+                    com.medicalsystem.backend.entity.FeedbackAttachmentEntity(
+                        name = att.file.name,
+                        sizeBytes = att.file.sizeBytes
+                    )
+                }.toMutableList(),
+                createdAt = it.createdAt
+            )
+        }
+
         return entity
     }
 
@@ -167,12 +199,25 @@ class ReferralMapper {
             notes = null
         )
 
+        val feedbackDto = model.feedback?.let {
+            com.medicalsystem.backend.dto.FeedbackDto(
+                summary = it.content,
+                followUp = "",
+                attachments = it.attachments.map { att ->
+                    com.medicalsystem.backend.dto.AttachmentDto(
+                        name = att.file.name,
+                        size = att.file.sizeBytes.toString()
+                    )
+                }
+            )
+        }
+
         return com.medicalsystem.backend.dto.ReferralDetailsDto(
             baseInfo = baseInfo,
             studentDemographics = studentDemographics,
             triageInfo = triageInfo,
             riskAssessment = riskAssessment,
-            feedback = null
+            feedback = feedbackDto
         )
     }
 

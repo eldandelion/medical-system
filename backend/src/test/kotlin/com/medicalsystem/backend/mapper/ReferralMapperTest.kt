@@ -58,4 +58,49 @@ class ReferralMapperTest {
         assertEquals("Jane Smith", dto.referredBy.name)
         assertEquals(0, dto.availableActions.size)
     }
+
+    @Test
+    fun `toDetailsDto should map feedback content to summary and leave followUp empty`() {
+        val date = LocalDateTime.now()
+        val referral = Referral(
+            id = 1L,
+            studentId = 100L,
+            type = ReferralType.EMERGENCY,
+            date = date,
+            title = "Crisis",
+            description = "High risk",
+            riskLevel = RiskStatus.HIGH,
+            status = ReferralStatus.CLOSED,
+            referredById = 200L,
+            clinicalStatus = mutableListOf(ClinicalStatusType.FIRST_VISIT),
+            severeRiskFactors = mutableListOf(RiskFlagName.SUICIDAL_IDEATION),
+            destination = null,
+            appointment = null,
+            attachments = mutableListOf(),
+            steps = mutableListOf(),
+            feedback = ReferralFeedback(referralId = 1L, content = "Diagnosis content")
+        )
+
+        val student = Student(
+            id = 100L,
+            name = "John Doe",
+            studentNumber = "12345",
+            major = com.medicalsystem.backend.model.Major(1L, "CS", com.medicalsystem.backend.model.College(1L, "Engineering")),
+            enrollmentDate = LocalDate.now(),
+            riskStatus = RiskStatus.HIGH
+        )
+
+        val referredBy = Teacher(
+            id = 200L,
+            name = "Jane Smith",
+            email = EmailAddress("jane@example.com"),
+            collegeId = 1L
+        )
+
+        val dto = mapper.toDetailsDto(referral, student, referredBy)
+
+        org.junit.jupiter.api.Assertions.assertNotNull(dto.feedback)
+        assertEquals("Diagnosis content", dto.feedback?.summary)
+        assertEquals("", dto.feedback?.followUp)
+    }
 }

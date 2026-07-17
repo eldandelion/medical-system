@@ -25,6 +25,7 @@ class Referral(
     val severeRiskFactors: MutableList<RiskFlagName> = mutableListOf(),
     var destination: ReferralDestination? = null,
     var appointment: Appointment? = null,
+    var feedback: ReferralFeedback? = null,
     val attachments: MutableList<ReferralAttachment> = mutableListOf(),
     val steps: MutableList<ReferralStep> = mutableListOf()
 ) : AggregateRoot() {
@@ -171,5 +172,22 @@ class Referral(
         }
         
         this.transition(ReferralStatus.CLOSED, actorId = actorId)
+    }
+
+    fun addFeedback(content: String, attachments: List<FeedbackAttachment>, actorId: Long) {
+        if (this.status != ReferralStatus.WAITING_FOR_APPOINTMENT) {
+            throw com.medicalsystem.backend.exception.ReferralStateException("Invalid state: ${this.status}, expected WAITING_FOR_APPOINTMENT")
+        }
+        if (this.appointment?.doctorId != actorId) {
+            throw com.medicalsystem.backend.exception.ForbiddenException("Doctor is not assigned to this referral")
+        }
+        
+        this.feedback = ReferralFeedback(
+            referralId = this.id ?: 0,
+            content = content,
+            attachments = attachments
+        )
+        
+        this.transition(ReferralStatus.AWAITING_FEEDBACK_APPROVAL, actorId = actorId)
     }
 }
