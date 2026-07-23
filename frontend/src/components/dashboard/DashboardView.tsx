@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ProfileSummaryCard, ActionMetricWidget, InteractiveStatusList } from './DashboardComponents';
+import { ProfileSummaryCard, ProfileSummarySkeleton, ProfileSummaryError, ActionMetricWidget, InteractiveStatusList } from './DashboardComponents';
 import { ActivityStatusType } from '../../config/dashboardConfig';
 
 export interface ProfileSummary {
@@ -27,7 +27,11 @@ export interface ActivityItem {
 }
 
 interface DashboardViewProps {
-  profileSummary: ProfileSummary;
+  profileSummary?: ProfileSummary;
+  isProfileLoading?: boolean;
+  isProfileError?: boolean;
+  onProfileRetry?: () => void;
+  onProfileClick?: () => void;
   actionMetrics: ActionMetric[];
   activityTitle: string;
   activities: ActivityItem[];
@@ -37,6 +41,10 @@ interface DashboardViewProps {
 
 export function DashboardView({
   profileSummary,
+  isProfileLoading,
+  isProfileError,
+  onProfileRetry,
+  onProfileClick,
   actionMetrics,
   activityTitle,
   activities,
@@ -48,13 +56,19 @@ export function DashboardView({
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 pb-12">
         {/* Profile Card Widget */}
         <div className="md:col-span-4 flex flex-col h-full">
-          <ProfileSummaryCard
-            avatarText={profileSummary.avatarText}
-            title={profileSummary.title}
-            subtitle={profileSummary.subtitle}
-            metadata={profileSummary.metadata}
-            onClick={profileSummary.onClick}
-          />
+          {isProfileLoading ? (
+            <ProfileSummarySkeleton />
+          ) : isProfileError ? (
+            <ProfileSummaryError onRetry={onProfileRetry || (() => {})} />
+          ) : profileSummary ? (
+            <ProfileSummaryCard
+              avatarText={profileSummary.avatarText}
+              title={profileSummary.title}
+              subtitle={profileSummary.subtitle}
+              metadata={profileSummary.metadata}
+              onClick={onProfileClick || profileSummary.onClick}
+            />
+          ) : null}
         </div>
 
         {/* Action Widgets */}

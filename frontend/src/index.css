@@ -231,3 +231,24 @@ md-outlined-segmented-button-set,
 .cursor-pointer {
   cursor: pointer !important;
 }
+
+/* Skeleton Wave Animation */
+.skeleton-wave {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(var(--md-sys-color-on-surface-variant-rgb, 73, 69, 79), 0.08) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonWave 1.5s infinite linear;
+}
+
+@keyframes skeletonWave {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

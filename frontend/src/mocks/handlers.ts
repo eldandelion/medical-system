@@ -54,6 +54,30 @@ export const handlers = [
     return HttpResponse.json(dashboardData);
   }),
 
+  http.get(api('/api/dashboard/:role/profile'), async ({ params, request }) => {
+    await delay(MOCK_DELAY_MS);
+    
+    // Attempt to fetch from real backend first
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn(`Could not fetch real profile data for ${params.role}, falling back to mock`);
+      }
+    }
+
+    const { role } = params;
+    const dashboardData = mockDashboardDb[role as string];
+    if (!dashboardData) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    return HttpResponse.json(dashboardData.profileSummary);
+  }),
+
   // Intercept detail fetches and return rich mock data
   http.get(api('/api/students/:id'), async ({ request, params }) => {
     await delay(MOCK_DELAY_MS);

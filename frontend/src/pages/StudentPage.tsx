@@ -12,9 +12,11 @@ import { DashboardView } from '../components/dashboard/DashboardView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { useQuery } from '@tanstack/react-query';
+import { useStudentProfileSummary } from '../hooks/useProfileSummary';
 import { RecordDetailsView } from '../components/records/RecordDetailsView';
 import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { STUDENT_METRICS_CONFIG } from '../config/dashboardConfig';
+import { useAuth } from '../contexts/AuthContext';
 
 export const StudentTabs = {
   DASHBOARD: 'Dashboard',
@@ -38,15 +40,23 @@ export function StudentPage() {
   const [activePage, setActivePage] = React.useState<StudentTab>(StudentTabs.DASHBOARD);
   const [selectedRecord, setSelectedRecord] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
+  const { session } = useAuth();
+  
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
     queryKey: ['/api/dashboard/student'],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/dashboard/student`.replace('//api', '/api'));
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/dashboard/student`.replace('//api', '/api'), {
+        headers: {
+          'Authorization': `Bearer ${session?.token || ''}`
+        }
+      });
       if (!res.ok) throw new Error('Failed to fetch dashboard');
       return res.json();
     },
-    enabled: activePage === StudentTabs.DASHBOARD
+    enabled: activePage === StudentTabs.DASHBOARD && !!session?.token
   });
+
+  const { data: profileSummaryData, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useStudentProfileSummary(session?.token);
 
 
 
@@ -91,16 +101,20 @@ export function StudentPage() {
           <>
             <CanvasHeader title={STUDENT_TAB_TITLES[activePage]} isLoading={dashboardLoading} />
             <DashboardView
-              profileSummary={{
-                avatarText: dashboardData.profileSummary.avatarText,
-                title: dashboardData.profileSummary.title,
-                subtitle: dashboardData.profileSummary.subtitle,
+              isProfileLoading={isProfileLoading}
+              isProfileError={isProfileError}
+              onProfileRetry={refetchProfile}
+              onProfileClick={() => setShowProfileDetails(true)}
+              profileSummary={profileSummaryData ? {
+                avatarText: profileSummaryData.avatarText,
+                title: profileSummaryData.title,
+                subtitle: profileSummaryData.subtitle,
                 metadata: [
-                  { icon: "badge", value: dashboardData.profileSummary.studentId || "" },
-                  { icon: "school", value: dashboardData.profileSummary.school || "" }
-                ],
-                onClick: () => setShowProfileDetails(true)
-              }}
+                  { icon: "badge", value: profileSummaryData.studentId || "" },
+                  { icon: "school", value: profileSummaryData.school || "" },
+                  { icon: "domain", value: profileSummaryData.department || "" }
+                ]
+              } : undefined}
               actionMetrics={STUDENT_METRICS_CONFIG.map((metric) => ({
                 icon: metric.icon,
                 numericValue: dashboardData.metrics[metric.metricKey] || 0,
