@@ -2,8 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 
 export interface ProfileSummaryDto {
   avatarUrl?: string | null;
-  title: string;
-  subtitle: string;
+  name: string;
+  role: 'TEACHER' | 'HEAD_COUNSELLOR' | 'TRIAL_ADMIN' | 'DOCTOR' | 'SYSTEM_ADMIN' | 'STUDENT';
   studentId?: string;
   employeeId?: string;
   school?: string;

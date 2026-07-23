@@ -10,6 +10,8 @@ import { StudentsView } from '../components/students/StudentsView';
 import { ReferralManagementView } from '../components/records/ReferralManagementView';
 import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
+import { ActivityList } from '../components/dashboard/ActivityList';
+import { roleTranslations } from '../utils/roleTranslations';
 import { DashboardView } from '../components/dashboard/DashboardView';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { StudentDetailsView, STUDENT_DETAILS_TABS } from '../components/students/StudentDetailsView';
@@ -156,8 +158,8 @@ export function HeadCouncillorPage() {
             <DashboardView
               profileSummary={{
               avatarUrl: dashboardData.profileSummary.avatarUrl,
-              title: dashboardData.profileSummary.title,
-              subtitle: dashboardData.profileSummary.subtitle,
+              name: dashboardData.profileSummary.name,
+              role: roleTranslations[dashboardData.profileSummary.role] || dashboardData.profileSummary.role,
               metadata: [
                 { icon: "badge", value: dashboardData.profileSummary.employeeId || "" },
                 { icon: "account_balance", value: dashboardData.profileSummary.department || "" }

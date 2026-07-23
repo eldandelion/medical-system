@@ -4,13 +4,13 @@ import { ActivityStatusType, STATUS_CHIP_COLORS } from '../../config/dashboardCo
 // --- Profile Summary Card ---
 interface ProfileSummaryCardProps {
   avatarUrl?: string | null;
-  title: string;
-  subtitle: string;
+  name: string;
+  role: string;
   metadata: { icon: string; value: string }[];
   onClick?: () => void;
 }
 
-export function ProfileSummaryCard({ avatarUrl, title, subtitle, metadata, onClick }: ProfileSummaryCardProps) {
+export function ProfileSummaryCard({ avatarUrl, name, role, metadata, onClick }: ProfileSummaryCardProps) {
   return (
     <div 
       onClick={onClick}
@@ -19,15 +19,15 @@ export function ProfileSummaryCard({ avatarUrl, title, subtitle, metadata, onCli
       <div className="flex items-center gap-4">
         <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[24px] font-medium shrink-0 overflow-hidden">
           {avatarUrl ? (
-            <img src={avatarUrl} alt={title} className="w-full h-full object-cover" />
+            <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
           ) : (
-            title ? title.charAt(0).toUpperCase() : '?'
+            name ? name.charAt(0).toUpperCase() : '?'
           )}
         </div>
         <div className="flex flex-col min-w-0 flex-1">
           {/* M3 titleLarge is roughly 22px */}
-          <h2 className="text-[22px] leading-[28px] font-normal text-[var(--md-sys-color-on-surface)] truncate">{title}</h2>
-          <span className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] truncate">{subtitle}</span>
+          <h2 className="text-[22px] leading-[28px] font-normal text-[var(--md-sys-color-on-surface)] truncate">{name}</h2>
+          <span className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] truncate">{role}</span>
         </div>
       </div>
       <div className="flex flex-col gap-2 mt-2">

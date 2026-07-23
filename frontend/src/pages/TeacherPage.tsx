@@ -11,6 +11,8 @@ import { ReferralManagementView } from '../components/records/ReferralManagement
 import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
 import { DashboardView } from '../components/dashboard/DashboardView';
+import { TeacherReferralsView } from '../components/referrals/TeacherReferralsView';
+import { roleTranslations } from '../utils/roleTranslations';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { StudentDetailsView, STUDENT_DETAILS_TABS } from '../components/students/StudentDetailsView';
 import { ReferralDetailsView, REFERRAL_DETAILS_TABS } from '../components/records/ReferralDetailsView';
@@ -157,8 +159,8 @@ export function TeacherPage() {
               onProfileClick={() => setShowProfileDetails(true)}
               profileSummary={profileSummaryData ? {
                 avatarUrl: profileSummaryData.avatarUrl,
-                title: profileSummaryData.title,
-                subtitle: profileSummaryData.subtitle,
+                name: profileSummaryData.name,
+                role: roleTranslations[profileSummaryData.role] || profileSummaryData.role,
                 metadata: [
                   { icon: "badge", value: profileSummaryData.employeeId || "" },
                   { icon: "account_balance", value: profileSummaryData.department || "" }

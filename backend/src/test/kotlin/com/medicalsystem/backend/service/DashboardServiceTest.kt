@@ -46,8 +46,8 @@ class DashboardServiceTest {
         val result = dashboardService.getStudentProfile(mockUser)
 
         assertNull(result.avatarUrl)
-        assertEquals("John Doe", result.title)
-        assertEquals("Student", result.subtitle)
+        assertEquals("John Doe", result.name)
+        assertEquals(com.medicalsystem.backend.model.UserRole.STUDENT, result.role)
         assertEquals("ST123", result.studentId)
         assertEquals("Engineering", result.school)
         assertEquals("Computer Science", result.department)
@@ -63,8 +63,8 @@ class DashboardServiceTest {
         val result = dashboardService.getTeacherProfile(mockUser)
 
         assertNull(result.avatarUrl)
-        assertEquals("Jane Smith", result.title)
-        assertEquals("Teacher", result.subtitle)
+        assertEquals("Jane Smith", result.name)
+        assertEquals(com.medicalsystem.backend.model.UserRole.TEACHER, result.role)
         assertEquals("2", result.employeeId)
         // department is currently hardcoded to null in our service stub
         assertEquals(null, result.department)

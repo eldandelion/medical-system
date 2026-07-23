@@ -8,6 +8,8 @@ import { NotificationsView } from '../components/notifications/NotificationsView
 import { ReferralManagementView } from '../components/records/ReferralManagementView';
 import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
+import { ActivityList } from '../components/dashboard/ActivityList';
+import { roleTranslations } from '../utils/roleTranslations';
 import { DashboardView } from '../components/dashboard/DashboardView';
 import { DashboardCalendarWidget } from '../components/dashboard/DashboardCalendarWidget';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
@@ -134,8 +136,8 @@ export function DoctorPage() {
             <DashboardView
               profileSummary={{
               avatarUrl: dashboardData.profileSummary.avatarUrl,
-              title: dashboardData.profileSummary.title,
-              subtitle: dashboardData.profileSummary.subtitle,
+              name: dashboardData.profileSummary.name,
+              role: roleTranslations[dashboardData.profileSummary.role] || dashboardData.profileSummary.role,
               metadata: [
                 { icon: "badge", value: dashboardData.profileSummary.employeeId || "" },
                 { icon: "verified_user", value: dashboardData.profileSummary.accessLevel || "" }

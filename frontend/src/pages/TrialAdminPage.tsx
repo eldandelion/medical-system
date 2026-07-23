@@ -9,6 +9,8 @@ import { ReferralManagementView } from '../components/records/ReferralManagement
 import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
 import { DashboardView } from '../components/dashboard/DashboardView';
+import { TrialAdminReferralsView } from '../components/referrals/TrialAdminReferralsView';
+import { roleTranslations } from '../utils/roleTranslations';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { ReferralDetailsView, REFERRAL_DETAILS_TABS } from '../components/records/ReferralDetailsView';
 import { REFERRAL_TYPE_LABELS } from '../config/styleConstants';
@@ -130,8 +132,8 @@ export function TrialAdminPage() {
             <DashboardView
               profileSummary={{
               avatarUrl: dashboardData.profileSummary.avatarUrl,
-              title: dashboardData.profileSummary.title,
-              subtitle: dashboardData.profileSummary.subtitle,
+              name: dashboardData.profileSummary.name,
+              role: roleTranslations[dashboardData.profileSummary.role] || dashboardData.profileSummary.role,
               metadata: [
                 { icon: "badge", value: dashboardData.profileSummary.employeeId || "" },
                 { icon: "verified_user", value: dashboardData.profileSummary.accessLevel || "" }

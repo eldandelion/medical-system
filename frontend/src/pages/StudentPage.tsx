@@ -8,6 +8,8 @@ import { NotificationsView } from '../components/notifications/NotificationsView
 import { ProfileView } from '../components/profile/ProfileView';
 import { AssessmentsView } from '../components/assessments/AssessmentsView';
 import { RecordsView, getRecordIcon } from '../components/records/RecordsView';
+import { StudentDashboardError } from '../components/dashboard/StudentDashboardError';
+import { roleTranslations } from '../utils/roleTranslations';
 import { DashboardView } from '../components/dashboard/DashboardView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
@@ -107,8 +109,8 @@ export function StudentPage() {
               onProfileClick={() => setShowProfileDetails(true)}
               profileSummary={profileSummaryData ? {
                 avatarUrl: profileSummaryData.avatarUrl,
-                title: profileSummaryData.title,
-                subtitle: profileSummaryData.subtitle,
+                name: profileSummaryData.name,
+                role: roleTranslations[profileSummaryData.role] || profileSummaryData.role,
                 metadata: [
                   { icon: "badge", value: profileSummaryData.studentId || "" },
                   { icon: "school", value: profileSummaryData.school || "" },

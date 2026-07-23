@@ -14,8 +14,8 @@ describe('ProfileSummaryCard', () => {
     render(
       <ProfileSummaryCard
         avatarUrl={null}
-        title="John Doe"
-        subtitle="Student"
+        name="John Doe"
+        role="Student"
         metadata={metadata}
         onClick={mockOnClick}
       />

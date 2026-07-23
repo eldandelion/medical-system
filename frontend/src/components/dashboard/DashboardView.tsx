@@ -4,8 +4,8 @@ import { ActivityStatusType } from '../../config/dashboardConfig';
 
 export interface ProfileSummary {
   avatarUrl?: string | null;
-  title: string;
-  subtitle: string;
+  name: string;
+  role: string;
   metadata: { icon: string; value: string }[];
   onClick?: () => void;
 }
@@ -63,8 +63,8 @@ export function DashboardView({
           ) : profileSummary ? (
             <ProfileSummaryCard
               avatarUrl={profileSummary.avatarUrl}
-              title={profileSummary.title}
-              subtitle={profileSummary.subtitle}
+              name={profileSummary.name}
+              role={profileSummary.role}
               metadata={profileSummary.metadata}
               onClick={onProfileClick || profileSummary.onClick}
             />

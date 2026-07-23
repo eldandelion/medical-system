@@ -27,8 +27,8 @@ class DashboardControllerTest {
         val mockUser = StudentUser(id = 1L, name = "John Doe", email = EmailAddress("john@univ.edu.cn"))
         val dto = ProfileSummaryDto(
             avatarUrl = "https://example.com/avatar.png",
-            title = "John Doe",
-            subtitle = "Student",
+            name = "John Doe",
+            role = com.medicalsystem.backend.model.UserRole.STUDENT,
             studentId = "ST123",
             school = "Engineering",
             department = "Computer Science"
@@ -41,7 +41,8 @@ class DashboardControllerTest {
         assertEquals(200, response.statusCode.value())
         assertNotNull(response.body)
         assertEquals("https://example.com/avatar.png", response.body?.avatarUrl)
-        assertEquals("John Doe", response.body?.title)
+        assertEquals("John Doe", response.body?.name)
+        assertEquals(com.medicalsystem.backend.model.UserRole.STUDENT, response.body?.role)
         assertEquals("ST123", response.body?.studentId)
     }
 }

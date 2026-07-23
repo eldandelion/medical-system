@@ -18,8 +18,8 @@ class DashboardService(
 
         return ProfileSummaryDto(
             avatarUrl = user.avatarUrl?.toString(),
-            title = user.name,
-            subtitle = "Student", 
+            name = user.name,
+            role = user.role, 
             studentId = student.studentNumber,
             school = student.major.college.name,
             department = student.major.name
@@ -32,8 +32,8 @@ class DashboardService(
         
         return ProfileSummaryDto(
             avatarUrl = user.avatarUrl?.toString(),
-            title = user.name,
-            subtitle = "Teacher",
+            name = user.name,
+            role = user.role,
             employeeId = user.id.toString(), // TODO: Maps to actual employee ID later if different from user ID
             department = null // TODO: Maps to college via CollegeRepository if needed
         )

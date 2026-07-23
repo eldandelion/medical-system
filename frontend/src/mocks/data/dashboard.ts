@@ -3,8 +3,8 @@ import { ActivityStatusType } from '../../config/dashboardConfig';
 export interface DashboardData {
   profileSummary: {
     avatarUrl: string | null;
-    title: string;
-    subtitle: string;
+    name: string;
+    subname: string;
     school?: string;
     employeeId?: string;
     department?: string;
@@ -15,7 +15,7 @@ export interface DashboardData {
   activityTitle: string;
   activities: {
     id: string;
-    title: string;
+    name: string;
     timestamp: string;
     statusText: string;
     statusType: ActivityStatusType;
@@ -26,8 +26,8 @@ export const mockDashboardDb: Record<string, DashboardData> = {
   student: {
     profileSummary: {
       avatarUrl: null,
-      title: "达尼尔·彼得罗夫",
-      subtitle: "中南大学学生",
+      name: "达尼尔·彼得罗夫",
+      subname: "中南大学学生",
       studentId: "987654321",
       school: "计算机科学与工程学院"
     },
@@ -39,21 +39,21 @@ export const mockDashboardDb: Record<string, DashboardData> = {
     activities: [
       {
         id: '1',
-        title: '完成期中自我测评',
+        name: '完成期中自我测评',
         timestamp: '2天后到期',
         statusText: '需处理',
         statusType: 'error'
       },
       {
         id: '2',
-        title: '查看反馈摘要：算法',
+        name: '查看反馈摘要：算法',
         timestamp: '昨天发布',
         statusText: '未读',
         statusType: 'info'
       },
       {
         id: '3',
-        title: '更新年度知情同意书',
+        name: '更新年度知情同意书',
         timestamp: '下学期必需',
         statusText: '待处理',
         statusType: 'neutral'
@@ -63,8 +63,8 @@ export const mockDashboardDb: Record<string, DashboardData> = {
   teacher: {
     profileSummary: {
       avatarUrl: null,
-      title: "艾米丽·沃森博士",
-      subtitle: "教研人员",
+      name: "艾米丽·沃森博士",
+      subname: "教研人员",
       employeeId: "T-88291",
       department: "心理学系"
     },
@@ -76,14 +76,14 @@ export const mockDashboardDb: Record<string, DashboardData> = {
     activities: [
       {
         id: '1',
-        title: '新分配学生：达尼尔·彼得罗夫',
+        name: '新分配学生：达尼尔·彼得罗夫',
         timestamp: '2小时前',
         statusText: '高风险标识',
         statusType: 'error'
       },
       {
         id: '2',
-        title: '转诊更新：爱丽丝·史密斯',
+        name: '转诊更新：爱丽丝·史密斯',
         timestamp: '昨天',
         statusText: '审核中',
         statusType: 'info'
@@ -93,8 +93,8 @@ export const mockDashboardDb: Record<string, DashboardData> = {
   'head-councillor': {
     profileSummary: {
       avatarUrl: null,
-      title: "张明诚",
-      subtitle: "主任辅导员",
+      name: "张明诚",
+      subname: "主任辅导员",
       employeeId: "HC-1001",
       department: "咨询中心"
     },
@@ -106,14 +106,14 @@ export const mockDashboardDb: Record<string, DashboardData> = {
     activities: [
       {
         id: '1',
-        title: '新分配学生：达尼尔·彼得罗夫',
+        name: '新分配学生：达尼尔·彼得罗夫',
         timestamp: '2小时前',
         statusText: '高风险标识',
         statusType: 'error'
       },
       {
         id: '2',
-        title: '转诊更新：爱丽丝·史密斯',
+        name: '转诊更新：爱丽丝·史密斯',
         timestamp: '昨天',
         statusText: '审核中',
         statusType: 'info'
@@ -123,8 +123,8 @@ export const mockDashboardDb: Record<string, DashboardData> = {
   'trial-admin': {
     profileSummary: {
       avatarUrl: null,
-      title: "赵敏",
-      subtitle: "初试管理员",
+      name: "赵敏",
+      subname: "初试管理员",
       employeeId: "TA-9009",
       accessLevel: "限制访问"
     },
@@ -136,14 +136,14 @@ export const mockDashboardDb: Record<string, DashboardData> = {
     activities: [
       {
         id: '1',
-        title: '新转诊申请：转诊中心',
+        name: '新转诊申请：转诊中心',
         timestamp: '1小时前',
         statusText: '待审核',
         statusType: 'info'
       },
       {
         id: '2',
-        title: '系统维护通知',
+        name: '系统维护通知',
         timestamp: '昨天',
         statusText: '已发布',
         statusType: 'warning'
@@ -153,8 +153,8 @@ export const mockDashboardDb: Record<string, DashboardData> = {
   doctor: {
     profileSummary: {
       avatarUrl: null,
-      title: "李医生",
-      subtitle: "精神科主治医师",
+      name: "李医生",
+      subname: "精神科主治医师",
       employeeId: "DR-5005",
       accessLevel: "医生权限",
       doctorId: 1
@@ -167,14 +167,14 @@ export const mockDashboardDb: Record<string, DashboardData> = {
     activities: [
       {
         id: '1',
-        title: '需出具随访报告：李四',
+        name: '需出具随访报告：李四',
         timestamp: '1小时前',
         statusText: '待处理',
         statusType: 'error'
       },
       {
         id: '2',
-        title: '已完成随访：王五',
+        name: '已完成随访：王五',
         timestamp: '昨天',
         statusText: '已完成',
         statusType: 'info'
