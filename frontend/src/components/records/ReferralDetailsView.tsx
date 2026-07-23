@@ -285,7 +285,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
         actions={
           <>
             <TertiaryButton label="取消" onClick={() => state.setIsRejectionDialogOpen(false)} />
-            <TertiaryButton label="确认拒绝" onClick={actions.handleReject} />
+            <TertiaryButton label="确认拒绝" onClick={actions.handleReject} disabled={!state.rejectionReason.trim() || !!state.actionError} />
           </>
         }
       >
@@ -294,9 +294,16 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
             请提供拒绝该转诊申请的具体原因。此信息将通过通知发送给发起人。
           </p>
           {state.actionError && (
-            <div className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-3 rounded-md text-sm">
-              {state.actionError}
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, y: -10, height: 0 }} 
+              animate={{ opacity: 1, y: 0, height: 'auto' }} 
+              className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-4 rounded-xl flex items-center gap-3 mt-2 shadow-sm"
+            >
+              <md-icon className="text-[var(--md-sys-color-on-error-container)] shrink-0">error_outline</md-icon>
+              <span className="text-[14px] font-medium leading-relaxed tracking-wide">
+                {state.actionError}
+              </span>
+            </motion.div>
           )}
           <md-outlined-text-field
             type="textarea"
@@ -317,16 +324,23 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
         actions={
           <>
             <SecondaryButton label="取消" onClick={() => state.setIsRecallDialogOpen(false)} />
-            <PrimaryButton label="确认撤回" onClick={actions.handleRecall} />
+            <TertiaryButton label="确认撤回" onClick={actions.handleRecall} disabled={!!state.actionError} />
           </>
         }
       >
         <div className="flex flex-col gap-4">
           <p className="text-[var(--md-sys-color-on-surface-variant)]">撤回后，该转诊将变为“已撤回”状态。您可以在之后基于此记录重新提交。是否确认撤回？</p>
           {state.actionError && (
-            <div className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-3 rounded-md text-sm">
-              {state.actionError}
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, y: -10, height: 0 }} 
+              animate={{ opacity: 1, y: 0, height: 'auto' }} 
+              className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-4 rounded-xl flex items-center gap-3 mt-2 shadow-sm"
+            >
+              <md-icon className="text-[var(--md-sys-color-on-error-container)] shrink-0">error_outline</md-icon>
+              <span className="text-[14px] font-medium leading-relaxed tracking-wide">
+                {state.actionError}
+              </span>
+            </motion.div>
           )}
         </div>
       </GenericDialog>
@@ -339,7 +353,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
         actions={
           <>
             <TertiaryButton label="取消" onClick={() => state.setIsApprovalDialogOpen(false)} />
-            <TertiaryButton label="确认批准" onClick={actions.handleApprove} />
+            <PrimaryButton label="批准" onClick={actions.handleApprove} disabled={!state.selectedHospitalId || !!state.actionError} />
           </>
         }
       >
@@ -348,9 +362,16 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
             请选择接诊医院。批准后，该转诊将自动分配给该医院的分诊管理员（Trial Admin）。
           </p>
           {state.actionError && (
-            <div className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-3 rounded-md text-sm">
-              {state.actionError}
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, y: -10, height: 0 }} 
+              animate={{ opacity: 1, y: 0, height: 'auto' }} 
+              className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-4 rounded-xl flex items-center gap-3 mt-2 shadow-sm"
+            >
+              <md-icon className="text-[var(--md-sys-color-on-error-container)] shrink-0">error_outline</md-icon>
+              <span className="text-[14px] font-medium leading-relaxed tracking-wide">
+                {state.actionError}
+              </span>
+            </motion.div>
           )}
           <div className="relative mt-2">
             <md-outlined-select
@@ -389,6 +410,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
             <TertiaryButton 
               label="确认删除" 
               onClick={actions.handleDelete}
+              disabled={!!state.actionError}
             />
           </>
         }
@@ -396,9 +418,16 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
         <div className="flex flex-col gap-4">
           <p className="text-[var(--md-sys-color-on-surface-variant)]">删除后，该草案将永久失效且无法恢复。是否确认删除？</p>
           {state.actionError && (
-            <div className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-3 rounded-md text-sm">
-              {state.actionError}
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, y: -10, height: 0 }} 
+              animate={{ opacity: 1, y: 0, height: 'auto' }} 
+              className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-4 rounded-xl flex items-center gap-3 mt-2 shadow-sm"
+            >
+              <md-icon className="text-[var(--md-sys-color-on-error-container)] shrink-0">error_outline</md-icon>
+              <span className="text-[14px] font-medium leading-relaxed tracking-wide">
+                {state.actionError}
+              </span>
+            </motion.div>
           )}
         </div>
       </GenericDialog>
@@ -411,7 +440,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
         actions={
           <>
             <TertiaryButton label="取消" onClick={() => state.setIsAssignDialogOpen(false)} />
-            <TertiaryButton label="确认分配" onClick={actions.handleAssign} />
+            <PrimaryButton label="确认分配" onClick={actions.handleAssign} disabled={!state.selectedDoctorId || !!state.actionError} />
           </>
         }
       >
@@ -420,9 +449,16 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
             请选择接诊的心理医生。分配后，该转诊将进入医生评估阶段。
           </p>
           {state.actionError && (
-            <div className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-3 rounded-md text-sm">
-              {state.actionError}
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, y: -10, height: 0 }} 
+              animate={{ opacity: 1, y: 0, height: 'auto' }} 
+              className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-4 rounded-xl flex items-center gap-3 mt-2 shadow-sm"
+            >
+              <md-icon className="text-[var(--md-sys-color-on-error-container)] shrink-0">error_outline</md-icon>
+              <span className="text-[14px] font-medium leading-relaxed tracking-wide">
+                {state.actionError}
+              </span>
+            </motion.div>
           )}
           <div className="relative mt-2">
             <md-outlined-select
@@ -451,7 +487,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
         actions={
           <>
             <SecondaryButton label="取消" onClick={() => state.setIsSchedulingDialogOpen(false)} />
-            <PrimaryButton label="确认安排" onClick={actions.handleSchedule} />
+            <PrimaryButton label="确认预约" onClick={actions.handleSchedule} disabled={!state.scheduleDateTime || !!state.actionError} />
           </>
         }
       >
@@ -460,9 +496,18 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
             请选择为该学生安排的就诊日期和时间。排期后，学生将收到通知。
           </p>
           {state.actionError && (
-            <div className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-3 rounded-md text-sm">
-              {state.actionError}
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, y: -10, height: 0 }} 
+              animate={{ opacity: 1, y: 0, height: 'auto' }} 
+              className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-4 rounded-xl flex items-start gap-3 mt-2 shadow-sm"
+            >
+              <md-icon className="text-[var(--md-sys-color-error)] shrink-0 mt-0.5">error_outline</md-icon>
+              <div className="flex flex-col">
+                <span className="text-[14px] font-medium leading-relaxed tracking-wide">
+                  {state.actionError}
+                </span>
+              </div>
+            </motion.div>
           )}
           <div className="mt-2">
             <DoctorScheduleCalendar 
@@ -482,7 +527,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
         actions={
           <>
             <TertiaryButton label="取消" onClick={() => state.setIsReportProblemDialogOpen(false)} />
-            <TertiaryButton label="确认报告" onClick={actions.handleReportProblem} />
+            <TertiaryButton label="提交反馈" onClick={actions.handleReportProblem} disabled={!state.reportProblemReason.trim() || !!state.actionError} />
           </>
         }
       >
@@ -514,7 +559,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
         actions={
           <>
             <TertiaryButton label="取消" onClick={() => state.setIsAcknowledgeDialogOpen?.(false)} />
-            <PrimaryButton label="确认" onClick={actions.handleAcknowledgeFeedback} />
+            <PrimaryButton label="确认反馈并结案" onClick={actions.handleAcknowledgeFeedback} disabled={!!state.actionError} />
           </>
         }
       >

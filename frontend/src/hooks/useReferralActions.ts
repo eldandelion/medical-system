@@ -81,23 +81,25 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
       onUpdate?.();
     },
     onError: (error: any, { errorMsg, endpoint }: any) => {
-      // We don't always show snackbar here anymore because we'll show it in the dialog (if open)
-      // but for actions without dialogs (like ACKNOWLEDGE), we might need it.
+      // The snackbar logic is kept but can be suppressed if desired.
       const isGeneric = error.message === `Failed to ${endpoint}`;
       const displayMsg = !isGeneric && error.message ? `${errorMsg}: ${error.message}` : errorMsg;
-      // We will let executeAction handle the state, but we can still show snackbar as a fallback or keep it.
-      // Keeping it for consistency, but maybe short duration.
       showSnackbar({ message: displayMsg, duration: 5000 });
     }
   });
 
+  const resolveErrorMessage = (error: any, endpoint: string, fallbackMsg: string) => {
+    const isGeneric = error.message === `Failed to ${endpoint}`;
+    return !isGeneric && error.message ? `${fallbackMsg}: ${error.message}` : fallbackMsg;
+  };
+
   const executeAction = async (endpoint: string, method: string, successMsg: string, errorMsg: string, body?: any) => {
-    setActionError(null);
     try {
       await mutation.mutateAsync({ endpoint, method, body, successMsg, errorMsg });
       return true;
     } catch (e: any) {
-      setActionError(e.message || errorMsg);
+      const resolvedMessage = resolveErrorMessage(e, endpoint, errorMsg);
+      setActionError(resolvedMessage);
       return false;
     }
   };
