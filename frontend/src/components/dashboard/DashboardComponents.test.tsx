@@ -13,7 +13,7 @@ describe('ProfileSummaryCard', () => {
 
     render(
       <ProfileSummaryCard
-        avatarText="J"
+        avatarUrl={null}
         title="John Doe"
         subtitle="Student"
         metadata={metadata}
@@ -21,6 +21,7 @@ describe('ProfileSummaryCard', () => {
       />
     );
 
+    // Should fallback to first letter of title
     expect(screen.getByText('J')).toBeTruthy();
     expect(screen.getByText('John Doe')).toBeTruthy();
     expect(screen.getByText('Student')).toBeTruthy();

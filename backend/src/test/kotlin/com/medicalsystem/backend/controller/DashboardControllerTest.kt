@@ -26,7 +26,7 @@ class DashboardControllerTest {
     fun `getStudentProfile returns mapped dto`() {
         val mockUser = StudentUser(id = 1L, name = "John Doe", email = EmailAddress("john@univ.edu.cn"))
         val dto = ProfileSummaryDto(
-            avatarText = "J",
+            avatarUrl = "https://example.com/avatar.png",
             title = "John Doe",
             subtitle = "Student",
             studentId = "ST123",
@@ -40,6 +40,7 @@ class DashboardControllerTest {
         
         assertEquals(200, response.statusCode.value())
         assertNotNull(response.body)
+        assertEquals("https://example.com/avatar.png", response.body?.avatarUrl)
         assertEquals("John Doe", response.body?.title)
         assertEquals("ST123", response.body?.studentId)
     }

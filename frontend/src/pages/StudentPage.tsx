@@ -106,7 +106,7 @@ export function StudentPage() {
               onProfileRetry={refetchProfile}
               onProfileClick={() => setShowProfileDetails(true)}
               profileSummary={profileSummaryData ? {
-                avatarText: profileSummaryData.avatarText,
+                avatarUrl: profileSummaryData.avatarUrl,
                 title: profileSummaryData.title,
                 subtitle: profileSummaryData.subtitle,
                 metadata: [

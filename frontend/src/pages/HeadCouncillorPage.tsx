@@ -155,7 +155,7 @@ export function HeadCouncillorPage() {
             <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage]} isLoading={dashboardLoading} />
             <DashboardView
               profileSummary={{
-              avatarText: dashboardData.profileSummary.avatarText,
+              avatarUrl: dashboardData.profileSummary.avatarUrl,
               title: dashboardData.profileSummary.title,
               subtitle: dashboardData.profileSummary.subtitle,
               metadata: [

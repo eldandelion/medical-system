@@ -4,6 +4,7 @@ import com.medicalsystem.backend.model.*
 import com.medicalsystem.backend.repository.StudentRepository
 import com.medicalsystem.backend.repository.UserRepository
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
@@ -44,7 +45,7 @@ class DashboardServiceTest {
 
         val result = dashboardService.getStudentProfile(mockUser)
 
-        assertEquals("J", result.avatarText)
+        assertNull(result.avatarUrl)
         assertEquals("John Doe", result.title)
         assertEquals("Student", result.subtitle)
         assertEquals("ST123", result.studentId)
@@ -61,7 +62,7 @@ class DashboardServiceTest {
 
         val result = dashboardService.getTeacherProfile(mockUser)
 
-        assertEquals("J", result.avatarText)
+        assertNull(result.avatarUrl)
         assertEquals("Jane Smith", result.title)
         assertEquals("Teacher", result.subtitle)
         assertEquals("2", result.employeeId)

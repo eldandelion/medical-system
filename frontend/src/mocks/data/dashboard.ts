@@ -2,10 +2,9 @@ import { ActivityStatusType } from '../../config/dashboardConfig';
 
 export interface DashboardData {
   profileSummary: {
-    avatarText: string;
+    avatarUrl: string | null;
     title: string;
     subtitle: string;
-    studentId?: string;
     school?: string;
     employeeId?: string;
     department?: string;
@@ -26,7 +25,7 @@ export interface DashboardData {
 export const mockDashboardDb: Record<string, DashboardData> = {
   student: {
     profileSummary: {
-      avatarText: "D",
+      avatarUrl: null,
       title: "达尼尔·彼得罗夫",
       subtitle: "中南大学学生",
       studentId: "987654321",
@@ -63,7 +62,7 @@ export const mockDashboardDb: Record<string, DashboardData> = {
   },
   teacher: {
     profileSummary: {
-      avatarText: "E",
+      avatarUrl: null,
       title: "艾米丽·沃森博士",
       subtitle: "教研人员",
       employeeId: "T-88291",
@@ -93,7 +92,7 @@ export const mockDashboardDb: Record<string, DashboardData> = {
   },
   'head-councillor': {
     profileSummary: {
-      avatarText: "张",
+      avatarUrl: null,
       title: "张明诚",
       subtitle: "主任辅导员",
       employeeId: "HC-1001",
@@ -123,7 +122,7 @@ export const mockDashboardDb: Record<string, DashboardData> = {
   },
   'trial-admin': {
     profileSummary: {
-      avatarText: "赵",
+      avatarUrl: null,
       title: "赵敏",
       subtitle: "初试管理员",
       employeeId: "TA-9009",
@@ -153,7 +152,7 @@ export const mockDashboardDb: Record<string, DashboardData> = {
   },
   doctor: {
     profileSummary: {
-      avatarText: "李",
+      avatarUrl: null,
       title: "李医生",
       subtitle: "精神科主治医师",
       employeeId: "DR-5005",

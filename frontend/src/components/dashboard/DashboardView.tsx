@@ -3,7 +3,7 @@ import { ProfileSummaryCard, ProfileSummarySkeleton, ProfileSummaryError, Action
 import { ActivityStatusType } from '../../config/dashboardConfig';
 
 export interface ProfileSummary {
-  avatarText: string;
+  avatarUrl?: string | null;
   title: string;
   subtitle: string;
   metadata: { icon: string; value: string }[];
@@ -62,7 +62,7 @@ export function DashboardView({
             <ProfileSummaryError onRetry={onProfileRetry || (() => {})} />
           ) : profileSummary ? (
             <ProfileSummaryCard
-              avatarText={profileSummary.avatarText}
+              avatarUrl={profileSummary.avatarUrl}
               title={profileSummary.title}
               subtitle={profileSummary.subtitle}
               metadata={profileSummary.metadata}

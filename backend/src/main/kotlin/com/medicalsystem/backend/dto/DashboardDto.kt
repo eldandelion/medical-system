@@ -1,7 +1,7 @@
 package com.medicalsystem.backend.dto
 
 data class ProfileSummaryDto(
-    val avatarText: String,
+    val avatarUrl: String?,
     val title: String,
     val subtitle: String,
     val studentId: String? = null,

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 export interface ProfileSummaryDto {
-  avatarText: string;
+  avatarUrl?: string | null;
   title: string;
   subtitle: string;
   studentId?: string;

@@ -3,22 +3,26 @@ import { ActivityStatusType, STATUS_CHIP_COLORS } from '../../config/dashboardCo
 
 // --- Profile Summary Card ---
 interface ProfileSummaryCardProps {
-  avatarText: string;
+  avatarUrl?: string | null;
   title: string;
   subtitle: string;
   metadata: { icon: string; value: string }[];
   onClick?: () => void;
 }
 
-export function ProfileSummaryCard({ avatarText, title, subtitle, metadata, onClick }: ProfileSummaryCardProps) {
+export function ProfileSummaryCard({ avatarUrl, title, subtitle, metadata, onClick }: ProfileSummaryCardProps) {
   return (
     <div 
       onClick={onClick}
       className={`bg-[var(--md-sys-color-surface-container-low)] min-h-[220px] rounded-[16px] p-6 flex flex-col gap-4 ${onClick ? 'cursor-pointer hover:bg-[var(--md-sys-color-surface-container)] transition-colors' : ''}`}
     >
       <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium shrink-0">
-          {avatarText}
+        <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[24px] font-medium shrink-0 overflow-hidden">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={title} className="w-full h-full object-cover" />
+          ) : (
+            title ? title.charAt(0).toUpperCase() : '?'
+          )}
         </div>
         <div className="flex flex-col min-w-0 flex-1">
           {/* M3 titleLarge is roughly 22px */}

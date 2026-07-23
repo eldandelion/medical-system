@@ -12,17 +12,12 @@ class DashboardService(
     private val userRepository: UserRepository
 ) {
 
-    private fun extractAvatarText(name: String?): String {
-        val trimmed = name?.trim()
-        return if (trimmed.isNullOrEmpty()) "?" else trimmed.substring(0, 1).uppercase()
-    }
-
     fun getStudentProfile(user: User): ProfileSummaryDto {
         val student = studentRepository.findById(user.id)
             .orElseThrow { RuntimeException("Student not found for user ${user.id}") }
 
         return ProfileSummaryDto(
-            avatarText = extractAvatarText(user.name),
+            avatarUrl = user.avatarUrl?.toString(),
             title = user.name,
             subtitle = "Student", 
             studentId = student.studentNumber,
@@ -36,7 +31,7 @@ class DashboardService(
             .orElseThrow { RuntimeException("Teacher not found for user ${user.id}") }
         
         return ProfileSummaryDto(
-            avatarText = extractAvatarText(user.name),
+            avatarUrl = user.avatarUrl?.toString(),
             title = user.name,
             subtitle = "Teacher",
             employeeId = user.id.toString(), // TODO: Maps to actual employee ID later if different from user ID
