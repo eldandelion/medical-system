@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ProfileSummaryCard, ProfileSummarySkeleton, ProfileSummaryError } from './DashboardComponents';
+import { ProfileSummaryCard, ProfileSummaryError } from './DashboardComponents';
 
 describe('ProfileSummaryCard', () => {
   it('renders correctly with given props and filters null metadata', () => {
@@ -34,16 +34,12 @@ describe('ProfileSummaryCard', () => {
     fireEvent.click(screen.getByText('John Doe'));
     expect(mockOnClick).toHaveBeenCalled();
   });
-});
-
-describe('ProfileSummarySkeleton', () => {
-  it('renders a shimmer loading state', () => {
-    const { container } = render(<ProfileSummarySkeleton />);
-    // Wait, the test checks the container class, but we put skeleton-wave on a child div.
-    // Let's just check the child div.
+  it('renders a shimmer loading state when isLoading is true', () => {
+    const { container } = render(<ProfileSummaryCard isLoading={true} />);
+    // Check for the skeleton wave element
     expect((container.querySelector('.skeleton-wave') as HTMLElement)).toBeTruthy();
-    // Ensure it maintains min-height
-    expect((container.firstChild as HTMLElement).className).toContain('min-h-[220px]');
+    // Ensure it has height full
+    expect((container.firstChild as HTMLElement).className).toContain('h-full');
   });
 });
 

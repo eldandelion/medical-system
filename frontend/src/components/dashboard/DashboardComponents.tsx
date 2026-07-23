@@ -4,21 +4,25 @@ import { ActivityStatusType, STATUS_CHIP_COLORS } from '../../config/dashboardCo
 // --- Profile Summary Card ---
 interface ProfileSummaryCardProps {
   avatarUrl?: string | null;
-  name: string;
-  role: string;
-  metadata: { icon: string; value: string }[];
+  name?: string;
+  role?: string;
+  metadata?: { icon: string; value: string }[];
   onClick?: () => void;
+  isLoading?: boolean;
 }
 
-export function ProfileSummaryCard({ avatarUrl, name, role, metadata, onClick }: ProfileSummaryCardProps) {
+export function ProfileSummaryCard({ avatarUrl, name, role, metadata, onClick, isLoading }: ProfileSummaryCardProps) {
   return (
     <div 
       onClick={onClick}
-      className={`bg-[var(--md-sys-color-surface-container-low)] h-full rounded-[16px] p-6 flex flex-col gap-4 ${onClick ? 'cursor-pointer hover:bg-[var(--md-sys-color-surface-container)] transition-colors' : ''}`}
+      className={`bg-[var(--md-sys-color-surface-container-low)] h-full rounded-[16px] p-6 flex flex-col gap-4 relative overflow-hidden ${onClick && !isLoading ? 'cursor-pointer hover:bg-[var(--md-sys-color-surface-container)] transition-colors' : ''}`}
     >
-      <div className="flex items-center gap-4">
+      {isLoading && <div className="absolute inset-0 skeleton-wave" />}
+      <div className="flex items-center gap-4 relative z-10">
         <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[24px] font-medium shrink-0 overflow-hidden">
-          {avatarUrl ? (
+          {isLoading ? (
+            <div className="w-full h-full bg-[var(--md-sys-color-surface-variant)] opacity-20" />
+          ) : avatarUrl ? (
             <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
           ) : (
             name ? name.charAt(0).toUpperCase() : '?'
@@ -26,43 +30,34 @@ export function ProfileSummaryCard({ avatarUrl, name, role, metadata, onClick }:
         </div>
         <div className="flex flex-col min-w-0 flex-1">
           {/* M3 titleLarge is roughly 22px */}
-          <h2 className="text-[22px] leading-[28px] font-normal text-[var(--md-sys-color-on-surface)] truncate">{name}</h2>
-          <span className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] truncate">{role}</span>
+          <h2 className="m-0 text-[22px] leading-[28px] font-normal text-[var(--md-sys-color-on-surface)] truncate">
+            {isLoading ? <div className="h-[22px] my-[3px] w-3/4 bg-[var(--md-sys-color-surface-variant)] opacity-20 rounded" /> : name}
+          </h2>
+          <span className="m-0 text-[14px] leading-[20px] text-[var(--md-sys-color-on-surface-variant)] truncate">
+            {isLoading ? <div className="h-[14px] my-[3px] w-1/2 bg-[var(--md-sys-color-surface-variant)] opacity-20 rounded" /> : role}
+          </span>
         </div>
       </div>
-      <div className="flex flex-col gap-2 mt-2">
-        {metadata.filter(item => item.value != null).map((item, idx) => (
-          <div key={idx} className="flex items-center gap-2 text-[14px] leading-[20px] text-[var(--md-sys-color-on-surface)] min-w-0">
-            <span className="material-symbols-outlined text-[18px] opacity-70 shrink-0" style={{ fontVariationSettings: "'FILL' 0" }}>{item.icon}</span>
-            <span className="text-[14px] font-normal text-[var(--md-sys-color-on-surface)] truncate">{item.value}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// --- Profile Summary Skeleton ---
-export function ProfileSummarySkeleton() {
-  return (
-    <div className="bg-[var(--md-sys-color-surface-container-low)] h-full rounded-[16px] p-6 flex flex-col gap-4 relative overflow-hidden">
-      <div className="absolute inset-0 skeleton-wave" />
-      <div className="flex items-center gap-4 relative z-10">
-        <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-surface-variant)] opacity-20 shrink-0" />
-        <div className="flex flex-col gap-2 flex-1">
-          <div className="h-6 w-3/4 bg-[var(--md-sys-color-surface-variant)] opacity-20 rounded" />
-          <div className="h-4 w-1/2 bg-[var(--md-sys-color-surface-variant)] opacity-20 rounded" />
-        </div>
-      </div>
-      <div className="flex flex-col gap-3 mt-4">
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded bg-[var(--md-sys-color-surface-variant)] opacity-20 shrink-0" />
-          <div className="h-4 w-full max-w-[200px] bg-[var(--md-sys-color-surface-variant)] opacity-20 rounded" />
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded bg-[var(--md-sys-color-surface-variant)] opacity-20 shrink-0" />
-          <div className="h-4 w-full max-w-[150px] bg-[var(--md-sys-color-surface-variant)] opacity-20 rounded" />
-        </div>
+      <div className="flex flex-col gap-2 mt-2 relative z-10">
+        {isLoading ? (
+          <>
+            <div className="flex items-center gap-2 h-[22px] text-[14px] leading-[20px] min-w-0">
+              <div className="w-[18px] h-[18px] rounded bg-[var(--md-sys-color-surface-variant)] opacity-20 shrink-0" />
+              <div className="h-[14px] w-full max-w-[200px] bg-[var(--md-sys-color-surface-variant)] opacity-20 rounded" />
+            </div>
+            <div className="flex items-center gap-2 h-[22px] text-[14px] leading-[20px] min-w-0">
+              <div className="w-[18px] h-[18px] rounded bg-[var(--md-sys-color-surface-variant)] opacity-20 shrink-0" />
+              <div className="h-[14px] w-full max-w-[150px] bg-[var(--md-sys-color-surface-variant)] opacity-20 rounded" />
+            </div>
+          </>
+        ) : (
+          metadata?.filter(item => item.value != null).map((item, idx) => (
+            <div key={idx} className="flex items-center gap-2 h-[22px] text-[14px] leading-[20px] text-[var(--md-sys-color-on-surface)] min-w-0">
+              <span className="material-symbols-outlined text-[18px] opacity-70 shrink-0" style={{ fontVariationSettings: "'FILL' 0" }}>{item.icon}</span>
+              <span className="text-[14px] font-normal text-[var(--md-sys-color-on-surface)] truncate">{item.value}</span>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
@@ -73,9 +68,9 @@ export function ProfileSummaryError({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="bg-[var(--md-sys-color-surface-container-low)] h-full rounded-[16px] p-6 flex flex-col items-center justify-center gap-4 text-center">
       <span className="material-symbols-outlined text-[48px] text-[var(--md-sys-color-error)] opacity-80">error_outline</span>
-      <div className="flex flex-col gap-1">
-        <h3 className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)]">加载个人资料失败</h3>
-        <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)]">请检查您的网络连接并重试</p>
+      <div className="flex flex-col items-center">
+        <h3 className="m-0 mb-1 text-[16px] font-medium text-[var(--md-sys-color-on-surface)]">加载个人资料失败</h3>
+        <p className="m-0 text-[14px] text-[var(--md-sys-color-on-surface-variant)]">请检查您的网络连接并重试</p>
       </div>
       <button 
         onClick={onRetry}

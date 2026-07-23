@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ProfileSummaryCard, ProfileSummarySkeleton, ProfileSummaryError, ActionMetricWidget, InteractiveStatusList } from './DashboardComponents';
+import { ProfileSummaryCard, ProfileSummaryError, ActionMetricWidget, InteractiveStatusList } from './DashboardComponents';
 import { ActivityStatusType } from '../../config/dashboardConfig';
 
 export interface ProfileSummary {
@@ -56,17 +56,16 @@ export function DashboardView({
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 pb-12">
         {/* Profile Card Widget */}
         <div className="md:col-span-4 flex flex-col h-full">
-          {isProfileLoading ? (
-            <ProfileSummarySkeleton />
-          ) : isProfileError ? (
+          {isProfileError ? (
             <ProfileSummaryError onRetry={onProfileRetry || (() => {})} />
-          ) : profileSummary ? (
+          ) : (profileSummary || isProfileLoading) ? (
             <ProfileSummaryCard
-              avatarUrl={profileSummary.avatarUrl}
-              name={profileSummary.name}
-              role={profileSummary.role}
-              metadata={profileSummary.metadata}
-              onClick={onProfileClick || profileSummary.onClick}
+              isLoading={isProfileLoading}
+              avatarUrl={profileSummary?.avatarUrl}
+              name={profileSummary?.name}
+              role={profileSummary?.role}
+              metadata={profileSummary?.metadata}
+              onClick={onProfileClick || profileSummary?.onClick}
             />
           ) : null}
         </div>
