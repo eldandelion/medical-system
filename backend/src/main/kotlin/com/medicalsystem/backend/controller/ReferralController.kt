@@ -52,8 +52,8 @@ class ReferralController(
         @Valid @RequestBody dto: com.medicalsystem.backend.dto.ApproveReferralDto,
         @CurrentUser user: User?
     ): ReferralDto {
-        if (user == null) throw ForbiddenException("Authorized user not found")
-        return referralService.approveReferral(id, dto, user)
+        val currentUser = user ?: throw ForbiddenException("Authorized user not found")
+        return referralService.approveReferral(id, dto, currentUser)
     }
 
     @PostMapping("/{id}/reject")

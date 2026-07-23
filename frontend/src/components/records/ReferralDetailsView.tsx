@@ -323,7 +323,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
         title="确认撤回申请？"
         actions={
           <>
-            <SecondaryButton label="取消" onClick={() => state.setIsRecallDialogOpen(false)} />
+            <TertiaryButton label="取消" onClick={() => state.setIsRecallDialogOpen(false)} />
             <TertiaryButton label="确认撤回" onClick={actions.handleRecall} disabled={!!state.actionError} />
           </>
         }

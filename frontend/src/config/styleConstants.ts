@@ -12,8 +12,11 @@ export const RISK_LEVEL_LABELS: Record<string, string> = {
 
 export const STATUS_STYLES: Record<string, string> = {
   APPROVED: 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]',
+  AWAITING_APPROVAL: 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]',
   AWAITING_REVIEW: 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]',
   AWAITING_TRIAGE: 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]',
+  NEEDS_REASSIGNMENT: 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]',
+  ERROR: 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]',
   PENDING: 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]',
   CLOSED: 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]',
   DRAFT: 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]',
@@ -27,8 +30,11 @@ export const STATUS_STYLES: Record<string, string> = {
 
 export const STATUS_LABELS: Record<string, string> = {
   APPROVED: '已批准',
-  AWAITING_REVIEW: '待审批',
+  AWAITING_APPROVAL: '待审批',
+  AWAITING_REVIEW: '待评估',
   AWAITING_TRIAGE: '待分配',
+  NEEDS_REASSIGNMENT: '待重新分配',
+  ERROR: '异常',
   PENDING: '进行中',
   CLOSED: '已结案',
   DRAFT: '草案',
