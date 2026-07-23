@@ -113,8 +113,7 @@ export function StudentPage() {
                 role: roleTranslations[profileSummaryData.role] || profileSummaryData.role,
                 metadata: [
                   { icon: "badge", value: profileSummaryData.studentId || "" },
-                  { icon: "school", value: profileSummaryData.school || "" },
-                  { icon: "domain", value: profileSummaryData.department || "" }
+                  { icon: "school", value: profileSummaryData.school || "" }
                 ]
               } : undefined}
               actionMetrics={STUDENT_METRICS_CONFIG.map((metric) => ({

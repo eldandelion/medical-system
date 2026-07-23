@@ -14,7 +14,7 @@ export function ProfileSummaryCard({ avatarUrl, name, role, metadata, onClick }:
   return (
     <div 
       onClick={onClick}
-      className={`bg-[var(--md-sys-color-surface-container-low)] min-h-[220px] rounded-[16px] p-6 flex flex-col gap-4 ${onClick ? 'cursor-pointer hover:bg-[var(--md-sys-color-surface-container)] transition-colors' : ''}`}
+      className={`bg-[var(--md-sys-color-surface-container-low)] h-full rounded-[16px] p-6 flex flex-col gap-4 ${onClick ? 'cursor-pointer hover:bg-[var(--md-sys-color-surface-container)] transition-colors' : ''}`}
     >
       <div className="flex items-center gap-4">
         <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[24px] font-medium shrink-0 overflow-hidden">
@@ -45,7 +45,7 @@ export function ProfileSummaryCard({ avatarUrl, name, role, metadata, onClick }:
 // --- Profile Summary Skeleton ---
 export function ProfileSummarySkeleton() {
   return (
-    <div className="bg-[var(--md-sys-color-surface-container-low)] min-h-[220px] rounded-[16px] p-6 flex flex-col gap-4 relative overflow-hidden">
+    <div className="bg-[var(--md-sys-color-surface-container-low)] h-full rounded-[16px] p-6 flex flex-col gap-4 relative overflow-hidden">
       <div className="absolute inset-0 skeleton-wave" />
       <div className="flex items-center gap-4 relative z-10">
         <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-surface-variant)] opacity-20 shrink-0" />
@@ -71,7 +71,7 @@ export function ProfileSummarySkeleton() {
 // --- Profile Summary Error ---
 export function ProfileSummaryError({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="bg-[var(--md-sys-color-surface-container-low)] min-h-[220px] rounded-[16px] p-6 flex flex-col items-center justify-center gap-4 text-center">
+    <div className="bg-[var(--md-sys-color-surface-container-low)] h-full rounded-[16px] p-6 flex flex-col items-center justify-center gap-4 text-center">
       <span className="material-symbols-outlined text-[48px] text-[var(--md-sys-color-error)] opacity-80">error_outline</span>
       <div className="flex flex-col gap-1">
         <h3 className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)]">加载个人资料失败</h3>
