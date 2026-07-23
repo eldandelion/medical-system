@@ -4,7 +4,7 @@ export interface DashboardData {
   profileSummary: {
     avatarUrl: string | null;
     name: string;
-    subname: string;
+    role: string;
     school?: string;
     employeeId?: string;
     department?: string;
@@ -27,7 +27,7 @@ export const mockDashboardDb: Record<string, DashboardData> = {
     profileSummary: {
       avatarUrl: null,
       name: "达尼尔·彼得罗夫",
-      subname: "中南大学学生",
+      role: "STUDENT",
       studentId: "987654321",
       school: "计算机科学与工程学院"
     },
@@ -64,7 +64,7 @@ export const mockDashboardDb: Record<string, DashboardData> = {
     profileSummary: {
       avatarUrl: null,
       name: "艾米丽·沃森博士",
-      subname: "教研人员",
+      role: "TEACHER",
       employeeId: "T-88291",
       department: "心理学系"
     },
@@ -94,7 +94,7 @@ export const mockDashboardDb: Record<string, DashboardData> = {
     profileSummary: {
       avatarUrl: null,
       name: "张明诚",
-      subname: "主任辅导员",
+      role: "HEAD_COUNSELLOR",
       employeeId: "HC-1001",
       department: "咨询中心"
     },
@@ -124,7 +124,7 @@ export const mockDashboardDb: Record<string, DashboardData> = {
     profileSummary: {
       avatarUrl: null,
       name: "赵敏",
-      subname: "初试管理员",
+      role: "TRIAL_ADMIN",
       employeeId: "TA-9009",
       accessLevel: "限制访问"
     },
@@ -154,7 +154,7 @@ export const mockDashboardDb: Record<string, DashboardData> = {
     profileSummary: {
       avatarUrl: null,
       name: "李医生",
-      subname: "精神科主治医师",
+      role: "DOCTOR",
       employeeId: "DR-5005",
       accessLevel: "医生权限",
       doctorId: 1
