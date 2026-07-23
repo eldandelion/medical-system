@@ -3,6 +3,8 @@ package com.medicalsystem.backend.entity
 import jakarta.persistence.*
 import com.medicalsystem.backend.model.UserRole
 
+import com.medicalsystem.backend.model.EmailAddress
+
 @Entity
 @Table(name = "users")
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -16,6 +18,6 @@ abstract class UserEntity(
     @Column(nullable = false)
     var role: UserRole,
 
-    @Column(length = 100)
-    var email: String? = null
+    @Column(length = 100, nullable = false, unique = true)
+    var email: EmailAddress
 )

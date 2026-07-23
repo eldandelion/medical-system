@@ -3,12 +3,14 @@ package com.medicalsystem.backend.config
 import com.medicalsystem.backend.dto.StudentDto
 import com.medicalsystem.backend.entity.*
 import com.medicalsystem.backend.model.*
+import com.medicalsystem.backend.model.*
 import com.medicalsystem.backend.repository.*
 import com.medicalsystem.backend.service.StudentService
 import com.medicalsystem.backend.entity.ReferralDestinationEntity
 import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.jdbc.core.JdbcTemplate
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -28,7 +30,8 @@ class DataInitializer {
         hospitalRepository: HospitalRepository,
         departmentRepository: DepartmentRepository,
         doctorRepository: DoctorRepository,
-        studentHealthProfileRepository: StudentHealthProfileJpaRepository
+        studentHealthProfileRepository: StudentHealthProfileJpaRepository,
+        jdbcTemplate: JdbcTemplate
     ) = CommandLineRunner {
         referralRepository.deleteAll()
         studentHealthProfileRepository.deleteAll()
@@ -41,6 +44,19 @@ class DataInitializer {
         collegeRepository.deleteAll()
         ethnicityRepository.deleteAll()
         schoolRepository.deleteAll()
+
+        try {
+            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0")
+            val tables = jdbcTemplate.queryForList("SHOW TABLES", String::class.java)
+            tables.forEach { table ->
+                jdbcTemplate.execute("ALTER TABLE $table AUTO_INCREMENT = 1")
+            }
+            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1")
+        } catch (e: Exception) {
+            // H2 doesn't support these MySQL commands, but since H2 is freshly created for tests, 
+            // auto-increment naturally starts at 1, so we can safely ignore the error.
+            println("Skipping auto-increment reset: ${e.message}")
+        }
 
         val medCollege = collegeRepository.save(CollegeEntity(name = "医学院"))
         val csCollege = collegeRepository.save(CollegeEntity(name = "计算机学院"))
@@ -91,17 +107,21 @@ class DataInitializer {
         hp3.psychometricTests.add(pt6)
         studentHealthProfileRepository.save(hp3)
 
-        val hosp = hospitalRepository.save(HospitalEntity(name = "市精神卫生中心", address = "市中心大道1号", contactPhone = "021-12345678"))
-        val dept = departmentRepository.save(DepartmentEntity(name = "临床心理科", hospital = hosp))
-        val doc = doctorRepository.save(DoctorEntity(name = "王建国", department = dept, phone = "13912345678", email = "wang@hospital.com"))
-        val triageAdmin = userRepository.save(TrialAdminEntity(name = "张老师", email = "zhang@univ.edu.cn", hospital = hosp))
-        val referrer = userRepository.save(TeacherEntity(name = "艾米丽·沃森", email = "emily@univ.edu.cn", college = medCollege))
-        val headCounsellor = userRepository.save(HeadCounsellorEntity(name = "李主任", email = "head@univ.edu.cn"))
+        val hosp = hospitalRepository.save(HospitalEntity(name = "校医院"))
+        val medDept = departmentRepository.save(DepartmentEntity(name = "内科", hospital = hosp))
+        val psychDept = departmentRepository.save(DepartmentEntity(name = "心理咨询科", hospital = hosp))
+
+        val studentUser = userRepository.save(StudentUserEntity(name = "李明", email = EmailAddress("liming@univ.edu.cn")))
+        val triageAdmin = userRepository.save(TrialAdminEntity(name = "张老师", email = EmailAddress("zhang@univ.edu.cn"), hospital = hosp))
+        val referrer = userRepository.save(TeacherEntity(name = "艾米丽·沃森", email = EmailAddress("emily@univ.edu.cn"), college = medCollege))
+        val doctor = userRepository.save(DoctorEntity(name = "李医生", email = EmailAddress("li@univ.edu.cn"), department = medDept))
+        val doctorWang = userRepository.save(DoctorEntity(name = "王医生", email = EmailAddress("wang@univ.edu.cn"), department = psychDept))
+        val headCounsellor = userRepository.save(HeadCounsellorEntity(name = "王主任", email = EmailAddress("wang_head@univ.edu.cn")))
 
         val dest = ReferralDestinationEntity(
             hospital = hosp,
-            department = dept,
-            doctor = doc,
+            department = medDept,
+            doctor = doctor,
             triageAdmin = triageAdmin,
             transferDate = LocalDate.now().plusDays(2)
         )

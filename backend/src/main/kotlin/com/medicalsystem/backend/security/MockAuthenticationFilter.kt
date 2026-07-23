@@ -48,7 +48,7 @@ class MockAuthenticationFilter(
                 ?: Doctor(id = 997L, name = "Mock Doctor", email = EmailAddress("doctor@univ.edu.cn"), departmentId = 1L, phone = null)
         } else if (token.contains("student")) {
             userRepository.findAll().firstOrNull { it.role == UserRole.STUDENT }
-                ?: StudentUser(id = 5L, name = "Mock Student", email = EmailAddress("student@univ.edu.cn"))
+                ?: StudentUser(id = 1L, name = "Mock Student", email = EmailAddress("student@univ.edu.cn"))
         } else {
             userRepository.findAll().firstOrNull()
         }

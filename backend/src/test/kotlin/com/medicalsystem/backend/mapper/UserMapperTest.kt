@@ -16,7 +16,7 @@ class UserMapperTest {
         val entity = DoctorEntity(
             id = 1L,
             name = "Dr. Smith",
-            email = "smith@hospital.com",
+            email = EmailAddress("smith@hospital.com"),
             department = department,
             phone = "123-456-7890"
         )
@@ -27,7 +27,7 @@ class UserMapperTest {
         val doctor = model as Doctor
         assertEquals(1L, doctor.id)
         assertEquals("Dr. Smith", doctor.name)
-        assertEquals("smith@hospital.com", doctor.email?.value)
+        assertEquals("smith@hospital.com", doctor.email.value)
         assertEquals(10L, doctor.departmentId)
         assertEquals("123-456-7890", doctor.phone?.value)
         assertEquals(UserRole.DOCTOR, doctor.role)
@@ -49,7 +49,7 @@ class UserMapperTest {
         val doctorEntity = entity as DoctorEntity
         assertEquals(1L, doctorEntity.id)
         assertEquals("Dr. Smith", doctorEntity.name)
-        assertEquals("smith@hospital.com", doctorEntity.email)
+        assertEquals(EmailAddress("smith@hospital.com"), doctorEntity.email)
         assertEquals("123-456-7890", doctorEntity.phone)
         assertNull(doctorEntity.department)
     }
@@ -60,7 +60,7 @@ class UserMapperTest {
         val entity = TeacherEntity(
             id = 2L,
             name = "Prof. Doe",
-            email = "doe@college.edu",
+            email = EmailAddress("doe@college.edu"),
             college = college
         )
 
@@ -70,7 +70,7 @@ class UserMapperTest {
         val teacher = model as Teacher
         assertEquals(2L, teacher.id)
         assertEquals("Prof. Doe", teacher.name)
-        assertEquals("doe@college.edu", teacher.email?.value)
+        assertEquals("doe@college.edu", teacher.email.value)
         assertEquals(20L, teacher.collegeId)
         assertEquals(UserRole.TEACHER, teacher.role)
     }
@@ -90,7 +90,7 @@ class UserMapperTest {
         val teacherEntity = entity as TeacherEntity
         assertEquals(2L, teacherEntity.id)
         assertEquals("Prof. Doe", teacherEntity.name)
-        assertEquals("doe@college.edu", teacherEntity.email)
+        assertEquals(EmailAddress("doe@college.edu"), teacherEntity.email)
         assertNull(teacherEntity.college)
     }
 }

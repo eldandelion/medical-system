@@ -2,6 +2,7 @@ package com.medicalsystem.backend.entity
 
 import jakarta.persistence.*
 import com.medicalsystem.backend.model.UserRole
+import com.medicalsystem.backend.model.EmailAddress
 
 @Entity
 @Table(name = "trial_admins")
@@ -9,7 +10,7 @@ import com.medicalsystem.backend.model.UserRole
 class TrialAdminEntity(
     id: Long = 0,
     name: String,
-    email: String? = null,
+    email: EmailAddress,
     
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hospital_id", unique = true)

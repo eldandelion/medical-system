@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.transaction.annotation.Transactional
+import com.medicalsystem.backend.model.EmailAddress
 import jakarta.persistence.EntityManager
 
 @SpringBootTest
@@ -25,7 +26,7 @@ class TrialAdminEntityTest {
 
         val trialAdmin = TrialAdminEntity(
             name = "Test Admin",
-            email = "admin@test.com",
+            email = EmailAddress("admin@test.com"),
             hospital = hospital
         )
         entityManager.persist(trialAdmin)
@@ -45,7 +46,7 @@ class TrialAdminEntityTest {
 
         val trialAdmin1 = TrialAdminEntity(
             name = "Test Admin 1",
-            email = "admin1@test.com",
+            email = EmailAddress("admin1@test.com"),
             hospital = hospital
         )
         entityManager.persist(trialAdmin1)
@@ -53,7 +54,7 @@ class TrialAdminEntityTest {
 
         val trialAdmin2 = TrialAdminEntity(
             name = "Test Admin 2",
-            email = "admin2@test.com",
+            email = EmailAddress("admin2@test.com"),
             hospital = hospital
         )
         
