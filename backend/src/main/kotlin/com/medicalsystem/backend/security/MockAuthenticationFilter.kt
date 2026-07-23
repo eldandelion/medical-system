@@ -11,8 +11,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class MockAuthenticationFilter(
-    private val userRepository: UserRepository,
-    private val studentRepository: com.medicalsystem.backend.repository.StudentRepository
+    private val userRepository: UserRepository
 ) : Filter {
 
     override fun doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain) {
@@ -49,11 +48,7 @@ class MockAuthenticationFilter(
                 ?: Doctor(id = 997L, name = "Mock Doctor", email = EmailAddress("doctor@univ.edu.cn"), departmentId = 1L, phone = null)
         } else if (token.contains("student")) {
             userRepository.findAll().firstOrNull { it.role == UserRole.STUDENT }
-                ?: StudentUser(
-                    id = studentRepository.findAll().firstOrNull()?.id ?: 1L,
-                    name = studentRepository.findAll().firstOrNull()?.name ?: "Mock Student",
-                    email = EmailAddress("student@univ.edu.cn")
-                )
+                ?: StudentUser(id = 5L, name = "Mock Student", email = EmailAddress("student@univ.edu.cn"))
         } else {
             userRepository.findAll().firstOrNull()
         }
