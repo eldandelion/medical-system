@@ -57,7 +57,7 @@ class CurrentUserArgumentResolverTest {
         val method = TestController::class.java.getMethod("testMethod", User::class.java)
         val parameter = MethodParameter(method, 0)
         
-        val mockUser = Teacher(id = 1L, name = "Test Teacher", email = EmailAddress("teacher@univ.edu.cn"), collegeId = 10L)
+        val mockUser = Teacher(id = 1L, name = "Test Teacher", email = EmailAddress("teacher@univ.edu.cn"), employeeNumber = com.medicalsystem.backend.model.SchoolEmployeeId("EMP-123"), collegeId = 10L)
         MockSecurityContextHolder.getContext().user = mockUser
         
         val result = resolver.resolveArgument(

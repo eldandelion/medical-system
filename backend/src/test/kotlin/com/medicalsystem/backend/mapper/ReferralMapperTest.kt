@@ -46,6 +46,7 @@ class ReferralMapperTest {
             id = 200L,
             name = "Jane Smith",
             email = EmailAddress("jane@example.com"),
+            employeeNumber = com.medicalsystem.backend.model.SchoolEmployeeId("EMP-123"),
             collegeId = 1L
         )
 
@@ -94,6 +95,7 @@ class ReferralMapperTest {
             id = 200L,
             name = "Jane Smith",
             email = EmailAddress("jane@example.com"),
+            employeeNumber = com.medicalsystem.backend.model.SchoolEmployeeId("EMP-123"),
             collegeId = 1L
         )
 

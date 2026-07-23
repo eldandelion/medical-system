@@ -8,7 +8,7 @@ class ReferralVisibilityPolicyTest {
     private fun createUser(role: UserRole, id: Long = 1L): User {
         return when (role) {
             UserRole.DOCTOR -> Doctor(id, "Test User", com.medicalsystem.backend.model.EmailAddress("test@test.com"), null, 1L, null)
-            UserRole.TEACHER -> Teacher(id, "Test User", com.medicalsystem.backend.model.EmailAddress("test@test.com"), null, null)
+            UserRole.TEACHER -> Teacher(id, "Test User", com.medicalsystem.backend.model.EmailAddress("test@test.com"), null, SchoolEmployeeId("EMP-123"), 1L)
             UserRole.HEAD_COUNSELLOR -> HeadCounsellor(id, "Test User", com.medicalsystem.backend.model.EmailAddress("test@test.com"))
             UserRole.TRIAL_ADMIN -> TrialAdmin(id, "Test User", com.medicalsystem.backend.model.EmailAddress("test@test.com"))
             UserRole.STUDENT -> StudentUser(id, "Test User", com.medicalsystem.backend.model.EmailAddress("test@test.com"))

@@ -21,7 +21,8 @@ class UserMapper {
                 id = entity.id,
                 name = entity.name,
                 email = entity.email,
-                collegeId = entity.college?.id
+                collegeId = entity.college.id!!,
+                employeeNumber = SchoolEmployeeId(entity.employeeNumber)
             )
             is HeadCounsellorEntity -> HeadCounsellor(
                 id = entity.id,
@@ -54,7 +55,9 @@ class UserMapper {
             is Teacher -> TeacherEntity(
                 id = model.id,
                 name = model.name,
-                email = model.email
+                email = model.email,
+                employeeNumber = model.employeeNumber.value,
+                college = CollegeEntity(id = model.collegeId, name = "")
             )
             is HeadCounsellor -> HeadCounsellorEntity(
                 id = model.id,

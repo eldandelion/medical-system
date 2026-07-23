@@ -35,3 +35,12 @@ value class IdCardNumber(val value: String) {
         }
     }
 }
+
+@JvmInline
+value class SchoolEmployeeId(val value: String) {
+    init {
+        require(value.matches(Regex("^[A-Za-z0-9-]{5,20}$"))) {
+            "Invalid School Employee ID format."
+        }
+    }
+}

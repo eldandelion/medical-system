@@ -145,7 +145,7 @@ class ReferralServiceTest {
 
     @Test
     fun `recallReferral transitions status to RECALLED when user is authorized`() {
-        val teacher = Teacher(id = 3L, name = "Teacher", email = com.medicalsystem.backend.model.EmailAddress("teacher@univ.edu.cn"), collegeId = 1L)
+        val teacher = Teacher(id = 3L, name = "Teacher", email = com.medicalsystem.backend.model.EmailAddress("teacher@univ.edu.cn"), employeeNumber = com.medicalsystem.backend.model.SchoolEmployeeId("EMP-123"), collegeId = 1L)
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
         referral.submit(com.medicalsystem.backend.model.UserRole.TEACHER, 3L)
         
@@ -165,7 +165,7 @@ class ReferralServiceTest {
 
     @Test
     fun `recallReferral throws ValidationException when user is not authorized`() {
-        val otherTeacher = Teacher(id = 99L, name = "Other", email = com.medicalsystem.backend.model.EmailAddress("other@univ.edu.cn"), collegeId = 1L)
+        val otherTeacher = Teacher(id = 99L, name = "Other", email = com.medicalsystem.backend.model.EmailAddress("other@univ.edu.cn"), employeeNumber = com.medicalsystem.backend.model.SchoolEmployeeId("EMP-123"), collegeId = 1L)
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
         referral.submit(com.medicalsystem.backend.model.UserRole.TEACHER, 3L)
         

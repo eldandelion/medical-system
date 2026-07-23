@@ -90,7 +90,7 @@ class ReferralControllerTest {
             availableActions = emptyList()
         )
         
-        val mockUser: User = com.medicalsystem.backend.model.Teacher(id = 1L, name = "Teacher", email = EmailAddress("teacher@univ.edu.cn"), collegeId = 1L)
+        val mockUser: User = com.medicalsystem.backend.model.Teacher(id = 1L, name = "Teacher", email = EmailAddress("teacher@univ.edu.cn"), employeeNumber = com.medicalsystem.backend.model.SchoolEmployeeId("EMP-123"), collegeId = 1L)
         `when`(referralService.recallReferral(1L, mockUser)).thenReturn(referralDto)
 
         val result = referralController.recallReferral(1L, mockUser)

@@ -61,6 +61,7 @@ class UserMapperTest {
             id = 2L,
             name = "Prof. Doe",
             email = EmailAddress("doe@college.edu"),
+            employeeNumber = "EMP-123",
             college = college
         )
 
@@ -81,6 +82,7 @@ class UserMapperTest {
             id = 2L,
             name = "Prof. Doe",
             email = EmailAddress("doe@college.edu"),
+            employeeNumber = SchoolEmployeeId("EMP-123"),
             collegeId = 20L
         )
 
@@ -91,6 +93,8 @@ class UserMapperTest {
         assertEquals(2L, teacherEntity.id)
         assertEquals("Prof. Doe", teacherEntity.name)
         assertEquals(EmailAddress("doe@college.edu"), teacherEntity.email)
-        assertNull(teacherEntity.college)
+        assertEquals("EMP-123", teacherEntity.employeeNumber)
+        assertNotNull(teacherEntity.college)
+        assertEquals(20L, teacherEntity.college.id)
     }
 }

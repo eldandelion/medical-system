@@ -45,7 +45,7 @@ class UserRepositoryAdapter(
         
         when (user) {
             is Doctor -> (entity as DoctorEntity).department = entityManager.getReference(DepartmentEntity::class.java, user.departmentId)
-            is Teacher -> user.collegeId?.let { (entity as TeacherEntity).college = entityManager.getReference(CollegeEntity::class.java, it) }
+            is Teacher -> (entity as TeacherEntity).college = entityManager.getReference(CollegeEntity::class.java, user.collegeId)
             is TrialAdmin -> user.hospitalId?.let { (entity as TrialAdminEntity).hospital = entityManager.getReference(HospitalEntity::class.java, it) }
             else -> {} // Other user types do not have relationships to map here
         }

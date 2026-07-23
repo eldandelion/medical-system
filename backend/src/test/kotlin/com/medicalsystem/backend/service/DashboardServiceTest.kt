@@ -3,6 +3,7 @@ package com.medicalsystem.backend.service
 import com.medicalsystem.backend.model.*
 import com.medicalsystem.backend.repository.StudentRepository
 import com.medicalsystem.backend.repository.UserRepository
+import com.medicalsystem.backend.repository.CollegeRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -22,6 +23,9 @@ class DashboardServiceTest {
 
     @Mock
     private lateinit var userRepository: UserRepository
+
+    @Mock
+    private lateinit var collegeRepository: CollegeRepository
 
     @InjectMocks
     private lateinit var dashboardService: DashboardService
@@ -55,18 +59,19 @@ class DashboardServiceTest {
 
     @Test
     fun `getTeacherProfile maps domain model to dto correctly`() {
-        val mockUser = Teacher(id = 2L, name = "Jane Smith", email = EmailAddress("jane@univ.edu.cn"), collegeId = 50L)
-        val teacherUser = Teacher(id = 2L, name = "Jane Smith", email = EmailAddress("jane@univ.edu.cn"), collegeId = 50L)
+        val mockUser = Teacher(id = 2L, name = "Jane Smith", email = EmailAddress("jane@univ.edu.cn"), employeeNumber = SchoolEmployeeId("EMP-123"), collegeId = 50L)
+        val teacherUser = Teacher(id = 2L, name = "Jane Smith", email = EmailAddress("jane@univ.edu.cn"), employeeNumber = SchoolEmployeeId("EMP-123"), collegeId = 50L)
+        val college = College(id = 50L, name = "Science")
 
         `when`(userRepository.findById(2L)).thenReturn(Optional.of(teacherUser))
+        `when`(collegeRepository.findById(50L)).thenReturn(Optional.of(college))
 
         val result = dashboardService.getTeacherProfile(mockUser)
 
         assertNull(result.avatarUrl)
         assertEquals("Jane Smith", result.name)
         assertEquals(com.medicalsystem.backend.model.UserRole.TEACHER, result.role)
-        assertEquals("2", result.employeeId)
-        // department is currently hardcoded to null in our service stub
-        assertEquals(null, result.department)
+        assertEquals("EMP-123", result.employeeId)
+        assertEquals("Science", result.department)
     }
 }

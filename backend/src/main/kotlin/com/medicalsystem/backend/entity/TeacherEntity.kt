@@ -13,8 +13,11 @@ class TeacherEntity(
     name: String,
     email: EmailAddress,
 
+    @Column(nullable = false)
+    var employeeNumber: String,
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "college_id")
-    var college: CollegeEntity? = null
+    @JoinColumn(name = "college_id", nullable = false)
+    var college: CollegeEntity
 
 ) : UserEntity(id = id, name = name, role = UserRole.TEACHER, email = email)

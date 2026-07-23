@@ -24,7 +24,8 @@ data class Teacher(
     override val name: String,
     override val email: EmailAddress,
     override val avatarUrl: URI? = null,
-    val collegeId: Long?
+    val employeeNumber: SchoolEmployeeId,
+    val collegeId: Long
 ) : User(id, name, email, avatarUrl, UserRole.TEACHER)
 
 data class HeadCounsellor(

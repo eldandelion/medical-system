@@ -113,7 +113,7 @@ class DataInitializer {
 
         val studentUser = userRepository.save(StudentUserEntity(name = "李明", email = EmailAddress("liming@univ.edu.cn")))
         val triageAdmin = userRepository.save(TrialAdminEntity(name = "张老师", email = EmailAddress("zhang@univ.edu.cn"), hospital = hosp))
-        val referrer = userRepository.save(TeacherEntity(name = "艾米丽·沃森", email = EmailAddress("emily@univ.edu.cn"), college = medCollege))
+        val referrer = userRepository.save(TeacherEntity(name = "艾米丽·沃森", email = EmailAddress("emily@univ.edu.cn"), employeeNumber = "EMP-00001", college = medCollege))
         val doctor = userRepository.save(DoctorEntity(name = "李医生", email = EmailAddress("li@univ.edu.cn"), department = medDept))
         val doctorWang = userRepository.save(DoctorEntity(name = "王医生", email = EmailAddress("wang@univ.edu.cn"), department = psychDept))
         val headCounsellor = userRepository.save(HeadCounsellorEntity(name = "王主任", email = EmailAddress("wang_head@univ.edu.cn")))
