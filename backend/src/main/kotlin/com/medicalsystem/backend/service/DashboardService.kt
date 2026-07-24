@@ -3,7 +3,9 @@ package com.medicalsystem.backend.service
 import com.medicalsystem.backend.dto.ProfileSummaryDto
 import com.medicalsystem.backend.model.User
 import com.medicalsystem.backend.model.Teacher
+import com.medicalsystem.backend.model.TrialAdmin
 import com.medicalsystem.backend.repository.CollegeRepository
+import com.medicalsystem.backend.repository.HospitalRepository
 import com.medicalsystem.backend.repository.StudentRepository
 import com.medicalsystem.backend.repository.UserRepository
 import org.springframework.stereotype.Service
@@ -12,7 +14,8 @@ import org.springframework.stereotype.Service
 class DashboardService(
     private val studentRepository: StudentRepository,
     private val userRepository: UserRepository,
-    private val collegeRepository: CollegeRepository
+    private val collegeRepository: CollegeRepository,
+    private val hospitalRepository: HospitalRepository
 ) {
 
     fun getStudentProfile(user: User): ProfileSummaryDto {
@@ -56,6 +59,22 @@ class DashboardService(
             employeeId = "HC-${headCounsellor.id}",
             // TODO: Add actual department mapping to HeadCounsellor entity
             department = "咨询中心"
+        )
+    }
+
+    fun getTrialAdminProfile(user: User): ProfileSummaryDto {
+        val trialAdmin = userRepository.findById(user.id)
+            .orElseThrow { RuntimeException("Trial Admin not found for user ${user.id}") } as TrialAdmin
+        
+        val hospitalName = hospitalRepository.findById(trialAdmin.hospitalId).orElse(null)?.name
+            ?: "未分配医院"
+
+        return ProfileSummaryDto(
+            avatarUrl = user.avatarUrl?.toString(),
+            name = user.name,
+            role = user.role,
+            employeeId = trialAdmin.employeeNumber.value,
+            hospital = hospitalName
         )
     }
 }

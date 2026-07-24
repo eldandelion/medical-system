@@ -54,7 +54,7 @@ class ReferralServiceTest {
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
         referral.submit(com.medicalsystem.backend.model.UserRole.TEACHER, 3L)
         
-        val trialAdmin = TrialAdmin(id = 2L, name = "Admin", email = com.medicalsystem.backend.model.EmailAddress("admin@univ.edu.cn"), hospitalId = 123L)
+        val trialAdmin = TrialAdmin(id = 2L, name = "Admin", email = com.medicalsystem.backend.model.EmailAddress("admin@univ.edu.cn"), employeeNumber = com.medicalsystem.backend.model.HospitalEmployeeId("HOSP-001"), hospitalId = 123L)
         
         `when`(userRepository.findAll()).thenReturn(listOf(councillor, trialAdmin))
         `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
@@ -84,7 +84,7 @@ class ReferralServiceTest {
 
     @Test
     fun `assignDoctor transitions status to WAITING_FOR_SCHEDULING and sets destination`() {
-        val admin = TrialAdmin(id = 1L, name = "Admin", email = com.medicalsystem.backend.model.EmailAddress("admin@univ.edu.cn"))
+        val admin = TrialAdmin(id = 1L, name = "Admin", email = com.medicalsystem.backend.model.EmailAddress("admin@univ.edu.cn"), employeeNumber = com.medicalsystem.backend.model.HospitalEmployeeId("HOSP-001"), hospitalId = 1L)
         val doctor = Doctor(id = 2L, name = "Dr. Smith", email = com.medicalsystem.backend.model.EmailAddress("doc@univ.edu.cn"), departmentId = 1L, phone = null)
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
         referral.submit(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, 1L)
@@ -104,7 +104,7 @@ class ReferralServiceTest {
 
     @Test
     fun `rejectReferral transitions status to REJECTED`() {
-        val admin = TrialAdmin(id = 1L, name = "Admin", email = com.medicalsystem.backend.model.EmailAddress("admin@univ.edu.cn"))
+        val admin = TrialAdmin(id = 1L, name = "Admin", email = com.medicalsystem.backend.model.EmailAddress("admin@univ.edu.cn"), employeeNumber = com.medicalsystem.backend.model.HospitalEmployeeId("HOSP-001"), hospitalId = 1L)
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
         referral.submit(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, 1L)
         referral.approve(com.medicalsystem.backend.model.HospitalId(1L), 1L)

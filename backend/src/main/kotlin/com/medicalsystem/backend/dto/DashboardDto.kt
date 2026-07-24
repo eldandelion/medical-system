@@ -9,5 +9,6 @@ data class ProfileSummaryDto(
     val studentId: String? = null,
     val employeeId: String? = null,
     val school: String? = null,
-    val department: String? = null
+    val department: String? = null,
+    val hospital: String? = null
 )

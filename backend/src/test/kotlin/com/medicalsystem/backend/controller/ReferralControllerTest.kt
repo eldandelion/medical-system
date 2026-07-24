@@ -65,7 +65,7 @@ class ReferralControllerTest {
             availableActions = emptyList()
         )
         
-        val mockUser: User = TrialAdmin(id = 1L, name = "Admin", email = EmailAddress("admin@univ.edu.cn"))
+        val mockUser: User = TrialAdmin(id = 1L, name = "Admin", email = EmailAddress("admin@univ.edu.cn"), employeeNumber = com.medicalsystem.backend.model.HospitalEmployeeId("HOSP-001"), hospitalId = 1L)
         `when`(referralService.scheduleAppointment(1L, dto, mockUser)).thenReturn(referralDto)
 
         val result = referralController.scheduleAppointment(1L, dto, mockUser)

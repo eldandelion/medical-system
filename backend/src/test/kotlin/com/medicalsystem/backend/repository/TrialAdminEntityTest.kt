@@ -27,6 +27,7 @@ class TrialAdminEntityTest {
         val trialAdmin = TrialAdminEntity(
             name = "Test Admin",
             email = EmailAddress("admin@test.com"),
+            employeeNumber = "HOSP-001",
             hospital = hospital
         )
         entityManager.persist(trialAdmin)
@@ -47,6 +48,7 @@ class TrialAdminEntityTest {
         val trialAdmin1 = TrialAdminEntity(
             name = "Test Admin 1",
             email = EmailAddress("admin1@test.com"),
+            employeeNumber = "HOSP-002",
             hospital = hospital
         )
         entityManager.persist(trialAdmin1)
@@ -55,6 +57,7 @@ class TrialAdminEntityTest {
         val trialAdmin2 = TrialAdminEntity(
             name = "Test Admin 2",
             email = EmailAddress("admin2@test.com"),
+            employeeNumber = "HOSP-003",
             hospital = hospital
         )
         

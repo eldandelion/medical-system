@@ -44,3 +44,12 @@ value class SchoolEmployeeId(val value: String) {
         }
     }
 }
+
+@JvmInline
+value class HospitalEmployeeId(val value: String) {
+    init {
+        require(value.matches(Regex("^[A-Za-z0-9-]{5,20}$"))) {
+            "Invalid Hospital Employee ID format."
+        }
+    }
+}

@@ -33,7 +33,8 @@ class UserMapper {
                 id = entity.id,
                 name = entity.name,
                 email = entity.email,
-                hospitalId = entity.hospital?.id
+                employeeNumber = HospitalEmployeeId(entity.employeeNumber),
+                hospitalId = entity.hospital.id!!
             )
             is StudentUserEntity -> StudentUser(
                 id = entity.id,
@@ -67,7 +68,9 @@ class UserMapper {
             is TrialAdmin -> TrialAdminEntity(
                 id = model.id,
                 name = model.name,
-                email = model.email
+                email = model.email,
+                employeeNumber = model.employeeNumber.value,
+                hospital = HospitalEntity(id = model.hospitalId, name = "")
             )
             is StudentUser -> StudentUserEntity(
                 id = model.id,

@@ -45,4 +45,26 @@ class DashboardControllerTest {
         assertEquals(com.medicalsystem.backend.model.UserRole.STUDENT, response.body?.role)
         assertEquals("ST123", response.body?.studentId)
     }
+
+    @Test
+    fun `getTrialAdminProfile returns mapped dto`() {
+        val mockUser = com.medicalsystem.backend.model.TrialAdmin(id = 3L, name = "Admin Wang", email = EmailAddress("admin@univ.edu.cn"), employeeNumber = com.medicalsystem.backend.model.HospitalEmployeeId("HOSP-001"), hospitalId = 200L)
+        val dto = ProfileSummaryDto(
+            avatarUrl = null,
+            name = "Admin Wang",
+            role = com.medicalsystem.backend.model.UserRole.TRIAL_ADMIN,
+            employeeId = "HOSP-001",
+            hospital = "University Hospital"
+        )
+        
+        `when`(dashboardService.getTrialAdminProfile(mockUser)).thenReturn(dto)
+
+        val response: ResponseEntity<ProfileSummaryDto> = dashboardController.getTrialAdminProfile(mockUser)
+        
+        assertEquals(200, response.statusCode.value())
+        assertNotNull(response.body)
+        assertEquals("Admin Wang", response.body?.name)
+        assertEquals("HOSP-001", response.body?.employeeId)
+        assertEquals("University Hospital", response.body?.hospital)
+    }
 }

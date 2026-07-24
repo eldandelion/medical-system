@@ -12,7 +12,10 @@ class TrialAdminEntity(
     name: String,
     email: EmailAddress,
     
+    @Column(name = "employee_number", unique = true, nullable = false, length = 20)
+    var employeeNumber: String,
+
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "hospital_id", unique = true)
-    var hospital: HospitalEntity? = null
+    @JoinColumn(name = "hospital_id", unique = true, nullable = false)
+    var hospital: HospitalEntity
 ) : UserEntity(id = id, name = name, role = UserRole.TRIAL_ADMIN, email = email)

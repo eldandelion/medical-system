@@ -21,6 +21,8 @@ import { ReferralCreationForm } from '../components/records/ReferralCreationForm
 import { TertiaryFab } from '../components/common/Buttons';
 import { queryClient } from '../utils/queryClient';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '../contexts/AuthContext';
+import { useTrialAdminProfileSummary } from '../hooks/useProfileSummary';
 
 import { TRIAL_ADMIN_METRICS_CONFIG } from '../config/dashboardConfig';
 
@@ -46,6 +48,10 @@ export function TrialAdminPage() {
   const [activePage, setActivePage] = React.useState<TrialAdminPageName>(TrialAdminTabs.DASHBOARD);
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
+  
+  const { session } = useAuth();
+  const { data: profileSummaryData, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useTrialAdminProfileSummary(session?.token);
+
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
     queryKey: ['/api/dashboard/trial-admin'],
     queryFn: async () => {
@@ -130,16 +136,19 @@ export function TrialAdminPage() {
           <>
             <CanvasHeader title={TRIAL_ADMIN_TAB_TITLES[activePage]} isLoading={dashboardLoading} />
             <DashboardView
-              profileSummary={{
-              avatarUrl: dashboardData.profileSummary.avatarUrl,
-              name: dashboardData.profileSummary.name,
-              role: roleTranslations[dashboardData.profileSummary.role] || dashboardData.profileSummary.role,
-              metadata: [
-                { icon: "badge", value: dashboardData.profileSummary.employeeId || "" },
-                { icon: "verified_user", value: dashboardData.profileSummary.accessLevel || "" }
-              ],
-              onClick: () => setShowProfileDetails(true)
-            }}
+              isProfileLoading={isProfileLoading}
+              isProfileError={isProfileError}
+              onProfileRetry={refetchProfile}
+              onProfileClick={() => setShowProfileDetails(true)}
+              profileSummary={profileSummaryData ? {
+                avatarUrl: profileSummaryData.avatarUrl,
+                name: profileSummaryData.name,
+                role: roleTranslations[profileSummaryData.role] || profileSummaryData.role,
+                metadata: [
+                  { icon: "badge", value: profileSummaryData.employeeId || "" },
+                  { icon: "local_hospital", value: profileSummaryData.hospital || "" }
+                ]
+              } : undefined}
             actionMetrics={TRIAL_ADMIN_METRICS_CONFIG.map((metric) => ({
               icon: metric.icon,
               numericValue: dashboardData.metrics[metric.metricKey] || 0,

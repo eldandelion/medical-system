@@ -107,12 +107,12 @@ class DataInitializer {
         hp3.psychometricTests.add(pt6)
         studentHealthProfileRepository.save(hp3)
 
-        val hosp = hospitalRepository.save(HospitalEntity(name = "校医院"))
+        val hosp = hospitalRepository.save(HospitalEntity(name = "中南大学湘雅医院"))
         val medDept = departmentRepository.save(DepartmentEntity(name = "内科", hospital = hosp))
         val psychDept = departmentRepository.save(DepartmentEntity(name = "心理咨询科", hospital = hosp))
 
         val studentUser = userRepository.save(StudentUserEntity(name = "李明", email = EmailAddress("liming@univ.edu.cn")))
-        val triageAdmin = userRepository.save(TrialAdminEntity(name = "张老师", email = EmailAddress("zhang@univ.edu.cn"), hospital = hosp))
+        val triageAdmin = userRepository.save(TrialAdminEntity(name = "张老师", email = EmailAddress("zhang@univ.edu.cn"), employeeNumber = "TA-00001", hospital = hosp))
         val referrer = userRepository.save(TeacherEntity(name = "艾米丽·沃森", email = EmailAddress("emily@univ.edu.cn"), employeeNumber = "EMP-00001", college = medCollege))
         val doctor = userRepository.save(DoctorEntity(name = "李医生", email = EmailAddress("li@univ.edu.cn"), department = medDept))
         val doctorWang = userRepository.save(DoctorEntity(name = "王医生", email = EmailAddress("wang@univ.edu.cn"), department = psychDept))

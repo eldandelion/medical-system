@@ -42,7 +42,7 @@ class MockAuthenticationFilter(
                 ?: HeadCounsellor(id = 999L, name = "Mock Head Councillor", email = EmailAddress("head@univ.edu.cn"))
         } else if (token.contains("trial_admin")) {
             userRepository.findAll().firstOrNull { it.role == UserRole.TRIAL_ADMIN }
-                ?: TrialAdmin(id = 998L, name = "Mock Trial Admin", email = EmailAddress("admin@univ.edu.cn"))
+                ?: TrialAdmin(id = 998L, name = "Mock Trial Admin", email = EmailAddress("admin@univ.edu.cn"), employeeNumber = HospitalEmployeeId("HOSP-001"), hospitalId = 1L)
         } else if (token.contains("doctor")) {
             userRepository.findAll().firstOrNull { it.role == UserRole.DOCTOR }
                 ?: Doctor(id = 997L, name = "Mock Doctor", email = EmailAddress("doctor@univ.edu.cn"), departmentId = 1L, phone = null)

@@ -40,7 +40,8 @@ data class TrialAdmin(
     override val name: String,
     override val email: EmailAddress,
     override val avatarUrl: URI? = null,
-    val hospitalId: Long? = null
+    val employeeNumber: HospitalEmployeeId,
+    val hospitalId: Long
 ) : User(id, name, email, avatarUrl, UserRole.TRIAL_ADMIN)
 
 data class StudentUser(

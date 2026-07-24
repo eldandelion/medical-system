@@ -8,6 +8,7 @@ export interface ProfileSummaryDto {
   employeeId?: string;
   school?: string;
   department?: string;
+  hospital?: string;
 }
 
 const fetchStudentProfile = async (token?: string): Promise<ProfileSummaryDto> => {
@@ -46,6 +47,18 @@ const fetchHeadCouncillorProfile = async (token?: string): Promise<ProfileSummar
   return response.json();
 };
 
+const fetchTrialAdminProfile = async (token?: string): Promise<ProfileSummaryDto> => {
+  const response = await fetch(`${import.meta.env.BASE_URL}/api/dashboard/trial-admin/profile`.replace('//api', '/api'), {
+    headers: {
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch trial admin profile');
+  }
+  return response.json();
+};
+
 export const useStudentProfileSummary = (token?: string) => {
   return useQuery({
     queryKey: ['dashboard', 'student', 'profile', token],
@@ -69,6 +82,15 @@ export const useHeadCouncillorProfileSummary = (token?: string) => {
     queryKey: ['dashboard', 'head-councillor', 'profile', token],
     queryFn: () => fetchHeadCouncillorProfile(token),
     retry: 1, // Fail fast as requested by user
+    enabled: !!token
+  });
+};
+
+export const useTrialAdminProfileSummary = (token?: string) => {
+  return useQuery({
+    queryKey: ['dashboard', 'trial-admin', 'profile', token],
+    queryFn: () => fetchTrialAdminProfile(token),
+    retry: 1,
     enabled: !!token
   });
 };
