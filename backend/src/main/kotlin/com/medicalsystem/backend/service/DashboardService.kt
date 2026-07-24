@@ -43,4 +43,19 @@ class DashboardService(
             department = departmentName
         )
     }
+
+    fun getHeadCounsellorProfile(user: User): ProfileSummaryDto {
+        val headCounsellor = userRepository.findById(user.id)
+            .orElseThrow { RuntimeException("Head Counsellor not found for user ${user.id}") }
+        
+        return ProfileSummaryDto(
+            avatarUrl = user.avatarUrl?.toString(),
+            name = user.name,
+            role = user.role,
+            // TODO: Add actual employeeNumber to HeadCounsellor entity
+            employeeId = "HC-${headCounsellor.id}",
+            // TODO: Add actual department mapping to HeadCounsellor entity
+            department = "咨询中心"
+        )
+    }
 }

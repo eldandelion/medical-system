@@ -21,4 +21,8 @@ class DashboardController(
     @GetMapping("/teacher/profile")
     fun getTeacherProfile(@CurrentUser user: User): ResponseEntity<ProfileSummaryDto> =
         ResponseEntity.ok(dashboardService.getTeacherProfile(user))
+
+    @GetMapping("/head-councillor/profile")
+    fun getHeadCounsellorProfile(@CurrentUser user: User): ResponseEntity<ProfileSummaryDto> =
+        ResponseEntity.ok(dashboardService.getHeadCounsellorProfile(user))
 }

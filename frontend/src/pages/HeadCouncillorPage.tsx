@@ -24,6 +24,8 @@ import { ReferralCreationForm } from '../components/records/ReferralCreationForm
 import { TertiaryFab } from '../components/common/Buttons';
 import { queryClient } from '../utils/queryClient';
 import { useQuery } from '@tanstack/react-query';
+import { useHeadCouncillorProfileSummary } from '../hooks/useProfileSummary';
+import { useAuth } from '../contexts/AuthContext';
 
 import { HEAD_COUNCILLOR_METRICS_CONFIG } from '../config/dashboardConfig';
 
@@ -52,16 +54,23 @@ export function HeadCouncillorPage() {
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
   const [refreshKey, setRefreshKey] = React.useState(0);
+  const { session } = useAuth();
+  
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
     queryKey: ['/api/dashboard/head-councillor'],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/dashboard/head-councillor`.replace('//api', '/api'));
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/dashboard/head-councillor`.replace('//api', '/api'), {
+        headers: {
+          'Authorization': `Bearer ${session?.token || ''}`
+        }
+      });
       if (!res.ok) throw new Error('Failed to fetch dashboard');
       return res.json();
     },
-    enabled: activePage === HeadCouncillorTabs.DASHBOARD
+    enabled: activePage === HeadCouncillorTabs.DASHBOARD && !!session?.token
   });
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
+  const { data: profileSummaryData, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useHeadCouncillorProfileSummary(session?.token);
 
 
 
@@ -156,16 +165,19 @@ export function HeadCouncillorPage() {
           <>
             <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage]} isLoading={dashboardLoading} />
             <DashboardView
-              profileSummary={{
-              avatarUrl: dashboardData.profileSummary.avatarUrl,
-              name: dashboardData.profileSummary.name,
-              role: roleTranslations[dashboardData.profileSummary.role] || dashboardData.profileSummary.role,
-              metadata: [
-                { icon: "badge", value: dashboardData.profileSummary.employeeId || "" },
-                { icon: "account_balance", value: dashboardData.profileSummary.department || "" }
-              ],
-              onClick: () => setShowProfileDetails(true)
-            }}
+              isProfileLoading={isProfileLoading}
+              isProfileError={isProfileError}
+              onProfileRetry={refetchProfile}
+              onProfileClick={() => setShowProfileDetails(true)}
+              profileSummary={profileSummaryData ? {
+                avatarUrl: profileSummaryData.avatarUrl,
+                name: profileSummaryData.name,
+                role: roleTranslations[profileSummaryData.role] || profileSummaryData.role,
+                metadata: [
+                  { icon: "badge", value: profileSummaryData.employeeId || "" },
+                  { icon: "account_balance", value: profileSummaryData.department || "" }
+                ]
+              } : undefined}
             actionMetrics={HEAD_COUNCILLOR_METRICS_CONFIG.map((metric) => ({
               icon: metric.icon,
               numericValue: dashboardData.metrics[metric.metricKey] || 0,
