@@ -15,6 +15,7 @@ data class Doctor(
     override val name: String,
     override val email: EmailAddress,
     override val avatarUrl: URI? = null,
+    val employeeNumber: HospitalEmployeeId,
     val departmentId: Long,
     val phone: PhoneNumber?
 ) : User(id, name, email, avatarUrl, UserRole.DOCTOR)

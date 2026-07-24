@@ -32,6 +32,9 @@ class DashboardServiceTest {
     @Mock
     private lateinit var hospitalRepository: HospitalRepository
 
+    @Mock
+    private lateinit var departmentRepository: com.medicalsystem.backend.repository.DepartmentRepository
+
     @InjectMocks
     private lateinit var dashboardService: DashboardService
 

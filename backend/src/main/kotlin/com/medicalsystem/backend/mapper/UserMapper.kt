@@ -14,6 +14,7 @@ class UserMapper {
                 id = entity.id,
                 name = entity.name,
                 email = entity.email,
+                employeeNumber = HospitalEmployeeId(entity.employeeNumber),
                 departmentId = entity.department!!.id,
                 phone = entity.phone?.let { PhoneNumber(it) }
             )
@@ -51,7 +52,9 @@ class UserMapper {
                 id = model.id,
                 name = model.name,
                 email = model.email,
-                phone = model.phone?.value
+                employeeNumber = model.employeeNumber.value,
+                phone = model.phone?.value,
+                department = DepartmentEntity(id = model.departmentId, name = "", hospital = HospitalEntity(id = 0, name = ""))
             )
             is Teacher -> TeacherEntity(
                 id = model.id,

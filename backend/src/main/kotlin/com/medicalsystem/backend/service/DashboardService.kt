@@ -4,7 +4,9 @@ import com.medicalsystem.backend.dto.ProfileSummaryDto
 import com.medicalsystem.backend.model.User
 import com.medicalsystem.backend.model.Teacher
 import com.medicalsystem.backend.model.TrialAdmin
+import com.medicalsystem.backend.model.Doctor
 import com.medicalsystem.backend.repository.CollegeRepository
+import com.medicalsystem.backend.repository.DepartmentRepository
 import com.medicalsystem.backend.repository.HospitalRepository
 import com.medicalsystem.backend.repository.StudentRepository
 import com.medicalsystem.backend.repository.UserRepository
@@ -15,7 +17,8 @@ class DashboardService(
     private val studentRepository: StudentRepository,
     private val userRepository: UserRepository,
     private val collegeRepository: CollegeRepository,
-    private val hospitalRepository: HospitalRepository
+    private val hospitalRepository: HospitalRepository,
+    private val departmentRepository: DepartmentRepository
 ) {
 
     fun getStudentProfile(user: User): ProfileSummaryDto {
@@ -43,6 +46,24 @@ class DashboardService(
             name = user.name,
             role = user.role,
             employeeId = teacherUser.employeeNumber.value,
+            department = departmentName
+        )
+    }
+
+    fun getDoctorProfile(user: User): ProfileSummaryDto {
+        val doctor = userRepository.findById(user.id)
+            .orElseThrow { RuntimeException("Doctor not found for user ${user.id}") } as Doctor
+            
+        val department = departmentRepository.findById(doctor.departmentId).orElse(null)
+        val hospitalName = department?.hospital?.name ?: "未知医院"
+        val departmentName = department?.name ?: "未知科室"
+
+        return ProfileSummaryDto(
+            avatarUrl = user.avatarUrl?.toString(),
+            name = user.name,
+            role = user.role,
+            employeeId = doctor.employeeNumber.value,
+            hospital = hospitalName,
             department = departmentName
         )
     }

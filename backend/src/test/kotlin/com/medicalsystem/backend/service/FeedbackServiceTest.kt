@@ -48,7 +48,7 @@ class FeedbackServiceTest {
 
     @BeforeEach
     fun setUp() {
-        doctor = Doctor(id = doctorId, name = "Dr. Right", email = com.medicalsystem.backend.model.EmailAddress("right@univ.edu"), departmentId = 1L, phone = null)
+        doctor = Doctor(id = doctorId, name = "Dr. Right", email = com.medicalsystem.backend.model.EmailAddress("right@univ.edu"), employeeNumber = com.medicalsystem.backend.model.HospitalEmployeeId("DOC-001"), departmentId = 1L, phone = null)
         
         validReferral = Referral(
             id = referralId,

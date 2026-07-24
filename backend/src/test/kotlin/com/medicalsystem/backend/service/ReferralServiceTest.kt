@@ -85,7 +85,7 @@ class ReferralServiceTest {
     @Test
     fun `assignDoctor transitions status to WAITING_FOR_SCHEDULING and sets destination`() {
         val admin = TrialAdmin(id = 1L, name = "Admin", email = com.medicalsystem.backend.model.EmailAddress("admin@univ.edu.cn"), employeeNumber = com.medicalsystem.backend.model.HospitalEmployeeId("HOSP-001"), hospitalId = 1L)
-        val doctor = Doctor(id = 2L, name = "Dr. Smith", email = com.medicalsystem.backend.model.EmailAddress("doc@univ.edu.cn"), departmentId = 1L, phone = null)
+        val doctor = Doctor(id = 2L, name = "Dr. Smith", email = com.medicalsystem.backend.model.EmailAddress("doc@univ.edu.cn"), employeeNumber = com.medicalsystem.backend.model.HospitalEmployeeId("DOC-001"), departmentId = 1L, phone = null)
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
         referral.submit(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, 1L)
         referral.approve(com.medicalsystem.backend.model.HospitalId(1L), 1L)
@@ -120,7 +120,7 @@ class ReferralServiceTest {
 
     @Test
     fun `scheduleAppointment validates role, delegates to Referral and saves`() {
-        val doctor = Doctor(id = 2L, name = "Dr. Smith", email = com.medicalsystem.backend.model.EmailAddress("doc@univ.edu.cn"), departmentId = 1L, phone = null)
+        val doctor = Doctor(id = 2L, name = "Dr. Smith", email = com.medicalsystem.backend.model.EmailAddress("doc@univ.edu.cn"), employeeNumber = com.medicalsystem.backend.model.HospitalEmployeeId("DOC-001"), departmentId = 1L, phone = null)
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
         referral.submit(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, 1L)
         referral.approve(com.medicalsystem.backend.model.HospitalId(1L), 1L)

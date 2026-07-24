@@ -42,7 +42,7 @@ class FeedbackControllerTest {
     fun `Given valid payload, When submitFeedback is called, Then calls service and returns OK`() {
         // Arrange
         val expectedDoctorId = 997L
-        val mockDoctor = Doctor(id = expectedDoctorId, name = "Mock Doctor", email = com.medicalsystem.backend.model.EmailAddress("doctor@univ.edu.cn"), departmentId = 1L, phone = null)
+        val mockDoctor = Doctor(id = expectedDoctorId, name = "Mock Doctor", email = com.medicalsystem.backend.model.EmailAddress("doctor@univ.edu.cn"), employeeNumber = com.medicalsystem.backend.model.HospitalEmployeeId("DOC-001"), departmentId = 1L, phone = null)
 
         // Act
         val response = feedbackController.submitFeedback(validRequest, mockDoctor)

@@ -17,6 +17,7 @@ class UserMapperTest {
             id = 1L,
             name = "Dr. Smith",
             email = EmailAddress("smith@hospital.com"),
+            employeeNumber = "DOC-001",
             department = department,
             phone = "123-456-7890"
         )
@@ -37,10 +38,11 @@ class UserMapperTest {
     fun `toEntity should correctly map Doctor model without relationships`() {
         val model = Doctor(
             id = 1L,
-            name = "Dr. Smith",
-            email = EmailAddress("smith@hospital.com"),
+            name = "Test Doctor",
+            email = EmailAddress("doctor@test.com"),
+            employeeNumber = HospitalEmployeeId("DOC-001"),
             departmentId = 10L,
-            phone = PhoneNumber("123-456-7890")
+            phone = PhoneNumber("13800138000")
         )
 
         val entity = mapper.toEntity(model)
@@ -48,10 +50,11 @@ class UserMapperTest {
         assertTrue(entity is DoctorEntity)
         val doctorEntity = entity as DoctorEntity
         assertEquals(1L, doctorEntity.id)
-        assertEquals("Dr. Smith", doctorEntity.name)
-        assertEquals(EmailAddress("smith@hospital.com"), doctorEntity.email)
-        assertEquals("123-456-7890", doctorEntity.phone)
-        assertNull(doctorEntity.department)
+        assertEquals("Test Doctor", doctorEntity.name)
+        assertEquals(EmailAddress("doctor@test.com"), doctorEntity.email)
+        assertEquals("13800138000", doctorEntity.phone)
+        assertNotNull(doctorEntity.department)
+        assertEquals(10L, doctorEntity.department?.id)
     }
 
     @Test
