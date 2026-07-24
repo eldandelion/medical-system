@@ -10,6 +10,7 @@ import com.medicalsystem.backend.repository.DepartmentRepository
 import com.medicalsystem.backend.repository.HospitalRepository
 import com.medicalsystem.backend.repository.StudentRepository
 import com.medicalsystem.backend.repository.UserRepository
+import com.medicalsystem.backend.exception.ResourceNotFoundException
 import org.springframework.stereotype.Service
 
 @Service
@@ -23,7 +24,7 @@ class DashboardService(
 
     fun getStudentProfile(user: User): ProfileSummaryDto {
         val student = studentRepository.findById(user.id)
-            .orElseThrow { RuntimeException("Student not found for user ${user.id}") }
+            .orElseThrow { ResourceNotFoundException("Student not found for user ${user.id}") }
 
         return ProfileSummaryDto(
             avatarUrl = user.avatarUrl?.toString(),
@@ -37,40 +38,40 @@ class DashboardService(
 
     fun getTeacherProfile(user: User): ProfileSummaryDto {
         val teacherUser = userRepository.findById(user.id)
-            .orElseThrow { RuntimeException("Teacher not found for user ${user.id}") } as Teacher
+            .orElseThrow { ResourceNotFoundException("Teacher not found for user ${user.id}") } as Teacher
         
-        val departmentName = collegeRepository.findById(teacherUser.collegeId).orElse(null)?.name
+        val college = collegeRepository.findById(teacherUser.collegeId)
+            .orElseThrow { ResourceNotFoundException("College not found for teacher ${teacherUser.id}") }
         
         return ProfileSummaryDto(
             avatarUrl = user.avatarUrl?.toString(),
             name = user.name,
             role = user.role,
             employeeId = teacherUser.employeeNumber.value,
-            department = departmentName
+            department = college.name
         )
     }
 
     fun getDoctorProfile(user: User): ProfileSummaryDto {
         val doctor = userRepository.findById(user.id)
-            .orElseThrow { RuntimeException("Doctor not found for user ${user.id}") } as Doctor
+            .orElseThrow { ResourceNotFoundException("Doctor not found for user ${user.id}") } as Doctor
             
-        val department = departmentRepository.findById(doctor.departmentId).orElse(null)
-        val hospitalName = department?.hospital?.name ?: "未知医院"
-        val departmentName = department?.name ?: "未知科室"
+        val department = departmentRepository.findById(doctor.departmentId)
+            .orElseThrow { ResourceNotFoundException("Department not found for doctor ${doctor.id}") }
 
         return ProfileSummaryDto(
             avatarUrl = user.avatarUrl?.toString(),
             name = user.name,
             role = user.role,
             employeeId = doctor.employeeNumber.value,
-            hospital = hospitalName,
-            department = departmentName
+            hospital = department.hospital.name,
+            department = department.name
         )
     }
 
     fun getHeadCounsellorProfile(user: User): ProfileSummaryDto {
         val headCounsellor = userRepository.findById(user.id)
-            .orElseThrow { RuntimeException("Head Counsellor not found for user ${user.id}") }
+            .orElseThrow { ResourceNotFoundException("Head Counsellor not found for user ${user.id}") }
         
         return ProfileSummaryDto(
             avatarUrl = user.avatarUrl?.toString(),
@@ -85,17 +86,17 @@ class DashboardService(
 
     fun getTrialAdminProfile(user: User): ProfileSummaryDto {
         val trialAdmin = userRepository.findById(user.id)
-            .orElseThrow { RuntimeException("Trial Admin not found for user ${user.id}") } as TrialAdmin
+            .orElseThrow { ResourceNotFoundException("Trial Admin not found for user ${user.id}") } as TrialAdmin
         
-        val hospitalName = hospitalRepository.findById(trialAdmin.hospitalId).orElse(null)?.name
-            ?: "未分配医院"
+        val hospital = hospitalRepository.findById(trialAdmin.hospitalId)
+            .orElseThrow { ResourceNotFoundException("Hospital not found for trial admin ${trialAdmin.id}") }
 
         return ProfileSummaryDto(
             avatarUrl = user.avatarUrl?.toString(),
             name = user.name,
             role = user.role,
             employeeId = trialAdmin.employeeNumber.value,
-            hospital = hospitalName
+            hospital = hospital.name
         )
     }
 }
