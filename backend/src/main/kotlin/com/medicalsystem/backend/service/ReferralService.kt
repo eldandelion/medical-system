@@ -28,6 +28,8 @@ class ReferralService(
     private val userRepository: UserRepository,
     private val hospitalRepository: HospitalRepository,
     private val departmentRepository: DepartmentRepository,
+    private val doctorRepository: com.medicalsystem.backend.repository.DoctorRepository,
+    private val trialAdminRepository: com.medicalsystem.backend.repository.TrialAdminRepository,
     private val referralMapper: ReferralMapper,
     private val eventPublisher: com.medicalsystem.backend.event.DomainEventPublisher
 ) {
@@ -138,8 +140,8 @@ class ReferralService(
             throw ValidationException("User not authorized to approve referral")
         }
         
-        val trialAdmins = userRepository.findAll().filterIsInstance<com.medicalsystem.backend.model.TrialAdmin>()
-        val hasTrialAdmin = trialAdmins.any { it.hospitalId == dto.hospitalId }
+        val trialAdmins = trialAdminRepository.findAll()
+        val hasTrialAdmin = trialAdmins.any { it.hospital.id == dto.hospitalId }
         
         if (!hasTrialAdmin) {
             throw ValidationException("Selected hospital has no assigned Trial Admin")
@@ -212,7 +214,10 @@ class ReferralService(
             ?: (referral.destination as? com.medicalsystem.backend.model.ReferralDestination.Triaged)?.hospitalId
             ?: throw ValidationException("Hospital must be assigned before assigning a doctor")
 
-        val departmentIdRaw = (doctor as? com.medicalsystem.backend.model.Doctor)?.departmentId
+        val doctorProfile = doctorRepository.findById(doctor.id).orElse(null)
+            ?: throw ValidationException("Assigned user is not a doctor or profile is missing")
+            
+        val departmentIdRaw = doctorProfile.department?.id
             ?: throw ValidationException("Assigned doctor has no department")
 
         referral.destination = com.medicalsystem.backend.model.ReferralDestination.Triaged(

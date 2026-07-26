@@ -31,7 +31,7 @@ class HospitalServiceTest {
 
         `when`(hospitalRepository.findAll()).thenReturn(listOf(hosp1, hosp2))
         
-        val trialAdmin = TrialAdminEntity(name = "Admin", email = com.medicalsystem.backend.model.EmailAddress("admin@test.com"), employeeNumber = "HOSP-001", hospital = hosp1)
+        val trialAdmin = TrialAdminEntity(userId = 1L, employeeNumber = "HOSP-001", hospital = hosp1)
         // Simulate a query to find all trial admins to map correctly
         `when`(trialAdminRepository.findAll()).thenReturn(listOf(trialAdmin))
 

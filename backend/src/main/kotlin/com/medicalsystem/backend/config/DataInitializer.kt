@@ -30,6 +30,9 @@ class DataInitializer {
         hospitalRepository: HospitalRepository,
         departmentRepository: DepartmentRepository,
         doctorRepository: DoctorRepository,
+        teacherRepository: TeacherRepository,
+        trialAdminRepository: TrialAdminRepository,
+        headCounsellorRepository: HeadCounsellorRepository,
         studentHealthProfileRepository: StudentHealthProfileJpaRepository,
         jdbcTemplate: JdbcTemplate
     ) = CommandLineRunner {
@@ -111,12 +114,21 @@ class DataInitializer {
         val medDept = departmentRepository.save(DepartmentEntity(name = "内科", hospital = hosp))
         val psychDept = departmentRepository.save(DepartmentEntity(name = "心理咨询科", hospital = hosp))
 
-        val studentUser = userRepository.save(StudentUserEntity(name = "李明", email = EmailAddress("liming@univ.edu.cn")))
-        val triageAdmin = userRepository.save(TrialAdminEntity(name = "张老师", email = EmailAddress("zhang@univ.edu.cn"), employeeNumber = "TA-00001", hospital = hosp))
-        val referrer = userRepository.save(TeacherEntity(name = "艾米丽·沃森", email = EmailAddress("emily@univ.edu.cn"), employeeNumber = "EMP-00001", college = medCollege))
-        val doctor = userRepository.save(DoctorEntity(name = "李医生", email = EmailAddress("li@univ.edu.cn"), employeeNumber = "DOC-00001", department = medDept))
-        val doctorWang = userRepository.save(DoctorEntity(name = "王医生", email = EmailAddress("wang@univ.edu.cn"), employeeNumber = "DOC-00002", department = psychDept))
-        val headCounsellor = userRepository.save(HeadCounsellorEntity(name = "王主任", email = EmailAddress("wang_head@univ.edu.cn")))
+        val studentUserBase = userRepository.save(UserEntity(name = "李明", email = EmailAddress("liming@univ.edu.cn"), role = UserRole.STUDENT))
+        val triageAdminBase = userRepository.save(UserEntity(name = "张老师", email = EmailAddress("zhang@univ.edu.cn"), role = UserRole.TRIAL_ADMIN))
+        val triageAdmin = trialAdminRepository.save(TrialAdminEntity(userId = triageAdminBase.id, employeeNumber = "TA-00001", hospital = hosp))
+
+        val referrerBase = userRepository.save(UserEntity(name = "艾米丽·沃森", email = EmailAddress("emily@univ.edu.cn"), role = UserRole.TEACHER))
+        val referrer = teacherRepository.save(TeacherEntity(userId = referrerBase.id, employeeNumber = "EMP-00001", college = medCollege))
+
+        val doctorBase = userRepository.save(UserEntity(name = "李医生", email = EmailAddress("li@univ.edu.cn"), role = UserRole.DOCTOR))
+        val doctor = doctorRepository.save(DoctorEntity(userId = doctorBase.id, employeeNumber = "DOC-00001", department = medDept))
+
+        val doctorWangBase = userRepository.save(UserEntity(name = "王医生", email = EmailAddress("wang@univ.edu.cn"), role = UserRole.DOCTOR))
+        val doctorWang = doctorRepository.save(DoctorEntity(userId = doctorWangBase.id, employeeNumber = "DOC-00002", department = psychDept))
+
+        val headCounsellorBase = userRepository.save(UserEntity(name = "王主任", email = EmailAddress("wang_head@univ.edu.cn"), role = UserRole.HEAD_COUNSELLOR))
+        val headCounsellor = headCounsellorRepository.save(HeadCounsellorEntity(userId = headCounsellorBase.id))
 
         val dest = ReferralDestinationEntity(
             hospital = hosp,
@@ -133,7 +145,7 @@ class DataInitializer {
             description = "期中考试后出现急性恐慌发作和睡眠剥夺",
             riskLevel = RiskStatus.HIGH,
             status = ReferralStatus.WAITING_FOR_SCHEDULING,
-            referredById = referrer.id,
+            referredById = referrer.userId,
             createdAt = LocalDateTime.now().minusDays(1),
             destination = dest
         )
@@ -143,28 +155,28 @@ class DataInitializer {
             type = ReferralStepType.INITIATION,
             time = LocalDateTime.now().minusDays(1),
             status = ReferralStepStatus.COMPLETED,
-            actorId = referrer.id
+            actorId = referrer.userId
         )
         val step2 = ReferralStepEntity(
             referral = ref1,
             type = ReferralStepType.REVIEW,
             time = LocalDateTime.now().minusHours(20),
             status = ReferralStepStatus.COMPLETED,
-            actorId = referrer.id
+            actorId = referrer.userId
         )
         val step3 = ReferralStepEntity(
             referral = ref1,
             type = ReferralStepType.TRIAGE,
             time = LocalDateTime.now().minusHours(18),
             status = ReferralStepStatus.COMPLETED,
-            actorId = triageAdmin.id
+            actorId = triageAdmin.userId
         )
         val step4 = ReferralStepEntity(
             referral = ref1,
             type = ReferralStepType.SCHEDULING,
             time = LocalDateTime.now().minusHours(5),
             status = ReferralStepStatus.ACTIVE,
-            actorId = triageAdmin.id
+            actorId = triageAdmin.userId
         )
         
         ref1.steps.addAll(listOf(step1, step2, step3, step4))
@@ -184,7 +196,7 @@ class DataInitializer {
             description = "情绪持续低落",
             riskLevel = RiskStatus.MEDIUM,
             status = ReferralStatus.AWAITING_TRIAGE,
-            referredById = referrer.id,
+            referredById = referrer.userId,
             createdAt = LocalDateTime.now().minusDays(2),
             destination = dest2
         )
@@ -194,21 +206,21 @@ class DataInitializer {
             type = ReferralStepType.INITIATION,
             time = LocalDateTime.now().minusDays(2),
             status = ReferralStepStatus.COMPLETED,
-            actorId = referrer.id
+            actorId = referrer.userId
         )
         val ref2Step2 = ReferralStepEntity(
             referral = ref2,
             type = ReferralStepType.REVIEW,
             time = LocalDateTime.now().minusHours(24),
             status = ReferralStepStatus.COMPLETED,
-            actorId = referrer.id
+            actorId = referrer.userId
         )
         val ref2Step3 = ReferralStepEntity(
             referral = ref2,
             type = ReferralStepType.TRIAGE,
             time = LocalDateTime.now().minusHours(12),
             status = ReferralStepStatus.ACTIVE,
-            actorId = triageAdmin.id
+            actorId = triageAdmin.userId
         )
         ref2.steps.addAll(listOf(ref2Step1, ref2Step2, ref2Step3))
 

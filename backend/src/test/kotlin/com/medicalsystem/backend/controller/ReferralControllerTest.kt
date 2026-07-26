@@ -3,7 +3,6 @@ package com.medicalsystem.backend.controller
 import com.medicalsystem.backend.dto.ReferralDto
 import com.medicalsystem.backend.service.ReferralService
 import com.medicalsystem.backend.model.User
-import com.medicalsystem.backend.model.TrialAdmin
 import com.medicalsystem.backend.model.EmailAddress
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -39,7 +38,7 @@ class ReferralControllerTest {
             referredBy = com.medicalsystem.backend.dto.ReferredByDto("Teacher"),
             availableActions = emptyList()
         )
-        val mockUser: User = com.medicalsystem.backend.model.HeadCounsellor(id = 1L, name = "HC", email = EmailAddress("hc@univ.edu.cn"))
+        val mockUser: User = com.medicalsystem.backend.model.User(id = 1L, name = "HC", email = EmailAddress("hc@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR)
         `when`(referralService.approveReferral(1L, dto, mockUser)).thenReturn(referralDto)
 
         val result = referralController.approveReferral(1L, dto, mockUser)
@@ -65,7 +64,7 @@ class ReferralControllerTest {
             availableActions = emptyList()
         )
         
-        val mockUser: User = TrialAdmin(id = 1L, name = "Admin", email = EmailAddress("admin@univ.edu.cn"), employeeNumber = com.medicalsystem.backend.model.HospitalEmployeeId("HOSP-001"), hospitalId = 1L)
+        val mockUser: User = com.medicalsystem.backend.model.User(id = 1L, name = "Admin", email = EmailAddress("admin@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.TRIAL_ADMIN)
         `when`(referralService.scheduleAppointment(1L, dto, mockUser)).thenReturn(referralDto)
 
         val result = referralController.scheduleAppointment(1L, dto, mockUser)
@@ -90,7 +89,7 @@ class ReferralControllerTest {
             availableActions = emptyList()
         )
         
-        val mockUser: User = com.medicalsystem.backend.model.Teacher(id = 1L, name = "Teacher", email = EmailAddress("teacher@univ.edu.cn"), employeeNumber = com.medicalsystem.backend.model.SchoolEmployeeId("EMP-123"), collegeId = 1L)
+        val mockUser: User = com.medicalsystem.backend.model.User(id = 1L, name = "Teacher", email = EmailAddress("teacher@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.TEACHER)
         `when`(referralService.recallReferral(1L, mockUser)).thenReturn(referralDto)
 
         val result = referralController.recallReferral(1L, mockUser)

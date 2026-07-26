@@ -42,13 +42,13 @@ class FeedbackServiceTest {
 
     private val doctorId = 2L
     private val referralId = 1L
-    private lateinit var doctor: Doctor
+    private lateinit var doctor: com.medicalsystem.backend.model.User
     private lateinit var validReferral: Referral
     private lateinit var validRequest: FeedbackCreationRequest
 
     @BeforeEach
     fun setUp() {
-        doctor = Doctor(id = doctorId, name = "Dr. Right", email = com.medicalsystem.backend.model.EmailAddress("right@univ.edu"), employeeNumber = com.medicalsystem.backend.model.HospitalEmployeeId("DOC-001"), departmentId = 1L, phone = null)
+        doctor = com.medicalsystem.backend.model.User(id = doctorId, name = "Dr. Right", email = com.medicalsystem.backend.model.EmailAddress("right@univ.edu"), role = com.medicalsystem.backend.model.UserRole.DOCTOR)
         
         validReferral = Referral(
             id = referralId,

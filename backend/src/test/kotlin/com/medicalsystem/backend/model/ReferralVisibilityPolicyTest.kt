@@ -7,12 +7,12 @@ class ReferralVisibilityPolicyTest {
 
     private fun createUser(role: UserRole, id: Long = 1L): User {
         return when (role) {
-            UserRole.DOCTOR -> Doctor(id, "Test User", com.medicalsystem.backend.model.EmailAddress("test@test.com"), null, com.medicalsystem.backend.model.HospitalEmployeeId("DOC-001"), 1L, null)
-            UserRole.TEACHER -> Teacher(id, "Test User", com.medicalsystem.backend.model.EmailAddress("test@test.com"), null, SchoolEmployeeId("EMP-123"), 1L)
-            UserRole.HEAD_COUNSELLOR -> HeadCounsellor(id, "Test User", com.medicalsystem.backend.model.EmailAddress("test@test.com"))
-            UserRole.TRIAL_ADMIN -> TrialAdmin(id, "Test User", com.medicalsystem.backend.model.EmailAddress("test@test.com"), employeeNumber = com.medicalsystem.backend.model.HospitalEmployeeId("HOSP-001"), hospitalId = 1L)
-            UserRole.STUDENT -> StudentUser(id, "Test User", com.medicalsystem.backend.model.EmailAddress("test@test.com"))
-            UserRole.SYSTEM_ADMIN -> SystemAdmin(id, "Test User", com.medicalsystem.backend.model.EmailAddress("test@test.com"))
+            UserRole.DOCTOR -> com.medicalsystem.backend.model.User(id = id, name = "Mock User", email = com.medicalsystem.backend.model.EmailAddress("mock@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.DOCTOR)
+            UserRole.TEACHER -> com.medicalsystem.backend.model.User(id = id, name = "Mock User", email = com.medicalsystem.backend.model.EmailAddress("mock@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.TEACHER)
+            UserRole.HEAD_COUNSELLOR -> com.medicalsystem.backend.model.User(id = id, name = "Mock User", email = com.medicalsystem.backend.model.EmailAddress("mock@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR)
+            UserRole.TRIAL_ADMIN -> com.medicalsystem.backend.model.User(id = id, name = "Mock User", email = com.medicalsystem.backend.model.EmailAddress("mock@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.TRIAL_ADMIN)
+            UserRole.STUDENT -> com.medicalsystem.backend.model.User(id = id, name = "Mock User", email = com.medicalsystem.backend.model.EmailAddress("mock@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.STUDENT)
+            UserRole.SYSTEM_ADMIN -> com.medicalsystem.backend.model.User(id = id, name = "Mock User", email = com.medicalsystem.backend.model.EmailAddress("mock@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.SYSTEM_ADMIN)
         }
     }
 

@@ -35,12 +35,21 @@ class DashboardServiceTest {
     @Mock
     private lateinit var departmentRepository: com.medicalsystem.backend.repository.DepartmentRepository
 
+    @Mock
+    private lateinit var teacherRepository: com.medicalsystem.backend.repository.TeacherRepository
+
+    @Mock
+    private lateinit var doctorRepository: com.medicalsystem.backend.repository.DoctorRepository
+
+    @Mock
+    private lateinit var trialAdminRepository: com.medicalsystem.backend.repository.TrialAdminRepository
+
     @InjectMocks
     private lateinit var dashboardService: DashboardService
 
     @Test
     fun `getStudentProfile maps domain model to dto correctly`() {
-        val mockUser = StudentUser(id = 1L, name = "John Doe", email = EmailAddress("john@univ.edu.cn"))
+        val mockUser = com.medicalsystem.backend.model.User(id = 1L, name = "John Doe", email = EmailAddress("john@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.STUDENT)
         
         val college = College(id = 10L, name = "Engineering")
         val major = Major(id = 100L, name = "Computer Science", college = college)
@@ -67,11 +76,13 @@ class DashboardServiceTest {
 
     @Test
     fun `getTeacherProfile maps domain model to dto correctly`() {
-        val mockUser = Teacher(id = 2L, name = "Jane Smith", email = EmailAddress("jane@univ.edu.cn"), employeeNumber = SchoolEmployeeId("EMP-123"), collegeId = 50L)
-        val teacherUser = Teacher(id = 2L, name = "Jane Smith", email = EmailAddress("jane@univ.edu.cn"), employeeNumber = SchoolEmployeeId("EMP-123"), collegeId = 50L)
+        val mockUser = com.medicalsystem.backend.model.User(id = 2L, name = "Jane Smith", email = EmailAddress("jane@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.TEACHER)
+        val teacherUser = com.medicalsystem.backend.model.User(id = 2L, name = "Jane Smith", email = EmailAddress("jane@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.TEACHER)
         val college = College(id = 50L, name = "Science")
 
-        `when`(userRepository.findById(2L)).thenReturn(Optional.of(teacherUser))
+        val teacherEntity = com.medicalsystem.backend.entity.TeacherEntity(userId = 2L, employeeNumber = "EMP-123", college = com.medicalsystem.backend.entity.CollegeEntity(id = 50L, name = "Science"))
+
+        `when`(teacherRepository.findById(2L)).thenReturn(Optional.of(teacherEntity))
         `when`(collegeRepository.findById(50L)).thenReturn(Optional.of(college))
 
         val result = dashboardService.getTeacherProfile(mockUser)
@@ -85,10 +96,12 @@ class DashboardServiceTest {
 
     @Test
     fun `getTrialAdminProfile maps domain model to dto correctly`() {
-        val mockUser = TrialAdmin(id = 3L, name = "Admin Wang", email = EmailAddress("admin@univ.edu.cn"), employeeNumber = HospitalEmployeeId("HOSP-001"), hospitalId = 200L)
+        val mockUser = com.medicalsystem.backend.model.User(id = 3L, name = "Admin Wang", email = EmailAddress("admin@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.TRIAL_ADMIN)
         val hospital = HospitalEntity(id = 200L, name = "University Hospital")
 
-        `when`(userRepository.findById(3L)).thenReturn(Optional.of(mockUser))
+        val trialAdminEntity = com.medicalsystem.backend.entity.TrialAdminEntity(userId = 3L, employeeNumber = "HOSP-001", hospital = HospitalEntity(id = 200L, name = "University Hospital"))
+
+        `when`(trialAdminRepository.findById(3L)).thenReturn(Optional.of(trialAdminEntity))
         `when`(hospitalRepository.findById(200L)).thenReturn(Optional.of(hospital))
 
         val result = dashboardService.getTrialAdminProfile(mockUser)

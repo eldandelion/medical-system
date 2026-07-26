@@ -8,11 +8,10 @@ import com.medicalsystem.backend.model.EmailAddress
 
 @Entity
 @Table(name = "doctors")
-@PrimaryKeyJoinColumn(name = "user_id")
 class DoctorEntity(
-    id: Long = 0,
-    name: String,
-    email: EmailAddress,
+    @Id
+    @Column(name = "user_id")
+    val userId: Long,
 
     @Column(name = "employee_number", length = 50, nullable = false)
     var employeeNumber: String,
@@ -23,5 +22,4 @@ class DoctorEntity(
 
     @Column(length = 20)
     var phone: String? = null
-
-) : UserEntity(id = id, name = name, role = UserRole.DOCTOR, email = email)
+)

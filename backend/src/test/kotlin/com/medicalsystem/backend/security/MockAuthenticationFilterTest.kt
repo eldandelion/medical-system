@@ -37,7 +37,7 @@ class MockAuthenticationFilterTest {
     @Test
     fun `should authenticate teacher and continue filter chain when teacher token provided`() {
         request.addHeader("Authorization", "Bearer teacher_token_zhang_123")
-        val mockTeacher = Teacher(id = 1L, name = "艾米丽·沃森", email = EmailAddress("teacher@univ.edu.cn"), employeeNumber = SchoolEmployeeId("EMP-123"), collegeId = 10L)
+        val mockTeacher = com.medicalsystem.backend.model.User(id = 1L, name = "艾米丽·沃森", email = EmailAddress("teacher@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.TEACHER)
         `when`(userRepository.findByName("艾米丽·沃森")).thenReturn(mockTeacher)
 
         doAnswer {
@@ -55,7 +55,7 @@ class MockAuthenticationFilterTest {
     @Test
     fun `should authenticate head councillor and continue filter chain when head councillor token provided`() {
         request.addHeader("Authorization", "Bearer head_councillor_token")
-        val mockCouncillor = HeadCounsellor(id = 5L, name = "Real Councillor", email = EmailAddress("hc@univ.edu.cn"))
+        val mockCouncillor = com.medicalsystem.backend.model.User(id = 5L, name = "Real Councillor", email = EmailAddress("hc@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR)
         `when`(userRepository.findAll()).thenReturn(listOf(mockCouncillor))
 
         doAnswer {
@@ -101,7 +101,7 @@ class MockAuthenticationFilterTest {
     @Test
     fun `should fallback to first user and continue chain when token is unrecognized`() {
         request.addHeader("Authorization", "Bearer some_random_token")
-        val fallbackUser = Teacher(id = 2L, name = "Fallback Teacher", email = EmailAddress("fallback@univ.edu.cn"), employeeNumber = SchoolEmployeeId("EMP-123"), collegeId = 10L)
+        val fallbackUser = com.medicalsystem.backend.model.User(id = 2L, name = "Fallback Teacher", email = EmailAddress("fallback@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.TEACHER)
         `when`(userRepository.findAll()).thenReturn(listOf(fallbackUser))
 
         doAnswer {

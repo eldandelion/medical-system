@@ -1,7 +1,6 @@
 package com.medicalsystem.backend.security
 
 import com.medicalsystem.backend.model.EmailAddress
-import com.medicalsystem.backend.model.Teacher
 import com.medicalsystem.backend.model.User
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.AfterEach
@@ -57,7 +56,7 @@ class CurrentUserArgumentResolverTest {
         val method = TestController::class.java.getMethod("testMethod", User::class.java)
         val parameter = MethodParameter(method, 0)
         
-        val mockUser = Teacher(id = 1L, name = "Test Teacher", email = EmailAddress("teacher@univ.edu.cn"), employeeNumber = com.medicalsystem.backend.model.SchoolEmployeeId("EMP-123"), collegeId = 10L)
+        val mockUser = com.medicalsystem.backend.model.User(id = 1L, name = "Test Teacher", email = EmailAddress("teacher@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.TEACHER)
         MockSecurityContextHolder.getContext().user = mockUser
         
         val result = resolver.resolveArgument(
