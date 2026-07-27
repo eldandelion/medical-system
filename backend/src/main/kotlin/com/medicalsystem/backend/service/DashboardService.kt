@@ -78,7 +78,7 @@ class DashboardService(
             avatarUrl = user.avatarUrl?.toString(),
             name = user.name,
             role = user.role,
-            employeeId = "HC-${headCounsellor.userId}",
+            employeeId = headCounsellor.employeeNumber.value,
             department = department.name
         )
     }

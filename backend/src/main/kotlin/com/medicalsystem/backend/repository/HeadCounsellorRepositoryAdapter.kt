@@ -1,6 +1,7 @@
 package com.medicalsystem.backend.repository
 
 import com.medicalsystem.backend.model.HeadCounsellor
+import com.medicalsystem.backend.model.SchoolEmployeeId
 import org.springframework.stereotype.Repository
 import java.util.Optional
 
@@ -12,6 +13,7 @@ class HeadCounsellorRepositoryAdapter(
         return jpaRepository.findById(id).map { entity ->
             HeadCounsellor(
                 userId = entity.userId,
+                employeeNumber = SchoolEmployeeId(entity.employeeNumber),
                 schoolId = entity.school.id,
                 departmentId = entity.department.id
             )

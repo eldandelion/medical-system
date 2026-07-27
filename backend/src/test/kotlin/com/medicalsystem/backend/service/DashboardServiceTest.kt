@@ -123,7 +123,7 @@ class DashboardServiceTest {
     fun `getHeadCounsellorProfile maps domain model to dto correctly`() {
         val mockUser = com.medicalsystem.backend.model.User(id = 4L, name = "Counsellor Li", email = EmailAddress("li@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR)
         
-        val headCounsellor = HeadCounsellor(userId = 4L, schoolId = 1L, departmentId = 7L)
+        val headCounsellor = HeadCounsellor(userId = 4L, employeeNumber = SchoolEmployeeId("HC-004"), schoolId = 1L, departmentId = 7L)
         val department = SchoolDepartment(id = 7L, name = "Psychology Department", schoolId = 1L)
 
         `when`(headCounsellorRepository.findById(4L)).thenReturn(Optional.of(headCounsellor))
@@ -134,7 +134,7 @@ class DashboardServiceTest {
         assertNull(result.avatarUrl)
         assertEquals("Counsellor Li", result.name)
         assertEquals(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, result.role)
-        assertEquals("HC-4", result.employeeId)
+        assertEquals("HC-004", result.employeeId)
         assertEquals("Psychology Department", result.department)
     }
 }

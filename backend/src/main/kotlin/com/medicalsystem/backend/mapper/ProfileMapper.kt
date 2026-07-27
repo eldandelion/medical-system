@@ -44,6 +44,7 @@ class ProfileMapper {
     fun toHeadCounsellor(entity: HeadCounsellorEntity): HeadCounsellor {
         return HeadCounsellor(
             userId = entity.userId,
+            employeeNumber = SchoolEmployeeId(entity.employeeNumber),
             schoolId = entity.school.id,
             departmentId = entity.department.id
         )
@@ -52,6 +53,7 @@ class ProfileMapper {
     fun toHeadCounsellorEntity(profile: HeadCounsellor): HeadCounsellorEntity {
         return HeadCounsellorEntity(
             userId = profile.userId,
+            employeeNumber = profile.employeeNumber.value,
             school = SchoolEntity(id = profile.schoolId, name = ""),
             department = SchoolDepartmentEntity(id = profile.departmentId, name = "", school = SchoolEntity(id = profile.schoolId, name = ""))
         )
