@@ -10,5 +10,13 @@ import com.medicalsystem.backend.model.EmailAddress
 class HeadCounsellorEntity(
     @Id
     @Column(name = "user_id")
-    val userId: Long
+    val userId: Long,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "school_id", nullable = false)
+    var school: SchoolEntity,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id", nullable = false)
+    var department: SchoolDepartmentEntity
 )

@@ -44,6 +44,12 @@ class DashboardServiceTest {
     @Mock
     private lateinit var trialAdminRepository: com.medicalsystem.backend.repository.TrialAdminRepository
 
+    @Mock
+    private lateinit var headCounsellorRepository: com.medicalsystem.backend.repository.HeadCounsellorRepository
+
+    @Mock
+    private lateinit var schoolDepartmentRepository: com.medicalsystem.backend.repository.SchoolDepartmentRepository
+
     @InjectMocks
     private lateinit var dashboardService: DashboardService
 
@@ -111,5 +117,24 @@ class DashboardServiceTest {
         assertEquals(com.medicalsystem.backend.model.UserRole.TRIAL_ADMIN, result.role)
         assertEquals("HOSP-001", result.employeeId)
         assertEquals("University Hospital", result.hospital)
+    }
+
+    @Test
+    fun `getHeadCounsellorProfile maps domain model to dto correctly`() {
+        val mockUser = com.medicalsystem.backend.model.User(id = 4L, name = "Counsellor Li", email = EmailAddress("li@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR)
+        
+        val headCounsellor = HeadCounsellor(userId = 4L, schoolId = 1L, departmentId = 7L)
+        val department = SchoolDepartment(id = 7L, name = "Psychology Department", schoolId = 1L)
+
+        `when`(headCounsellorRepository.findById(4L)).thenReturn(Optional.of(headCounsellor))
+        `when`(schoolDepartmentRepository.findById(7L)).thenReturn(Optional.of(department))
+
+        val result = dashboardService.getHeadCounsellorProfile(mockUser)
+
+        assertNull(result.avatarUrl)
+        assertEquals("Counsellor Li", result.name)
+        assertEquals(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, result.role)
+        assertEquals("HC-4", result.employeeId)
+        assertEquals("Psychology Department", result.department)
     }
 }

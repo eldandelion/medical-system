@@ -32,7 +32,8 @@ class DataInitializer {
         doctorRepository: DoctorRepository,
         teacherRepository: TeacherRepository,
         trialAdminRepository: TrialAdminRepository,
-        headCounsellorRepository: HeadCounsellorRepository,
+        headCounsellorJpaRepository: HeadCounsellorJpaRepository,
+        schoolDepartmentJpaRepository: SchoolDepartmentJpaRepository,
         studentHealthProfileRepository: StudentHealthProfileJpaRepository,
         jdbcTemplate: JdbcTemplate
     ) = CommandLineRunner {
@@ -128,7 +129,8 @@ class DataInitializer {
         val doctorWang = doctorRepository.save(DoctorEntity(userId = doctorWangBase.id, employeeNumber = "DOC-00002", department = psychDept))
 
         val headCounsellorBase = userRepository.save(UserEntity(name = "王主任", email = EmailAddress("wang_head@univ.edu.cn"), role = UserRole.HEAD_COUNSELLOR))
-        val headCounsellor = headCounsellorRepository.save(HeadCounsellorEntity(userId = headCounsellorBase.id))
+        val scDept = schoolDepartmentJpaRepository.save(SchoolDepartmentEntity(name = "咨询中心", school = mainSchool))
+        val headCounsellor = headCounsellorJpaRepository.save(HeadCounsellorEntity(userId = headCounsellorBase.id, school = mainSchool, department = scDept))
 
         val dest = ReferralDestinationEntity(
             hospital = hosp,

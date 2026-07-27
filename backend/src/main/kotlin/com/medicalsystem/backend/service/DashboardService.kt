@@ -15,7 +15,9 @@ class DashboardService(
     private val hospitalDepartmentRepository: HospitalDepartmentRepository,
     private val teacherRepository: TeacherRepository,
     private val doctorRepository: DoctorRepository,
-    private val trialAdminRepository: TrialAdminRepository
+    private val trialAdminRepository: TrialAdminRepository,
+    private val headCounsellorRepository: HeadCounsellorRepository,
+    private val schoolDepartmentRepository: SchoolDepartmentRepository
 ) {
 
     fun getStudentProfile(user: User): ProfileSummaryDto {
@@ -66,15 +68,18 @@ class DashboardService(
     }
 
     fun getHeadCounsellorProfile(user: User): ProfileSummaryDto {
-        val headCounsellor = userRepository.findById(user.id)
+        val headCounsellor = headCounsellorRepository.findById(user.id)
             .orElseThrow { ResourceNotFoundException("Head Counsellor not found for user ${user.id}") }
+            
+        val department = schoolDepartmentRepository.findById(headCounsellor.departmentId)
+            .orElseThrow { ResourceNotFoundException("Department not found for head counsellor ${headCounsellor.userId}") }
         
         return ProfileSummaryDto(
             avatarUrl = user.avatarUrl?.toString(),
             name = user.name,
             role = user.role,
-            employeeId = "HC-${headCounsellor.id}",
-            department = "咨询中心"
+            employeeId = "HC-${headCounsellor.userId}",
+            department = department.name
         )
     }
 
