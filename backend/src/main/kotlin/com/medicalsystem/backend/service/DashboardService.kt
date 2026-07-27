@@ -12,7 +12,7 @@ class DashboardService(
     private val userRepository: UserRepository,
     private val collegeRepository: CollegeRepository,
     private val hospitalRepository: HospitalRepository,
-    private val departmentRepository: DepartmentRepository,
+    private val hospitalDepartmentRepository: HospitalDepartmentRepository,
     private val teacherRepository: TeacherRepository,
     private val doctorRepository: DoctorRepository,
     private val trialAdminRepository: TrialAdminRepository
@@ -52,7 +52,7 @@ class DashboardService(
         val doctorEntity = doctorRepository.findById(user.id)
             .orElseThrow { ResourceNotFoundException("Doctor not found for user ${user.id}") }
             
-        val department = departmentRepository.findById(doctorEntity.department!!.id!!)
+        val department = hospitalDepartmentRepository.findById(doctorEntity.department!!.id!!)
             .orElseThrow { ResourceNotFoundException("Department not found for doctor ${doctorEntity.userId}") }
 
         return ProfileSummaryDto(

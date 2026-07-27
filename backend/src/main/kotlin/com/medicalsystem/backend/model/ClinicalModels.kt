@@ -9,8 +9,8 @@ value class HospitalId(val value: Long) {
 }
 
 @JvmInline
-value class DepartmentId(val value: Long) {
-    init { require(value > 0) { "DepartmentId must be positive" } }
+value class HospitalDepartmentId(val value: Long) {
+    init { require(value > 0) { "HospitalDepartmentId must be positive" } }
 }
 
 @JvmInline
@@ -34,13 +34,13 @@ data class Hospital(
     }
 }
 
-data class Department(
-    val id: DepartmentId,
+data class HospitalDepartment(
+    val id: HospitalDepartmentId,
     val name: String,
     val hospitalId: HospitalId
 ) {
     init {
-        require(name.isNotBlank()) { "Department name cannot be blank" }
+        require(name.isNotBlank()) { "HospitalDepartment name cannot be blank" }
     }
 }
 
@@ -63,7 +63,7 @@ sealed interface ReferralDestination {
     data class Triaged(
         val hospitalId: HospitalId,
         val triageAdminId: TriageAdminId,
-        val departmentId: DepartmentId,
+        val departmentId: HospitalDepartmentId,
         val doctorId: DoctorId,
         override val transferDate: LocalDate?
     ) : ReferralDestination

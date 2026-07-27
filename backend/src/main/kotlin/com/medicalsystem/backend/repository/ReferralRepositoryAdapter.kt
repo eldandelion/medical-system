@@ -7,7 +7,7 @@ import java.util.Optional
 
 import jakarta.persistence.EntityManager
 import com.medicalsystem.backend.entity.HospitalEntity
-import com.medicalsystem.backend.entity.DepartmentEntity
+import com.medicalsystem.backend.entity.HospitalDepartmentEntity
 import com.medicalsystem.backend.entity.DoctorEntity
 import com.medicalsystem.backend.entity.TrialAdminEntity
 import com.medicalsystem.backend.entity.ReferralDestinationEntity
@@ -44,7 +44,7 @@ class ReferralRepositoryAdapter(
                 )
                 is com.medicalsystem.backend.model.ReferralDestination.Triaged -> ReferralDestinationEntity(
                     hospital = entityManager.getReference(HospitalEntity::class.java, dest.hospitalId.value),
-                    department = entityManager.getReference(DepartmentEntity::class.java, dest.departmentId.value),
+                    department = entityManager.getReference(HospitalDepartmentEntity::class.java, dest.departmentId.value),
                     doctor = entityManager.getReference(DoctorEntity::class.java, dest.doctorId.value),
                     triageAdmin = entityManager.getReference(TrialAdminEntity::class.java, dest.triageAdminId.value),
                     transferDate = dest.transferDate

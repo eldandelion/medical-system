@@ -16,7 +16,7 @@ import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import com.medicalsystem.backend.repository.UserRepository
 import com.medicalsystem.backend.repository.HospitalRepository
-import com.medicalsystem.backend.repository.DepartmentRepository
+import com.medicalsystem.backend.repository.HospitalDepartmentRepository
 import com.medicalsystem.backend.exception.ValidationException
 import com.medicalsystem.backend.model.User
 
@@ -27,7 +27,7 @@ class ReferralService(
     private val studentRepository: StudentRepository,
     private val userRepository: UserRepository,
     private val hospitalRepository: HospitalRepository,
-    private val departmentRepository: DepartmentRepository,
+    private val hospitalDepartmentRepository: HospitalDepartmentRepository,
     private val doctorRepository: com.medicalsystem.backend.repository.DoctorRepository,
     private val trialAdminRepository: com.medicalsystem.backend.repository.TrialAdminRepository,
     private val referralMapper: ReferralMapper,
@@ -88,7 +88,7 @@ class ReferralService(
             hospitalName = hospitalRepository.findById(hospitalId.value).orElse(null)?.name
             
             if (dest is com.medicalsystem.backend.model.ReferralDestination.Triaged) {
-                departmentName = departmentRepository.findById(dest.departmentId.value).orElse(null)?.name
+                departmentName = hospitalDepartmentRepository.findById(dest.departmentId.value).orElse(null)?.name
                 doctorName = userRepository.findById(dest.doctorId.value).orElse(null)?.name
                 adminName = userRepository.findById(dest.triageAdminId.value).orElse(null)?.name
             }
@@ -223,7 +223,7 @@ class ReferralService(
         referral.destination = com.medicalsystem.backend.model.ReferralDestination.Triaged(
             hospitalId = existingHospitalId,
             triageAdminId = com.medicalsystem.backend.model.TriageAdminId(user.id),
-            departmentId = com.medicalsystem.backend.model.DepartmentId(departmentIdRaw),
+            departmentId = com.medicalsystem.backend.model.HospitalDepartmentId(departmentIdRaw),
             doctorId = com.medicalsystem.backend.model.DoctorId(doctor.id),
             transferDate = referral.destination?.transferDate
         )

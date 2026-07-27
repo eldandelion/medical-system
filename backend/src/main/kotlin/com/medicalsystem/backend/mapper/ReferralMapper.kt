@@ -33,7 +33,7 @@ class ReferralMapper {
                         com.medicalsystem.backend.model.ReferralDestination.Triaged(
                             hospitalId = com.medicalsystem.backend.model.HospitalId(dest.hospital!!.id),
                             triageAdminId = com.medicalsystem.backend.model.TriageAdminId(dest.triageAdmin!!.userId),
-                            departmentId = com.medicalsystem.backend.model.DepartmentId(dest.department!!.id),
+                            departmentId = com.medicalsystem.backend.model.HospitalDepartmentId(dest.department!!.id),
                             doctorId = com.medicalsystem.backend.model.DoctorId(dest.doctor!!.userId),
                             transferDate = dest.transferDate
                         )

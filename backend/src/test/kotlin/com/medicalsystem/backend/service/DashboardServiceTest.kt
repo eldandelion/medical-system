@@ -33,7 +33,7 @@ class DashboardServiceTest {
     private lateinit var hospitalRepository: HospitalRepository
 
     @Mock
-    private lateinit var departmentRepository: com.medicalsystem.backend.repository.DepartmentRepository
+    private lateinit var hospitalDepartmentRepository: com.medicalsystem.backend.repository.HospitalDepartmentRepository
 
     @Mock
     private lateinit var teacherRepository: com.medicalsystem.backend.repository.TeacherRepository

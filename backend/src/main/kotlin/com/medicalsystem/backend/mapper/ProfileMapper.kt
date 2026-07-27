@@ -21,7 +21,7 @@ class ProfileMapper {
             userId = profile.userId,
             employeeNumber = profile.employeeNumber.value,
             phone = profile.phone?.value,
-            department = DepartmentEntity(id = profile.departmentId, name = "", hospital = HospitalEntity(id = 0, name = ""))
+            department = HospitalDepartmentEntity(id = profile.departmentId, name = "", hospital = HospitalEntity(id = 0, name = ""))
         )
     }
 

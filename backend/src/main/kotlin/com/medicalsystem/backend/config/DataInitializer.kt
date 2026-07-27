@@ -28,7 +28,7 @@ class DataInitializer {
         schoolRepository: com.medicalsystem.backend.repository.SchoolJpaRepository,
         referralRepository: ReferralJpaRepository,
         hospitalRepository: HospitalRepository,
-        departmentRepository: DepartmentRepository,
+        hospitalDepartmentRepository: HospitalDepartmentRepository,
         doctorRepository: DoctorRepository,
         teacherRepository: TeacherRepository,
         trialAdminRepository: TrialAdminRepository,
@@ -41,7 +41,7 @@ class DataInitializer {
         studentRepository.deleteAll()
         userRepository.deleteAll()
         doctorRepository.deleteAll()
-        departmentRepository.deleteAll()
+        hospitalDepartmentRepository.deleteAll()
         hospitalRepository.deleteAll()
         majorRepository.deleteAll()
         collegeRepository.deleteAll()
@@ -111,8 +111,8 @@ class DataInitializer {
         studentHealthProfileRepository.save(hp3)
 
         val hosp = hospitalRepository.save(HospitalEntity(name = "中南大学湘雅医院"))
-        val medDept = departmentRepository.save(DepartmentEntity(name = "内科", hospital = hosp))
-        val psychDept = departmentRepository.save(DepartmentEntity(name = "心理咨询科", hospital = hosp))
+        val medDept = hospitalDepartmentRepository.save(HospitalDepartmentEntity(name = "内科", hospital = hosp))
+        val psychDept = hospitalDepartmentRepository.save(HospitalDepartmentEntity(name = "心理咨询科", hospital = hosp))
 
         val studentUserBase = userRepository.save(UserEntity(name = "李明", email = EmailAddress("liming@univ.edu.cn"), role = UserRole.STUDENT))
         val triageAdminBase = userRepository.save(UserEntity(name = "张老师", email = EmailAddress("zhang@univ.edu.cn"), role = UserRole.TRIAL_ADMIN))

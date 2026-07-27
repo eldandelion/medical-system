@@ -120,7 +120,7 @@ class ReferralTest {
         referral.destination = ReferralDestination.Triaged(
             hospitalId = HospitalId(1L),
             triageAdminId = TriageAdminId(1L),
-            departmentId = DepartmentId(1L),
+            departmentId = HospitalDepartmentId(1L),
             doctorId = DoctorId(1L),
             transferDate = null
         )
@@ -159,7 +159,7 @@ class ReferralTest {
         referral.destination = ReferralDestination.Triaged(
             hospitalId = HospitalId(1L),
             triageAdminId = TriageAdminId(1L),
-            departmentId = DepartmentId(1L),
+            departmentId = HospitalDepartmentId(1L),
             doctorId = DoctorId(1L),
             transferDate = null
         )
@@ -202,7 +202,7 @@ class ReferralTest {
         
         referralSpy.destination = com.medicalsystem.backend.model.ReferralDestination.Triaged(
             hospitalId = com.medicalsystem.backend.model.HospitalId(1L),
-            departmentId = com.medicalsystem.backend.model.DepartmentId(1L),
+            departmentId = com.medicalsystem.backend.model.HospitalDepartmentId(1L),
             doctorId = com.medicalsystem.backend.model.DoctorId(3L),
             triageAdminId = com.medicalsystem.backend.model.TriageAdminId(1L),
             transferDate = null

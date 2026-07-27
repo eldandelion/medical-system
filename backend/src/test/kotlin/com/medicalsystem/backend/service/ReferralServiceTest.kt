@@ -31,7 +31,7 @@ class ReferralServiceTest {
     private lateinit var hospitalRepository: HospitalRepository
 
     @Mock
-    private lateinit var departmentRepository: DepartmentRepository
+    private lateinit var hospitalDepartmentRepository: HospitalDepartmentRepository
 
     @Mock
     private lateinit var doctorRepository: DoctorRepository
@@ -98,7 +98,7 @@ class ReferralServiceTest {
         referral.submit(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, 1L)
         referral.approve(com.medicalsystem.backend.model.HospitalId(1L), 1L)
         
-        val doctorEntity = com.medicalsystem.backend.entity.DoctorEntity(userId = 2L, employeeNumber = "D", department = com.medicalsystem.backend.entity.DepartmentEntity(id = 5L, name = "Dep", hospital = com.medicalsystem.backend.entity.HospitalEntity(id = 1L, name = "H")))
+        val doctorEntity = com.medicalsystem.backend.entity.DoctorEntity(userId = 2L, employeeNumber = "D", department = com.medicalsystem.backend.entity.HospitalDepartmentEntity(id = 5L, name = "Dep", hospital = com.medicalsystem.backend.entity.HospitalEntity(id = 1L, name = "H")))
 
         `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
         `when`(userRepository.findById(2L)).thenReturn(Optional.of(doctor))
@@ -138,7 +138,7 @@ class ReferralServiceTest {
         
         // Mock Triaged destination before moving to scheduling
         referral.destination = com.medicalsystem.backend.model.ReferralDestination.Triaged(
-            hospitalId = HospitalId(1L), departmentId = DepartmentId(1L), doctorId = DoctorId(2L), triageAdminId = TriageAdminId(1L), transferDate = null
+            hospitalId = HospitalId(1L), departmentId = HospitalDepartmentId(1L), doctorId = DoctorId(2L), triageAdminId = TriageAdminId(1L), transferDate = null
         )
         referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING)
         

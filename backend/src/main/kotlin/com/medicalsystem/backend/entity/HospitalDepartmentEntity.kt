@@ -3,8 +3,8 @@ package com.medicalsystem.backend.entity
 import jakarta.persistence.*
 
 @Entity
-@Table(name = "departments")
-class DepartmentEntity(
+@Table(name = "hospital_departments")
+class HospitalDepartmentEntity(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 

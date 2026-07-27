@@ -2,7 +2,7 @@ package com.medicalsystem.backend.service
 
 import com.medicalsystem.backend.dto.DoctorDto
 import com.medicalsystem.backend.repository.AppointmentRepository
-import com.medicalsystem.backend.repository.DepartmentRepository
+import com.medicalsystem.backend.repository.HospitalDepartmentRepository
 import com.medicalsystem.backend.repository.UserRepository
 import com.medicalsystem.backend.repository.DoctorRepository
 import org.springframework.data.repository.findByIdOrNull
@@ -18,14 +18,14 @@ import java.time.temporal.TemporalAdjusters
 class DoctorService(
     private val appointmentRepository: AppointmentRepository,
     private val userRepository: UserRepository,
-    private val departmentRepository: DepartmentRepository,
+    private val hospitalDepartmentRepository: HospitalDepartmentRepository,
     private val doctorRepository: DoctorRepository,
     private val clock: Clock = Clock.systemDefaultZone()
 ) {
 
     fun getAllDoctors(): List<DoctorDto> =
         doctorRepository.findAll().map { doctorEntity ->
-            val departmentName = doctorEntity.department?.id?.let { departmentRepository.findByIdOrNull(it)?.name } ?: "未知部门"
+            val departmentName = doctorEntity.department?.id?.let { hospitalDepartmentRepository.findByIdOrNull(it)?.name } ?: "未知部门"
             val doctorUser = userRepository.findById(doctorEntity.userId).orElse(null)
             DoctorDto(
                 id = doctorEntity.userId,
