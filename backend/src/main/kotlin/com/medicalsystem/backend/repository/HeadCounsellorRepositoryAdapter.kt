@@ -14,8 +14,8 @@ class HeadCounsellorRepositoryAdapter(
             HeadCounsellor(
                 userId = entity.userId,
                 employeeNumber = SchoolEmployeeId(entity.employeeNumber),
-                schoolId = entity.school.id,
-                departmentId = entity.department.id
+                schoolId = entity.schoolId,
+                departmentId = entity.departmentId
             )
         }
     }

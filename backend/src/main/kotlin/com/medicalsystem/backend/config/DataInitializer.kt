@@ -130,7 +130,7 @@ class DataInitializer {
 
         val headCounsellorBase = userRepository.save(UserEntity(name = "王主任", email = EmailAddress("wang_head@univ.edu.cn"), role = UserRole.HEAD_COUNSELLOR))
         val scDept = schoolDepartmentJpaRepository.save(SchoolDepartmentEntity(name = "咨询中心", school = mainSchool))
-        val headCounsellor = headCounsellorJpaRepository.save(HeadCounsellorEntity(userId = headCounsellorBase.id, employeeNumber = "HC-00001", school = mainSchool, department = scDept))
+        val headCounsellor = headCounsellorJpaRepository.save(HeadCounsellorEntity(userId = headCounsellorBase.id, employeeNumber = "HC-00001", schoolId = mainSchool.id!!, departmentId = scDept.id!!))
 
         val dest = ReferralDestinationEntity(
             hospital = hosp,

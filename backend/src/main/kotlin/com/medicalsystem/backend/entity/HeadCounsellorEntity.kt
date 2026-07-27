@@ -15,11 +15,9 @@ class HeadCounsellorEntity(
     @Column(name = "employee_number", nullable = false, length = 50)
     var employeeNumber: String,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "school_id", nullable = false)
-    var school: SchoolEntity,
+    @Column(name = "school_id", nullable = false)
+    val schoolId: Long,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "department_id", nullable = false)
-    var department: SchoolDepartmentEntity
+    @Column(name = "department_id", nullable = false)
+    val departmentId: Long
 )
