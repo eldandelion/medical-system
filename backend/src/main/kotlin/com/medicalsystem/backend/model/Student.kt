@@ -9,7 +9,8 @@ data class Student(
     val major: Major,
     val enrollmentDate: LocalDate,
     val riskStatus: RiskStatus,
-    val demographics: Demographics? = null
+    val demographics: Demographics? = null,
+    val assignedTeacherId: Long? = null
 ) : AggregateRoot() {
     
     fun register(riskLevel: String?) {

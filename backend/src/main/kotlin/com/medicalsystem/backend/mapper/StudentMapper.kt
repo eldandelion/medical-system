@@ -22,7 +22,8 @@ class StudentMapper(
     private val academicYearCalculator: AcademicYearCalculator,
     private val ethnicityRepository: com.medicalsystem.backend.repository.EthnicityJpaRepository,
     private val schoolRepository: com.medicalsystem.backend.repository.SchoolJpaRepository,
-    private val healthProfileRepository: StudentHealthProfileRepository
+    private val healthProfileRepository: StudentHealthProfileRepository,
+    private val teacherRepository: com.medicalsystem.backend.repository.TeacherRepository
 ) {
     fun toModel(entity: StudentEntity): Student {
         val profile = healthProfileRepository.findByStudentId(entity.id).orElse(null)
@@ -46,7 +47,8 @@ class StudentMapper(
                     emergencyContactPhone = it.emergencyContactPhone?.let { p -> com.medicalsystem.backend.model.PhoneNumber(p) },
                     school = it.school?.let { s -> School(s.id ?: 0L, s.name) }
                 )
-            }
+            },
+            assignedTeacherId = entity.assignedTeacher?.userId
         )
     }
 
@@ -98,7 +100,8 @@ class StudentMapper(
                     emergencyContactPhone = it.emergencyContactPhone?.value,
                     school = it.school?.name?.let { name -> schoolRepository.findByName(name).orElse(null) }
                 )
-            }
+            },
+            assignedTeacher = model.assignedTeacherId?.let { id -> teacherRepository.findById(id).orElse(null) }
         )
     }
 }

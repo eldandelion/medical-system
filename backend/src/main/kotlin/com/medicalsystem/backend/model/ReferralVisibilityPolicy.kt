@@ -1,6 +1,7 @@
 package com.medicalsystem.backend.model
 
 sealed class VisibilityCriteria {
+    data class ForTeacher(val teacherId: Long, val allowedInitiatorRoles: List<UserRole>) : VisibilityCriteria()
     data class ByInitiator(val initiatorId: Long) : VisibilityCriteria()
     data class ByAssignedDoctor(val doctorId: Long) : VisibilityCriteria()
     data class ByStatuses(val statuses: List<ReferralStatus>) : VisibilityCriteria()
@@ -13,7 +14,10 @@ sealed class VisibilityCriteria {
 object ReferralVisibilityPolicy {
     fun getVisibilityCriteria(user: User): VisibilityCriteria {
         return when (user.role) {
-            UserRole.TEACHER -> VisibilityCriteria.ByInitiator(user.id)
+            UserRole.TEACHER -> VisibilityCriteria.ForTeacher(
+                teacherId = user.id,
+                allowedInitiatorRoles = listOf(UserRole.HEAD_COUNSELLOR)
+            )
             UserRole.DOCTOR -> VisibilityCriteria.ByAssignedDoctor(user.id)
             UserRole.STUDENT -> VisibilityCriteria.BySubject(
                 studentId = user.id,

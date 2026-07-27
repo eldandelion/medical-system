@@ -17,11 +17,11 @@ class ReferralVisibilityPolicyTest {
     }
 
     @Test
-    fun `teacher sees only initiated referrals`() {
+    fun `teacher sees initiated referrals and referrals from allowed roles for assigned students`() {
         val user = createUser(UserRole.TEACHER, 100L)
         val criteria = ReferralVisibilityPolicy.getVisibilityCriteria(user)
         
-        assertEquals(VisibilityCriteria.ByInitiator(100L), criteria)
+        assertEquals(VisibilityCriteria.ForTeacher(100L, listOf(UserRole.HEAD_COUNSELLOR)), criteria)
     }
 
     @Test
