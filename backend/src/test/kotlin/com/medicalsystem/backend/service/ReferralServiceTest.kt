@@ -64,7 +64,7 @@ class ReferralServiceTest {
         
         val trialAdminEntity = com.medicalsystem.backend.entity.TrialAdminEntity(userId = 2L, employeeNumber = "123", hospital = com.medicalsystem.backend.entity.HospitalEntity(id = 123L, name = "H"))
         
-        `when`(trialAdminRepository.findAll()).thenReturn(listOf(trialAdminEntity))
+        `when`(trialAdminRepository.existsByHospitalId(123L)).thenReturn(true)
         `when`(referralRepository.findByIdAndVisibleTo(org.mockito.kotlin.eq(1L), org.mockito.kotlin.any())).thenReturn(Optional.of(referral))
         `when`(referralRepository.save(org.mockito.kotlin.any())).thenAnswer { it.arguments[0] }
 
@@ -82,7 +82,7 @@ class ReferralServiceTest {
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
         referral.submit(com.medicalsystem.backend.model.UserRole.TEACHER, 3L)
         
-        `when`(trialAdminRepository.findAll()).thenReturn(emptyList()) // No trial admins included
+        `when`(trialAdminRepository.existsByHospitalId(123L)).thenReturn(false) // No trial admins included
         `when`(referralRepository.findByIdAndVisibleTo(org.mockito.kotlin.eq(1L), org.mockito.kotlin.any())).thenReturn(Optional.of(referral))
 
         assertThrows(com.medicalsystem.backend.exception.ValidationException::class.java) {

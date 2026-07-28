@@ -46,13 +46,14 @@ data class HospitalDepartment(
 
 sealed interface ReferralDestination {
     val transferDate: LocalDate?
+    val hospitalId: HospitalId
 
     /**
      * Initial state: The referral has been submitted and a hospital was assigned,
      * but it has not yet been processed by a Triage Admin.
      */
     data class Submitted(
-        val hospitalId: HospitalId,
+        override val hospitalId: HospitalId,
         override val transferDate: LocalDate?
     ) : ReferralDestination
 
@@ -61,7 +62,7 @@ sealed interface ReferralDestination {
      * a specific department and doctor within the hospital.
      */
     data class Triaged(
-        val hospitalId: HospitalId,
+        override val hospitalId: HospitalId,
         val triageAdminId: TriageAdminId,
         val departmentId: HospitalDepartmentId,
         val doctorId: DoctorId,

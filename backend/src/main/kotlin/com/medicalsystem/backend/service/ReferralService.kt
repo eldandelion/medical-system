@@ -75,6 +75,7 @@ class ReferralService(
     }
 
     fun fetchReferralTracking(id: Long, user: User? = null): ReferralTrackingDto {
+        // TODO: Refactor to a dedicated Query Service / Projection to avoid manual stitching and constructor bloat
         val model = if (user != null) {
             referralRepository.findByIdAndVisibleTo(id, user)
         } else {
@@ -122,7 +123,7 @@ class ReferralService(
             model.submit(user.role, user.id)
         }
 
-        val saved = referralRepository.save(model)
+        val saved = saveAndPublishEvents(model)
         
         eventPublisher.publish(
             com.medicalsystem.backend.event.ReferralInitiatedEvent(
@@ -131,8 +132,6 @@ class ReferralService(
                 riskLevel = saved.riskLevel.name
             )
         )
-        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
-        saved.clearDomainEvents()
         
         return mapToDto(saved)
     }
@@ -146,20 +145,14 @@ class ReferralService(
             throw ValidationException("User not authorized to approve referral")
         }
         
-        val trialAdmins = trialAdminRepository.findAll()
-        val hasTrialAdmin = trialAdmins.any { it.hospital.id == dto.hospitalId }
+        val hasTrialAdmin = trialAdminRepository.existsByHospitalId(dto.hospitalId)
         
         if (!hasTrialAdmin) {
             throw ValidationException("Selected hospital has no assigned Trial Admin")
         }
 
         referral.approve(com.medicalsystem.backend.model.HospitalId(dto.hospitalId), actorId = user.id)
-        val saved = referralRepository.save(referral)
-        
-        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
-        saved.clearDomainEvents()
-
-        return mapToDto(saved)
+        return mapToDto(saveAndPublishEvents(referral))
     }
 
     @Transactional
@@ -172,12 +165,7 @@ class ReferralService(
         }
 
         referral.transition(ReferralStatus.REJECTED, actorId = user.id, reason = dto.reason)
-        val saved = referralRepository.save(referral)
-        
-        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
-        saved.clearDomainEvents()
-
-        return mapToDto(saved)
+        return mapToDto(saveAndPublishEvents(referral))
     }
 
     @Transactional
@@ -190,12 +178,7 @@ class ReferralService(
         }
 
         referral.recall(actorId = user.id)
-        
-        val saved = referralRepository.save(referral)
-        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
-        saved.clearDomainEvents()
-
-        return mapToDto(saved)
+        return mapToDto(saveAndPublishEvents(referral))
     }
 
     
@@ -216,8 +199,7 @@ class ReferralService(
             throw ValidationException("Assigned user is not a doctor")
         }
 
-        val existingHospitalId = (referral.destination as? com.medicalsystem.backend.model.ReferralDestination.Submitted)?.hospitalId 
-            ?: (referral.destination as? com.medicalsystem.backend.model.ReferralDestination.Triaged)?.hospitalId
+        val existingHospitalId = referral.destination?.hospitalId
             ?: throw ValidationException("Hospital must be assigned before assigning a doctor")
 
         val doctorProfile = doctorRepository.findById(doctor.id).orElse(null)
@@ -235,12 +217,7 @@ class ReferralService(
         )
 
         referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING, actorId = user.id)
-        val saved = referralRepository.save(referral)
-        
-        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
-        saved.clearDomainEvents()
-
-        return mapToDto(saved)
+        return mapToDto(saveAndPublishEvents(referral))
     }
 
     @Transactional
@@ -253,12 +230,7 @@ class ReferralService(
         }
 
         referral.transition(ReferralStatus.NEEDS_REASSIGNMENT, actorId = user.id, reason = dto.reason)
-        val saved = referralRepository.save(referral)
-        
-        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
-        saved.clearDomainEvents()
-
-        return mapToDto(saved)
+        return mapToDto(saveAndPublishEvents(referral))
     }
 
     @Transactional
@@ -277,13 +249,7 @@ class ReferralService(
         val time = dto.appointmentTime ?: throw ValidationException("Appointment time is required")
 
         referral.scheduleAppointment(doctorId = user.id, time = time, actorId = user.id)
-        
-        val saved = referralRepository.save(referral)
-        
-        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
-        saved.clearDomainEvents()
-
-        return mapToDto(saved)
+        return mapToDto(saveAndPublishEvents(referral))
     }
 
     @Transactional
