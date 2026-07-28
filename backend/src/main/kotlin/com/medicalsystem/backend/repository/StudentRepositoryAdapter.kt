@@ -15,8 +15,24 @@ class StudentRepositoryAdapter(
         return jpaRepository.findAll().map { mapper.toModel(it) }
     }
 
+    override fun findVisibleStudentsFor(user: com.medicalsystem.backend.model.User): List<Student> {
+        val criteria = com.medicalsystem.backend.model.StudentVisibilityPolicy.getVisibilityCriteria(user)
+        val spec = StudentJpaSpecification.fromVisibilityCriteria(criteria)
+        return jpaRepository.findAll(spec).map { mapper.toModel(it) }
+    }
+
     override fun findById(id: Long): Optional<Student> {
         return jpaRepository.findById(id).map { mapper.toModel(it) }
+    }
+
+    override fun findByIdAndVisibleTo(id: Long, user: com.medicalsystem.backend.model.User): Optional<Student> {
+        val criteria = com.medicalsystem.backend.model.StudentVisibilityPolicy.getVisibilityCriteria(user)
+        val visibilitySpec = StudentJpaSpecification.fromVisibilityCriteria(criteria)
+        val idSpec = org.springframework.data.jpa.domain.Specification<com.medicalsystem.backend.entity.StudentEntity> { root, _, cb ->
+            cb.equal(root.get<Long>("id"), id)
+        }
+        val spec = visibilitySpec.and(idSpec)
+        return jpaRepository.findOne(spec).map { mapper.toModel(it) }
     }
 
     override fun existsByStudentNumber(studentNumber: String): Boolean {

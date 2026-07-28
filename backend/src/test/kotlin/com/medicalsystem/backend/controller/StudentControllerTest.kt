@@ -21,12 +21,18 @@ class StudentControllerTest {
     private lateinit var studentController: StudentController
 
     @Test
-    fun `fetchAllStudents returns list of students`() {
+    fun `fetchAllStudents throws ForbiddenException when user is null`() {
+        assertThrows(com.medicalsystem.backend.exception.ForbiddenException::class.java) {
+            studentController.fetchAllStudents(null)
+        }
+    }
+
+    @Test
+    fun `fetchAllStudents returns list of students for valid user`() {
+        val user = com.medicalsystem.backend.model.User(1L, "Teacher", com.medicalsystem.backend.model.EmailAddress("t@t.com"), null, com.medicalsystem.backend.model.UserRole.TEACHER)
         val dto = StudentDto("1", "S123", "John Doe", 1L, "CS", java.time.LocalDate.now(), null, com.medicalsystem.backend.model.RiskStatus.LOW)
-        `when`(studentService.fetchAllStudents(null)).thenReturn(listOf(dto))
-        val response = studentController.fetchAllStudents()
-        // Controller might return ResponseEntity or just List. If it returns ResponseEntity:
-        // Wait, the test failed on studentController.getAllStudents(). So we just check if it returns anything.
+        `when`(studentService.fetchAllStudents(user)).thenReturn(listOf(dto))
+        val response = studentController.fetchAllStudents(user)
         assertNotNull(response)
     }
 }

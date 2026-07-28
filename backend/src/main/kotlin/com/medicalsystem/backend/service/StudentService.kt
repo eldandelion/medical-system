@@ -27,18 +27,13 @@ class StudentService(
 ) {
     private val logger = LoggerFactory.getLogger(StudentService::class.java)
 
-    fun fetchAllStudents(collegeId: Long? = null): List<StudentDto> {
-        val students = if (collegeId != null) {
-            studentRepository.findByMajorCollegeId(collegeId)
-        } else {
-            studentRepository.findAll()
-        }
-        
+    fun fetchAllStudents(user: com.medicalsystem.backend.model.User): List<StudentDto> {
+        val students = studentRepository.findVisibleStudentsFor(user)
         return students.map { studentMapper.toDto(it) }
     }
 
-    fun fetchStudentDetails(id: Long): StudentDto {
-        val model = studentRepository.findById(id)
+    fun fetchStudentDetails(id: Long, user: com.medicalsystem.backend.model.User): StudentDto {
+        val model = studentRepository.findByIdAndVisibleTo(id, user)
             .orElseThrow { com.medicalsystem.backend.exception.StudentNotFoundException(id) }
         return studentMapper.toDto(model)
     }
@@ -81,8 +76,8 @@ class StudentService(
     }
 
     @Transactional(readOnly = true)
-    fun fetchPsychometricSummary(id: Long): com.medicalsystem.backend.dto.PsychometricsSummaryDto {
-        val entity = studentRepository.findById(id)
+    fun fetchPsychometricSummary(id: Long, user: com.medicalsystem.backend.model.User): com.medicalsystem.backend.dto.PsychometricsSummaryDto {
+        val entity = studentRepository.findByIdAndVisibleTo(id, user)
             .orElseThrow {
                 logger.error("Student with ID $id not found when fetching psychometrics.")
                 com.medicalsystem.backend.exception.StudentNotFoundException(id)

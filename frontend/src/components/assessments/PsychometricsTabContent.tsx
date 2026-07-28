@@ -80,11 +80,16 @@ const MemoizedRadarChart = React.memo(({ radarData }: { radarData: any[] }) => (
 
 import { useQuery } from '@tanstack/react-query';
 
+import { useAuth } from '../../contexts/AuthContext';
+
 export function PsychometricsTabContent({ student }: PsychometricsTabContentProps) {
+  const { session } = useAuth();
   const { data, isLoading: loading, error } = useQuery({
-    queryKey: ['psychometrics', student?.id],
+    queryKey: ['psychometrics', student?.id, session.token],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/students/${student?.id}/psychometrics`.replace('//api', '/api'));
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/students/${student?.id}/psychometrics`.replace('//api', '/api'), {
+        headers: { 'Authorization': `Bearer ${session.token}` }
+      });
       if (!res.ok) throw new Error('Failed to fetch psychometrics data');
       return res.json();
     },

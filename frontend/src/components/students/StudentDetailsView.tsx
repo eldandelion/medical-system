@@ -35,7 +35,10 @@ export const STUDENT_DETAILS_TABS = [
   { id: StudentDetailsTabs.HISTORY, label: '档案记录', icon: 'history_edu' },
 ];
 
+import { useAuth } from '../../contexts/AuthContext';
+
 export function StudentDetailsView({ student: initialStudent, hideHeader, activeTab: propsActiveTab, onTabChange }: StudentDetailsViewProps) {
+  const { session } = useAuth();
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>(StudentDetailsTabs.OVERVIEW);
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
   
@@ -52,9 +55,11 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
   const tabs = STUDENT_DETAILS_TABS;
 
   const { data: studentData } = useQuery<Student>({
-    queryKey: ['/api/students', initialStudent?.id],
+    queryKey: ['/api/students', initialStudent?.id, session.token],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/students/${initialStudent?.id}`.replace('//api', '/api'));
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/students/${initialStudent?.id}`.replace('//api', '/api'), {
+        headers: { 'Authorization': `Bearer ${session.token}` }
+      });
       if (!res.ok) throw new Error('Failed to fetch student details');
       return res.json();
     },
