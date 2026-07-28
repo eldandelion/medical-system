@@ -65,7 +65,7 @@ class ReferralServiceTest {
         val trialAdminEntity = com.medicalsystem.backend.entity.TrialAdminEntity(userId = 2L, employeeNumber = "123", hospital = com.medicalsystem.backend.entity.HospitalEntity(id = 123L, name = "H"))
         
         `when`(trialAdminRepository.findAll()).thenReturn(listOf(trialAdminEntity))
-        `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
+        `when`(referralRepository.findByIdAndVisibleTo(org.mockito.kotlin.eq(1L), org.mockito.kotlin.any())).thenReturn(Optional.of(referral))
         `when`(referralRepository.save(org.mockito.kotlin.any())).thenAnswer { it.arguments[0] }
 
         referralService.approveReferral(1L, com.medicalsystem.backend.dto.ApproveReferralDto(hospitalId = 123L), councillor)
@@ -83,7 +83,7 @@ class ReferralServiceTest {
         referral.submit(com.medicalsystem.backend.model.UserRole.TEACHER, 3L)
         
         `when`(trialAdminRepository.findAll()).thenReturn(emptyList()) // No trial admins included
-        `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
+        `when`(referralRepository.findByIdAndVisibleTo(org.mockito.kotlin.eq(1L), org.mockito.kotlin.any())).thenReturn(Optional.of(referral))
 
         assertThrows(com.medicalsystem.backend.exception.ValidationException::class.java) {
             referralService.approveReferral(1L, com.medicalsystem.backend.dto.ApproveReferralDto(hospitalId = 123L), councillor)
@@ -100,7 +100,7 @@ class ReferralServiceTest {
         
         val doctorEntity = com.medicalsystem.backend.entity.DoctorEntity(userId = 2L, employeeNumber = "D", department = com.medicalsystem.backend.entity.HospitalDepartmentEntity(id = 5L, name = "Dep", hospital = com.medicalsystem.backend.entity.HospitalEntity(id = 1L, name = "H")))
 
-        `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
+        `when`(referralRepository.findByIdAndVisibleTo(org.mockito.kotlin.eq(1L), org.mockito.kotlin.any())).thenReturn(Optional.of(referral))
         `when`(userRepository.findById(2L)).thenReturn(Optional.of(doctor))
         `when`(doctorRepository.findById(2L)).thenReturn(Optional.of(doctorEntity))
         `when`(referralRepository.save(org.mockito.kotlin.any())).thenAnswer { it.arguments[0] }
@@ -120,7 +120,7 @@ class ReferralServiceTest {
         referral.submit(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, 1L)
         referral.approve(com.medicalsystem.backend.model.HospitalId(1L), 1L)
         
-        `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
+        `when`(referralRepository.findByIdAndVisibleTo(org.mockito.kotlin.eq(1L), org.mockito.kotlin.any())).thenReturn(Optional.of(referral))
         `when`(referralRepository.save(org.mockito.kotlin.any())).thenAnswer { it.arguments[0] }
 
         referralService.rejectReferral(1L, com.medicalsystem.backend.dto.RejectReferralDto(reason = "Not needed"), admin)
@@ -142,7 +142,7 @@ class ReferralServiceTest {
         )
         referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING)
         
-        `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
+        `when`(referralRepository.findByIdAndVisibleTo(org.mockito.kotlin.eq(1L), org.mockito.kotlin.any())).thenReturn(Optional.of(referral))
         `when`(referralRepository.save(org.mockito.kotlin.any())).thenAnswer { it.arguments[0] }
 
         val time = java.time.LocalDateTime.now().plusDays(2)
@@ -165,7 +165,7 @@ class ReferralServiceTest {
         idField.isAccessible = true
         idField.set(referral, 1L)
         
-        `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
+        `when`(referralRepository.findByIdAndVisibleTo(org.mockito.kotlin.eq(1L), org.mockito.kotlin.any())).thenReturn(Optional.of(referral))
         `when`(referralRepository.save(org.mockito.kotlin.any())).thenAnswer { it.arguments[0] }
 
         referralService.recallReferral(1L, teacher)
@@ -180,7 +180,7 @@ class ReferralServiceTest {
         val referral = ReferralFactory.createDraft(studentId = 1L, title = "T", reason = "R", riskLevel = RiskStatus.HIGH, referredById = 3L)
         referral.submit(com.medicalsystem.backend.model.UserRole.TEACHER, 3L)
         
-        `when`(referralRepository.findById(1L)).thenReturn(Optional.of(referral))
+        `when`(referralRepository.findByIdAndVisibleTo(org.mockito.kotlin.eq(1L), org.mockito.kotlin.any())).thenReturn(Optional.of(referral))
 
         val exception = assertThrows(com.medicalsystem.backend.exception.ValidationException::class.java) {
             referralService.recallReferral(1L, otherTeacher)

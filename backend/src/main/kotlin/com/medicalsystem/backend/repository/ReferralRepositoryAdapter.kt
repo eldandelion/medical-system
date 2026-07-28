@@ -33,6 +33,16 @@ class ReferralRepositoryAdapter(
         return jpaRepository.findById(id).map { mapper.toModel(it) }
     }
 
+    override fun findByIdAndVisibleTo(id: Long, user: com.medicalsystem.backend.model.User): Optional<Referral> {
+        val criteria = com.medicalsystem.backend.model.ReferralVisibilityPolicy.getVisibilityCriteria(user)
+        val visibilitySpec = ReferralJpaSpecification.fromVisibilityCriteria(criteria)
+        val idSpec = org.springframework.data.jpa.domain.Specification<com.medicalsystem.backend.entity.ReferralEntity> { root, _, cb ->
+            cb.equal(root.get<Long>("id"), id)
+        }
+        val spec = visibilitySpec.and(idSpec)
+        return jpaRepository.findOne(spec).map { mapper.toModel(it) }
+    }
+
     override fun save(referral: Referral): Referral {
         val entity = mapper.toEntity(referral)
         

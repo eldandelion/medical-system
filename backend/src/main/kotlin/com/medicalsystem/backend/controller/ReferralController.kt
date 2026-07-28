@@ -26,14 +26,17 @@ class ReferralController(
         @PathVariable id: Long,
         @CurrentUser user: User?
     ): com.medicalsystem.backend.dto.ReferralDetailsDto {
-        return referralService.fetchReferralDetails(id, user)
+        val currentUser = user ?: throw ForbiddenException("Authorized user not found")
+        return referralService.fetchReferralDetails(id, currentUser)
     }
 
     @GetMapping("/{id}/tracking")
     fun fetchReferralTracking(
-        @PathVariable id: Long
+        @PathVariable id: Long,
+        @CurrentUser user: User?
     ): com.medicalsystem.backend.dto.ReferralTrackingDto {
-        return referralService.fetchReferralTracking(id)
+        val currentUser = user ?: throw ForbiddenException("Authorized user not found")
+        return referralService.fetchReferralTracking(id, currentUser)
     }
 
     @PostMapping

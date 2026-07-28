@@ -12,7 +12,7 @@ object ReferralJpaSpecification {
                 is VisibilityCriteria.All -> cb.conjunction()
                 
                 is VisibilityCriteria.ForTeacher -> {
-                    val initiatedByTeacher = cb.equal(root.get<Long>("referredById"), criteria.teacherId)
+                val initiatedByTeacher = cb.equal(root.get<Long>("referredById"), criteria.teacherId)
 
                     // Subquery to check if the student is assigned to this teacher
                     val assignedTeacherSubq = query.subquery(Long::class.java)
