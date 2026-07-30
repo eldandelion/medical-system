@@ -18,7 +18,7 @@ class NotificationEventListener(
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun handleReferralInitiated(event: ReferralInitiatedEvent) {
-        val headCounsellorId = event.collegeId?.let { 
+        val headCounsellorId = event.schoolId?.let { 
             headCounsellorRepository.findBySchoolId(it).orElse(null)?.userId 
         }
 

@@ -19,7 +19,7 @@ class ReferralNotificationRoutingPolicyTest {
             referralId = 1L,
             studentId = 100L,
             initiatorId = 200L,
-            collegeId = 10L,
+            schoolId = 10L,
             riskStatus = RiskStatus.HIGH
         )
         val hcId = 300L
@@ -54,7 +54,7 @@ class ReferralNotificationRoutingPolicyTest {
             referralId = 1L,
             studentId = 100L,
             initiatorId = hcId,
-            collegeId = 10L,
+            schoolId = 10L,
             riskStatus = RiskStatus.MEDIUM
         )
 
@@ -77,7 +77,7 @@ class ReferralNotificationRoutingPolicyTest {
             referralId = 1L,
             studentId = 100L,
             initiatorId = 200L,
-            collegeId = 10L,
+            schoolId = 10L,
             riskStatus = RiskStatus.LOW
         )
 

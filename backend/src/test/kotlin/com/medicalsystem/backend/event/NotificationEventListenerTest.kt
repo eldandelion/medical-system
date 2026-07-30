@@ -36,7 +36,7 @@ class NotificationEventListenerTest {
             referralId = 1L,
             studentId = 100L,
             initiatorId = 200L,
-            collegeId = 10L,
+            schoolId = 10L,
             riskStatus = RiskStatus.HIGH
         )
         val hcId = 300L
