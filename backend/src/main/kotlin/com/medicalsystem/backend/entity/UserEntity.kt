@@ -15,7 +15,6 @@ class UserEntity(
     var name: String,
 
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
     var role: UserRole,
 
     @Column(length = 100, nullable = false, unique = true)
