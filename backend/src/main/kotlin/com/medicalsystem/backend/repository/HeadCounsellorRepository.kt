@@ -5,4 +5,5 @@ import java.util.Optional
 
 interface HeadCounsellorRepository {
     fun findById(id: Long): Optional<HeadCounsellor>
+    fun findAll(): List<HeadCounsellor>
 }

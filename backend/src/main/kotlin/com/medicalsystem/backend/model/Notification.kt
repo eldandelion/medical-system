@@ -20,4 +20,45 @@ data class Notification(
     fun invalidateAction() {
         this.isActionAvailable = false
     }
+
+    companion object {
+        fun createForStudent(studentId: Long, riskLevel: String): Notification {
+            return Notification(
+                userId = studentId,
+                messageCode = NotificationMessageCode.REFERRAL_SUBMITTED_STUDENT,
+                messageArgs = listOf(riskLevel),
+                actionType = NotificationActionType.NONE
+            )
+        }
+        
+        fun createForInitiator(initiatorId: Long, studentId: Long, riskLevel: String, referralId: Long): Notification {
+            return Notification(
+                userId = initiatorId,
+                messageCode = NotificationMessageCode.REFERRAL_SUBMITTED_INITIATOR,
+                messageArgs = listOf(studentId.toString(), riskLevel),
+                actionType = NotificationActionType.VIEW_REFERRAL,
+                actionTargetId = referralId
+            )
+        }
+        
+        fun createForHeadCounsellor(hcId: Long, studentId: Long, riskLevel: String, referralId: Long): Notification {
+            return Notification(
+                userId = hcId,
+                messageCode = NotificationMessageCode.REFERRAL_REQUIRES_REVIEW_HC,
+                messageArgs = listOf(studentId.toString(), riskLevel),
+                actionType = NotificationActionType.REVIEW_REFERRAL,
+                actionTargetId = referralId
+            )
+        }
+        
+        fun createDeduplicatedForHcInitiator(hcId: Long, studentId: Long, riskLevel: String, referralId: Long): Notification {
+            return Notification(
+                userId = hcId,
+                messageCode = NotificationMessageCode.REFERRAL_SUBMITTED_INITIATOR,
+                messageArgs = listOf(studentId.toString(), riskLevel),
+                actionType = NotificationActionType.REVIEW_REFERRAL,
+                actionTargetId = referralId
+            )
+        }
+    }
 }

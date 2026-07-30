@@ -19,4 +19,15 @@ class HeadCounsellorRepositoryAdapter(
             )
         }
     }
+
+    override fun findAll(): List<HeadCounsellor> {
+        return jpaRepository.findAll().map { entity ->
+            HeadCounsellor(
+                userId = entity.userId,
+                employeeNumber = SchoolEmployeeId(entity.employeeNumber),
+                schoolId = entity.schoolId,
+                departmentId = entity.departmentId
+            )
+        }
+    }
 }

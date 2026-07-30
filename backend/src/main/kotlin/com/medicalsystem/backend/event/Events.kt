@@ -6,6 +6,7 @@ import com.medicalsystem.backend.model.ReferralStatus
 data class ReferralInitiatedEvent(
     val referralId: Long,
     val studentId: Long,
+    val initiatorId: Long,
     val riskLevel: String,
     override val occurredOn: LocalDateTime = LocalDateTime.now()
 ) : DomainEvent

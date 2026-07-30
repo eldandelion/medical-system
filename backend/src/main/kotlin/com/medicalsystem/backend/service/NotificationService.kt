@@ -10,6 +10,10 @@ import org.springframework.stereotype.Service
 class NotificationService(
     private val notificationRepository: NotificationRepository
 ) {
+    fun saveNotification(notification: Notification) {
+        notificationRepository.save(notification)
+    }
+
     fun createNotification(
         userId: Long,
         messageCode: NotificationMessageCode,
@@ -26,7 +30,7 @@ class NotificationService(
             isRead = false,
             isActionAvailable = true
         )
-        notificationRepository.save(notification)
+        saveNotification(notification)
     }
 
     fun invalidateActions(actionType: NotificationActionType, targetId: Long) {
