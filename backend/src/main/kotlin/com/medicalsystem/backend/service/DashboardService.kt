@@ -5,8 +5,10 @@ import com.medicalsystem.backend.model.User
 import com.medicalsystem.backend.repository.*
 import com.medicalsystem.backend.exception.ResourceNotFoundException
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
+@Transactional(readOnly = true)
 class DashboardService(
     private val studentRepository: StudentRepository,
     private val userRepository: UserRepository,

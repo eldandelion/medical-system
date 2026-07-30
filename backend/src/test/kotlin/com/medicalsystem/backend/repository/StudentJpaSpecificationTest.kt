@@ -46,23 +46,25 @@ class StudentJpaSpecificationTest {
         )
         entityManager.persist(teacher1)
 
-        val student1 = StudentEntity(
-            studentNumber = "STU1",
-            name = "Alice",
-            major = major,
-            enrollmentDate = LocalDate.now(),
-            assignedTeacher = teacher1
-        )
-        entityManager.persist(student1)
-
         val student2 = StudentEntity(
-            studentNumber = "STU2",
-            name = "Bob",
+            id = 1002L,
+            studentNumber = "S456",
+            name = "Another Student",
             major = major,
             enrollmentDate = LocalDate.now(),
             assignedTeacher = null
         )
         entityManager.persist(student2)
+
+        val student1 = StudentEntity(
+            id = 1001L,
+            studentNumber = "S123",
+            name = "Test Student",
+            major = major,
+            enrollmentDate = LocalDate.now(),
+            assignedTeacher = teacher1
+        )
+        entityManager.persist(student1)
 
         entityManager.flush()
         entityManager.clear()

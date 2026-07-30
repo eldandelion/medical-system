@@ -11,7 +11,6 @@ import { ReferralManagementView } from '../components/records/ReferralManagement
 import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
 import { DashboardView } from '../components/dashboard/DashboardView';
-import { TeacherReferralsView } from '../components/referrals/TeacherReferralsView';
 import { roleTranslations } from '../utils/roleTranslations';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { StudentDetailsView, STUDENT_DETAILS_TABS } from '../components/students/StudentDetailsView';
@@ -24,6 +23,7 @@ import { queryClient } from '../utils/queryClient';
 import { useQuery } from '@tanstack/react-query';
 import { useTeacherProfileSummary } from '../hooks/useProfileSummary';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../hooks/useNotifications';
 
 import { TEACHER_METRICS_CONFIG } from '../config/dashboardConfig';
 
@@ -51,6 +51,7 @@ export function TeacherPage() {
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
   const [refreshKey, setRefreshKey] = React.useState(0);
   const { session } = useAuth();
+  const { unreadCount } = useNotifications(session?.token);
 
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
     queryKey: ['/api/dashboard/teacher'],
@@ -197,7 +198,7 @@ export function TeacherPage() {
     >
       <Sidebar composeButton={composeButton}>
         <NavItem icon="dashboard" label="控制面板" active={activePage === TeacherTabs.DASHBOARD} onClick={() => handlePageChange(TeacherTabs.DASHBOARD)} />
-        <NavItem icon="notifications" label="通知中心" active={activePage === TeacherTabs.NOTIFICATIONS} onClick={() => handlePageChange(TeacherTabs.NOTIFICATIONS)} badge={true} />
+        <NavItem icon="notifications" label="通知中心" active={activePage === TeacherTabs.NOTIFICATIONS} onClick={() => handlePageChange(TeacherTabs.NOTIFICATIONS)} badge={unreadCount > 0} />
 
         <NavItem icon="group" label="学生管理" active={activePage === TeacherTabs.STUDENTS} onClick={() => handlePageChange(TeacherTabs.STUDENTS)} />
         <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === TeacherTabs.REFERRAL_MANAGEMENT} onClick={() => handlePageChange(TeacherTabs.REFERRAL_MANAGEMENT)} />

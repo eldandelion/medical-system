@@ -53,4 +53,33 @@ class NotificationServiceTest {
 
         verify(notificationRepository).invalidateActionsForTarget(actionType, targetId)
     }
+
+    @Test
+    fun `getNotificationsForUser returns notifications sorted by creation date`() {
+        val userId = 1L
+        val notifications = listOf(
+            Notification(id = 1, userId = userId, messageCode = NotificationMessageCode.REFERRAL_SUBMITTED_STUDENT, actionType = NotificationActionType.NONE, messageArgs = emptyList(), isRead = false),
+            Notification(id = 2, userId = userId, messageCode = NotificationMessageCode.REFERRAL_REQUIRES_REVIEW_HC, actionType = NotificationActionType.REVIEW_REFERRAL, messageArgs = emptyList(), isRead = false)
+        )
+        `when`(notificationRepository.findByUserIdOrderByCreatedAtDesc(userId)).thenReturn(notifications.reversed())
+        
+        val result = notificationService.getNotificationsForUser(userId)
+        
+        assertEquals(2, result.size)
+        assertEquals(2L, result[0].id) // Newest first
+    }
+
+    @Test
+    fun `markAsRead successfully updates notification state`() {
+        val userId = 1L
+        val notificationId = 100L
+        val notification = Notification(id = notificationId, userId = userId, messageCode = NotificationMessageCode.REFERRAL_SUBMITTED_STUDENT, actionType = NotificationActionType.NONE, messageArgs = emptyList(), isRead = false)
+        
+        `when`(notificationRepository.findById(notificationId)).thenReturn(notification)
+        
+        notificationService.markAsRead(notificationId, userId)
+        
+        verify(notificationRepository).save(notification)
+        assertTrue(notification.isRead)
+    }
 }

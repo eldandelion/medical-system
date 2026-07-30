@@ -44,6 +44,7 @@ class StudentRepositoryAdapterTest {
         entityManager.persist(teacher1)
 
         val studentEntity1 = StudentEntity(
+            id = 1001L,
             studentNumber = "STU1",
             name = "Alice",
             major = major,
@@ -53,6 +54,7 @@ class StudentRepositoryAdapterTest {
         entityManager.persist(studentEntity1)
 
         val studentEntity2 = StudentEntity(
+            id = 1002L,
             studentNumber = "STU2",
             name = "Bob",
             major = major,

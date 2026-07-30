@@ -11,7 +11,7 @@ data class Notification(
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val actionType: NotificationActionType = NotificationActionType.NONE,
     val actionTargetId: Long? = null,
-    var isActionAvailable: Boolean = true
+    var isActionAvailable: Boolean = (actionType != NotificationActionType.NONE)
 ) {
     fun markAsRead() {
         this.isRead = true
@@ -51,14 +51,5 @@ data class Notification(
             )
         }
         
-        fun createDeduplicatedForHcInitiator(hcId: Long, studentId: Long, riskLevel: String, referralId: Long): Notification {
-            return Notification(
-                userId = hcId,
-                messageCode = NotificationMessageCode.REFERRAL_SUBMITTED_INITIATOR,
-                messageArgs = listOf(studentId.toString(), riskLevel),
-                actionType = NotificationActionType.REVIEW_REFERRAL,
-                actionTargetId = referralId
-            )
-        }
     }
 }

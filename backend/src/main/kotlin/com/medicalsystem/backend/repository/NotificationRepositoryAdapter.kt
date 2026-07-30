@@ -29,12 +29,20 @@ class NotificationRepositoryAdapter(
         return toDomain(savedEntity)
     }
 
-    override fun findAllByUserId(userId: Long): List<Notification> {
-        return notificationJpaRepository.findAllByUserIdOrderByCreatedAtDesc(userId).map { toDomain(it) }
+    override fun saveAll(notifications: List<Notification>): List<Notification> {
+        return notifications.map { save(it) }
     }
 
     override fun invalidateActionsForTarget(actionType: NotificationActionType, targetId: Long) {
         notificationJpaRepository.invalidateActionsForTarget(actionType, targetId)
+    }
+
+    override fun findByUserIdOrderByCreatedAtDesc(userId: Long): List<Notification> {
+        return notificationJpaRepository.findAllByUserIdOrderByCreatedAtDesc(userId).map { toDomain(it) }
+    }
+
+    override fun findById(id: Long): Notification? {
+        return notificationJpaRepository.findById(id).orElse(null)?.let { toDomain(it) }
     }
 
     private fun toDomain(entity: NotificationEntity): Notification {

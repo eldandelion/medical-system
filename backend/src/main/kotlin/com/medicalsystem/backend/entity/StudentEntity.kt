@@ -6,8 +6,9 @@ import com.medicalsystem.backend.model.RiskStatus
 @Entity
 @Table(name = "students")
 class StudentEntity(
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0,
+    @Id
+    @Column(name = "user_id")
+    val id: Long,
 
     @Column(unique = true, nullable = false)
     val studentNumber: String,

@@ -43,6 +43,64 @@ export const handlers = [
     return HttpResponse.json(assessment);
   }),
 
+  http.get(api('/api/notifications'), async ({ request }) => {
+    await delay(MOCK_DELAY_MS);
+    
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn('Could not fetch real notifications, falling back to mock');
+      }
+    }
+
+    return HttpResponse.json([
+      {
+        id: 1,
+        userId: 1,
+        messageCode: 'REFERRAL_SUBMITTED_INITIATOR',
+        messageArgs: ['S12345', 'HIGH'],
+        actionType: 'NONE',
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        isActionAvailable: false
+      },
+      {
+        id: 2,
+        userId: 1,
+        messageCode: 'REFERRAL_REQUIRES_REVIEW_HC',
+        messageArgs: ['S98765', 'MEDIUM'],
+        actionType: 'REVIEW_REFERRAL',
+        actionTargetId: 100,
+        isRead: false,
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        isActionAvailable: true
+      }
+    ]);
+  }),
+
+  http.patch(api('/api/notifications/:id/read'), async ({ request, params }) => {
+    await delay(500);
+    
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return new HttpResponse(null, { status: 200 });
+        }
+      } catch (e) {
+        console.warn('Could not mock read on backend, falling back to mock');
+      }
+    }
+    
+    return new HttpResponse(null, { status: 200 });
+  }),
+
 
   http.get(api('/api/dashboard/:role'), async ({ params }) => {
     await delay(MOCK_DELAY_MS);

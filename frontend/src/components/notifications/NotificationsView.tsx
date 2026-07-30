@@ -1,67 +1,72 @@
 import React from 'react';
-import { UrgentAlert } from './UrgentAlert';
 import { NotificationItem } from './NotificationItem';
+import { useNotifications } from '../../hooks/useNotifications';
+import { useAuth } from '../../contexts/AuthContext';
+import { NotificationDto } from '../../api/notifications';
+
+// Helper to translate message codes to readable Chinese text
+const getNotificationText = (notification: NotificationDto) => {
+  switch (notification.messageCode) {
+    case 'REFERRAL_SUBMITTED_STUDENT':
+      return `您的转诊申请已提交。风险等级评估为: ${notification.messageArgs[0] || '未知'}`;
+    case 'REFERRAL_SUBMITTED_INITIATOR':
+      return `您发起的转诊申请(学生ID: ${notification.messageArgs[0] || ''})已提交。风险等级: ${notification.messageArgs[1] || '未知'}`;
+    case 'REFERRAL_REQUIRES_REVIEW_HC':
+      return `有新的转诊申请需要审核(学生ID: ${notification.messageArgs[0] || ''})。风险等级: ${notification.messageArgs[1] || '未知'}`;
+    default:
+      return notification.messageCode.replace(/_/g, ' ');
+  }
+};
+
+const getNotificationTitle = (notification: NotificationDto) => {
+  if (notification.messageCode.includes('SUBMITTED')) return '转诊申请已提交';
+  if (notification.messageCode.includes('REVIEW')) return '待审核转诊申请';
+  return '新通知';
+};
 
 export function NotificationsView() {
+  const { session } = useAuth();
+  const { notifications, markAsRead, isLoading } = useNotifications(session?.token);
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
+        {/* @ts-ignore */}
+        <md-circular-progress indeterminate></md-circular-progress>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col items-stretch overflow-y-auto px-6 md:px-12 lg:px-24 pb-20 pt-8">
       <div className="max-w-3xl w-full flex flex-col mx-auto">
-        
-        {/* Needs attention section */}
         <h3 className="text-[12px] font-medium tracking-wide text-[var(--md-sys-color-on-surface-variant)] mb-4 uppercase">
-          待处理
+          所有通知
         </h3>
         
         <div className="flex flex-col gap-4 mb-4">
-          <UrgentAlert 
-            icon="warning"
-            title="逾期的心理测评"
-            description="您的辅导员要求在下次咨询前完成 PHQ-9 量表测评。"
-            actions={[
-              { label: '开始测评', variant: 'filled' }
-            ]}
-          />
-
-          <NotificationItem 
-            icon="security"
-            iconBgColor="var(--md-sys-color-tertiary-container)"
-            iconTextColor="var(--md-sys-color-on-tertiary-container)"
-            header="PIPL 数据知情同意需更新"
-            time="剩余 3 天"
-            body="将预检记录传输至外部网络的授权将在 3 天内过期。"
-            actions={[
-              { label: '管理知情同意', variant: 'outlined' }
-            ]}
-          />
-        </div>
-
-        {/* Earlier section */}
-        <div className="flex items-center gap-4 mb-6 mt-6">
-          <h3 className="text-[12px] font-medium tracking-wide text-[var(--md-sys-color-on-surface-variant)] shrink-0 uppercase">更早</h3>
-          <div className="h-[1px] bg-[var(--md-sys-color-outline-variant)] w-full opacity-30"></div>
-        </div>
-
-        <div className="flex flex-col gap-8">
-          <NotificationItem 
-            icon="local_hospital"
-            iconBgColor="var(--md-sys-color-secondary-container)"
-            iconTextColor="var(--md-sys-color-on-secondary-container)"
-            header="转诊流程已结束"
-            time="2026年4月12日"
-            body="医院已上传您 2026年4月12日 线下咨询的反馈摘要。"
-            actions={[
-              { label: '查看记录', variant: 'text' }
-            ]}
-          />
-
-          <NotificationItem 
-            icon="event"
-            iconBgColor="var(--md-sys-color-surface-variant)"
-            iconTextColor="var(--md-sys-color-on-surface-variant)"
-            header="已安排随访"
-            time="2026年5月10日"
-            body="已登记 2026年5月10日 的随访环节。"
-          />
+          {notifications.map((notification: NotificationDto) => (
+            <NotificationItem 
+              key={notification.id}
+              icon={notification.actionType === 'REVIEW_REFERRAL' ? 'assignment_turned_in' : 'info'}
+              iconBgColor={notification.isRead ? 'var(--md-sys-color-surface-variant)' : 'var(--md-sys-color-error-container)'}
+              iconTextColor={notification.isRead ? 'var(--md-sys-color-on-surface-variant)' : 'var(--md-sys-color-on-error-container)'}
+              header={getNotificationTitle(notification)}
+              time={new Date(notification.createdAt).toLocaleDateString()}
+              body={getNotificationText(notification)}
+              actions={
+                !notification.isRead
+                  ? [{ label: '标记为已读', variant: 'filled', onClick: () => markAsRead(notification.id) }]
+                  : []
+              }
+            />
+          ))}
+          
+          {notifications.length === 0 && (
+            <div className="text-center text-[var(--md-sys-color-on-surface-variant)] pt-12">
+              暂无通知
+            </div>
+          )}
         </div>
       </div>
     </div>

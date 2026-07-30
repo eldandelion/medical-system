@@ -8,7 +8,6 @@ import { NotificationsView } from '../components/notifications/NotificationsView
 import { ProfileView } from '../components/profile/ProfileView';
 import { AssessmentsView } from '../components/assessments/AssessmentsView';
 import { RecordsView, getRecordIcon } from '../components/records/RecordsView';
-import { StudentDashboardError } from '../components/dashboard/StudentDashboardError';
 import { roleTranslations } from '../utils/roleTranslations';
 import { DashboardView } from '../components/dashboard/DashboardView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
@@ -19,6 +18,7 @@ import { RecordDetailsView } from '../components/records/RecordDetailsView';
 import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { STUDENT_METRICS_CONFIG } from '../config/dashboardConfig';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../hooks/useNotifications';
 
 export const StudentTabs = {
   DASHBOARD: 'Dashboard',
@@ -43,6 +43,7 @@ export function StudentPage() {
   const [selectedRecord, setSelectedRecord] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
   const { session } = useAuth();
+  const { unreadCount } = useNotifications(session?.token);
   
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
     queryKey: ['/api/dashboard/student'],
@@ -147,7 +148,7 @@ export function StudentPage() {
     >
       <Sidebar>
         <NavItem icon="dashboard" label="控制面板" active={activePage === StudentTabs.DASHBOARD} onClick={() => handlePageChange(StudentTabs.DASHBOARD)} />
-        <NavItem icon="notifications" label="通知中心" active={activePage === StudentTabs.NOTIFICATIONS} onClick={() => handlePageChange(StudentTabs.NOTIFICATIONS)} badge={true} />
+        <NavItem icon="notifications" label="通知中心" active={activePage === StudentTabs.NOTIFICATIONS} onClick={() => handlePageChange(StudentTabs.NOTIFICATIONS)} badge={unreadCount > 0} />
 
         <NavItem icon="assignment" label="自我测评" active={activePage === StudentTabs.ASSESSMENTS} onClick={() => handlePageChange(StudentTabs.ASSESSMENTS)} />
         <NavItem icon="folder" label="我的记录" active={activePage === StudentTabs.MY_RECORDS} onClick={() => handlePageChange(StudentTabs.MY_RECORDS)} />

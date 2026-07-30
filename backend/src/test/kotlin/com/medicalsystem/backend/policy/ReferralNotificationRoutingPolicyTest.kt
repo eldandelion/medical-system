@@ -67,7 +67,7 @@ class ReferralNotificationRoutingPolicyTest {
 
         val hcNotif = notifications.find { it.userId == hcId }
         requireNotNull(hcNotif)
-        assertEquals(NotificationMessageCode.REFERRAL_SUBMITTED_INITIATOR, hcNotif.messageCode)
+        assertEquals(NotificationMessageCode.REFERRAL_REQUIRES_REVIEW_HC, hcNotif.messageCode)
         assertEquals(NotificationActionType.REVIEW_REFERRAL, hcNotif.actionType)
     }
 

@@ -10,7 +10,6 @@ import { StudentsView } from '../components/students/StudentsView';
 import { ReferralManagementView } from '../components/records/ReferralManagementView';
 import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
-import { ActivityList } from '../components/dashboard/ActivityList';
 import { roleTranslations } from '../utils/roleTranslations';
 import { DashboardView } from '../components/dashboard/DashboardView';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
@@ -26,6 +25,7 @@ import { queryClient } from '../utils/queryClient';
 import { useQuery } from '@tanstack/react-query';
 import { useHeadCouncillorProfileSummary } from '../hooks/useProfileSummary';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../hooks/useNotifications';
 
 import { HEAD_COUNCILLOR_METRICS_CONFIG } from '../config/dashboardConfig';
 
@@ -55,6 +55,7 @@ export function HeadCouncillorPage() {
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
   const [refreshKey, setRefreshKey] = React.useState(0);
   const { session } = useAuth();
+  const { unreadCount } = useNotifications(session?.token);
   
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
     queryKey: ['/api/dashboard/head-councillor'],
@@ -209,7 +210,7 @@ export function HeadCouncillorPage() {
     >
       <Sidebar composeButton={composeButton}>
         <NavItem icon="dashboard" label="控制面板" active={activePage === HeadCouncillorTabs.DASHBOARD} onClick={() => handlePageChange(HeadCouncillorTabs.DASHBOARD)} />
-        <NavItem icon="notifications" label="通知中心" active={activePage === HeadCouncillorTabs.NOTIFICATIONS} onClick={() => handlePageChange(HeadCouncillorTabs.NOTIFICATIONS)} badge={true} />
+        <NavItem icon="notifications" label="通知中心" active={activePage === HeadCouncillorTabs.NOTIFICATIONS} onClick={() => handlePageChange(HeadCouncillorTabs.NOTIFICATIONS)} badge={unreadCount > 0} />
 
         <NavItem icon="group" label="学生管理" active={activePage === HeadCouncillorTabs.STUDENTS} onClick={() => handlePageChange(HeadCouncillorTabs.STUDENTS)} />
         <NavItem icon="engineering" label="人员管理" active={activePage === HeadCouncillorTabs.STAFF} onClick={() => handlePageChange(HeadCouncillorTabs.STAFF)} />

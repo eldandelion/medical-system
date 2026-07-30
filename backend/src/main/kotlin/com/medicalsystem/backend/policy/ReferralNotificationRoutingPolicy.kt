@@ -15,22 +15,17 @@ class ReferralNotificationRoutingPolicy : NotificationRoutingPolicy<ReferralInit
         // 1. Student always gets notified
         notifications.add(Notification.createForStudent(event.studentId, riskName))
 
-        if (headCounsellorId == null) {
-            notifications.add(Notification.createForInitiator(event.initiatorId, event.studentId, riskName, event.referralId))
-            return notifications
-        }
-
-        // 2. Deduplication and routing
-        if (event.initiatorId == headCounsellorId) {
-            notifications.add(Notification.createDeduplicatedForHcInitiator(
-                headCounsellorId, event.studentId, riskName, event.referralId
-            ))
-        } else {
-            notifications.add(Notification.createForInitiator(
-                event.initiatorId, event.studentId, riskName, event.referralId
-            ))
+        // 2. Head Counsellor Review Notification
+        if (headCounsellorId != null) {
             notifications.add(Notification.createForHeadCounsellor(
                 headCounsellorId, event.studentId, riskName, event.referralId
+            ))
+        }
+
+        // 3. Initiator Notification (only if they are NOT the head counsellor)
+        if (event.initiatorId != headCounsellorId) {
+            notifications.add(Notification.createForInitiator(
+                event.initiatorId, event.studentId, riskName, event.referralId
             ))
         }
 
