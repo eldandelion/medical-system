@@ -130,7 +130,8 @@ class ReferralService(
                 referralId = saved.id!!,
                 studentId = saved.studentId,
                 initiatorId = user.id,
-                riskLevel = saved.riskLevel.name
+                collegeId = student.major.college.id,
+                riskStatus = saved.riskLevel
             )
         )
         

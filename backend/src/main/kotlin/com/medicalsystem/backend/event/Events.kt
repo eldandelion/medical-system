@@ -3,11 +3,14 @@ package com.medicalsystem.backend.event
 import java.time.LocalDateTime
 import com.medicalsystem.backend.model.ReferralStatus
 
+import com.medicalsystem.backend.model.RiskStatus
+
 data class ReferralInitiatedEvent(
     val referralId: Long,
     val studentId: Long,
     val initiatorId: Long,
-    val riskLevel: String,
+    val collegeId: Long?,
+    val riskStatus: RiskStatus,
     override val occurredOn: LocalDateTime = LocalDateTime.now()
 ) : DomainEvent
 

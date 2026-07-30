@@ -19,8 +19,8 @@ class StudentHealthProfileRiskListener(
     @Async
     @EventListener
     fun onReferralInitiated(event: ReferralInitiatedEvent) {
-        logger.info("Handling ReferralInitiatedEvent for student ${event.studentId} with risk level ${event.riskLevel}")
-        updateRiskLevelIfHigher(event.studentId, event.riskLevel)
+        logger.info("Handling ReferralInitiatedEvent for student ${event.studentId} with risk status ${event.riskStatus}")
+        updateRiskLevelIfHigher(event.studentId, event.riskStatus.name)
     }
     
     @Async

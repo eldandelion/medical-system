@@ -12,48 +12,19 @@ import org.springframework.transaction.event.TransactionalEventListener
 @Component
 class NotificationEventListener(
     private val notificationService: NotificationService,
-    private val headCounsellorRepository: com.medicalsystem.backend.repository.HeadCounsellorRepository
+    private val headCounsellorRepository: com.medicalsystem.backend.repository.HeadCounsellorRepository,
+    private val routingPolicy: com.medicalsystem.backend.policy.NotificationRoutingPolicy<ReferralInitiatedEvent>
 ) {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun handleReferralInitiated(event: ReferralInitiatedEvent) {
-        notifyStudent(event)
-        notifyInitiatorAndHeadCounsellor(event)
-    }
-
-    private fun notifyStudent(event: ReferralInitiatedEvent) {
-        val notification = com.medicalsystem.backend.model.Notification.createForStudent(event.studentId, event.riskLevel)
-        notificationService.saveNotification(notification)
-    }
-
-    private fun notifyInitiatorAndHeadCounsellor(event: ReferralInitiatedEvent) {
-        val headCounsellor = headCounsellorRepository.findAll().firstOrNull()
-
-        if (headCounsellor == null) {
-            notificationService.saveNotification(
-                com.medicalsystem.backend.model.Notification.createForInitiator(event.initiatorId, event.studentId, event.riskLevel, event.referralId)
-            )
-            return
+        val headCounsellorId = event.collegeId?.let { 
+            headCounsellorRepository.findBySchoolId(it).orElse(null)?.userId 
         }
 
-        if (event.initiatorId == headCounsellor.userId) {
-            notificationService.saveNotification(
-                com.medicalsystem.backend.model.Notification.createDeduplicatedForHcInitiator(
-                    headCounsellor.userId, event.studentId, event.riskLevel, event.referralId
-                )
-            )
-        } else {
-            notificationService.saveNotification(
-                com.medicalsystem.backend.model.Notification.createForInitiator(
-                    event.initiatorId, event.studentId, event.riskLevel, event.referralId
-                )
-            )
-            notificationService.saveNotification(
-                com.medicalsystem.backend.model.Notification.createForHeadCounsellor(
-                    headCounsellor.userId, event.studentId, event.riskLevel, event.referralId
-                )
-            )
-        }
+        val notifications = routingPolicy.determineNotifications(event, headCounsellorId)
+
+        notifications.forEach { notificationService.saveNotification(it) }
     }
 
     @Async
