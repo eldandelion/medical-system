@@ -11,7 +11,7 @@ data class ReferralDestinationEntity(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dest_department_id")
-    var department: DepartmentEntity? = null,
+    var department: HospitalDepartmentEntity? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dest_doctor_id")

@@ -7,11 +7,10 @@ import com.medicalsystem.backend.model.EmailAddress
 
 @Entity
 @Table(name = "teachers")
-@PrimaryKeyJoinColumn(name = "user_id")
 class TeacherEntity(
-    id: Long = 0,
-    name: String,
-    email: EmailAddress,
+    @Id
+    @Column(name = "user_id")
+    val userId: Long,
 
     @Column(nullable = false)
     var employeeNumber: String,
@@ -19,5 +18,4 @@ class TeacherEntity(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "college_id", nullable = false)
     var college: CollegeEntity
-
-) : UserEntity(id = id, name = name, role = UserRole.TEACHER, email = email)
+)

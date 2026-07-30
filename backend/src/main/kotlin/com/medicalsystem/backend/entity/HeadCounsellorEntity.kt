@@ -7,9 +7,17 @@ import com.medicalsystem.backend.model.EmailAddress
 
 @Entity
 @Table(name = "head_counsellors")
-@PrimaryKeyJoinColumn(name = "user_id")
 class HeadCounsellorEntity(
-    id: Long = 0,
-    name: String,
-    email: EmailAddress
-) : UserEntity(id = id, name = name, role = UserRole.HEAD_COUNSELLOR, email = email)
+    @Id
+    @Column(name = "user_id")
+    val userId: Long,
+
+    @Column(name = "employee_number", nullable = false, length = 50)
+    var employeeNumber: String,
+
+    @Column(name = "school_id", nullable = false)
+    val schoolId: Long,
+
+    @Column(name = "department_id", nullable = false)
+    val departmentId: Long
+)

@@ -16,7 +16,7 @@ import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import com.medicalsystem.backend.repository.UserRepository
 import com.medicalsystem.backend.repository.HospitalRepository
-import com.medicalsystem.backend.repository.DepartmentRepository
+import com.medicalsystem.backend.repository.HospitalDepartmentRepository
 import com.medicalsystem.backend.exception.ValidationException
 import com.medicalsystem.backend.model.User
 
@@ -27,7 +27,9 @@ class ReferralService(
     private val studentRepository: StudentRepository,
     private val userRepository: UserRepository,
     private val hospitalRepository: HospitalRepository,
-    private val departmentRepository: DepartmentRepository,
+    private val hospitalDepartmentRepository: HospitalDepartmentRepository,
+    private val doctorRepository: com.medicalsystem.backend.repository.DoctorRepository,
+    private val trialAdminRepository: com.medicalsystem.backend.repository.TrialAdminRepository,
     private val referralMapper: ReferralMapper,
     private val eventPublisher: com.medicalsystem.backend.event.DomainEventPublisher
 ) {
@@ -62,16 +64,23 @@ class ReferralService(
     }
 
     fun fetchReferralDetails(id: Long, user: User? = null): com.medicalsystem.backend.dto.ReferralDetailsDto {
-        val model = referralRepository.findById(id)
-            .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
+        val model = if (user != null) {
+            referralRepository.findByIdAndVisibleTo(id, user)
+        } else {
+            referralRepository.findById(id)
+        }.orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
         val student = studentRepository.findById(model.studentId).orElse(null)
         val referredBy = userRepository.findById(model.referredById).orElse(null)
         return referralMapper.toDetailsDto(model, student, referredBy, user)
     }
 
-    fun fetchReferralTracking(id: Long): ReferralTrackingDto {
-        val model = referralRepository.findById(id)
-            .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
+    fun fetchReferralTracking(id: Long, user: User? = null): ReferralTrackingDto {
+        // TODO: Refactor to a dedicated Query Service / Projection to avoid manual stitching and constructor bloat
+        val model = if (user != null) {
+            referralRepository.findByIdAndVisibleTo(id, user)
+        } else {
+            referralRepository.findById(id)
+        }.orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
         
         var hospitalName: String? = null
         var departmentName: String? = null
@@ -86,7 +95,7 @@ class ReferralService(
             hospitalName = hospitalRepository.findById(hospitalId.value).orElse(null)?.name
             
             if (dest is com.medicalsystem.backend.model.ReferralDestination.Triaged) {
-                departmentName = departmentRepository.findById(dest.departmentId.value).orElse(null)?.name
+                departmentName = hospitalDepartmentRepository.findById(dest.departmentId.value).orElse(null)?.name
                 doctorName = userRepository.findById(dest.doctorId.value).orElse(null)?.name
                 adminName = userRepository.findById(dest.triageAdminId.value).orElse(null)?.name
             }
@@ -114,7 +123,7 @@ class ReferralService(
             model.submit(user.role, user.id)
         }
 
-        val saved = referralRepository.save(model)
+        val saved = saveAndPublishEvents(model)
         
         eventPublisher.publish(
             com.medicalsystem.backend.event.ReferralInitiatedEvent(
@@ -123,40 +132,32 @@ class ReferralService(
                 riskLevel = saved.riskLevel.name
             )
         )
-        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
-        saved.clearDomainEvents()
         
         return mapToDto(saved)
     }
 
     @Transactional
     fun approveReferral(id: Long, dto: com.medicalsystem.backend.dto.ApproveReferralDto, user: User): ReferralDto {
-        val referral = referralRepository.findById(id)
+        val referral = referralRepository.findByIdAndVisibleTo(id, user)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
 
         if (!referral.getAllowedActions(user).contains(com.medicalsystem.backend.model.ReferralAction.APPROVE_REFERRAL)) {
             throw ValidationException("User not authorized to approve referral")
         }
         
-        val trialAdmins = userRepository.findAll().filterIsInstance<com.medicalsystem.backend.model.TrialAdmin>()
-        val hasTrialAdmin = trialAdmins.any { it.hospitalId == dto.hospitalId }
+        val hasTrialAdmin = trialAdminRepository.existsByHospitalId(dto.hospitalId)
         
         if (!hasTrialAdmin) {
             throw ValidationException("Selected hospital has no assigned Trial Admin")
         }
 
         referral.approve(com.medicalsystem.backend.model.HospitalId(dto.hospitalId), actorId = user.id)
-        val saved = referralRepository.save(referral)
-        
-        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
-        saved.clearDomainEvents()
-
-        return mapToDto(saved)
+        return mapToDto(saveAndPublishEvents(referral))
     }
 
     @Transactional
     fun rejectReferral(id: Long, dto: com.medicalsystem.backend.dto.RejectReferralDto, user: User): ReferralDto {
-        val referral = referralRepository.findById(id)
+        val referral = referralRepository.findByIdAndVisibleTo(id, user)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
 
         if (!referral.getAllowedActions(user).contains(com.medicalsystem.backend.model.ReferralAction.REJECT_REFERRAL)) {
@@ -164,17 +165,12 @@ class ReferralService(
         }
 
         referral.transition(ReferralStatus.REJECTED, actorId = user.id, reason = dto.reason)
-        val saved = referralRepository.save(referral)
-        
-        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
-        saved.clearDomainEvents()
-
-        return mapToDto(saved)
+        return mapToDto(saveAndPublishEvents(referral))
     }
 
     @Transactional
     fun recallReferral(id: Long, user: User): ReferralDto {
-        val referral = referralRepository.findById(id)
+        val referral = referralRepository.findByIdAndVisibleTo(id, user)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
 
         if (com.medicalsystem.backend.model.ReferralAction.RECALL_REFERRAL !in referral.getAllowedActions(user)) {
@@ -182,18 +178,13 @@ class ReferralService(
         }
 
         referral.recall(actorId = user.id)
-        
-        val saved = referralRepository.save(referral)
-        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
-        saved.clearDomainEvents()
-
-        return mapToDto(saved)
+        return mapToDto(saveAndPublishEvents(referral))
     }
 
     
     @Transactional
     fun assignDoctor(id: Long, dto: com.medicalsystem.backend.dto.AssignDoctorDto, user: User): ReferralDto {
-        val referral = referralRepository.findById(id)
+        val referral = referralRepository.findByIdAndVisibleTo(id, user)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
 
         if (!referral.getAllowedActions(user).contains(com.medicalsystem.backend.model.ReferralAction.ASSIGN_DOCTOR) &&
@@ -208,33 +199,30 @@ class ReferralService(
             throw ValidationException("Assigned user is not a doctor")
         }
 
-        val existingHospitalId = (referral.destination as? com.medicalsystem.backend.model.ReferralDestination.Submitted)?.hospitalId 
-            ?: (referral.destination as? com.medicalsystem.backend.model.ReferralDestination.Triaged)?.hospitalId
+        val existingHospitalId = referral.destination?.hospitalId
             ?: throw ValidationException("Hospital must be assigned before assigning a doctor")
 
-        val departmentIdRaw = (doctor as? com.medicalsystem.backend.model.Doctor)?.departmentId
+        val doctorProfile = doctorRepository.findById(doctor.id).orElse(null)
+            ?: throw ValidationException("Assigned user is not a doctor or profile is missing")
+            
+        val departmentIdRaw = doctorProfile.department?.id
             ?: throw ValidationException("Assigned doctor has no department")
 
         referral.destination = com.medicalsystem.backend.model.ReferralDestination.Triaged(
             hospitalId = existingHospitalId,
             triageAdminId = com.medicalsystem.backend.model.TriageAdminId(user.id),
-            departmentId = com.medicalsystem.backend.model.DepartmentId(departmentIdRaw),
+            departmentId = com.medicalsystem.backend.model.HospitalDepartmentId(departmentIdRaw),
             doctorId = com.medicalsystem.backend.model.DoctorId(doctor.id),
             transferDate = referral.destination?.transferDate
         )
 
         referral.transition(ReferralStatus.WAITING_FOR_SCHEDULING, actorId = user.id)
-        val saved = referralRepository.save(referral)
-        
-        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
-        saved.clearDomainEvents()
-
-        return mapToDto(saved)
+        return mapToDto(saveAndPublishEvents(referral))
     }
 
     @Transactional
     fun requestReassignment(id: Long, dto: com.medicalsystem.backend.dto.RejectReferralDto, user: User): ReferralDto {
-        val referral = referralRepository.findById(id)
+        val referral = referralRepository.findByIdAndVisibleTo(id, user)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
 
         if (!referral.getAllowedActions(user).contains(com.medicalsystem.backend.model.ReferralAction.REQUEST_REASSIGNMENT)) {
@@ -242,17 +230,12 @@ class ReferralService(
         }
 
         referral.transition(ReferralStatus.NEEDS_REASSIGNMENT, actorId = user.id, reason = dto.reason)
-        val saved = referralRepository.save(referral)
-        
-        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
-        saved.clearDomainEvents()
-
-        return mapToDto(saved)
+        return mapToDto(saveAndPublishEvents(referral))
     }
 
     @Transactional
     fun scheduleAppointment(id: Long, dto: com.medicalsystem.backend.dto.ScheduleAppointmentDto, user: User): ReferralDto {
-        val referral = referralRepository.findById(id)
+        val referral = referralRepository.findByIdAndVisibleTo(id, user)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
 
         if (!referral.getAllowedActions(user).contains(com.medicalsystem.backend.model.ReferralAction.SCHEDULE_APPOINTMENT)) {
@@ -266,18 +249,12 @@ class ReferralService(
         val time = dto.appointmentTime ?: throw ValidationException("Appointment time is required")
 
         referral.scheduleAppointment(doctorId = user.id, time = time, actorId = user.id)
-        
-        val saved = referralRepository.save(referral)
-        
-        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
-        saved.clearDomainEvents()
-
-        return mapToDto(saved)
+        return mapToDto(saveAndPublishEvents(referral))
     }
 
     @Transactional
     fun acknowledgeFeedback(id: Long, user: User): ReferralDto {
-        val referral = referralRepository.findById(id)
+        val referral = referralRepository.findByIdAndVisibleTo(id, user)
             .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
 
         if (!referral.getAllowedActions(user).contains(com.medicalsystem.backend.model.ReferralAction.ACKNOWLEDGE_FEEDBACK)) {

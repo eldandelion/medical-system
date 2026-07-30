@@ -24,9 +24,15 @@ class TrialAdminEntityTest {
         val hospital = HospitalEntity(name = "Test Hospital")
         entityManager.persist(hospital)
 
-        val trialAdmin = TrialAdminEntity(
+        val userEntity = com.medicalsystem.backend.entity.UserEntity(
             name = "Test Admin",
-            email = EmailAddress("admin@test.com"),
+            email = com.medicalsystem.backend.model.EmailAddress("admin@test.com"),
+            role = com.medicalsystem.backend.model.UserRole.TRIAL_ADMIN
+        )
+        entityManager.persist(userEntity)
+
+        val trialAdmin = TrialAdminEntity(
+            userId = userEntity.id!!,
             employeeNumber = "HOSP-001",
             hospital = hospital
         )
@@ -34,10 +40,10 @@ class TrialAdminEntityTest {
         entityManager.flush()
         entityManager.clear()
 
-        val foundAdmin = entityManager.find(TrialAdminEntity::class.java, trialAdmin.id)
+        val foundAdmin = entityManager.find(TrialAdminEntity::class.java, trialAdmin.userId)
         assertNotNull(foundAdmin)
         assertNotNull(foundAdmin.hospital)
-        assertNotNull(foundAdmin.hospital?.id)
+        assertNotNull(foundAdmin.hospital.id)
     }
 
     @Test
@@ -45,18 +51,30 @@ class TrialAdminEntityTest {
         val hospital = HospitalEntity(name = "Test Hospital 2")
         entityManager.persist(hospital)
 
-        val trialAdmin1 = TrialAdminEntity(
+        val userEntity1 = com.medicalsystem.backend.entity.UserEntity(
             name = "Test Admin 1",
-            email = EmailAddress("admin1@test.com"),
+            email = com.medicalsystem.backend.model.EmailAddress("admin1@test.com"),
+            role = com.medicalsystem.backend.model.UserRole.TRIAL_ADMIN
+        )
+        entityManager.persist(userEntity1)
+
+        val trialAdmin1 = TrialAdminEntity(
+            userId = userEntity1.id!!,
             employeeNumber = "HOSP-002",
             hospital = hospital
         )
         entityManager.persist(trialAdmin1)
         entityManager.flush()
 
-        val trialAdmin2 = TrialAdminEntity(
+        val userEntity2 = com.medicalsystem.backend.entity.UserEntity(
             name = "Test Admin 2",
-            email = EmailAddress("admin2@test.com"),
+            email = com.medicalsystem.backend.model.EmailAddress("admin2@test.com"),
+            role = com.medicalsystem.backend.model.UserRole.TRIAL_ADMIN
+        )
+        entityManager.persist(userEntity2)
+
+        val trialAdmin2 = TrialAdminEntity(
+            userId = userEntity2.id!!,
             employeeNumber = "HOSP-003",
             hospital = hospital
         )

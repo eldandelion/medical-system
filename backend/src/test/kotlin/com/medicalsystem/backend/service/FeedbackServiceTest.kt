@@ -42,13 +42,13 @@ class FeedbackServiceTest {
 
     private val doctorId = 2L
     private val referralId = 1L
-    private lateinit var doctor: Doctor
+    private lateinit var doctor: com.medicalsystem.backend.model.User
     private lateinit var validReferral: Referral
     private lateinit var validRequest: FeedbackCreationRequest
 
     @BeforeEach
     fun setUp() {
-        doctor = Doctor(id = doctorId, name = "Dr. Right", email = com.medicalsystem.backend.model.EmailAddress("right@univ.edu"), employeeNumber = com.medicalsystem.backend.model.HospitalEmployeeId("DOC-001"), departmentId = 1L, phone = null)
+        doctor = com.medicalsystem.backend.model.User(id = doctorId, name = "Dr. Right", email = com.medicalsystem.backend.model.EmailAddress("right@univ.edu"), role = com.medicalsystem.backend.model.UserRole.DOCTOR)
         
         validReferral = Referral(
             id = referralId,
@@ -60,7 +60,7 @@ class FeedbackServiceTest {
             riskLevel = RiskStatus.HIGH,
             status = ReferralStatus.WAITING_FOR_APPOINTMENT,
             referredById = 3L,
-            destination = ReferralDestination.Triaged(doctorId = DoctorId(doctorId), departmentId = DepartmentId(1L), hospitalId = HospitalId(1L), triageAdminId = TriageAdminId(1L), transferDate = null),
+            destination = ReferralDestination.Triaged(doctorId = DoctorId(doctorId), departmentId = HospitalDepartmentId(1L), hospitalId = HospitalId(1L), triageAdminId = TriageAdminId(1L), transferDate = null),
             appointment = Appointment(doctorId = doctorId, appointmentTime = java.time.Instant.now(), status = AppointmentStatus.SCHEDULED)
         )
 

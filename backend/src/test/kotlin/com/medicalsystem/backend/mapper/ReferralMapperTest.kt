@@ -42,13 +42,7 @@ class ReferralMapperTest {
             riskStatus = RiskStatus.HIGH
         )
 
-        val referredBy = Teacher(
-            id = 200L,
-            name = "Jane Smith",
-            email = EmailAddress("jane@example.com"),
-            employeeNumber = com.medicalsystem.backend.model.SchoolEmployeeId("EMP-123"),
-            collegeId = 1L
-        )
+        val referredBy = com.medicalsystem.backend.model.User(id = 200L, name = "Jane Smith", email = EmailAddress("jane@example.com"), role = com.medicalsystem.backend.model.UserRole.TEACHER)
 
         val dto = mapper.toDto(referral, student, referredBy)
 
@@ -91,13 +85,7 @@ class ReferralMapperTest {
             riskStatus = RiskStatus.HIGH
         )
 
-        val referredBy = Teacher(
-            id = 200L,
-            name = "Jane Smith",
-            email = EmailAddress("jane@example.com"),
-            employeeNumber = com.medicalsystem.backend.model.SchoolEmployeeId("EMP-123"),
-            collegeId = 1L
-        )
+        val referredBy = com.medicalsystem.backend.model.User(id = 200L, name = "Jane Smith", email = EmailAddress("jane@example.com"), role = com.medicalsystem.backend.model.UserRole.TEACHER)
 
         val dto = mapper.toDetailsDto(referral, student, referredBy)
 

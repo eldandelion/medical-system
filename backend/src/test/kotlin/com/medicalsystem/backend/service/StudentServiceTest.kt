@@ -45,18 +45,29 @@ class StudentServiceTest {
     private lateinit var studentService: StudentService
 
     @Test
-    fun `fetchAllStudents returns all mapped students`() {
+    fun `fetchAllStudents returns visible students`() {
+        val user = com.medicalsystem.backend.model.User(1L, "Teacher", com.medicalsystem.backend.model.EmailAddress("t@t.com"), null, com.medicalsystem.backend.model.UserRole.TEACHER)
         val college = College(1L, "Engineering")
         val major = Major(1L, "CS", college)
         val model = Student(1L, "S123", "John Doe", major, LocalDate.of(2023, 9, 1), RiskStatus.LOW, null)
         val dto = StudentDto("1", "S123", "John Doe", 1L, "CS", LocalDate.of(2023, 9, 1), null, RiskStatus.LOW)
         
-        `when`(studentRepository.findAll()).thenReturn(listOf(model))
+        `when`(studentRepository.findVisibleStudentsFor(user)).thenReturn(listOf(model))
         `when`(studentMapper.toDto(model)).thenReturn(dto)
 
-        val result = studentService.fetchAllStudents()
+        val result = studentService.fetchAllStudents(user)
 
         assertEquals(1, result.size)
         assertEquals("1", result[0].id)
+    }
+
+    @Test
+    fun `fetchStudentDetails throws exception when not visible`() {
+        val user = com.medicalsystem.backend.model.User(1L, "Teacher", com.medicalsystem.backend.model.EmailAddress("t@t.com"), null, com.medicalsystem.backend.model.UserRole.TEACHER)
+        `when`(studentRepository.findByIdAndVisibleTo(1L, user)).thenReturn(Optional.empty())
+        
+        assertThrows(com.medicalsystem.backend.exception.StudentNotFoundException::class.java) {
+            studentService.fetchStudentDetails(1L, user)
+        }
     }
 }

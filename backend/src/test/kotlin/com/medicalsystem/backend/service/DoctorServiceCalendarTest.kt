@@ -2,7 +2,7 @@ package com.medicalsystem.backend.service
 
 import com.medicalsystem.backend.entity.AppointmentEntity
 import com.medicalsystem.backend.repository.AppointmentRepository
-import com.medicalsystem.backend.repository.DepartmentRepository
+import com.medicalsystem.backend.repository.HospitalDepartmentRepository
 import com.medicalsystem.backend.repository.UserRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -29,7 +29,7 @@ class DoctorServiceCalendarTest {
     private lateinit var userRepository: UserRepository
 
     @Mock
-    private lateinit var departmentRepository: DepartmentRepository
+    private lateinit var hospitalDepartmentRepository: HospitalDepartmentRepository
 
     @Captor
     private lateinit var startCaptor: ArgumentCaptor<Instant>
@@ -44,11 +44,14 @@ class DoctorServiceCalendarTest {
     private val fixedInstant = Instant.parse("2026-07-08T12:00:00Z")
     private val zoneId = ZoneId.of("Asia/Shanghai")
 
+    @Mock
+    private lateinit var doctorRepository: com.medicalsystem.backend.repository.DoctorRepository
+
     @BeforeEach
     fun setUp() {
         // Inject a fixed clock so date bounds are 100% deterministic
         val fixedClock = Clock.fixed(fixedInstant, zoneId)
-        doctorService = DoctorService(appointmentRepository, userRepository, departmentRepository, fixedClock)
+        doctorService = DoctorService(appointmentRepository, userRepository, hospitalDepartmentRepository, doctorRepository, fixedClock)
     }
 
     @Test
@@ -111,7 +114,7 @@ class DoctorServiceCalendarTest {
         // Fixed Sunday, July 12, 2026, 12:00:00 PM UTC
         val sundayInstant = Instant.parse("2026-07-12T12:00:00Z")
         val fixedClock = Clock.fixed(sundayInstant, zoneId)
-        val weekendDoctorService = DoctorService(appointmentRepository, userRepository, departmentRepository, fixedClock)
+        val weekendDoctorService = DoctorService(appointmentRepository, userRepository, hospitalDepartmentRepository, doctorRepository, fixedClock)
 
         // Expected Monday 00:00:00 Asia/Shanghai of NEXT week
         val expectedStart = ZonedDateTime.of(2026, 7, 13, 0, 0, 0, 0, zoneId).toInstant()

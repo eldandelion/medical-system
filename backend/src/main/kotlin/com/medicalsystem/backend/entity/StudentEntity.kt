@@ -23,5 +23,9 @@ class StudentEntity(
     var enrollmentDate: java.time.LocalDate,
 
     @Embedded
-    var demographics: StudentDemographicsEntity? = null
+    var demographics: StudentDemographicsEntity? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_teacher_id")
+    var assignedTeacher: TeacherEntity? = null
 )

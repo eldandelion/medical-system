@@ -39,16 +39,16 @@ class MockAuthenticationFilter(
             userRepository.findByName("艾米丽·沃森")
         } else if (token.contains("head_councillor")) {
             userRepository.findAll().firstOrNull { it.role == UserRole.HEAD_COUNSELLOR }
-                ?: HeadCounsellor(id = 999L, name = "Mock Head Councillor", email = EmailAddress("head@univ.edu.cn"))
+                ?: User(id = 999L, name = "Mock Head Councillor", email = EmailAddress("head@univ.edu.cn"), role = UserRole.HEAD_COUNSELLOR)
         } else if (token.contains("trial_admin")) {
             userRepository.findAll().firstOrNull { it.role == UserRole.TRIAL_ADMIN }
-                ?: TrialAdmin(id = 998L, name = "Mock Trial Admin", email = EmailAddress("admin@univ.edu.cn"), employeeNumber = HospitalEmployeeId("HOSP-001"), hospitalId = 1L)
+                ?: User(id = 998L, name = "Mock Trial Admin", email = EmailAddress("admin@univ.edu.cn"), role = UserRole.TRIAL_ADMIN)
         } else if (token.contains("doctor")) {
             userRepository.findAll().firstOrNull { it.role == UserRole.DOCTOR }
-                ?: Doctor(id = 997L, name = "Mock Doctor", email = EmailAddress("doctor@univ.edu.cn"), employeeNumber = HospitalEmployeeId("DOC-001"), departmentId = 1L, phone = null)
+                ?: User(id = 997L, name = "Mock Doctor", email = EmailAddress("doctor@univ.edu.cn"), role = UserRole.DOCTOR)
         } else if (token.contains("student")) {
             userRepository.findAll().firstOrNull { it.role == UserRole.STUDENT }
-                ?: StudentUser(id = 1L, name = "Mock Student", email = EmailAddress("student@univ.edu.cn"))
+                ?: User(id = 1L, name = "Mock Student", email = EmailAddress("student@univ.edu.cn"), role = UserRole.STUDENT)
         } else {
             userRepository.findAll().firstOrNull()
         }

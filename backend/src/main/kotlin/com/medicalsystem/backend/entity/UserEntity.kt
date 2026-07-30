@@ -7,8 +7,7 @@ import com.medicalsystem.backend.model.EmailAddress
 
 @Entity
 @Table(name = "users")
-@Inheritance(strategy = InheritanceType.JOINED)
-abstract class UserEntity(
+class UserEntity(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 

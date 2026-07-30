@@ -21,11 +21,17 @@ interface StudentsViewProps {
   header?: (loading: boolean) => React.ReactNode;
 }
 
+import { useAuth } from '../../contexts/AuthContext';
+
 export function StudentsView({ onStudentSelect, selectedStudentId, header }: StudentsViewProps) {
+  const { session } = useAuth();
+  
   const { data: studentsData, isLoading: loading } = useQuery<Student[]>({
-    queryKey: ['/api/students'],
+    queryKey: ['/api/students', session.token],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/students`.replace('//api', '/api'));
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/students`.replace('//api', '/api'), {
+        headers: { 'Authorization': `Bearer ${session.token}` }
+      });
       if (!res.ok) throw new Error('Failed to fetch students');
       return res.json();
     }

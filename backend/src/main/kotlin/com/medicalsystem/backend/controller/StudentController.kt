@@ -2,6 +2,9 @@ package com.medicalsystem.backend.controller
 
 import com.medicalsystem.backend.dto.StudentDto
 import com.medicalsystem.backend.service.StudentService
+import com.medicalsystem.backend.security.CurrentUser
+import com.medicalsystem.backend.model.User
+import com.medicalsystem.backend.exception.ForbiddenException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -14,13 +17,15 @@ import jakarta.validation.Valid
 class StudentController(private val studentService: StudentService) {
 
     @GetMapping
-    fun fetchAllStudents(): List<StudentDto> {
-        return studentService.fetchAllStudents()
+    fun fetchAllStudents(@CurrentUser user: User?): List<StudentDto> {
+        if (user == null) throw ForbiddenException("Authorized user not found")
+        return studentService.fetchAllStudents(user)
     }
 
     @GetMapping("/{id}")
-    fun fetchStudentDetails(@PathVariable id: Long): StudentDto {
-        return studentService.fetchStudentDetails(id)
+    fun fetchStudentDetails(@PathVariable id: Long, @CurrentUser user: User?): StudentDto {
+        if (user == null) throw ForbiddenException("Authorized user not found")
+        return studentService.fetchStudentDetails(id, user)
     }
 
     @PostMapping
@@ -30,7 +35,8 @@ class StudentController(private val studentService: StudentService) {
     }
 
     @GetMapping("/{id}/psychometrics")
-    fun fetchPsychometricSummary(@PathVariable id: Long): com.medicalsystem.backend.dto.PsychometricsSummaryDto {
-        return studentService.fetchPsychometricSummary(id)
+    fun fetchPsychometricSummary(@PathVariable id: Long, @CurrentUser user: User?): com.medicalsystem.backend.dto.PsychometricsSummaryDto {
+        if (user == null) throw ForbiddenException("Authorized user not found")
+        return studentService.fetchPsychometricSummary(id, user)
     }
 }

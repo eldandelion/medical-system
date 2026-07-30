@@ -1,7 +1,6 @@
 package com.medicalsystem.backend.controller
 
 import com.medicalsystem.backend.dto.ProfileSummaryDto
-import com.medicalsystem.backend.model.StudentUser
 import com.medicalsystem.backend.model.EmailAddress
 import com.medicalsystem.backend.service.DashboardService
 import org.junit.jupiter.api.Test
@@ -24,7 +23,7 @@ class DashboardControllerTest {
 
     @Test
     fun `getStudentProfile returns mapped dto`() {
-        val mockUser = StudentUser(id = 1L, name = "John Doe", email = EmailAddress("john@univ.edu.cn"))
+        val mockUser = com.medicalsystem.backend.model.User(id = 1L, name = "John Doe", email = EmailAddress("john@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.STUDENT)
         val dto = ProfileSummaryDto(
             avatarUrl = "https://example.com/avatar.png",
             name = "John Doe",
@@ -48,7 +47,7 @@ class DashboardControllerTest {
 
     @Test
     fun `getTrialAdminProfile returns mapped dto`() {
-        val mockUser = com.medicalsystem.backend.model.TrialAdmin(id = 3L, name = "Admin Wang", email = EmailAddress("admin@univ.edu.cn"), employeeNumber = com.medicalsystem.backend.model.HospitalEmployeeId("HOSP-001"), hospitalId = 200L)
+        val mockUser = com.medicalsystem.backend.model.User(id = 3L, name = "Admin Wang", email = EmailAddress("admin@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.TRIAL_ADMIN)
         val dto = ProfileSummaryDto(
             avatarUrl = null,
             name = "Admin Wang",

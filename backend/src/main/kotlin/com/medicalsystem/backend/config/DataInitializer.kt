@@ -28,18 +28,26 @@ class DataInitializer {
         schoolRepository: com.medicalsystem.backend.repository.SchoolJpaRepository,
         referralRepository: ReferralJpaRepository,
         hospitalRepository: HospitalRepository,
-        departmentRepository: DepartmentRepository,
+        hospitalDepartmentRepository: HospitalDepartmentRepository,
         doctorRepository: DoctorRepository,
+        teacherRepository: TeacherRepository,
+        trialAdminRepository: TrialAdminRepository,
+        headCounsellorJpaRepository: HeadCounsellorJpaRepository,
+        schoolDepartmentJpaRepository: SchoolDepartmentJpaRepository,
         studentHealthProfileRepository: StudentHealthProfileJpaRepository,
         jdbcTemplate: JdbcTemplate
     ) = CommandLineRunner {
         referralRepository.deleteAll()
         studentHealthProfileRepository.deleteAll()
         studentRepository.deleteAll()
-        userRepository.deleteAll()
+        trialAdminRepository.deleteAll()
+        headCounsellorJpaRepository.deleteAll()
+        teacherRepository.deleteAll()
         doctorRepository.deleteAll()
-        departmentRepository.deleteAll()
+        userRepository.deleteAll()
+        hospitalDepartmentRepository.deleteAll()
         hospitalRepository.deleteAll()
+        schoolDepartmentJpaRepository.deleteAll()
         majorRepository.deleteAll()
         collegeRepository.deleteAll()
         ethnicityRepository.deleteAll()
@@ -79,10 +87,27 @@ class DataInitializer {
         val s3Demo = StudentDemographicsEntity(gender = Gender.MALE, dateOfBirth = LocalDate.of(2005, 11, 2), ethnicity = han, idCardNumber = "440106200511025678", contactNumber = "13500135000", email = "zhangwei@univ.edu.cn", homeAddress = "广州市天河区某街道", emergencyContactName = "张明", emergencyContactPhone = "13400134000", school = mainSchool)
         val s4Demo = StudentDemographicsEntity(gender = Gender.FEMALE, dateOfBirth = LocalDate.of(2002, 3, 15), ethnicity = man, idCardNumber = "210102200203158901", contactNumber = "13300133000", email = "chenxiu@univ.edu.cn", homeAddress = "沈阳市和平区某街道", emergencyContactName = "陈军", emergencyContactPhone = "13200132000", school = mainSchool)
 
-        val s1 = studentRepository.save(StudentEntity(studentNumber = "S2023001", name = "李明", major = csMajor, enrollmentDate = LocalDate.of(2024, 9, 1), demographics = s1Demo))
-        val s2 = studentRepository.save(StudentEntity(studentNumber = "S2023002", name = "王芳", major = engMajor, enrollmentDate = LocalDate.of(2023, 9, 1), demographics = s2Demo))
+        val referrerBase = userRepository.save(UserEntity(name = "艾米丽·沃森", email = EmailAddress("emily@univ.edu.cn"), role = UserRole.TEACHER))
+        val referrer = teacherRepository.save(TeacherEntity(userId = referrerBase.id, employeeNumber = "EMP-00001", college = medCollege))
+
+        val s1 = studentRepository.save(StudentEntity(studentNumber = "S2023001", name = "李明", major = csMajor, enrollmentDate = LocalDate.of(2024, 9, 1), demographics = s1Demo, assignedTeacher = referrer))
+        val s2 = studentRepository.save(StudentEntity(studentNumber = "S2023002", name = "王芳", major = engMajor, enrollmentDate = LocalDate.of(2023, 9, 1), demographics = s2Demo, assignedTeacher = referrer))
         val s3 = studentRepository.save(StudentEntity(studentNumber = "S2023003", name = "张伟", major = busMajor, enrollmentDate = LocalDate.of(2025, 9, 1), demographics = s3Demo))
         val s4 = studentRepository.save(StudentEntity(studentNumber = "S2023004", name = "陈秀", major = medMajor, enrollmentDate = LocalDate.of(2022, 9, 1), demographics = s4Demo))
+
+        val s5Demo = StudentDemographicsEntity(gender = Gender.FEMALE, dateOfBirth = LocalDate.of(2004, 1, 10), ethnicity = han, idCardNumber = "110101200401105555", contactNumber = "13911112222", email = "zhaomin@univ.edu.cn", homeAddress = "上海市徐汇区", emergencyContactName = "赵强", emergencyContactPhone = "13911113333", school = mainSchool)
+        val s6Demo = StudentDemographicsEntity(gender = Gender.MALE, dateOfBirth = LocalDate.of(2003, 6, 22), ethnicity = han, idCardNumber = "110101200306226666", contactNumber = "13822223333", email = "liuhai@univ.edu.cn", homeAddress = "广州市越秀区", emergencyContactName = "刘军", emergencyContactPhone = "13822224444", school = mainSchool)
+        val s7Demo = StudentDemographicsEntity(gender = Gender.FEMALE, dateOfBirth = LocalDate.of(2005, 9, 5), ethnicity = hui, idCardNumber = "110101200509057777", contactNumber = "13733334444", email = "sunli@univ.edu.cn", homeAddress = "深圳市南山区", emergencyContactName = "孙燕", emergencyContactPhone = "13733335555", school = mainSchool)
+        val s8Demo = StudentDemographicsEntity(gender = Gender.MALE, dateOfBirth = LocalDate.of(2004, 11, 18), ethnicity = man, idCardNumber = "110101200411188888", contactNumber = "13644445555", email = "wudong@univ.edu.cn", homeAddress = "成都市武侯区", emergencyContactName = "吴刚", emergencyContactPhone = "13644446666", school = mainSchool)
+        val s9Demo = StudentDemographicsEntity(gender = Gender.FEMALE, dateOfBirth = LocalDate.of(2002, 12, 12), ethnicity = han, idCardNumber = "110101200212129999", contactNumber = "13555556666", email = "zhoumei@univ.edu.cn", homeAddress = "武汉市洪山区", emergencyContactName = "周华", emergencyContactPhone = "13555557777", school = mainSchool)
+        val s10Demo = StudentDemographicsEntity(gender = Gender.MALE, dateOfBirth = LocalDate.of(2003, 4, 30), ethnicity = han, idCardNumber = "110101200304300000", contactNumber = "13466667777", email = "zhengqi@univ.edu.cn", homeAddress = "杭州市西湖区", emergencyContactName = "郑伟", emergencyContactPhone = "13466668888", school = mainSchool)
+
+        val s5 = studentRepository.save(StudentEntity(studentNumber = "S2023005", name = "赵敏", major = medMajor, enrollmentDate = LocalDate.of(2024, 9, 1), demographics = s5Demo, assignedTeacher = referrer))
+        val s6 = studentRepository.save(StudentEntity(studentNumber = "S2023006", name = "刘海", major = csMajor, enrollmentDate = LocalDate.of(2023, 9, 1), demographics = s6Demo, assignedTeacher = referrer))
+        val s7 = studentRepository.save(StudentEntity(studentNumber = "S2023007", name = "孙丽", major = engMajor, enrollmentDate = LocalDate.of(2025, 9, 1), demographics = s7Demo, assignedTeacher = referrer))
+        val s8 = studentRepository.save(StudentEntity(studentNumber = "S2023008", name = "吴东", major = busMajor, enrollmentDate = LocalDate.of(2022, 9, 1), demographics = s8Demo))
+        val s9 = studentRepository.save(StudentEntity(studentNumber = "S2023009", name = "周梅", major = medMajor, enrollmentDate = LocalDate.of(2024, 9, 1), demographics = s9Demo))
+        val s10 = studentRepository.save(StudentEntity(studentNumber = "S2023010", name = "郑奇", major = csMajor, enrollmentDate = LocalDate.of(2023, 9, 1), demographics = s10Demo))
 
         val hp1 = studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s1.id, riskStatus = RiskStatus.MEDIUM, scidDiagnosis = "重度抑郁症，伴随焦虑症状"))
         val hp2 = studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s2.id, riskStatus = RiskStatus.LOW))
@@ -107,16 +132,32 @@ class DataInitializer {
         hp3.psychometricTests.add(pt6)
         studentHealthProfileRepository.save(hp3)
 
-        val hosp = hospitalRepository.save(HospitalEntity(name = "中南大学湘雅医院"))
-        val medDept = departmentRepository.save(DepartmentEntity(name = "内科", hospital = hosp))
-        val psychDept = departmentRepository.save(DepartmentEntity(name = "心理咨询科", hospital = hosp))
+        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s5.id, riskStatus = RiskStatus.LOW))
+        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s6.id, riskStatus = RiskStatus.MEDIUM, scidDiagnosis = "轻度焦虑"))
+        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s7.id, riskStatus = RiskStatus.LOW))
+        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s8.id, riskStatus = RiskStatus.HIGH, scidDiagnosis = "双相情感障碍"))
+        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s9.id, riskStatus = RiskStatus.LOW))
+        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s10.id, riskStatus = RiskStatus.MEDIUM, scidDiagnosis = "睡眠障碍"))
 
-        val studentUser = userRepository.save(StudentUserEntity(name = "李明", email = EmailAddress("liming@univ.edu.cn")))
-        val triageAdmin = userRepository.save(TrialAdminEntity(name = "张老师", email = EmailAddress("zhang@univ.edu.cn"), employeeNumber = "TA-00001", hospital = hosp))
-        val referrer = userRepository.save(TeacherEntity(name = "艾米丽·沃森", email = EmailAddress("emily@univ.edu.cn"), employeeNumber = "EMP-00001", college = medCollege))
-        val doctor = userRepository.save(DoctorEntity(name = "李医生", email = EmailAddress("li@univ.edu.cn"), employeeNumber = "DOC-00001", department = medDept))
-        val doctorWang = userRepository.save(DoctorEntity(name = "王医生", email = EmailAddress("wang@univ.edu.cn"), employeeNumber = "DOC-00002", department = psychDept))
-        val headCounsellor = userRepository.save(HeadCounsellorEntity(name = "王主任", email = EmailAddress("wang_head@univ.edu.cn")))
+        val hosp = hospitalRepository.save(HospitalEntity(name = "中南大学湘雅医院"))
+        val medDept = hospitalDepartmentRepository.save(HospitalDepartmentEntity(name = "内科", hospital = hosp))
+        val psychDept = hospitalDepartmentRepository.save(HospitalDepartmentEntity(name = "心理咨询科", hospital = hosp))
+
+        val studentUserBase = userRepository.save(UserEntity(name = "李明", email = EmailAddress("liming@univ.edu.cn"), role = UserRole.STUDENT))
+        val triageAdminBase = userRepository.save(UserEntity(name = "张老师", email = EmailAddress("zhang@univ.edu.cn"), role = UserRole.TRIAL_ADMIN))
+        val triageAdmin = trialAdminRepository.save(TrialAdminEntity(userId = triageAdminBase.id, employeeNumber = "TA-00001", hospital = hosp))
+
+
+
+        val doctorBase = userRepository.save(UserEntity(name = "李医生", email = EmailAddress("li@univ.edu.cn"), role = UserRole.DOCTOR))
+        val doctor = doctorRepository.save(DoctorEntity(userId = doctorBase.id, employeeNumber = "DOC-00001", department = medDept))
+
+        val doctorWangBase = userRepository.save(UserEntity(name = "王医生", email = EmailAddress("wang@univ.edu.cn"), role = UserRole.DOCTOR))
+        val doctorWang = doctorRepository.save(DoctorEntity(userId = doctorWangBase.id, employeeNumber = "DOC-00002", department = psychDept))
+
+        val headCounsellorBase = userRepository.save(UserEntity(name = "王主任", email = EmailAddress("wang_head@univ.edu.cn"), role = UserRole.HEAD_COUNSELLOR))
+        val scDept = schoolDepartmentJpaRepository.save(SchoolDepartmentEntity(name = "咨询中心", school = mainSchool))
+        val headCounsellor = headCounsellorJpaRepository.save(HeadCounsellorEntity(userId = headCounsellorBase.id, employeeNumber = "HC-00001", schoolId = mainSchool.id!!, departmentId = scDept.id!!))
 
         val dest = ReferralDestinationEntity(
             hospital = hosp,
@@ -133,7 +174,7 @@ class DataInitializer {
             description = "期中考试后出现急性恐慌发作和睡眠剥夺",
             riskLevel = RiskStatus.HIGH,
             status = ReferralStatus.WAITING_FOR_SCHEDULING,
-            referredById = referrer.id,
+            referredById = referrer.userId,
             createdAt = LocalDateTime.now().minusDays(1),
             destination = dest
         )
@@ -143,28 +184,28 @@ class DataInitializer {
             type = ReferralStepType.INITIATION,
             time = LocalDateTime.now().minusDays(1),
             status = ReferralStepStatus.COMPLETED,
-            actorId = referrer.id
+            actorId = referrer.userId
         )
         val step2 = ReferralStepEntity(
             referral = ref1,
             type = ReferralStepType.REVIEW,
             time = LocalDateTime.now().minusHours(20),
             status = ReferralStepStatus.COMPLETED,
-            actorId = referrer.id
+            actorId = referrer.userId
         )
         val step3 = ReferralStepEntity(
             referral = ref1,
             type = ReferralStepType.TRIAGE,
             time = LocalDateTime.now().minusHours(18),
             status = ReferralStepStatus.COMPLETED,
-            actorId = triageAdmin.id
+            actorId = triageAdmin.userId
         )
         val step4 = ReferralStepEntity(
             referral = ref1,
             type = ReferralStepType.SCHEDULING,
             time = LocalDateTime.now().minusHours(5),
             status = ReferralStepStatus.ACTIVE,
-            actorId = triageAdmin.id
+            actorId = triageAdmin.userId
         )
         
         ref1.steps.addAll(listOf(step1, step2, step3, step4))
@@ -184,7 +225,7 @@ class DataInitializer {
             description = "情绪持续低落",
             riskLevel = RiskStatus.MEDIUM,
             status = ReferralStatus.AWAITING_TRIAGE,
-            referredById = referrer.id,
+            referredById = referrer.userId,
             createdAt = LocalDateTime.now().minusDays(2),
             destination = dest2
         )
@@ -194,21 +235,21 @@ class DataInitializer {
             type = ReferralStepType.INITIATION,
             time = LocalDateTime.now().minusDays(2),
             status = ReferralStepStatus.COMPLETED,
-            actorId = referrer.id
+            actorId = referrer.userId
         )
         val ref2Step2 = ReferralStepEntity(
             referral = ref2,
             type = ReferralStepType.REVIEW,
             time = LocalDateTime.now().minusHours(24),
             status = ReferralStepStatus.COMPLETED,
-            actorId = referrer.id
+            actorId = referrer.userId
         )
         val ref2Step3 = ReferralStepEntity(
             referral = ref2,
             type = ReferralStepType.TRIAGE,
             time = LocalDateTime.now().minusHours(12),
             status = ReferralStepStatus.ACTIVE,
-            actorId = triageAdmin.id
+            actorId = triageAdmin.userId
         )
         ref2.steps.addAll(listOf(ref2Step1, ref2Step2, ref2Step3))
 

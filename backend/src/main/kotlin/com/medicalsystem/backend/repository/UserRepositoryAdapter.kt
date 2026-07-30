@@ -4,17 +4,7 @@ import com.medicalsystem.backend.mapper.UserMapper
 import com.medicalsystem.backend.model.User
 import org.springframework.stereotype.Repository
 import java.util.Optional
-
 import jakarta.persistence.EntityManager
-import com.medicalsystem.backend.entity.DoctorEntity
-import com.medicalsystem.backend.entity.TeacherEntity
-import com.medicalsystem.backend.entity.TrialAdminEntity
-import com.medicalsystem.backend.entity.DepartmentEntity
-import com.medicalsystem.backend.entity.CollegeEntity
-import com.medicalsystem.backend.entity.HospitalEntity
-import com.medicalsystem.backend.model.Doctor
-import com.medicalsystem.backend.model.Teacher
-import com.medicalsystem.backend.model.TrialAdmin
 
 @Repository
 class UserRepositoryAdapter(
@@ -42,14 +32,6 @@ class UserRepositoryAdapter(
 
     override fun save(user: User): User {
         val entity = mapper.toEntity(user)
-        
-        when (user) {
-            is Doctor -> (entity as DoctorEntity).department = entityManager.getReference(DepartmentEntity::class.java, user.departmentId)
-            is Teacher -> (entity as TeacherEntity).college = entityManager.getReference(CollegeEntity::class.java, user.collegeId)
-            is TrialAdmin -> user.hospitalId?.let { (entity as TrialAdminEntity).hospital = entityManager.getReference(HospitalEntity::class.java, it) }
-            else -> {} // Other user types do not have relationships to map here
-        }
-        
         val savedEntity = jpaRepository.save(entity)
         return mapper.toModel(savedEntity)
     }

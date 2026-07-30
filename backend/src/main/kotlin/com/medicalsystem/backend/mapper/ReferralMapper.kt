@@ -32,9 +32,9 @@ class ReferralMapper {
                     if (dest.triageAdmin != null && dest.department != null && dest.doctor != null) {
                         com.medicalsystem.backend.model.ReferralDestination.Triaged(
                             hospitalId = com.medicalsystem.backend.model.HospitalId(dest.hospital!!.id),
-                            triageAdminId = com.medicalsystem.backend.model.TriageAdminId(dest.triageAdmin!!.id),
-                            departmentId = com.medicalsystem.backend.model.DepartmentId(dest.department!!.id),
-                            doctorId = com.medicalsystem.backend.model.DoctorId(dest.doctor!!.id),
+                            triageAdminId = com.medicalsystem.backend.model.TriageAdminId(dest.triageAdmin!!.userId),
+                            departmentId = com.medicalsystem.backend.model.HospitalDepartmentId(dest.department!!.id),
+                            doctorId = com.medicalsystem.backend.model.DoctorId(dest.doctor!!.userId),
                             transferDate = dest.transferDate
                         )
                     } else {
