@@ -23,7 +23,9 @@ const getNotificationText = (notification: NotificationDto) => {
       );
     }
     case 'REFERRAL_REQUIRES_REVIEW_HC':
-      return `有新的转诊申请需要您审核(学生: ${notification.payload.studentName || ''})。风险等级: ${notification.payload.riskLevel || '未知'}`;
+      return (
+        <span>由 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{notification.payload.initiatorName || '教师'}</span> 为 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{notification.payload.studentName || '未知学生'}</span> 发起的转诊申请需要您审核。</span>
+      );
     default:
       return notification.messageCode.replace(/_/g, ' ');
   }
@@ -70,7 +72,18 @@ export function NotificationsView({ onViewReferral, onViewRecords }: Notificatio
                 ...(notification.actionType === 'VIEW_REFERRAL' ? [{
                   label: '查看详情',
                   variant: 'text' as const,
-                  onClick: () => onViewReferral && notification.actionTargetId && onViewReferral(String(notification.actionTargetId))
+                  onClick: () => {
+                    const targetId = notification.payload?.referralId || notification.actionTargetId;
+                    if (onViewReferral && targetId) onViewReferral(String(targetId));
+                  }
+                }] : []),
+                ...(notification.actionType === 'REVIEW_REFERRAL' ? [{
+                  label: '查看详情',
+                  variant: 'text' as const,
+                  onClick: () => {
+                    const targetId = notification.payload?.referralId || notification.actionTargetId;
+                    if (onViewReferral && targetId) onViewReferral(String(targetId));
+                  }
                 }] : []),
                 ...(notification.actionType === 'VIEW_RECORDS' ? [{
                   label: '查看记录',

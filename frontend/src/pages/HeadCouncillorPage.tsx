@@ -81,6 +81,11 @@ export function HeadCouncillorPage() {
     setSelectedItem(null);
   };
 
+  const handleViewReferral = (referralId: string) => {
+    setActivePage(HeadCouncillorTabs.REFERRAL_MANAGEMENT);
+    setSelectedItem({ id: referralId });
+  };
+
   const handleCompose = () => {
     openCreation(
       '发起转诊',
@@ -129,7 +134,7 @@ export function HeadCouncillorPage() {
         return (
           <>
             <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage]} />
-            <NotificationsView />
+            <NotificationsView onViewReferral={handleViewReferral} />
           </>
         );
       case HeadCouncillorTabs.STUDENTS:
