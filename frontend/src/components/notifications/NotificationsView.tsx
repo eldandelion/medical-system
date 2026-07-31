@@ -6,13 +6,16 @@ import { NotificationDto } from '../../api/notifications';
 
 interface NotificationsViewProps {
   onViewReferral?: (referralId: string) => void;
+  onViewRecords?: () => void;
 }
 
 // Helper to translate message codes to readable Chinese text
 const getNotificationText = (notification: NotificationDto) => {
   switch (notification.messageCode) {
     case 'REFERRAL_SUBMITTED_STUDENT':
-      return `您的转诊申请已提交。风险等级评估为: ${notification.payload.riskLevel || '未知'}`;
+      return (
+        <span>由 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{notification.payload.initiatorName || '教师'}</span> 发起的转诊申请已成功提交。</span>
+      );
     case 'REFERRAL_SUBMITTED_INITIATOR': {
       const studentName = notification.payload.studentName || '';
       return (
@@ -33,7 +36,7 @@ const getNotificationTitle = (notification: NotificationDto) => {
   return '新通知';
 };
 
-export function NotificationsView({ onViewReferral }: NotificationsViewProps) {
+export function NotificationsView({ onViewReferral, onViewRecords }: NotificationsViewProps) {
   const { session } = useAuth();
   const { notifications, markAsRead, isLoading } = useNotifications(session?.token);
 
@@ -68,6 +71,11 @@ export function NotificationsView({ onViewReferral }: NotificationsViewProps) {
                   label: '查看详情',
                   variant: 'text' as const,
                   onClick: () => onViewReferral && notification.actionTargetId && onViewReferral(String(notification.actionTargetId))
+                }] : []),
+                ...(notification.actionType === 'VIEW_RECORDS' ? [{
+                  label: '查看记录',
+                  variant: 'text' as const,
+                  onClick: () => onViewRecords && onViewRecords()
                 }] : [])
               ]}
             />

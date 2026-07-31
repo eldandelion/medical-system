@@ -74,7 +74,7 @@ export function StudentPage() {
         return (
           <>
             <CanvasHeader title={STUDENT_TAB_TITLES[activePage]} />
-            <NotificationsView />
+            <NotificationsView onViewRecords={() => handlePageChange(StudentTabs.MY_RECORDS)} />
           </>
         );
       case StudentTabs.ASSESSMENTS:

@@ -22,12 +22,12 @@ data class Notification(
     }
 
     companion object {
-        fun createForStudent(studentId: Long, riskLevel: String): Notification {
+        fun createForStudent(studentId: Long, initiatorName: String): Notification {
             return Notification(
                 userId = studentId,
                 messageCode = NotificationMessageCode.REFERRAL_SUBMITTED_STUDENT,
-                payload = mapOf("riskLevel" to riskLevel),
-                actionType = NotificationActionType.NONE
+                payload = mapOf("initiatorName" to initiatorName),
+                actionType = NotificationActionType.VIEW_RECORDS
             )
         }
         

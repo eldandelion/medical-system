@@ -13,7 +13,8 @@ class ReferralNotificationRoutingPolicyTest {
 
     private val studentRepository: com.medicalsystem.backend.repository.StudentRepository = org.mockito.kotlin.mock()
     private val referralRepository: com.medicalsystem.backend.repository.ReferralRepository = org.mockito.kotlin.mock()
-    private val policy = ReferralNotificationRoutingPolicy(studentRepository, referralRepository)
+    private val userRepository: com.medicalsystem.backend.repository.UserRepository = org.mockito.kotlin.mock()
+    private val policy = ReferralNotificationRoutingPolicy(studentRepository, referralRepository, userRepository)
 
     @org.junit.jupiter.api.BeforeEach
     fun setup() {
@@ -24,6 +25,10 @@ class ReferralNotificationRoutingPolicyTest {
         val mockReferral = org.mockito.kotlin.mock<com.medicalsystem.backend.model.Referral>()
         org.mockito.kotlin.whenever(mockReferral.riskLevel).thenReturn(RiskStatus.HIGH)
         org.mockito.kotlin.whenever(referralRepository.findById(org.mockito.kotlin.any())).thenReturn(java.util.Optional.of(mockReferral))
+
+        val mockUser = org.mockito.kotlin.mock<com.medicalsystem.backend.model.User>()
+        org.mockito.kotlin.whenever(mockUser.name).thenReturn("Jane Smith")
+        org.mockito.kotlin.whenever(userRepository.findById(org.mockito.kotlin.any())).thenReturn(java.util.Optional.of(mockUser))
     }
 
     @Test
@@ -43,8 +48,8 @@ class ReferralNotificationRoutingPolicyTest {
         val studentNotif = notifications.find { it.userId == 100L }
         requireNotNull(studentNotif)
         assertEquals(NotificationMessageCode.REFERRAL_SUBMITTED_STUDENT, studentNotif.messageCode)
-        assertEquals(NotificationActionType.NONE, studentNotif.actionType)
-        assertEquals(mapOf("riskLevel" to "HIGH"), studentNotif.payload)
+        assertEquals(NotificationActionType.VIEW_RECORDS, studentNotif.actionType)
+        assertEquals(mapOf("initiatorName" to "Jane Smith"), studentNotif.payload)
 
         // Initiator notification
         val initiatorNotif = notifications.find { it.userId == 200L }
@@ -76,7 +81,7 @@ class ReferralNotificationRoutingPolicyTest {
 
         val studentNotif = notifications.find { it.userId == 100L }
         requireNotNull(studentNotif)
-        assertEquals(mapOf("riskLevel" to "HIGH"), studentNotif.payload)
+        assertEquals(mapOf("initiatorName" to "Jane Smith"), studentNotif.payload)
 
         val hcNotif = notifications.find { it.userId == hcId }
         requireNotNull(hcNotif)
