@@ -1,10 +1,11 @@
 package com.medicalsystem.backend.repository
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.medicalsystem.backend.entity.NotificationEntity
 import com.medicalsystem.backend.model.Notification
 import com.medicalsystem.backend.model.NotificationActionType
 import org.springframework.stereotype.Repository
-import com.fasterxml.jackson.databind.ObjectMapper
 
 @Repository
 class NotificationRepositoryAdapter(
@@ -18,7 +19,7 @@ class NotificationRepositoryAdapter(
             id = notification.id ?: 0L,
             userId = notification.userId,
             messageCode = notification.messageCode,
-            messageArgs = objectMapper.writeValueAsString(notification.messageArgs),
+            payload = objectMapper.writeValueAsString(notification.payload),
             isRead = notification.isRead,
             createdAt = notification.createdAt,
             actionType = notification.actionType,
@@ -46,17 +47,18 @@ class NotificationRepositoryAdapter(
     }
 
     private fun toDomain(entity: NotificationEntity): Notification {
-        val args: List<String> = try {
-            objectMapper.readValue(entity.messageArgs, objectMapper.typeFactory.constructCollectionType(List::class.java, String::class.java))
+        val typeRef = object : TypeReference<Map<String, Any>>() {}
+        val payloadMap = try {
+            objectMapper.readValue(entity.payload, typeRef)
         } catch (e: Exception) {
-            emptyList()
+            emptyMap()
         }
         
         return Notification(
             id = entity.id,
             userId = entity.userId,
             messageCode = entity.messageCode,
-            messageArgs = args,
+            payload = payloadMap,
             isRead = entity.isRead,
             createdAt = entity.createdAt,
             actionType = entity.actionType,

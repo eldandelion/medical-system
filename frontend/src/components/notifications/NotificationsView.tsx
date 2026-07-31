@@ -12,15 +12,15 @@ interface NotificationsViewProps {
 const getNotificationText = (notification: NotificationDto) => {
   switch (notification.messageCode) {
     case 'REFERRAL_SUBMITTED_STUDENT':
-      return `您的转诊申请已提交。风险等级评估为: ${notification.messageArgs[0] || '未知'}`;
+      return `您的转诊申请已提交。风险等级评估为: ${notification.payload.riskLevel || '未知'}`;
     case 'REFERRAL_SUBMITTED_INITIATOR': {
-      const studentName = notification.messageArgs[0] || '';
+      const studentName = notification.payload.studentName || '';
       return (
         <span>您为 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 发起的转诊申请已成功记录，并进入后续评估流程。</span>
       );
     }
     case 'REFERRAL_REQUIRES_REVIEW_HC':
-      return `有新的转诊申请需要审核(学生ID: ${notification.messageArgs[0] || ''})。风险等级: ${notification.messageArgs[1] || '未知'}`;
+      return `有新的转诊申请需要您审核(学生: ${notification.payload.studentName || ''})。风险等级: ${notification.payload.riskLevel || '未知'}`;
     default:
       return notification.messageCode.replace(/_/g, ' ');
   }

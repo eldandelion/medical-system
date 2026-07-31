@@ -25,19 +25,19 @@ class NotificationServiceTest {
     fun `should create notification and save to repository`() {
         val userId = 100L
         val messageCode = NotificationMessageCode.REFERRAL_INITIATED
-        val messageArgs = listOf("456", "HIGH")
-        val actionType = NotificationActionType.REVIEW_REFERRAL
-        val actionTargetId = 789L
+        val payload = mapOf("studentId" to "456", "riskLevel" to "HIGH")
+        val actionType = NotificationActionType.VIEW_REFERRAL
+        val actionTargetId = 100L
 
-        notificationService.createNotification(userId, messageCode, messageArgs, actionType, actionTargetId)
+        notificationService.createNotification(userId, messageCode, payload, actionType, actionTargetId)
 
         val captor = ArgumentCaptor.forClass(Notification::class.java)
-        verify(notificationRepository).save(captor.capture() ?: Notification(userId = 0, messageCode = NotificationMessageCode.REFERRAL_INITIATED, messageArgs = emptyList()))
+        verify(notificationRepository).save(captor.capture() ?: Notification(userId = 0, messageCode = NotificationMessageCode.REFERRAL_INITIATED, payload = emptyMap()))
 
         val savedEntity = captor.value
         assertEquals(userId, savedEntity.userId)
         assertEquals(messageCode, savedEntity.messageCode)
-        assertEquals(messageArgs, savedEntity.messageArgs)
+        assertEquals(payload, savedEntity.payload)
         assertEquals(actionType, savedEntity.actionType)
         assertEquals(actionTargetId, savedEntity.actionTargetId)
         assertFalse(savedEntity.isRead)
@@ -58,8 +58,8 @@ class NotificationServiceTest {
     fun `getNotificationsForUser returns notifications sorted by creation date`() {
         val userId = 1L
         val notifications = listOf(
-            Notification(id = 1, userId = userId, messageCode = NotificationMessageCode.REFERRAL_SUBMITTED_STUDENT, actionType = NotificationActionType.NONE, messageArgs = emptyList(), isRead = false),
-            Notification(id = 2, userId = userId, messageCode = NotificationMessageCode.REFERRAL_REQUIRES_REVIEW_HC, actionType = NotificationActionType.REVIEW_REFERRAL, messageArgs = emptyList(), isRead = false)
+            Notification(id = 1, userId = userId, messageCode = NotificationMessageCode.REFERRAL_SUBMITTED_STUDENT, actionType = NotificationActionType.NONE, payload = emptyMap(), isRead = false),
+            Notification(id = 2, userId = userId, messageCode = NotificationMessageCode.REFERRAL_REQUIRES_REVIEW_HC, actionType = NotificationActionType.REVIEW_REFERRAL, payload = emptyMap(), isRead = false)
         )
         `when`(notificationRepository.findByUserIdOrderByCreatedAtDesc(userId)).thenReturn(notifications.reversed())
         
@@ -71,9 +71,9 @@ class NotificationServiceTest {
 
     @Test
     fun `markAsRead successfully updates notification state`() {
-        val userId = 1L
-        val notificationId = 100L
-        val notification = Notification(id = notificationId, userId = userId, messageCode = NotificationMessageCode.REFERRAL_SUBMITTED_STUDENT, actionType = NotificationActionType.NONE, messageArgs = emptyList(), isRead = false)
+        val userId = 123L
+        val notificationId = 1L
+        val notification = Notification(id = notificationId, userId = userId, messageCode = NotificationMessageCode.REFERRAL_SUBMITTED_STUDENT, actionType = NotificationActionType.NONE, payload = emptyMap(), isRead = false)
         
         `when`(notificationRepository.findById(notificationId)).thenReturn(notification)
         

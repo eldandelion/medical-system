@@ -6,7 +6,7 @@ data class Notification(
     val id: Long? = null,
     val userId: Long,
     val messageCode: NotificationMessageCode,
-    val messageArgs: List<String> = emptyList(),
+    val payload: Map<String, Any> = emptyMap(),
     var isRead: Boolean = false,
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val actionType: NotificationActionType = NotificationActionType.NONE,
@@ -26,7 +26,7 @@ data class Notification(
             return Notification(
                 userId = studentId,
                 messageCode = NotificationMessageCode.REFERRAL_SUBMITTED_STUDENT,
-                messageArgs = listOf(riskLevel),
+                payload = mapOf("riskLevel" to riskLevel),
                 actionType = NotificationActionType.NONE
             )
         }
@@ -35,7 +35,11 @@ data class Notification(
             return Notification(
                 userId = initiatorId,
                 messageCode = NotificationMessageCode.REFERRAL_SUBMITTED_INITIATOR,
-                messageArgs = listOf(studentName, riskLevel),
+                payload = mapOf(
+                    "studentName" to studentName,
+                    "riskLevel" to riskLevel,
+                    "referralId" to referralId
+                ),
                 actionType = NotificationActionType.VIEW_REFERRAL,
                 actionTargetId = referralId
             )
@@ -45,7 +49,11 @@ data class Notification(
             return Notification(
                 userId = hcId,
                 messageCode = NotificationMessageCode.REFERRAL_REQUIRES_REVIEW_HC,
-                messageArgs = listOf(studentName, riskLevel),
+                payload = mapOf(
+                    "studentName" to studentName,
+                    "riskLevel" to riskLevel,
+                    "referralId" to referralId
+                ),
                 actionType = NotificationActionType.REVIEW_REFERRAL,
                 actionTargetId = referralId
             )

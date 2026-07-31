@@ -7,11 +7,11 @@ import java.time.LocalDateTime
 data class NotificationDto(
     val id: Long,
     val userId: Long,
-    val messageCode: NotificationMessageCode,
-    val messageArgs: List<String>,
+    val messageCode: String,
+    val payload: Map<String, Any>,
     val isRead: Boolean,
     val createdAt: LocalDateTime,
-    val actionType: NotificationActionType,
+    val actionType: String,
     val actionTargetId: Long?,
     val isActionAvailable: Boolean
 )

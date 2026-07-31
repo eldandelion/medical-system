@@ -2,7 +2,7 @@ export interface NotificationDto {
   id: number;
   userId: number;
   messageCode: string;
-  messageArgs: string[];
+  payload: Record<string, any>;
   actionType: string;
   actionTargetId?: number;
   isRead: boolean;

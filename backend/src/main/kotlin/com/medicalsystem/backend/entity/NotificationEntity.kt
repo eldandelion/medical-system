@@ -25,8 +25,8 @@ class NotificationEntity(
     @Column(name = "message_code", nullable = false)
     val messageCode: NotificationMessageCode,
 
-    @Column(name = "message_args", columnDefinition = "TEXT")
-    val messageArgs: String,
+    @Column(name = "payload", columnDefinition = "JSON")
+    val payload: String,
 
     @Column(name = "is_read", nullable = false)
     var isRead: Boolean = false,

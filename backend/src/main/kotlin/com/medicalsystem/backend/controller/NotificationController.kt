@@ -15,13 +15,13 @@ class NotificationController(
         val notifications = notificationService.getNotificationsForUser(user.id)
         return ResponseEntity.ok(notifications.map { 
             NotificationDto(
-                id = it.id ?: 0L,
+                id = it.id!!,
                 userId = it.userId,
-                messageCode = it.messageCode,
-                messageArgs = it.messageArgs,
+                messageCode = it.messageCode.name,
+                payload = it.payload,
                 isRead = it.isRead,
                 createdAt = it.createdAt,
-                actionType = it.actionType,
+                actionType = it.actionType.name,
                 actionTargetId = it.actionTargetId,
                 isActionAvailable = it.isActionAvailable
             ) 

@@ -44,18 +44,21 @@ class ReferralNotificationRoutingPolicyTest {
         requireNotNull(studentNotif)
         assertEquals(NotificationMessageCode.REFERRAL_SUBMITTED_STUDENT, studentNotif.messageCode)
         assertEquals(NotificationActionType.NONE, studentNotif.actionType)
+        assertEquals(mapOf("riskLevel" to "HIGH"), studentNotif.payload)
 
         // Initiator notification
         val initiatorNotif = notifications.find { it.userId == 200L }
         requireNotNull(initiatorNotif)
         assertEquals(NotificationMessageCode.REFERRAL_SUBMITTED_INITIATOR, initiatorNotif.messageCode)
         assertEquals(NotificationActionType.VIEW_REFERRAL, initiatorNotif.actionType)
+        assertEquals(mapOf("studentName" to "John Doe", "riskLevel" to "HIGH", "referralId" to 1L), initiatorNotif.payload)
 
         // HC notification
         val hcNotif = notifications.find { it.userId == 300L }
         requireNotNull(hcNotif)
         assertEquals(NotificationMessageCode.REFERRAL_REQUIRES_REVIEW_HC, hcNotif.messageCode)
         assertEquals(NotificationActionType.REVIEW_REFERRAL, hcNotif.actionType)
+        assertEquals(mapOf("studentName" to "John Doe", "riskLevel" to "HIGH", "referralId" to 1L), hcNotif.payload)
     }
 
     @Test
@@ -73,11 +76,13 @@ class ReferralNotificationRoutingPolicyTest {
 
         val studentNotif = notifications.find { it.userId == 100L }
         requireNotNull(studentNotif)
+        assertEquals(mapOf("riskLevel" to "HIGH"), studentNotif.payload)
 
         val hcNotif = notifications.find { it.userId == hcId }
         requireNotNull(hcNotif)
         assertEquals(NotificationMessageCode.REFERRAL_REQUIRES_REVIEW_HC, hcNotif.messageCode)
         assertEquals(NotificationActionType.REVIEW_REFERRAL, hcNotif.actionType)
+        assertEquals(mapOf("studentName" to "John Doe", "riskLevel" to "HIGH", "referralId" to 1L), hcNotif.payload)
     }
 
     @Test

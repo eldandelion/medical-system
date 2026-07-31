@@ -18,20 +18,18 @@ class NotificationService(
     fun createNotification(
         userId: Long,
         messageCode: NotificationMessageCode,
-        messageArgs: List<String>,
-        actionType: NotificationActionType,
-        actionTargetId: Long?
-    ) {
+        payload: Map<String, Any>,
+        actionType: NotificationActionType = NotificationActionType.NONE,
+        actionTargetId: Long? = null
+    ): Notification {
         val notification = Notification(
             userId = userId,
             messageCode = messageCode,
-            messageArgs = messageArgs,
+            payload = payload,
             actionType = actionType,
-            actionTargetId = actionTargetId,
-            isRead = false,
-            isActionAvailable = true
+            actionTargetId = actionTargetId
         )
-        saveNotification(notification)
+        return notificationRepository.save(notification)
     }
 
     fun invalidateActions(actionType: NotificationActionType, targetId: Long) {
