@@ -20,6 +20,7 @@ class ReferralNotificationRoutingPolicyTest {
     fun setup() {
         val mockStudent = org.mockito.kotlin.mock<com.medicalsystem.backend.model.Student>()
         org.mockito.kotlin.whenever(mockStudent.name).thenReturn("John Doe")
+        org.mockito.kotlin.whenever(mockStudent.assignedTeacherId).thenReturn(null)
         org.mockito.kotlin.whenever(studentRepository.findById(org.mockito.kotlin.any())).thenReturn(java.util.Optional.of(mockStudent))
         
         val mockReferral = org.mockito.kotlin.mock<com.medicalsystem.backend.model.Referral>()
@@ -103,5 +104,30 @@ class ReferralNotificationRoutingPolicyTest {
         assertEquals(2, notifications.size)
         assertTrue(notifications.any { it.userId == 100L })
         assertTrue(notifications.any { it.userId == 200L })
+    }
+
+    @Test
+    fun `when HC initiates and student has assigned teacher, returns 3 notifications including teacher`() {
+        val mockStudent = org.mockito.kotlin.mock<com.medicalsystem.backend.model.Student>()
+        org.mockito.kotlin.whenever(mockStudent.name).thenReturn("John Doe")
+        org.mockito.kotlin.whenever(mockStudent.assignedTeacherId).thenReturn(400L)
+        org.mockito.kotlin.whenever(studentRepository.findById(org.mockito.kotlin.any())).thenReturn(java.util.Optional.of(mockStudent))
+
+        val hcId = 300L
+        val event = ReferralInitiatedEvent(
+            referralId = 1L,
+            studentId = 100L,
+            initiatorId = hcId
+        )
+
+        val notifications = policy.determineNotifications(event, hcId)
+
+        assertEquals(3, notifications.size)
+
+        val teacherNotif = notifications.find { it.userId == 400L }
+        requireNotNull(teacherNotif)
+        assertEquals(NotificationMessageCode.REFERRAL_CREATED_FOR_STUDENT_TEACHER, teacherNotif.messageCode)
+        assertEquals(NotificationActionType.VIEW_REFERRAL, teacherNotif.actionType)
+        assertEquals(mapOf("studentName" to "John Doe", "riskLevel" to "HIGH", "referralId" to 1L, "initiatorName" to "Jane Smith"), teacherNotif.payload)
     }
 }

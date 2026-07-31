@@ -58,6 +58,21 @@ data class Notification(
                 actionTargetId = referralId
             )
         }
+
+        fun createForAssignedTeacher(teacherId: Long, studentName: String, riskLevel: String, referralId: Long, initiatorName: String): Notification {
+            return Notification(
+                userId = teacherId,
+                messageCode = NotificationMessageCode.REFERRAL_CREATED_FOR_STUDENT_TEACHER,
+                payload = mapOf(
+                    "studentName" to studentName,
+                    "riskLevel" to riskLevel,
+                    "referralId" to referralId,
+                    "initiatorName" to initiatorName
+                ),
+                actionType = NotificationActionType.VIEW_REFERRAL,
+                actionTargetId = referralId
+            )
+        }
         
     }
 }

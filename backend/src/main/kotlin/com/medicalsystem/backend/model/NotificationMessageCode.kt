@@ -7,7 +7,8 @@ enum class NotificationMessageCode(val code: Int) {
     EVALUATION_COMPLETED(4),
     REFERRAL_SUBMITTED_STUDENT(5),
     REFERRAL_SUBMITTED_INITIATOR(6),
-    REFERRAL_REQUIRES_REVIEW_HC(7);
+    REFERRAL_REQUIRES_REVIEW_HC(7),
+    REFERRAL_CREATED_FOR_STUDENT_TEACHER(8);
 
     companion object {
         fun fromCode(code: Int): NotificationMessageCode = entries.find { it.code == code }

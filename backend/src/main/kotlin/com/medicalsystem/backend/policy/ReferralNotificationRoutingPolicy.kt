@@ -37,6 +37,20 @@ class ReferralNotificationRoutingPolicy(
             ))
         }
 
+        // 4. Assigned Teacher Notification
+        if (student.assignedTeacherId != null) {
+            // Only send if the teacher is NOT the initiator (to avoid duplicate notifications)
+            if (student.assignedTeacherId != event.initiatorId) {
+                 notifications.add(Notification.createForAssignedTeacher(
+                     student.assignedTeacherId, 
+                     student.name, 
+                     riskName, 
+                     event.referralId,
+                     initiator.name
+                 ))
+            }
+        }
+
         return notifications
     }
 }

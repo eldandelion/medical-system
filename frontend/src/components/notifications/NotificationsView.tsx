@@ -26,6 +26,13 @@ const getNotificationText = (notification: NotificationDto) => {
       return (
         <span>由 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{notification.payload.initiatorName || '教师'}</span> 为 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{notification.payload.studentName || '未知学生'}</span> 发起的转诊申请需要您审核。</span>
       );
+    case 'REFERRAL_CREATED_FOR_STUDENT_TEACHER': {
+      const initiatorName = notification.payload.initiatorName || '心理咨询师';
+      const studentName = notification.payload.studentName || '未知学生';
+      return (
+        <span>心理咨询师 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{initiatorName}</span> 为您的学生 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 发起了转诊申请。</span>
+      );
+    }
     default:
       return notification.messageCode.replace(/_/g, ' ');
   }
@@ -33,9 +40,16 @@ const getNotificationText = (notification: NotificationDto) => {
 
 const getNotificationTitle = (notification: NotificationDto) => {
   if (notification.messageCode === 'REFERRAL_SUBMITTED_INITIATOR') return '转诊申请提交成功';
+  if (notification.messageCode === 'REFERRAL_CREATED_FOR_STUDENT_TEACHER') return '学生转诊申请已创建';
   if (notification.messageCode.includes('SUBMITTED')) return '转诊申请已提交';
   if (notification.messageCode.includes('REVIEW')) return '待审核转诊申请';
   return '新通知';
+};
+
+const getNotificationIcon = (notification: NotificationDto) => {
+  if (notification.actionType === 'REVIEW_REFERRAL') return 'assignment_turned_in';
+  if (notification.messageCode === 'REFERRAL_CREATED_FOR_STUDENT_TEACHER') return 'assignment_ind';
+  return 'info';
 };
 
 export function NotificationsView({ onViewReferral, onViewRecords }: NotificationsViewProps) {
@@ -62,7 +76,7 @@ export function NotificationsView({ onViewReferral, onViewRecords }: Notificatio
           {notifications.map((notification: NotificationDto) => (
             <NotificationItem 
               key={notification.id}
-              icon={notification.actionType === 'REVIEW_REFERRAL' ? 'assignment_turned_in' : 'info'}
+              icon={getNotificationIcon(notification)}
               iconBgColor={notification.isRead ? 'var(--md-sys-color-surface-variant)' : 'var(--md-sys-color-secondary-container)'}
               iconTextColor={notification.isRead ? 'var(--md-sys-color-on-surface-variant)' : 'var(--md-sys-color-on-secondary-container)'}
               header={getNotificationTitle(notification)}
