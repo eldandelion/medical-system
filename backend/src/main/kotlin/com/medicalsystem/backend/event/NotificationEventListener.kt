@@ -8,8 +8,11 @@ import org.springframework.stereotype.Component
 import org.springframework.scheduling.annotation.Async
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.annotation.Propagation
 
 @Component
+@Transactional(propagation = Propagation.REQUIRES_NEW)
 class NotificationEventListener(
     private val notificationService: NotificationService,
     private val headCounsellorRepository: com.medicalsystem.backend.repository.HeadCounsellorRepository,
