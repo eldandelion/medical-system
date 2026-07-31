@@ -22,6 +22,9 @@ import { useQuery } from '@tanstack/react-query';
 import { DOCTOR_METRICS_CONFIG } from '../config/dashboardConfig';
 import { useAuth } from '../contexts/AuthContext';
 import { useDoctorProfileSummary } from '../hooks/useProfileSummary';
+import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
+import { ReferralDetailsView } from '../components/records/ReferralDetailsView';
+import { roleTranslations } from '../utils/roleTranslations';
 
 export const DoctorTabs = {
   DASHBOARD: 'Dashboard',

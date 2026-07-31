@@ -25,7 +25,7 @@ import { useTeacherProfileSummary } from '../hooks/useProfileSummary';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
 import { enrichReferralStatus } from '../utils/referralUtils';
-import { Referral } from '../api/referrals';
+import { Referral } from '../types';
 
 import { TEACHER_METRICS_CONFIG } from '../config/dashboardConfig';
 

@@ -20,6 +20,8 @@ import { queryClient } from '../utils/queryClient';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import { useTrialAdminProfileSummary } from '../hooks/useProfileSummary';
+import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
+import { roleTranslations } from '../utils/roleTranslations';
 
 import { TRIAL_ADMIN_METRICS_CONFIG } from '../config/dashboardConfig';
 
