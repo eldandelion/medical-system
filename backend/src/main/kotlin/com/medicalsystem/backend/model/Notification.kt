@@ -31,21 +31,21 @@ data class Notification(
             )
         }
         
-        fun createForInitiator(initiatorId: Long, studentId: Long, riskLevel: String, referralId: Long): Notification {
+        fun createForInitiator(initiatorId: Long, studentName: String, riskLevel: String, referralId: Long): Notification {
             return Notification(
                 userId = initiatorId,
                 messageCode = NotificationMessageCode.REFERRAL_SUBMITTED_INITIATOR,
-                messageArgs = listOf(studentId.toString(), riskLevel),
+                messageArgs = listOf(studentName, riskLevel),
                 actionType = NotificationActionType.VIEW_REFERRAL,
                 actionTargetId = referralId
             )
         }
         
-        fun createForHeadCounsellor(hcId: Long, studentId: Long, riskLevel: String, referralId: Long): Notification {
+        fun createForHeadCounsellor(hcId: Long, studentName: String, riskLevel: String, referralId: Long): Notification {
             return Notification(
                 userId = hcId,
                 messageCode = NotificationMessageCode.REFERRAL_REQUIRES_REVIEW_HC,
-                messageArgs = listOf(studentId.toString(), riskLevel),
+                messageArgs = listOf(studentName, riskLevel),
                 actionType = NotificationActionType.REVIEW_REFERRAL,
                 actionTargetId = referralId
             )

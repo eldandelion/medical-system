@@ -13,12 +13,14 @@ import org.springframework.transaction.event.TransactionalEventListener
 class NotificationEventListener(
     private val notificationService: NotificationService,
     private val headCounsellorRepository: com.medicalsystem.backend.repository.HeadCounsellorRepository,
+    private val studentRepository: com.medicalsystem.backend.repository.StudentRepository,
     private val routingPolicy: com.medicalsystem.backend.policy.NotificationRoutingPolicy<ReferralInitiatedEvent>
 ) {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun handleReferralInitiated(event: ReferralInitiatedEvent) {
-        val headCounsellorId = event.schoolId?.let { 
+        val student = studentRepository.findById(event.studentId).orElse(null) ?: return
+        val headCounsellorId = student.demographics?.school?.id?.let { 
             headCounsellorRepository.findBySchoolId(it).orElse(null)?.userId 
         }
 

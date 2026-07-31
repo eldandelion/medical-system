@@ -19,6 +19,7 @@ class NotificationEventListenerTest {
 
     private lateinit var notificationService: NotificationService
     private lateinit var headCounsellorRepository: HeadCounsellorRepository
+    private lateinit var studentRepository: com.medicalsystem.backend.repository.StudentRepository
     private lateinit var routingPolicy: NotificationRoutingPolicy<ReferralInitiatedEvent>
     private lateinit var listener: NotificationEventListener
 
@@ -26,8 +27,9 @@ class NotificationEventListenerTest {
     fun setup() {
         notificationService = mock()
         headCounsellorRepository = mock()
+        studentRepository = mock()
         routingPolicy = mock()
-        listener = NotificationEventListener(notificationService, headCounsellorRepository, routingPolicy)
+        listener = NotificationEventListener(notificationService, headCounsellorRepository, studentRepository, routingPolicy)
     }
 
     @Test
@@ -35,22 +37,31 @@ class NotificationEventListenerTest {
         val event = ReferralInitiatedEvent(
             referralId = 1L,
             studentId = 100L,
-            initiatorId = 200L,
-            schoolId = 10L,
-            riskStatus = RiskStatus.HIGH
+            initiatorId = 200L
         )
+        
+        val mockStudent = mock<com.medicalsystem.backend.model.Student>()
+        val mockDemographics = mock<com.medicalsystem.backend.model.Demographics>()
+        val mockSchool = mock<com.medicalsystem.backend.model.School>()
+        whenever(mockSchool.id).thenReturn(10L)
+        whenever(mockDemographics.school).thenReturn(mockSchool)
+        whenever(mockStudent.demographics).thenReturn(mockDemographics)
+        
+        whenever(studentRepository.findById(100L)).thenReturn(Optional.of(mockStudent))
+        
         val hcId = 300L
         val hc = HeadCounsellor(hcId, SchoolEmployeeId("T-12345"), 10L, 5L)
         whenever(headCounsellorRepository.findBySchoolId(10L)).thenReturn(Optional.of(hc))
 
         val mockNotifications = listOf(
             Notification.createForStudent(100L, "HIGH"),
-            Notification.createForInitiator(200L, 100L, "HIGH", 1L)
+            Notification.createForInitiator(200L, "John Doe", "HIGH", 1L)
         )
         whenever(routingPolicy.determineNotifications(event, hcId)).thenReturn(mockNotifications)
 
         listener.handleReferralInitiated(event)
 
+        verify(studentRepository).findById(100L)
         verify(headCounsellorRepository).findBySchoolId(10L)
         verify(routingPolicy).determineNotifications(event, hcId)
         verify(notificationService).saveNotification(mockNotifications[0])

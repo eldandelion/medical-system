@@ -129,9 +129,7 @@ class ReferralService(
             com.medicalsystem.backend.event.ReferralInitiatedEvent(
                 referralId = saved.id!!,
                 studentId = saved.studentId,
-                initiatorId = user.id,
-                schoolId = student.demographics?.school?.id,
-                riskStatus = saved.riskLevel
+                initiatorId = user.id
             )
         )
         

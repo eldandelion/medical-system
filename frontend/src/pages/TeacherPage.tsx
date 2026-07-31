@@ -24,6 +24,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useTeacherProfileSummary } from '../hooks/useProfileSummary';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
+import { enrichReferralStatus } from '../utils/referralUtils';
+import { Referral } from '../api/referrals';
 
 import { TEACHER_METRICS_CONFIG } from '../config/dashboardConfig';
 
@@ -110,6 +112,34 @@ export function TeacherPage() {
     setTimeout(expandToFullscreen, 10);
   };
 
+  const handleViewReferral = async (referralId: string) => {
+    handlePageChange(TeacherTabs.REFERRAL_MANAGEMENT);
+    try {
+      let referrals = queryClient.getQueryData<Referral[]>(['/api/referrals']);
+      
+      if (!referrals) {
+        const apiUrl = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/api/referrals`;
+        const res = await fetch(apiUrl, {
+          headers: { 'Authorization': `Bearer ${session?.token || ''}` }
+        });
+        if (res.ok) {
+          const rawData = await res.json();
+          referrals = rawData.map((r: any) => enrichReferralStatus(r));
+          queryClient.setQueryData(['/api/referrals'], referrals);
+        }
+      }
+      
+      const targetReferral = referrals?.find(r => String(r.id) === String(referralId));
+      if (targetReferral) {
+        setSelectedItem(targetReferral);
+      } else {
+        console.warn(`Referral with ID ${referralId} not found in the list`);
+      }
+    } catch (error) {
+      console.error('Failed to load referral for notification', error);
+    }
+  };
+
   const composeButton = (
     <TertiaryFab
       icon="edit"
@@ -124,7 +154,7 @@ export function TeacherPage() {
         return (
           <>
             <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} />
-            <NotificationsView />
+            <NotificationsView onViewReferral={handleViewReferral} />
           </>
         );
       case TeacherTabs.STUDENTS:

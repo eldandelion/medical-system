@@ -12,15 +12,17 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 @Transactional
 class StudentHealthProfileRiskListener(
-    private val healthProfileRepository: StudentHealthProfileRepository
+    private val healthProfileRepository: StudentHealthProfileRepository,
+    private val referralRepository: com.medicalsystem.backend.repository.ReferralRepository
 ) {
     private val logger = LoggerFactory.getLogger(StudentHealthProfileRiskListener::class.java)
 
     @Async
     @EventListener
     fun onReferralInitiated(event: ReferralInitiatedEvent) {
-        logger.info("Handling ReferralInitiatedEvent for student ${event.studentId} with risk status ${event.riskStatus}")
-        updateRiskLevelIfHigher(event.studentId, event.riskStatus.name)
+        val referral = referralRepository.findById(event.referralId).orElse(null) ?: return
+        logger.info("Handling ReferralInitiatedEvent for student ${event.studentId} with risk status ${referral.riskLevel}")
+        updateRiskLevelIfHigher(event.studentId, referral.riskLevel.name)
     }
     
     @Async

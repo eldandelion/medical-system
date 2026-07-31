@@ -4,13 +4,21 @@ import { useNotifications } from '../../hooks/useNotifications';
 import { useAuth } from '../../contexts/AuthContext';
 import { NotificationDto } from '../../api/notifications';
 
+interface NotificationsViewProps {
+  onViewReferral?: (referralId: string) => void;
+}
+
 // Helper to translate message codes to readable Chinese text
 const getNotificationText = (notification: NotificationDto) => {
   switch (notification.messageCode) {
     case 'REFERRAL_SUBMITTED_STUDENT':
       return `您的转诊申请已提交。风险等级评估为: ${notification.messageArgs[0] || '未知'}`;
-    case 'REFERRAL_SUBMITTED_INITIATOR':
-      return `您发起的转诊申请(学生ID: ${notification.messageArgs[0] || ''})已提交。风险等级: ${notification.messageArgs[1] || '未知'}`;
+    case 'REFERRAL_SUBMITTED_INITIATOR': {
+      const studentName = notification.messageArgs[0] || '';
+      return (
+        <span>您为 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 发起的转诊申请已成功记录，并进入后续评估流程。</span>
+      );
+    }
     case 'REFERRAL_REQUIRES_REVIEW_HC':
       return `有新的转诊申请需要审核(学生ID: ${notification.messageArgs[0] || ''})。风险等级: ${notification.messageArgs[1] || '未知'}`;
     default:
@@ -19,12 +27,13 @@ const getNotificationText = (notification: NotificationDto) => {
 };
 
 const getNotificationTitle = (notification: NotificationDto) => {
+  if (notification.messageCode === 'REFERRAL_SUBMITTED_INITIATOR') return '转诊申请提交成功';
   if (notification.messageCode.includes('SUBMITTED')) return '转诊申请已提交';
   if (notification.messageCode.includes('REVIEW')) return '待审核转诊申请';
   return '新通知';
 };
 
-export function NotificationsView() {
+export function NotificationsView({ onViewReferral }: NotificationsViewProps) {
   const { session } = useAuth();
   const { notifications, markAsRead, isLoading } = useNotifications(session?.token);
 
@@ -49,16 +58,18 @@ export function NotificationsView() {
             <NotificationItem 
               key={notification.id}
               icon={notification.actionType === 'REVIEW_REFERRAL' ? 'assignment_turned_in' : 'info'}
-              iconBgColor={notification.isRead ? 'var(--md-sys-color-surface-variant)' : 'var(--md-sys-color-error-container)'}
-              iconTextColor={notification.isRead ? 'var(--md-sys-color-on-surface-variant)' : 'var(--md-sys-color-on-error-container)'}
+              iconBgColor={notification.isRead ? 'var(--md-sys-color-surface-variant)' : 'var(--md-sys-color-secondary-container)'}
+              iconTextColor={notification.isRead ? 'var(--md-sys-color-on-surface-variant)' : 'var(--md-sys-color-on-secondary-container)'}
               header={getNotificationTitle(notification)}
-              time={new Date(notification.createdAt).toLocaleDateString()}
+              time={new Date(notification.createdAt).toLocaleString()}
               body={getNotificationText(notification)}
-              actions={
-                !notification.isRead
-                  ? [{ label: '标记为已读', variant: 'filled', onClick: () => markAsRead(notification.id) }]
-                  : []
-              }
+              actions={[
+                ...(notification.actionType === 'VIEW_REFERRAL' ? [{
+                  label: '查看详情',
+                  variant: 'text' as const,
+                  onClick: () => onViewReferral && notification.actionTargetId && onViewReferral(String(notification.actionTargetId))
+                }] : [])
+              ]}
             />
           ))}
           

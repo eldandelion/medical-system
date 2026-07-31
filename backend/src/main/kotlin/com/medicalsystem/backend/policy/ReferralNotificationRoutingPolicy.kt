@@ -5,12 +5,18 @@ import com.medicalsystem.backend.event.ReferralInitiatedEvent
 import org.springframework.stereotype.Component
 
 @Component
-class ReferralNotificationRoutingPolicy : NotificationRoutingPolicy<ReferralInitiatedEvent> {
+class ReferralNotificationRoutingPolicy(
+    private val studentRepository: com.medicalsystem.backend.repository.StudentRepository,
+    private val referralRepository: com.medicalsystem.backend.repository.ReferralRepository
+) : NotificationRoutingPolicy<ReferralInitiatedEvent> {
     
     override fun determineNotifications(event: ReferralInitiatedEvent, contextId: Long?): List<Notification> {
+        val student = studentRepository.findById(event.studentId).orElseThrow()
+        val referral = referralRepository.findById(event.referralId).orElseThrow()
+        
         val headCounsellorId = contextId
         val notifications = mutableListOf<Notification>()
-        val riskName = event.riskStatus.name
+        val riskName = referral.riskLevel.name
 
         // 1. Student always gets notified
         notifications.add(Notification.createForStudent(event.studentId, riskName))
@@ -18,14 +24,14 @@ class ReferralNotificationRoutingPolicy : NotificationRoutingPolicy<ReferralInit
         // 2. Head Counsellor Review Notification
         if (headCounsellorId != null) {
             notifications.add(Notification.createForHeadCounsellor(
-                headCounsellorId, event.studentId, riskName, event.referralId
+                headCounsellorId, student.name, riskName, event.referralId
             ))
         }
 
         // 3. Initiator Notification (only if they are NOT the head counsellor)
         if (event.initiatorId != headCounsellorId) {
             notifications.add(Notification.createForInitiator(
-                event.initiatorId, event.studentId, riskName, event.referralId
+                event.initiatorId, student.name, riskName, event.referralId
             ))
         }
 

@@ -11,16 +11,27 @@ import java.time.LocalDateTime
 
 class ReferralNotificationRoutingPolicyTest {
 
-    private val policy = ReferralNotificationRoutingPolicy()
+    private val studentRepository: com.medicalsystem.backend.repository.StudentRepository = org.mockito.kotlin.mock()
+    private val referralRepository: com.medicalsystem.backend.repository.ReferralRepository = org.mockito.kotlin.mock()
+    private val policy = ReferralNotificationRoutingPolicy(studentRepository, referralRepository)
+
+    @org.junit.jupiter.api.BeforeEach
+    fun setup() {
+        val mockStudent = org.mockito.kotlin.mock<com.medicalsystem.backend.model.Student>()
+        org.mockito.kotlin.whenever(mockStudent.name).thenReturn("John Doe")
+        org.mockito.kotlin.whenever(studentRepository.findById(org.mockito.kotlin.any())).thenReturn(java.util.Optional.of(mockStudent))
+        
+        val mockReferral = org.mockito.kotlin.mock<com.medicalsystem.backend.model.Referral>()
+        org.mockito.kotlin.whenever(mockReferral.riskLevel).thenReturn(RiskStatus.HIGH)
+        org.mockito.kotlin.whenever(referralRepository.findById(org.mockito.kotlin.any())).thenReturn(java.util.Optional.of(mockReferral))
+    }
 
     @Test
     fun `when teacher initiates and HC exists, returns 3 notifications`() {
         val event = ReferralInitiatedEvent(
             referralId = 1L,
             studentId = 100L,
-            initiatorId = 200L,
-            schoolId = 10L,
-            riskStatus = RiskStatus.HIGH
+            initiatorId = 200L
         )
         val hcId = 300L
 
@@ -53,9 +64,7 @@ class ReferralNotificationRoutingPolicyTest {
         val event = ReferralInitiatedEvent(
             referralId = 1L,
             studentId = 100L,
-            initiatorId = hcId,
-            schoolId = 10L,
-            riskStatus = RiskStatus.MEDIUM
+            initiatorId = hcId
         )
 
         val notifications = policy.determineNotifications(event, hcId)
@@ -76,9 +85,7 @@ class ReferralNotificationRoutingPolicyTest {
         val event = ReferralInitiatedEvent(
             referralId = 1L,
             studentId = 100L,
-            initiatorId = 200L,
-            schoolId = 10L,
-            riskStatus = RiskStatus.LOW
+            initiatorId = 200L
         )
 
         val notifications = policy.determineNotifications(event, null)
