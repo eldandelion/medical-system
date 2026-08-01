@@ -267,9 +267,10 @@ class ReferralService(
     }
 
     private fun saveAndPublishEvents(referral: Referral): Referral {
+        val events = referral.getDomainEvents()
         val saved = referralRepository.save(referral)
-        saved.getDomainEvents().forEach { eventPublisher.publish(it) }
-        saved.clearDomainEvents()
+        events.forEach { eventPublisher.publish(it) }
+        referral.clearDomainEvents()
         return saved
     }
 }

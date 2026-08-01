@@ -20,7 +20,9 @@ class NotificationEventListenerTest {
     private lateinit var notificationService: NotificationService
     private lateinit var headCounsellorRepository: HeadCounsellorRepository
     private lateinit var studentRepository: com.medicalsystem.backend.repository.StudentRepository
+    private lateinit var referralRepository: com.medicalsystem.backend.repository.ReferralRepository
     private lateinit var routingPolicy: NotificationRoutingPolicy<ReferralInitiatedEvent>
+    private lateinit var lifecycleRoutingPolicy: com.medicalsystem.backend.policy.LifecycleNotificationRoutingPolicy
     private lateinit var listener: NotificationEventListener
 
     @BeforeEach
@@ -28,8 +30,17 @@ class NotificationEventListenerTest {
         notificationService = mock()
         headCounsellorRepository = mock()
         studentRepository = mock()
+        referralRepository = mock()
         routingPolicy = mock()
-        listener = NotificationEventListener(notificationService, headCounsellorRepository, studentRepository, routingPolicy)
+        lifecycleRoutingPolicy = mock()
+        listener = NotificationEventListener(
+            notificationService,
+            headCounsellorRepository,
+            studentRepository,
+            referralRepository,
+            routingPolicy,
+            lifecycleRoutingPolicy
+        )
     }
 
     @Test

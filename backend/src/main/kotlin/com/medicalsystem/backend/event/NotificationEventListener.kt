@@ -17,7 +17,9 @@ class NotificationEventListener(
     private val notificationService: NotificationService,
     private val headCounsellorRepository: com.medicalsystem.backend.repository.HeadCounsellorRepository,
     private val studentRepository: com.medicalsystem.backend.repository.StudentRepository,
-    private val routingPolicy: com.medicalsystem.backend.policy.NotificationRoutingPolicy<ReferralInitiatedEvent>
+    private val referralRepository: com.medicalsystem.backend.repository.ReferralRepository,
+    private val routingPolicy: com.medicalsystem.backend.policy.NotificationRoutingPolicy<ReferralInitiatedEvent>,
+    private val lifecycleRoutingPolicy: com.medicalsystem.backend.policy.LifecycleNotificationRoutingPolicy
 ) {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -35,6 +37,11 @@ class NotificationEventListener(
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun handleReferralStatusChanged(event: ReferralStatusChangedEvent) {
+        val referral = referralRepository.findById(event.referralId).orElse(null) ?: return
+        
+        val notifications = lifecycleRoutingPolicy.determineNotifications(event, referral)
+        notifications.forEach { notificationService.saveNotification(it) }
+
         if (event.newStatus == ReferralStatus.CLOSED) {
             notificationService.invalidateActions(
                 actionType = NotificationActionType.REVIEW_REFERRAL,
