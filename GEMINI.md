@@ -1,68 +1,160 @@
-# GEMINI.md - Project Context Summary
+# GEMINI.md
 
 ## Project Overview
-**Name**: University Medical Screening System (Full Stack)
-**Purpose**: A comprehensive medical screening and referral management system for universities, supporting multiple user roles (Student, Teacher, Head Councillor, Admin, Doctors).
+The University Medical Screening System is a full-stack platform managing student health screenings, psychiatric triage, and hospital referral workflows across multiple roles (Student, Teacher, Head Councillor, Trial Admin, Doctor).
 
-## Technology Stack
-### Frontend
-- **Core**: [React 19](https://react.dev/) (Functional Components, Hooks)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Build Tool**: [Vite 6](https://vitejs.dev/)
-- **Styling**: Tailwind CSS 4, Material Design 3 (Material Web Components), Custom CSS variables
-- **Libraries**: Motion (Framer Motion), Recharts, @google/genai
-
-### Backend & Infrastructure
-- **Core**: [Spring Boot](https://spring.io/projects/spring-boot)
-- **Language**: [Kotlin](https://kotlinlang.org/)
-- **Data Access**: Spring Data JPA / Hibernate
-- **Database**: MySQL 8
-- **Infrastructure**: Docker & Docker Compose
-
-## Architecture & Design Patterns
-- **Frontend Architecture**: 
-  - Role-Based Orchestration (`App.tsx` routes to `StudentPage`, `TeacherPage`, etc.)
-  - Domain-organized components (`components/records`, `components/students`, etc.)
-- **Backend Architecture (Domain-Driven Design)**:
-  - **Pure Domain Models**: Business logic strictly uses pure Kotlin `enum class` and rich domain types.
-  - **Infrastructure Isolation**: JPA `@AttributeConverter` is utilized to map complex domain types (like enums) to highly optimized database structures (e.g., standard integers) without polluting the Domain layer.
-  - **Security Architecture (Black Box)**: Authentication is completely decoupled from controllers and business logic. A Servlet Filter resolves tokens and injects the authenticated entity via a `@CurrentUser` argument resolver. This mock security layer is designed as a drop-in replacement for future Spring Security (JWT) integration.
-- **Database Standards**:
-  - Uses `BIGINT UNSIGNED` / `INT UNSIGNED` for primary and foreign keys.
-  - Strictly avoids MySQL native `ENUM` types in favor of integer-backed application lookups or dedicated lookup tables.
-  - Strategically uses composite indexes for common query patterns (e.g., `idx_referral_student_status`).
-
-## Installed Agent Skills & Best Practices
-1. **Test-Driven Development (TDD)**:
-   - **The Iron Law**: NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST.
-   - Always Red -> Green -> Refactor. 
-2. **MySQL Expertise**:
-   - Focuses on highly optimized schemas, covering indexes, and avoiding technical debt (like native Enums).
-3. **Domain-Driven Design (DDD)**:
-   - Maintains ubiquitous language and bounded contexts.
-4. **Clean Code**:
-   - High standards for readability, small focused methods, and maintainability.
-
-## Directory Structure
+### Monorepo Structure
 ```text
 /
-├── frontend/             # Vite React Application
-│   ├── src/              # React source code (components, pages, contexts)
-│   ├── public/           # Static assets
-│   └── package.json      # Frontend dependencies
-├── backend/              # Spring Boot Kotlin Application
-│   ├── src/main/kotlin/  # Kotlin source code (controllers, services, models, entities, converters)
-│   ├── src/test/kotlin/  # TDD Test Suite
-│   └── pom.xml           # Maven dependencies
-├── .agent/skills/        # AI Agent Skills (TDD, MySQL, DDD, Clean Code)
-└── docker-compose.yml    # Deployment orchestration (db, frontend, backend)
+├── frontend/             # React 19 + TypeScript + Vite single-page application
+├── backend/              # Spring Boot + Kotlin REST API application
+├── docker-compose.yml    # Container orchestration (MySQL 8, backend, frontend)
+└── .github/workflows/    # Deployment workflows
 ```
 
-## Coding Conventions
-- **Git Workflow**: Always checkout to a new branch when implementing a new feature or fixing a bug.
-- **Component Structure (React)**: Always use Functional Components with Hooks.
-- **Naming**:
-  - React Components/Types: `PascalCase`
-  - Kotlin Classes/Entities: `PascalCase`
-  - Utilities/Functions/Variables: `camelCase`
-- **Testing**: Tests must accurately reflect the behavior of the new services/controllers, using strict mock verification.
+---
+
+## Tech Stack & Build Tools
+
+### Frontend
+- **Framework & Core**: React 19, TypeScript 5.8 (Target ES2022, bundler module resolution)
+- **Build Tool & Dev Server**: Vite 6 (`@vitejs/plugin-react`)
+- **Styling**: Tailwind CSS 4 (`@tailwindcss/vite`), Material Design 3 Web Components (`@material/web`), Roboto fonts, Material Symbols
+- **State & Data Fetching**: TanStack React Query 5 (`staleTime: 5m`, 3 retries), React Context API
+- **Animations & Icons**: Motion (Framer Motion), Lucide React
+- **API Mocking**: Mock Service Worker (MSW 2) in development/testing with backend fallback
+
+### Backend & Database
+- **Framework**: Spring Boot 4.1, Spring Data JPA, Spring Web, Spring Validation, SpringDoc OpenAPI 2.6
+- **Language & Runtime**: Kotlin 2.3 (JVM 17), Jackson Kotlin Module
+- **Build Tool**: Apache Maven (wrapper: `./mvnw`), Jacoco Maven Plugin
+- **Database**: MySQL 8 (InnoDB), H2 (in-memory test database)
+- **Deployment**: Docker & Docker Compose (`db:3306->3307`, `backend:8080->8081`, `frontend:80`)
+
+---
+
+## Architecture & Code Organization
+
+### Frontend Architecture
+- **Role-Based Orchestration**: `App.tsx` routes views according to the authenticated user's role.
+- **Modular Component Tree**: `src/components/` organized by domain (`assessments`, `dashboard`, `records`, `students`, `profile`, `staff`, `creation-overlay`, `layout`, `common`).
+- **Context-Driven UI State**: Contexts manage authentication (`AuthContext`), global snackbars (`SnackbarContext`), theme/dark mode, and creation flows.
+
+### Backend Architecture (Domain-Driven Design)
+- **`model/`**: Pure domain aggregates, entities, factories, visibility policies, and domain value objects. Business logic uses pure Kotlin `enum class` types.
+- **`converter/`**: JPA `@Converter(autoApply = true)` implementations (`EnumConverters.kt`, `ValueObjectConverters.kt`) map domain enums to 1-based integer ordinals to keep database schemas optimized and decouple DB persistence from the domain.
+- **`entity/`**: JPA entities mapped to MySQL tables with `BIGINT UNSIGNED` primary keys.
+- **`repository/`**: Spring Data JPA repositories and custom adapter implementations.
+- **`service/`**: Application and domain services handling business transactions and publishing domain events.
+- **`controller/` & `dto/`**: REST controllers under `/api/*` consuming and returning strongly typed DTOs.
+- **`security/`**: Token-resolving Servlet Filter (`MockAuthenticationFilter`) injecting authenticated users via `@CurrentUser` argument resolver (`CurrentUserArgumentResolver`).
+
+---
+
+## Coding Conventions & Formatting
+
+### Naming Conventions
+- **Classes, Interfaces, Types, React Components**: `PascalCase` (e.g., `ReferralController`, `StudentPage`, `NotificationDto`)
+- **Functions, Methods, Variables, Properties**: `camelCase` (e.g., `fetchActiveReferrals`, `useReferralActions`, `studentNumber`)
+- **Enums**: `PascalCase` for enum classes, `SCREAMING_SNAKE_CASE` for enum entries (e.g., `ReferralStatus.AWAITING_TRIAGE`)
+- **Database Tables & Columns**: `snake_case` (e.g., `referral_step`, `student_id`)
+
+### Formatting
+- **Frontend**: 2-space indentation, semicolons enabled, single/double quotes, TypeScript strict type checking (`tsc --noEmit`).
+- **Backend**: 4-space indentation, standard Kotlin coding conventions, trailing commas supported.
+
+---
+
+## Error Handling
+
+### Frontend
+- **API Requests**: Async `fetch` calls check `res.ok` and throw standard `Error` messages on failures.
+- **User Feedback**: UI operations catch errors and display feedback via `useSnackbar()` notification alerts or fallback state indicators.
+- **Mock Fallback**: MSW handlers attempt live backend communication and fall back to mock datasets on network or endpoint failures.
+
+### Backend
+- **Custom Exceptions**: Domain and HTTP exceptions extend `RuntimeException` (e.g., `NotFoundException`, `ConflictException`, `ValidationException`, `ForbiddenException`, `ReferralStateException`).
+- **Centralized Handler**: `@RestControllerAdvice` in `GlobalExceptionHandler.kt` maps exceptions to uniform JSON responses:
+  - Returns appropriate status codes (`400 BAD_REQUEST`, `403 FORBIDDEN`, `404 NOT_FOUND`, `409 CONFLICT`).
+  - Response body format: `{"error": "Message"}` or `{"error": "Validation failed", "details": {...}}` for bean validation errors (`MethodArgumentNotValidException`).
+
+---
+
+## Logging Practices
+
+### Frontend
+- Utilizes standard browser `console` methods:
+  - `console.error`: For unexpected API failures and critical catch blocks.
+  - `console.warn`: For missing references or MSW fallback triggers.
+  - `console.log`: For UI state debugging in development.
+
+### Backend
+- Uses SLF4J with standard class-bound loggers:
+  - `private val logger = LoggerFactory.getLogger(TargetClass::class.java)`
+- Levels:
+  - `logger.info`: For successful state transitions, event processing, and entity lifecycle completions.
+  - `logger.warn`: For recoverable domain anomalies or parsing issues.
+  - `logger.error`: For missing critical entities or service exceptions.
+
+---
+
+## Existing Testing Strategies
+
+### Frontend Tests (Vitest + Testing Library)
+- **Runner & Environment**: Vitest with `jsdom` test environment.
+- **Frameworks**: `@testing-library/react` and `@testing-library/dom`.
+- **Scope**:
+  - Component unit and interaction tests (`*.test.tsx`) asserting DOM output and event firing via `fireEvent` / `screen`.
+  - Utility and date formatting tests (`*.test.ts`).
+  - MSW handler integration tests (`handlers.test.ts`).
+  - Hook and Context behavior tests (`AuthContext.test.tsx`, `useReferralActions.test.tsx`).
+
+### Backend Tests (JUnit 5 + Mockito Kotlin + Spring Boot Test)
+- **Unit Testing**:
+  - JUnit 5 (`@Test`) with Mockito Kotlin (`@ExtendWith(MockitoExtension::class)`).
+  - Isolated testing of Controllers and Services with `@Mock` repositories/dependencies and `@InjectMocks`.
+- **Integration & Repository Testing**:
+  - `@SpringBootTest` with `@Transactional` and `@Autowired EntityManager` for repository query and entity mapping validation against H2 database.
+- **Coverage**:
+  - Jacoco Maven Plugin configured to measure code coverage during `mvn test`.
+
+---
+
+## Common Development & Build Commands
+
+### Frontend (`/frontend`)
+- Install dependencies: `npm install`
+- Start dev server (port 3000): `npm run dev`
+- Run type check / lint: `npm run lint` (`tsc --noEmit`)
+- Run unit tests: `npm run test` (`vitest`)
+- Production build: `npm run build` (`vite build`)
+
+### Backend (`/backend`)
+- Run unit and integration tests: `./mvnw test`
+- Build executable JAR: `./mvnw clean package`
+- Run local development application: `./mvnw spring-boot:run`
+
+### Full Stack via Docker
+- Build and spin up all containers: `docker compose up --build -d`
+- View container logs: `docker compose logs -f`
+- Stop containers: `docker compose down`
+
+---
+
+## PRD and Context
+
+- Located in folder .ai
+
+## On-Demand Context
+
+<!-- Optional: Reference docs for deeper context -->
+
+| Topic | File |
+|-------|------|
+| Repository Architecture & Domain Map | `project-index.md` |
+| Frontend UI Architecture & Components | `.ai/reference/components.md` |
+| Frontend API Client & State Management | `.ai/reference/frontend-api-state.md` |
+| Backend Data Architecture & Persistence | `.ai/reference/backend-data.md` |
+| Backend Services & Domain Logic | `.ai/reference/backend-services.md` |
+| Security, Authentication, & Error Handling | `.ai/reference/security-errors.md` |
+
