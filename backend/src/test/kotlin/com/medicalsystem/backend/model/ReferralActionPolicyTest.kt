@@ -19,13 +19,14 @@ class ReferralActionPolicyTest {
         val statuses = ReferralActionPolicy.getActionableStatusesFor(UserRole.TRIAL_ADMIN)
         assertEquals(2, statuses.size)
         assertTrue(statuses.contains(ReferralStatus.AWAITING_TRIAGE))
-        assertTrue(statuses.contains(ReferralStatus.WAITING_FOR_SCHEDULING))
+        assertTrue(statuses.contains(ReferralStatus.NEEDS_REASSIGNMENT))
     }
 
     @Test
     fun `getActionableStatusesFor returns correct statuses for Doctor`() {
         val statuses = ReferralActionPolicy.getActionableStatusesFor(UserRole.DOCTOR)
-        assertEquals(1, statuses.size)
+        assertEquals(2, statuses.size)
+        assertTrue(statuses.contains(ReferralStatus.WAITING_FOR_SCHEDULING))
         assertTrue(statuses.contains(ReferralStatus.WAITING_FOR_APPOINTMENT))
     }
 

@@ -47,7 +47,7 @@ object ReferralJpaSpecification {
                 is VisibilityCriteria.ByAssignedDoctor -> {
                     val destinationJoin = root.join<Any, Any>("destination")
                     val doctorJoin = destinationJoin.join<Any, Any>("doctor")
-                    cb.equal(doctorJoin.get<Long>("id"), criteria.doctorId)
+                    cb.equal(doctorJoin.get<Long>("userId"), criteria.doctorId)
                 }
                 
                 is VisibilityCriteria.InitiatedOrStatuses -> {

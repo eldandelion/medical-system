@@ -137,6 +137,24 @@ The University Medical Screening System is a full-stack platform managing studen
 
 ---
 
+## Domain Policies & Aggregate Invariant Synchronization
+
+1. **Actionable Status & Metric Alignment with Aggregate Invariants**:
+   - Any domain status policy or metric query (e.g., `ReferralActionPolicy`) MUST be derived from or strictly synchronized with the Aggregate's executable actions (`Referral.getAllowedActions(user)`).
+   - If a role has domain actions available in a state (e.g. `UserRole.DOCTOR` in `WAITING_FOR_SCHEDULING` for scheduling and `WAITING_FOR_APPOINTMENT` for feedback), that state must be explicitly included in the role's actionable policy.
+
+---
+
+## Persistence & JPA Specification Rules
+
+1. **JPA Entity Property Fidelity & Criteria Specification Verification**:
+   - Never assume entity identifier properties are named `id`. Role-extension entities (`DoctorEntity`, `TeacherEntity`, `TrialAdminEntity`, `HeadCounsellorEntity`) use `@Id val userId: Long` mapped to `user_id`.
+   - Always verify exact Kotlin property names when composing JPA Criteria API predicates (`root.join(...).get("userId")`).
+   - Every branch of a `JpaSpecification` (e.g. `ReferralJpaSpecification.fromVisibilityCriteria`) MUST be covered by an integration test (`@SpringBootTest`) against the test database to ensure criteria queries execute valid SQL without silent filtering bugs or attribute name errors.
+
+
+---
+
 ## Common Development & Build Commands
 
 ### Frontend (`/frontend`)

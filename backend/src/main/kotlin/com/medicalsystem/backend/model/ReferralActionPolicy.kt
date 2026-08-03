@@ -8,9 +8,10 @@ object ReferralActionPolicy {
         )
         UserRole.TRIAL_ADMIN -> listOf(
             ReferralStatus.AWAITING_TRIAGE,
-            ReferralStatus.WAITING_FOR_SCHEDULING
+            ReferralStatus.NEEDS_REASSIGNMENT
         )
         UserRole.DOCTOR -> listOf(
+            ReferralStatus.WAITING_FOR_SCHEDULING,
             ReferralStatus.WAITING_FOR_APPOINTMENT
         )
         else -> emptyList()
