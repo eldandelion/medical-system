@@ -9,4 +9,5 @@ interface NotificationRepository {
     fun invalidateActionsForTarget(actionType: NotificationActionType, targetId: Long)
     fun findByUserIdOrderByCreatedAtDesc(userId: Long): List<Notification>
     fun findById(id: Long): Notification?
+    fun countUnreadByUserId(userId: Long): Long
 }

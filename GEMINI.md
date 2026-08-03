@@ -120,6 +120,23 @@ The University Medical Screening System is a full-stack platform managing studen
 
 ---
 
+## MSW to Real API Migration & Contract Rules
+
+1. **Strict Type Contracts (Zero `any` on API Responses)**:
+   - Frontend API fetching hooks (`useQuery`, `fetch`) must NEVER type responses implicitly as `any`.
+   - Always define explicit TypeScript interfaces mirroring the backend Kotlin DTOs (e.g. `DashboardResponseDto<T>`).
+   - If a field is excluded or deferred on the backend, it must NOT exist on the frontend response type, ensuring TypeScript (`tsc --noEmit`) immediately flags any unmigrated UI references at compile time.
+
+2. **Synchronize Mocks with Backend DTOs**:
+   - When transitioning an endpoint from MSW to the backend, immediately prune or align MSW mock schemas (`src/mocks/data/*`) to match the exact JSON payload returned by the Spring Boot controller.
+   - Never allow MSW mocks to return extra or phantom fields that the live backend does not provide.
+
+3. **Defensive Rendering for Collections & Optional Fields**:
+   - UI components rendering lists, nested objects, or optional DTO fields must always supply default fallbacks (e.g. `items = []`, `data?.list ?? []`) and use optional chaining (`items?.map(...)`).
+   - Components must gracefully render empty or loading placeholder states when partial data is returned.
+
+---
+
 ## Common Development & Build Commands
 
 ### Frontend (`/frontend`)

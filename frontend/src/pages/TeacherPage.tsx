@@ -25,7 +25,7 @@ import { useTeacherProfileSummary } from '../hooks/useProfileSummary';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
 import { enrichReferralStatus } from '../utils/referralUtils';
-import { Referral } from '../types';
+import { Referral, DashboardResponseDto, TeacherMetricsDto } from '../types';
 
 import { TEACHER_METRICS_CONFIG } from '../config/dashboardConfig';
 
@@ -55,7 +55,7 @@ export function TeacherPage() {
   const { session } = useAuth();
   const { unreadCount } = useNotifications(session?.token);
 
-  const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
+  const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardResponseDto<TeacherMetricsDto>>({
     queryKey: ['/api/dashboard/teacher'],
     queryFn: async () => {
       const res = await fetch(`${import.meta.env.BASE_URL}/api/dashboard/teacher`.replace('//api', '/api'), {
@@ -199,13 +199,13 @@ export function TeacherPage() {
               } : undefined}
             actionMetrics={TEACHER_METRICS_CONFIG.map((metric) => ({
               icon: metric.icon,
-              numericValue: dashboardData.metrics[metric.metricKey] || 0,
+              numericValue: dashboardData.metrics[metric.metricKey as keyof TeacherMetricsDto] || 0,
               label: metric.label,
               containerColorClass: metric.containerColorClass,
               onClick: () => handlePageChange(metric.targetPage as TeacherPageName)
             }))}
             activityTitle={dashboardData.activityTitle}
-            activities={dashboardData.activities}
+            activities={dashboardData.activities ?? []}
           />
         </>) : null;
       default:

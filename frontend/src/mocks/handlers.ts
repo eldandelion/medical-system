@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from 'msw';
-import { mockAssessmentsDb, mockDashboardDb, mockStudentsDb, mockReferralsDb } from './db';
+import { mockAssessmentsDb, mockDashboardDb, mockStudentsDb, mockReferralsDb, generateTrackerSteps } from './db';
 const MOCK_DELAY_MS = 1000;
 
 import { Referral, ReferralAction } from '../types';
@@ -9,18 +9,18 @@ const mockComputeAvailableActions = (referral: Referral, authHeader: string): Re
   const status = referral.status;
   
   if (authHeader.includes('teacher')) {
-    if (status === 'Draft') actions.push('recreate', 'delete_draft');
-    else if (status === 'Recalled') actions.push('recreate');
-    else if (status === 'AwaitingApproval') actions.push('recall_referral');
+    if (status === 'DRAFT') actions.push('recreate', 'delete_draft');
+    else if (status === 'RECALLED') actions.push('recreate');
+    else if (status === 'AWAITING_REVIEW') actions.push('recall_referral');
   } else if (authHeader.includes('head_councillor')) {
-    if (status === 'Draft') actions.push('recreate', 'delete_draft');
-    else if (status === 'AwaitingApproval') actions.push('approve_referral', 'reject_referral');
-    else if (status === 'AwaitingFeedbackApproval') actions.push('acknowledge_feedback');
+    if (status === 'DRAFT') actions.push('recreate', 'delete_draft');
+    else if (status === 'AWAITING_REVIEW') actions.push('approve_referral', 'reject_referral');
+    else if (status === 'AWAITING_FEEDBACK_APPROVAL') actions.push('acknowledge_feedback');
   } else if (authHeader.includes('trial_admin')) {
-    if (status === 'AwaitingTriage') actions.push('assign_doctor', 'reject_referral');
+    if (status === 'AWAITING_TRIAGE') actions.push('assign_doctor', 'reject_referral');
   } else if (authHeader.includes('doctor')) {
-    if (status === 'WaitingForScheduling') actions.push('schedule_appointment', 'reject_referral');
-    else if (status === 'WaitingForAppointment') actions.push('write_feedback', 'report_problem');
+    if (status === 'WAITING_FOR_SCHEDULING') actions.push('schedule_appointment', 'reject_referral');
+    else if (status === 'WAITING_FOR_APPOINTMENT') actions.push('write_feedback', 'report_problem');
   }
   
   return actions;
@@ -43,9 +43,20 @@ export const handlers = [
     return HttpResponse.json(assessment);
   }),
 
-  http.get(api('/api/notifications'), async ({ request }) => {
+  http.post(api('/api/assessments/:id/submit'), async ({ request }) => {
+    await delay(MOCK_DELAY_MS);
+    const data = await request.json();
+    return HttpResponse.json({
+      success: true,
+      message: 'Assessment submitted successfully',
+      submission: data,
+    });
+  }),
+
+  http.get(api('/api/students'), async ({ request }) => {
     await delay(MOCK_DELAY_MS);
     
+    // Attempt to fetch from real backend first
     if (import.meta.env.MODE !== 'test') {
       try {
         const { bypass } = await import('msw');
@@ -54,56 +65,67 @@ export const handlers = [
           return HttpResponse.json(await res.json());
         }
       } catch (e) {
-        console.warn('Could not fetch real notifications, falling back to mock');
+        console.warn("Could not fetch real students data, falling back to mock");
       }
     }
 
-    return HttpResponse.json([
-      {
-        id: 1,
-        userId: 1,
-        messageCode: 'REFERRAL_SUBMITTED_INITIATOR',
-        payload: { studentName: 'John Doe', riskLevel: 'HIGH', referralId: 1 },
-        actionType: 'NONE',
-        isRead: false,
-        createdAt: new Date().toISOString(),
-        isActionAvailable: false
-      },
-      {
-        id: 2,
-        userId: 1,
-        messageCode: 'REFERRAL_REQUIRES_REVIEW_HC',
-        payload: { studentName: 'Jane Smith', riskLevel: 'MEDIUM', referralId: 2 },
-        actionType: 'REVIEW_REFERRAL',
-        actionTargetId: 100,
-        isRead: false,
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-        isActionAvailable: true
-      }
-    ]);
+    const url = new URL(request.url);
+    const search = url.searchParams.get('search')?.toLowerCase() || '';
+    const status = url.searchParams.get('status') || 'ALL';
+    const academicYear = url.searchParams.get('academicYear') || 'ALL';
+    const department = url.searchParams.get('department') || 'ALL';
+    const hasActiveReferral = url.searchParams.get('hasActiveReferral');
+
+    let filtered = [...mockStudentsDb];
+
+    if (search) {
+      filtered = filtered.filter(
+        (s) =>
+          s.name.toLowerCase().includes(search) ||
+          s.studentNumber.toLowerCase().includes(search)
+      );
+    }
+
+    if (status !== 'ALL') {
+      filtered = filtered.filter((s) => s.riskLevel && s.riskLevel.toUpperCase() === status.toUpperCase());
+    }
+
+    if (academicYear !== 'ALL') {
+      filtered = filtered.filter((s) => s.year === academicYear);
+    }
+
+    if (department !== 'ALL') {
+      filtered = filtered.filter((s) => s.major === department || s.demographics?.school === department);
+    }
+
+    if (hasActiveReferral !== null && hasActiveReferral !== undefined && hasActiveReferral !== '') {
+      const boolVal = hasActiveReferral === 'true';
+      filtered = filtered.filter((s) => {
+        const hasReferral = mockReferralsDb.some(r => r.studentNumber === s.studentNumber && !['CLOSED', 'REJECTED'].includes(r.status));
+        return hasReferral === boolVal;
+      });
+    }
+
+    return HttpResponse.json(filtered);
   }),
 
-  http.patch(api('/api/notifications/:id/read'), async ({ request, params }) => {
-    await delay(500);
-    
+
+  http.get(api('/api/dashboard/:role'), async ({ params, request }) => {
+    await delay(MOCK_DELAY_MS);
+
+    // Attempt to fetch from real backend first
     if (import.meta.env.MODE !== 'test') {
       try {
         const { bypass } = await import('msw');
         const res = await fetch(bypass(request));
         if (res.ok) {
-          return new HttpResponse(null, { status: 200 });
+          return HttpResponse.json(await res.json());
         }
       } catch (e) {
-        console.warn('Could not mock read on backend, falling back to mock');
+        console.warn(`Could not fetch real dashboard data for ${params.role}, falling back to mock`);
       }
     }
-    
-    return new HttpResponse(null, { status: 200 });
-  }),
 
-
-  http.get(api('/api/dashboard/:role'), async ({ params }) => {
-    await delay(MOCK_DELAY_MS);
     const { role } = params;
     const dashboardData = mockDashboardDb[role as string];
     if (!dashboardData) {
@@ -138,91 +160,129 @@ export const handlers = [
 
   // Intercept detail fetches and return rich mock data
   http.get(api('/api/students/:id'), async ({ request, params }) => {
+    const { id } = params;
     await delay(MOCK_DELAY_MS);
-    const { id } = params;
-    const match = mockStudentsDb.find((s) => s.id === id);
-    if (match) {
-      return HttpResponse.json(match);
-    }
-    // Fallback if ID not found (since real DB has 1,2,3,4 but mock DB has s1, s2, s3, s4)
-    const fallbackStudent = mockStudentsDb[0];
-    return HttpResponse.json({ ...fallbackStudent, id: id as string });
-  }),
-
-
-  http.get(api('/api/referrals/:id'), async ({ request, params }) => {
-    const { id } = params;
-    const authHeader = request.headers.get('Authorization') || '';
     
-    // Attempt to fetch real referral from the backend (Vite proxy)
-    // Skip bypass if we are running in tests since there's no real backend running
+    // Attempt to fetch from real backend first
     if (import.meta.env.MODE !== 'test') {
       try {
         const { bypass } = await import('msw');
         const res = await fetch(bypass(request));
         if (res.ok) {
-          // Pass the real response through directly since the backend now computes availableActions natively
           return HttpResponse.json(await res.json());
         }
       } catch (e) {
-        console.warn("Could not fetch real referral, falling back to mock");
+        console.warn("Could not fetch real student data, falling back to mock");
+      }
+    }
+
+    const student = mockStudentsDb.find((s) => s.id === id);
+    if (!student) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    return HttpResponse.json(student);
+  }),
+
+  http.get(api('/api/referrals'), async ({ request }) => {
+    await delay(MOCK_DELAY_MS);
+    
+    // Attempt to fetch from real backend first
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          const liveData = await res.json();
+          const authHeader = request.headers.get('Authorization') || '';
+          const enriched = liveData.map((item: Referral) => ({
+            ...item,
+            availableActions: mockComputeAvailableActions(item, authHeader)
+          }));
+          return HttpResponse.json(enriched);
+        }
+      } catch (e) {
+        console.warn("Could not fetch real referrals data, falling back to mock");
+      }
+    }
+
+    const authHeader = request.headers.get('Authorization') || '';
+    const enrichedDb = mockReferralsDb.map((item) => ({
+      ...item,
+      availableActions: mockComputeAvailableActions(item, authHeader)
+    }));
+
+    return HttpResponse.json(enrichedDb);
+  }),
+
+  http.post(api('/api/referrals'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      const { passthrough } = await import('msw');
+      return passthrough();
+    }
+
+    await delay(MOCK_DELAY_MS);
+    const data = await request.json() as any;
+    
+    const newReferral = {
+      id: Math.random().toString(36).substring(7),
+      studentName: data.studentName || '待指定学生',
+      studentNumber: data.studentNumber || 'STU-NEW',
+      type: data.type || 'INITIAL',
+      date: new Date().toISOString().split('T')[0],
+      title: data.title || '无标题转诊',
+      description: data.description || '无详细描述',
+      riskLevel: data.riskLevel || 'LOW',
+      status: 'DRAFT',
+      referredBy: {
+        name: '当前用户',
+        avatar: undefined
+      },
+      ...data
+    };
+
+    mockReferralsDb.push(newReferral);
+    return HttpResponse.json(newReferral, { status: 201 });
+  }),
+
+  http.get(api('/api/referrals/:id'), async ({ request, params }) => {
+    const { id } = params;
+    await delay(MOCK_DELAY_MS);
+    
+    // Attempt to fetch from real backend first
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not fetch real referral data, falling back to mock");
       }
     }
 
     const referral = mockReferralsDb.find((r) => r.id === id);
     if (!referral) {
-      // If we can't find it in the mock DB,
-      // we generate a dummy referral
-      const fallbackBaseInfo = { 
-        ...mockReferralsDb[0], 
-        id: id as string, 
-        title: "Backend Referral Detail", 
-        description: "This is a fallback referral generated by MSW because the backend is offline."
-      };
-      
-      const actions = mockComputeAvailableActions(fallbackBaseInfo, authHeader);
-      const fallbackReferralWithActions = {
-          ...fallbackBaseInfo,
-          availableActions: actions
-      };
-      
-      return HttpResponse.json({
-        baseInfo: fallbackReferralWithActions,
-        studentDemographics: {
-            studentId: fallbackReferralWithActions.studentNumber,
-            school: '未知',
-            grade: '未知',
-            phone: '未知'
-        },
-        triageInfo: {
-            isFirstVisit: true,
-            isMedicated: false,
-            priorTherapy: '无',
-            fullDescription: fallbackReferralWithActions.description
-        },
-        riskAssessment: {
-            ideation: false,
-            attempt: false,
-            selfHarm: false
-        }
-      });
+      return new HttpResponse(null, { status: 404 });
     }
 
-    const mockActions = mockComputeAvailableActions(referral, authHeader);
-    const referralWithActions = { 
-      ...referral, 
-      availableActions: mockActions,
-      appointment: (referral as any).extendedData?.appointment
-    };
+    const authHeader = request.headers.get('Authorization') || '';
+    const availableActions = mockComputeAvailableActions(referral, authHeader);
 
     return HttpResponse.json({
-      baseInfo: referralWithActions,
+      baseInfo: {
+        ...referral,
+        availableActions
+      },
       studentDemographics: {
-        studentId: referral.studentNumber,
-        school: '计算机科学与技术学院',
-        grade: '大二',
+        age: 20,
         phone: '138-0000-0000',
-        age: 21,
+        email: 'student@example.edu.cn',
+        academicYear: '大二',
+        grade: '大二',
+        studentId: referral.studentNumber || 'STU-001',
+        school: '计算机科学与技术学院',
+        department: '计算机科学与技术学院',
         gender: '未知'
       },
       triageInfo: {
@@ -233,9 +293,9 @@ export const handlers = [
         fullDescription: referral.description
       },
       riskAssessment: {
-        ideation: referral.riskLevel === 'High',
+        ideation: referral.riskLevel === 'HIGH',
         attempt: false,
-        selfHarm: referral.riskLevel === 'High',
+        selfHarm: referral.riskLevel === 'HIGH',
         notes: ''
       },
       feedback: (referral as any).extendedData?.feedback || null
@@ -307,11 +367,11 @@ export const handlers = [
       return new HttpResponse(null, { status: 404 });
     }
 
-    if (referral.status !== 'AwaitingApproval') {
+    if (referral.status !== 'AWAITING_REVIEW') {
       return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting approval referrals can be recalled' });
     }
 
-    referral.status = 'Recalled';
+    referral.status = 'RECALLED';
 
     return HttpResponse.json({ success: true });
   }),
@@ -334,7 +394,7 @@ export const handlers = [
       return new HttpResponse(null, { status: 404 });
     }
 
-    if (mockReferralsDb[index].status !== 'Draft') {
+    if (mockReferralsDb[index].status !== 'DRAFT') {
       return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only draft referrals can be deleted' });
     }
 
@@ -361,11 +421,11 @@ export const handlers = [
       return new HttpResponse(null, { status: 404 });
     }
 
-    if (referral.status !== 'AwaitingApproval') {
+    if (referral.status !== 'AWAITING_REVIEW') {
       return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting approval referrals can be approved' });
     }
 
-    referral.status = 'AwaitingTriage';
+    referral.status = 'AWAITING_TRIAGE';
     if ((referral as any).extendedData?.steps) {
       const reviewStep = (referral as any).extendedData.steps.find((s: any) => s.type === 'review');
       if (reviewStep) {
@@ -399,11 +459,11 @@ export const handlers = [
     }
 
     if (authHeader.includes('head_councillor')) {
-      if (referral.status !== 'AwaitingApproval') {
+      if (referral.status !== 'AWAITING_REVIEW') {
         return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting approval referrals can be rejected by head councillor' });
       }
     } else if (authHeader.includes('trial_admin')) {
-      if (referral.status !== 'AwaitingTriage') {
+      if (referral.status !== 'AWAITING_TRIAGE') {
         return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting triage referrals can be rejected by trial admin' });
       }
       const triageStep = (referral as any).extendedData?.steps?.find((s: any) => s.type === 'triage');
@@ -411,7 +471,7 @@ export const handlers = [
         return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Triage must be active' });
       }
     } else if (authHeader.includes('doctor')) {
-      if (referral.status !== 'WaitingForScheduling') {
+      if (referral.status !== 'WAITING_FOR_SCHEDULING') {
         return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only referrals waiting for scheduling can be rejected by doctors' });
       }
     } else {
@@ -422,7 +482,7 @@ export const handlers = [
     const reason = data?.reason || '无拒绝原因';
 
     if (authHeader.includes('doctor')) {
-      referral.status = 'AwaitingTriage';
+      referral.status = 'AWAITING_TRIAGE';
       if ((referral as any).extendedData) {
         if (!(referral as any).extendedData.rejectedBy) {
           (referral as any).extendedData.rejectedBy = [];
@@ -430,7 +490,7 @@ export const handlers = [
         (referral as any).extendedData.rejectedBy.push('李医生');
       }
     } else {
-      referral.status = 'Rejected';
+      referral.status = 'REJECTED';
     }
 
     if ((referral as any).extendedData?.steps) {
@@ -484,7 +544,7 @@ export const handlers = [
       return new HttpResponse(null, { status: 404 });
     }
 
-    if (referral.status !== 'AwaitingTriage' && referral.status !== 'Rejected') {
+    if (referral.status !== 'AWAITING_TRIAGE' && referral.status !== 'REJECTED') {
       return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting triage or rejected referrals can be assigned' });
     }
 
@@ -493,13 +553,13 @@ export const handlers = [
     
     let targetReferral = referral;
 
-    if (referral.status === 'Rejected') {
+    if (referral.status === 'REJECTED') {
       targetReferral = JSON.parse(JSON.stringify(referral));
       targetReferral.id = Math.random().toString(36).substring(7);
       mockReferralsDb.push(targetReferral as any);
     }
 
-    targetReferral.status = 'WaitingForScheduling';
+    targetReferral.status = 'WAITING_FOR_SCHEDULING';
 
     if ((targetReferral as any).extendedData?.steps) {
       const triageStep = (targetReferral as any).extendedData.steps.find((s: any) => s.type === 'triage');
@@ -579,14 +639,14 @@ export const handlers = [
       return new HttpResponse(null, { status: 404 });
     }
 
-    if (referral.status !== 'WaitingForScheduling') {
+    if (referral.status !== 'WAITING_FOR_SCHEDULING') {
       return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only referrals waiting for scheduling can be scheduled' });
     }
 
     const data = await request.json() as any;
     const appointmentTime = data?.appointmentTime;
     
-    referral.status = 'WaitingForAppointment';
+    referral.status = 'WAITING_FOR_APPOINTMENT';
 
     if ((referral as any).extendedData) {
       (referral as any).extendedData.appointment = {
@@ -630,7 +690,7 @@ export const handlers = [
       return new HttpResponse(null, { status: 404 });
     }
 
-    referral.status = 'AwaitingFeedbackApproval';
+    referral.status = 'AWAITING_FEEDBACK_APPROVAL';
 
     if ((referral as any).extendedData) {
       if (!(referral as any).extendedData.feedback) {
@@ -677,11 +737,11 @@ export const handlers = [
       return new HttpResponse(null, { status: 404 });
     }
 
-    if (referral.status !== 'AwaitingFeedbackApproval') {
+    if (referral.status !== 'AWAITING_FEEDBACK_APPROVAL') {
       return new HttpResponse(null, { status: 400, statusText: 'Bad Request: Only awaiting feedback approval referrals can be acknowledged' });
     }
 
-    referral.status = 'Closed';
+    referral.status = 'CLOSED';
     
     if ((referral as any).extendedData?.steps) {
       const feedbackStep = (referral as any).extendedData.steps.find(s => s.type === 'feedback');

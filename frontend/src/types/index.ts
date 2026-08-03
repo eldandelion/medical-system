@@ -132,3 +132,40 @@ export interface Student {
     description: string;
   }[];
 }
+
+export interface StudentMetricsDto {
+  assessmentsCount: number;
+  notificationsCount: number;
+}
+
+export interface TeacherMetricsDto {
+  studentsCount: number;
+  notificationsCount: number;
+}
+
+export interface HeadCouncillorMetricsDto {
+  studentsCount: number;
+  referralsCount: number;
+}
+
+export interface TrialAdminMetricsDto {
+  staffCount: number;
+  referralsCount: number;
+}
+
+export interface DoctorMetricsDto {
+  referralsCount: number;
+  notificationsCount: number;
+}
+
+export interface DashboardResponseDto<T> {
+  metrics: T;
+  activityTitle?: string;
+  activities?: Array<{
+    id: string;
+    title: string;
+    timestamp: string;
+    statusText: string;
+    statusType?: any;
+  }>;
+}

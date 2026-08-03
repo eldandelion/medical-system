@@ -37,7 +37,7 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
   const ACTION_MESSAGES = {
     RECALL: { success: '转诊申请已撤回', error: '撤回失败，该申请可能已被处理' },
     DELETE: { success: '草案已删除', error: '删除失败，请稍后重试' },
-    APPROVE: { success: '转诊已批准', error: '批准失败，该申请可能已被撤回' },
+    APPROVE: { success: '转诊已批准', error: '批准失败，请稍后重试' },
     REJECT: { success: '转诊已拒绝', error: '操作失败，该申请可能已被撤回' },
     ASSIGN: { success: '转诊已分配', error: '分配失败，请稍后重试' },
     SCHEDULE: { success: '预约已排期', error: '预约排期失败，请稍后重试' },
@@ -117,6 +117,7 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
   const handleApprove = async () => {
     if (!selectedHospitalId) {
       setActionError('请选择医院');
+      showSnackbar({ message: '请选择医院', duration: 3000 });
       return;
     }
     const success = await executeAction('/approve', 'POST', ACTION_MESSAGES.APPROVE.success, ACTION_MESSAGES.APPROVE.error, { hospitalId: parseInt(selectedHospitalId, 10) });
@@ -137,6 +138,7 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
   const handleAssign = async () => {
     if (!selectedDoctorId) {
       setActionError('请选择医生');
+      showSnackbar({ message: '请选择医生', duration: 3000 });
       return;
     }
     const success = await executeAction('/assign-doctor', 'POST', ACTION_MESSAGES.ASSIGN.success, ACTION_MESSAGES.ASSIGN.error, { doctorId: parseInt(selectedDoctorId, 10) });
@@ -146,6 +148,7 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
   const handleSchedule = async () => {
     if (!scheduleDateTime) {
       setActionError('请选择预约时间');
+      showSnackbar({ message: '请选择预约时间', duration: 3000 });
       return;
     }
     const success = await executeAction('/schedule', 'POST', ACTION_MESSAGES.SCHEDULE.success, ACTION_MESSAGES.SCHEDULE.error, { appointmentTime: scheduleDateTime });

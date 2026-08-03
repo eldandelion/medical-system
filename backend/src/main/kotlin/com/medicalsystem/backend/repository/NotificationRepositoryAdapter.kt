@@ -46,6 +46,10 @@ class NotificationRepositoryAdapter(
         return notificationJpaRepository.findById(id).orElse(null)?.let { toDomain(it) }
     }
 
+    override fun countUnreadByUserId(userId: Long): Long {
+        return notificationJpaRepository.countByUserIdAndIsReadFalse(userId)
+    }
+
     private fun toDomain(entity: NotificationEntity): Notification {
         val typeRef = object : TypeReference<Map<String, Any>>() {}
         val payloadMap = try {

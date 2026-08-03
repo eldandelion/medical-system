@@ -28,6 +28,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
 
 import { HEAD_COUNCILLOR_METRICS_CONFIG } from '../config/dashboardConfig';
+import { DashboardResponseDto, HeadCouncillorMetricsDto } from '../types';
 
 export const HeadCouncillorTabs = {
   DASHBOARD: 'Dashboard',
@@ -57,7 +58,7 @@ export function HeadCouncillorPage() {
   const { session } = useAuth();
   const { unreadCount } = useNotifications(session?.token);
   
-  const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
+  const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardResponseDto<HeadCouncillorMetricsDto>>({
     queryKey: ['/api/dashboard/head-councillor'],
     queryFn: async () => {
       const res = await fetch(`${import.meta.env.BASE_URL}/api/dashboard/head-councillor`.replace('//api', '/api'), {
@@ -186,13 +187,13 @@ export function HeadCouncillorPage() {
               } : undefined}
             actionMetrics={HEAD_COUNCILLOR_METRICS_CONFIG.map((metric) => ({
               icon: metric.icon,
-              numericValue: dashboardData.metrics[metric.metricKey] || 0,
+              numericValue: dashboardData.metrics[metric.metricKey as keyof HeadCouncillorMetricsDto] || 0,
               label: metric.label,
               containerColorClass: metric.containerColorClass,
               onClick: () => handlePageChange(metric.targetPage as HeadCouncillorPageName)
             }))}
             activityTitle={dashboardData.activityTitle}
-            activities={dashboardData.activities}
+            activities={dashboardData.activities ?? []}
           />
         </>) : null;
       default:

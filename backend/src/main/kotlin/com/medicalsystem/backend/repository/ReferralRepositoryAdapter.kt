@@ -69,4 +69,15 @@ class ReferralRepositoryAdapter(
     override fun deleteAll() {
         jpaRepository.deleteAll()
     }
+
+    override fun countActionableReferralsFor(user: com.medicalsystem.backend.model.User): Long {
+        val statuses = com.medicalsystem.backend.model.ReferralActionPolicy.getActionableStatusesFor(user.role)
+        if (statuses.isEmpty()) return 0L
+        val criteria = com.medicalsystem.backend.model.ReferralVisibilityPolicy.getVisibilityCriteria(user)
+        val visibilitySpec = ReferralJpaSpecification.fromVisibilityCriteria(criteria)
+        val statusSpec = org.springframework.data.jpa.domain.Specification<com.medicalsystem.backend.entity.ReferralEntity> { root, _, cb ->
+            root.get<com.medicalsystem.backend.model.ReferralStatus>("status").`in`(statuses)
+        }
+        return jpaRepository.count(visibilitySpec.and(statusSpec))
+    }
 }

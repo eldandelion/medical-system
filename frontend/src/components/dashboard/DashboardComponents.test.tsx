@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ProfileSummaryCard, ProfileSummaryError } from './DashboardComponents';
+import { ProfileSummaryCard, ProfileSummaryError, InteractiveStatusList } from './DashboardComponents';
 
 describe('ProfileSummaryCard', () => {
   it('renders correctly with given props and filters null metadata', () => {
@@ -52,5 +52,25 @@ describe('ProfileSummaryError', () => {
     const button = screen.getByText('重试');
     fireEvent.click(button);
     expect(mockRetry).toHaveBeenCalled();
+  });
+});
+
+describe('InteractiveStatusList', () => {
+  it('renders empty fallback message when items is undefined or empty without throwing', () => {
+    const { rerender } = render(<InteractiveStatusList items={undefined as any} />);
+    expect(screen.getByText('暂无动态')).toBeTruthy();
+
+    rerender(<InteractiveStatusList items={[]} />);
+    expect(screen.getByText('暂无动态')).toBeTruthy();
+  });
+
+  it('renders items when items array is provided', () => {
+    const items = [
+      { id: '1', title: '转诊申请已提交', timestamp: '10分钟前', statusText: '待审核' }
+    ];
+    render(<InteractiveStatusList items={items} />);
+    expect(screen.getByText('转诊申请已提交')).toBeTruthy();
+    expect(screen.getByText('10分钟前')).toBeTruthy();
+    expect(screen.getByText('待审核')).toBeTruthy();
   });
 });

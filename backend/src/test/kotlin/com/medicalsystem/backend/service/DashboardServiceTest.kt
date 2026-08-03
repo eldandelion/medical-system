@@ -1,13 +1,14 @@
 package com.medicalsystem.backend.service
 
+import com.medicalsystem.backend.dto.*
+import com.medicalsystem.backend.exception.ForbiddenException
 import com.medicalsystem.backend.model.*
-import com.medicalsystem.backend.repository.StudentRepository
-import com.medicalsystem.backend.repository.UserRepository
-import com.medicalsystem.backend.repository.CollegeRepository
-import com.medicalsystem.backend.repository.HospitalRepository
+import com.medicalsystem.backend.repository.*
 import com.medicalsystem.backend.entity.HospitalEntity
+import com.medicalsystem.backend.entity.TrialAdminEntity
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
@@ -33,29 +34,35 @@ class DashboardServiceTest {
     private lateinit var hospitalRepository: HospitalRepository
 
     @Mock
-    private lateinit var hospitalDepartmentRepository: com.medicalsystem.backend.repository.HospitalDepartmentRepository
+    private lateinit var hospitalDepartmentRepository: HospitalDepartmentRepository
 
     @Mock
-    private lateinit var teacherRepository: com.medicalsystem.backend.repository.TeacherRepository
+    private lateinit var teacherRepository: TeacherRepository
 
     @Mock
-    private lateinit var doctorRepository: com.medicalsystem.backend.repository.DoctorRepository
+    private lateinit var doctorRepository: DoctorRepository
 
     @Mock
-    private lateinit var trialAdminRepository: com.medicalsystem.backend.repository.TrialAdminRepository
+    private lateinit var trialAdminRepository: TrialAdminRepository
 
     @Mock
-    private lateinit var headCounsellorRepository: com.medicalsystem.backend.repository.HeadCounsellorRepository
+    private lateinit var headCounsellorRepository: HeadCounsellorRepository
 
     @Mock
-    private lateinit var schoolDepartmentRepository: com.medicalsystem.backend.repository.SchoolDepartmentRepository
+    private lateinit var schoolDepartmentRepository: SchoolDepartmentRepository
+
+    @Mock
+    private lateinit var notificationRepository: NotificationRepository
+
+    @Mock
+    private lateinit var referralRepository: ReferralRepository
 
     @InjectMocks
     private lateinit var dashboardService: DashboardService
 
     @Test
     fun `getStudentProfile maps domain model to dto correctly`() {
-        val mockUser = com.medicalsystem.backend.model.User(id = 1L, name = "John Doe", email = EmailAddress("john@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.STUDENT)
+        val mockUser = User(id = 1L, name = "John Doe", email = EmailAddress("john@univ.edu.cn"), role = UserRole.STUDENT)
         
         val college = College(id = 10L, name = "Engineering")
         val major = Major(id = 100L, name = "Computer Science", college = college)
@@ -74,7 +81,7 @@ class DashboardServiceTest {
 
         assertNull(result.avatarUrl)
         assertEquals("John Doe", result.name)
-        assertEquals(com.medicalsystem.backend.model.UserRole.STUDENT, result.role)
+        assertEquals(UserRole.STUDENT, result.role)
         assertEquals("ST123", result.studentId)
         assertEquals("Engineering", result.school)
         assertEquals("Computer Science", result.department)
@@ -82,8 +89,7 @@ class DashboardServiceTest {
 
     @Test
     fun `getTeacherProfile maps domain model to dto correctly`() {
-        val mockUser = com.medicalsystem.backend.model.User(id = 2L, name = "Jane Smith", email = EmailAddress("jane@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.TEACHER)
-        val teacherUser = com.medicalsystem.backend.model.User(id = 2L, name = "Jane Smith", email = EmailAddress("jane@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.TEACHER)
+        val mockUser = User(id = 2L, name = "Jane Smith", email = EmailAddress("jane@univ.edu.cn"), role = UserRole.TEACHER)
         val college = College(id = 50L, name = "Science")
 
         val teacherEntity = com.medicalsystem.backend.entity.TeacherEntity(userId = 2L, employeeNumber = "EMP-123", college = com.medicalsystem.backend.entity.CollegeEntity(id = 50L, name = "Science"))
@@ -95,17 +101,17 @@ class DashboardServiceTest {
 
         assertNull(result.avatarUrl)
         assertEquals("Jane Smith", result.name)
-        assertEquals(com.medicalsystem.backend.model.UserRole.TEACHER, result.role)
+        assertEquals(UserRole.TEACHER, result.role)
         assertEquals("EMP-123", result.employeeId)
         assertEquals("Science", result.department)
     }
 
     @Test
     fun `getTrialAdminProfile maps domain model to dto correctly`() {
-        val mockUser = com.medicalsystem.backend.model.User(id = 3L, name = "Admin Wang", email = EmailAddress("admin@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.TRIAL_ADMIN)
+        val mockUser = User(id = 3L, name = "Admin Wang", email = EmailAddress("admin@univ.edu.cn"), role = UserRole.TRIAL_ADMIN)
         val hospital = HospitalEntity(id = 200L, name = "University Hospital")
 
-        val trialAdminEntity = com.medicalsystem.backend.entity.TrialAdminEntity(userId = 3L, employeeNumber = "HOSP-001", hospital = HospitalEntity(id = 200L, name = "University Hospital"))
+        val trialAdminEntity = TrialAdminEntity(userId = 3L, employeeNumber = "HOSP-001", hospital = HospitalEntity(id = 200L, name = "University Hospital"))
 
         `when`(trialAdminRepository.findById(3L)).thenReturn(Optional.of(trialAdminEntity))
         `when`(hospitalRepository.findById(200L)).thenReturn(Optional.of(hospital))
@@ -114,14 +120,14 @@ class DashboardServiceTest {
 
         assertNull(result.avatarUrl)
         assertEquals("Admin Wang", result.name)
-        assertEquals(com.medicalsystem.backend.model.UserRole.TRIAL_ADMIN, result.role)
+        assertEquals(UserRole.TRIAL_ADMIN, result.role)
         assertEquals("HOSP-001", result.employeeId)
         assertEquals("University Hospital", result.hospital)
     }
 
     @Test
     fun `getHeadCounsellorProfile maps domain model to dto correctly`() {
-        val mockUser = com.medicalsystem.backend.model.User(id = 4L, name = "Counsellor Li", email = EmailAddress("li@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR)
+        val mockUser = User(id = 4L, name = "Counsellor Li", email = EmailAddress("li@univ.edu.cn"), role = UserRole.HEAD_COUNSELLOR)
         
         val headCounsellor = HeadCounsellor(userId = 4L, employeeNumber = SchoolEmployeeId("HC-004"), schoolId = 1L, departmentId = 7L)
         val department = SchoolDepartment(id = 7L, name = "Psychology Department", schoolId = 1L)
@@ -133,8 +139,77 @@ class DashboardServiceTest {
 
         assertNull(result.avatarUrl)
         assertEquals("Counsellor Li", result.name)
-        assertEquals(com.medicalsystem.backend.model.UserRole.HEAD_COUNSELLOR, result.role)
+        assertEquals(UserRole.HEAD_COUNSELLOR, result.role)
         assertEquals("HC-004", result.employeeId)
         assertEquals("Psychology Department", result.department)
+    }
+
+    @Test
+    fun `getStudentDashboard returns student metrics`() {
+        val mockUser = User(id = 1L, name = "John Doe", email = EmailAddress("john@univ.edu.cn"), role = UserRole.STUDENT)
+        `when`(notificationRepository.countUnreadByUserId(1L)).thenReturn(4L)
+
+        val result = dashboardService.getStudentDashboard(mockUser)
+
+        assertEquals(0L, result.metrics.assessmentsCount)
+        assertEquals(4L, result.metrics.notificationsCount)
+    }
+
+    @Test
+    fun `getStudentDashboard throws ForbiddenException for mismatched role`() {
+        val wrongUser = User(id = 2L, name = "Jane", email = EmailAddress("jane@univ.edu.cn"), role = UserRole.TEACHER)
+        assertThrows(ForbiddenException::class.java) {
+            dashboardService.getStudentDashboard(wrongUser)
+        }
+    }
+
+    @Test
+    fun `getTeacherDashboard returns teacher metrics`() {
+        val mockUser = User(id = 2L, name = "Jane Smith", email = EmailAddress("jane@univ.edu.cn"), role = UserRole.TEACHER)
+        `when`(studentRepository.countVisibleStudentsFor(mockUser)).thenReturn(42L)
+        `when`(notificationRepository.countUnreadByUserId(2L)).thenReturn(3L)
+
+        val result = dashboardService.getTeacherDashboard(mockUser)
+
+        assertEquals(42L, result.metrics.studentsCount)
+        assertEquals(3L, result.metrics.notificationsCount)
+    }
+
+    @Test
+    fun `getHeadCounsellorDashboard returns head counsellor metrics`() {
+        val mockUser = User(id = 4L, name = "Counsellor Li", email = EmailAddress("li@univ.edu.cn"), role = UserRole.HEAD_COUNSELLOR)
+        `when`(studentRepository.countVisibleStudentsFor(mockUser)).thenReturn(150L)
+        `when`(referralRepository.countActionableReferralsFor(mockUser)).thenReturn(5L)
+
+        val result = dashboardService.getHeadCounsellorDashboard(mockUser)
+
+        assertEquals(150L, result.metrics.studentsCount)
+        assertEquals(5L, result.metrics.referralsCount)
+    }
+
+    @Test
+    fun `getTrialAdminDashboard returns trial admin metrics`() {
+        val mockUser = User(id = 3L, name = "Admin Wang", email = EmailAddress("admin@univ.edu.cn"), role = UserRole.TRIAL_ADMIN)
+        val trialAdminEntity = TrialAdminEntity(userId = 3L, employeeNumber = "TA-01", hospital = HospitalEntity(id = 10L, name = "First Hospital"))
+        `when`(trialAdminRepository.findById(3L)).thenReturn(Optional.of(trialAdminEntity))
+        `when`(doctorRepository.countByDepartmentHospitalId(10L)).thenReturn(12L)
+        `when`(referralRepository.countActionableReferralsFor(mockUser)).thenReturn(7L)
+
+        val result = dashboardService.getTrialAdminDashboard(mockUser)
+
+        assertEquals(12L, result.metrics.staffCount)
+        assertEquals(7L, result.metrics.referralsCount)
+    }
+
+    @Test
+    fun `getDoctorDashboard returns doctor metrics`() {
+        val mockUser = User(id = 5L, name = "Dr. House", email = EmailAddress("house@univ.edu.cn"), role = UserRole.DOCTOR)
+        `when`(referralRepository.countActionableReferralsFor(mockUser)).thenReturn(8L)
+        `when`(notificationRepository.countUnreadByUserId(5L)).thenReturn(2L)
+
+        val result = dashboardService.getDoctorDashboard(mockUser)
+
+        assertEquals(8L, result.metrics.referralsCount)
+        assertEquals(2L, result.metrics.notificationsCount)
     }
 }

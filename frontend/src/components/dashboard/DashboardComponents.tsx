@@ -135,11 +135,19 @@ export interface StatusListItem {
 }
 
 interface InteractiveStatusListProps {
-  items: StatusListItem[];
+  items?: StatusListItem[];
   onRowClick?: (item: StatusListItem) => void;
 }
 
-export function InteractiveStatusList({ items, onRowClick }: InteractiveStatusListProps) {
+export function InteractiveStatusList({ items = [], onRowClick }: InteractiveStatusListProps) {
+  if (!items || items.length === 0) {
+    return (
+      <div className="bg-[var(--md-sys-color-surface-container-low)] rounded-[16px] p-6 text-center text-[var(--md-sys-color-on-surface-variant)] text-[14px] leading-[20px]">
+        暂无动态
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-1">
       {items.map((item, idx) => {

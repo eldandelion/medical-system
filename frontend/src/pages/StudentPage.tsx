@@ -19,6 +19,7 @@ import { SecurityConsentView } from '../components/security/SecurityConsentView'
 import { STUDENT_METRICS_CONFIG } from '../config/dashboardConfig';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
+import { DashboardResponseDto, StudentMetricsDto } from '../types';
 
 export const StudentTabs = {
   DASHBOARD: 'Dashboard',
@@ -45,7 +46,7 @@ export function StudentPage() {
   const { session } = useAuth();
   const { unreadCount } = useNotifications(session?.token);
   
-  const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
+  const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardResponseDto<StudentMetricsDto>>({
     queryKey: ['/api/dashboard/student'],
     queryFn: async () => {
       const res = await fetch(`${import.meta.env.BASE_URL}/api/dashboard/student`.replace('//api', '/api'), {
@@ -119,14 +120,14 @@ export function StudentPage() {
               } : undefined}
               actionMetrics={STUDENT_METRICS_CONFIG.map((metric) => ({
                 icon: metric.icon,
-                numericValue: dashboardData.metrics[metric.metricKey] || 0,
+                numericValue: dashboardData.metrics[metric.metricKey as keyof StudentMetricsDto] || 0,
                 label: metric.label,
                 containerColorClass: metric.containerColorClass,
                 onClick: () => handlePageChange(metric.targetPage as StudentTab)
               }))}
-            activityTitle={dashboardData.activityTitle}
-            activities={dashboardData.activities}
-          />
+              activityTitle={dashboardData.activityTitle}
+              activities={dashboardData.activities ?? []}
+            />
         </>) : null;
       default:
         return (

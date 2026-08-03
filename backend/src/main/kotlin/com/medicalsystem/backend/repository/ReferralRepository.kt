@@ -11,4 +11,5 @@ interface ReferralRepository {
     fun findByIdAndVisibleTo(id: Long, user: com.medicalsystem.backend.model.User): Optional<Referral>
     fun save(referral: Referral): Referral
     fun deleteAll()
+    fun countActionableReferralsFor(user: User): Long
 }

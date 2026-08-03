@@ -32,11 +32,11 @@ export const TEACHER_METRICS_CONFIG: MetricConfig[] = [
     metricKey: "studentsCount"
   },
   {
-    icon: "assignment_late",
-    label: "待处理转诊",
-    containerColorClass: "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]",
-    targetPage: "Referral Management",
-    metricKey: "referralsCount"
+    icon: "notifications",
+    label: "未读通知",
+    containerColorClass: "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]",
+    targetPage: "Notifications",
+    metricKey: "notificationsCount"
   }
 ];
 

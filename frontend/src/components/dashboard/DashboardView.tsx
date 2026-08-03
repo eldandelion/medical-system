@@ -33,8 +33,8 @@ interface DashboardViewProps {
   onProfileRetry?: () => void;
   onProfileClick?: () => void;
   actionMetrics: ActionMetric[];
-  activityTitle: string;
-  activities: ActivityItem[];
+  activityTitle?: string;
+  activities?: ActivityItem[];
   onActivityClick?: (item: ActivityItem) => void;
   rightWidget?: React.ReactNode;
 }
@@ -46,8 +46,8 @@ export function DashboardView({
   onProfileRetry,
   onProfileClick,
   actionMetrics,
-  activityTitle,
-  activities,
+  activityTitle = '近期动态',
+  activities = [],
   onActivityClick,
   rightWidget
 }: DashboardViewProps) {

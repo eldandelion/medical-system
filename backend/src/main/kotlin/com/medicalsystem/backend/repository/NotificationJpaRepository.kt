@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository
 @Repository
 interface NotificationJpaRepository : JpaRepository<NotificationEntity, Long> {
     fun findAllByUserIdOrderByCreatedAtDesc(userId: Long): List<NotificationEntity>
+    fun countByUserIdAndIsReadFalse(userId: Long): Long
     
     @Modifying
     @Query("UPDATE NotificationEntity n SET n.isActionAvailable = false WHERE n.actionType = :actionType AND n.actionTargetId = :targetId")

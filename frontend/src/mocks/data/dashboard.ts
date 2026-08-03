@@ -5,6 +5,7 @@ export interface DashboardData {
     avatarUrl: string | null;
     name: string;
     role: string;
+    studentId?: string;
     school?: string;
     employeeId?: string;
     department?: string;
@@ -70,7 +71,7 @@ export const mockDashboardDb: Record<string, DashboardData> = {
     },
     metrics: {
       studentsCount: 42,
-      referralsCount: 5
+      notificationsCount: 3
     },
     activityTitle: "最近活动",
     activities: [

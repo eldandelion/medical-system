@@ -12,3 +12,34 @@ data class ProfileSummaryDto(
     val department: String? = null,
     val hospital: String? = null
 )
+
+sealed interface DashboardMetricsDto
+
+data class StudentMetricsDto(
+    val assessmentsCount: Long = 0,
+    val notificationsCount: Long = 0
+) : DashboardMetricsDto
+
+data class TeacherMetricsDto(
+    val studentsCount: Long = 0,
+    val notificationsCount: Long = 0
+) : DashboardMetricsDto
+
+data class HeadCounsellorMetricsDto(
+    val studentsCount: Long = 0,
+    val referralsCount: Long = 0
+) : DashboardMetricsDto
+
+data class TrialAdminMetricsDto(
+    val staffCount: Long = 0,
+    val referralsCount: Long = 0
+) : DashboardMetricsDto
+
+data class DoctorMetricsDto(
+    val referralsCount: Long = 0,
+    val notificationsCount: Long = 0
+) : DashboardMetricsDto
+
+data class DashboardResponseDto<T : DashboardMetricsDto>(
+    val metrics: T
+)

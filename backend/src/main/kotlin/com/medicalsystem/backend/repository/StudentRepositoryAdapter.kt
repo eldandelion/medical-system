@@ -21,6 +21,12 @@ class StudentRepositoryAdapter(
         return jpaRepository.findAll(spec).map { mapper.toModel(it) }
     }
 
+    override fun countVisibleStudentsFor(user: com.medicalsystem.backend.model.User): Long {
+        val criteria = com.medicalsystem.backend.model.StudentVisibilityPolicy.getVisibilityCriteria(user)
+        val spec = StudentJpaSpecification.fromVisibilityCriteria(criteria)
+        return jpaRepository.count(spec)
+    }
+
     override fun findById(id: Long): Optional<Student> {
         return jpaRepository.findById(id).map { mapper.toModel(it) }
     }

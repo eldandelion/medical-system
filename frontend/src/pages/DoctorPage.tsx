@@ -25,6 +25,7 @@ import { useDoctorProfileSummary } from '../hooks/useProfileSummary';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { ReferralDetailsView } from '../components/records/ReferralDetailsView';
 import { roleTranslations } from '../utils/roleTranslations';
+import { DashboardResponseDto, DoctorMetricsDto } from '../types';
 
 export const DoctorTabs = {
   DASHBOARD: 'Dashboard',
@@ -47,14 +48,18 @@ export function DoctorPage() {
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
   const { session } = useAuth();
-  const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
+  const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardResponseDto<DoctorMetricsDto>>({
     queryKey: ['/api/dashboard/doctor'],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/dashboard/doctor`.replace('//api', '/api'));
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/dashboard/doctor`.replace('//api', '/api'), {
+        headers: {
+          'Authorization': `Bearer ${session?.token || ''}`
+        }
+      });
       if (!res.ok) throw new Error('Failed to fetch dashboard');
       return res.json();
     },
-    enabled: activePage === DoctorTabs.DASHBOARD
+    enabled: activePage === DoctorTabs.DASHBOARD && !!session?.token
   });
   
   const { data: profileSummaryData, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useDoctorProfileSummary(session?.token);
@@ -154,14 +159,14 @@ export function DoctorPage() {
               } : undefined}
             actionMetrics={DOCTOR_METRICS_CONFIG.map((metric) => ({
               icon: metric.icon,
-              numericValue: dashboardData.metrics[metric.metricKey] || 0,
+              numericValue: dashboardData.metrics[metric.metricKey as keyof DoctorMetricsDto] || 0,
               label: metric.label,
               containerColorClass: metric.containerColorClass,
               onClick: () => handlePageChange(metric.targetPage as DoctorPageName)
             }))}
             activityTitle={dashboardData.activityTitle}
-            activities={dashboardData.activities}
-            rightWidget={<DashboardCalendarWidget doctorId={String(dashboardData.profileSummary.doctorId || 1)} />}
+            activities={dashboardData.activities ?? []}
+            rightWidget={<DashboardCalendarWidget doctorId={String(profileSummaryData?.employeeId || '1')} />}
           />
         </>) : null;
       default:

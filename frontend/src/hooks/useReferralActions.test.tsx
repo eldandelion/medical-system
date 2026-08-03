@@ -88,6 +88,7 @@ describe('useReferralActions', () => {
     const { result } = renderHook(() => useReferralActions({ referralId: '123', onUpdate: mockOnUpdate }), { wrapper });
 
     act(() => {
+      result.current.state.setSelectedHospitalId('1');
       result.current.state.setIsApprovalDialogOpen(true);
     });
 
@@ -100,7 +101,7 @@ describe('useReferralActions', () => {
       expect.objectContaining({ method: 'POST' })
     );
     
-    expect(result.current.state.isApprovalDialogOpen).toBe(false);
+    expect(result.current.state.isApprovalDialogOpen).toBe(true);
     expect(mockShowSnackbar).toHaveBeenCalledWith({ message: '批准失败，请稍后重试', duration: 5000 });
     expect(mockOnUpdate).not.toHaveBeenCalled();
     expect(queryClient.invalidateQueries).not.toHaveBeenCalled();
@@ -111,6 +112,10 @@ describe('useReferralActions', () => {
     (global.fetch as any).mockRejectedValueOnce(new Error('Network disconnected'));
 
     const { result } = renderHook(() => useReferralActions({ referralId: '1', onUpdate: mockOnUpdate }), { wrapper });
+
+    act(() => {
+      result.current.state.setSelectedHospitalId('1');
+    });
 
     await act(async () => {
       await result.current.actions.handleApprove();

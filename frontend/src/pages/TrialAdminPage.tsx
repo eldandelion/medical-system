@@ -24,6 +24,7 @@ import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { roleTranslations } from '../utils/roleTranslations';
 
 import { TRIAL_ADMIN_METRICS_CONFIG } from '../config/dashboardConfig';
+import { DashboardResponseDto, TrialAdminMetricsDto } from '../types';
 
 export const TrialAdminTabs = {
   DASHBOARD: 'Dashboard',
@@ -51,14 +52,18 @@ export function TrialAdminPage() {
   const { session } = useAuth();
   const { data: profileSummaryData, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useTrialAdminProfileSummary(session?.token);
 
-  const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
+  const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardResponseDto<TrialAdminMetricsDto>>({
     queryKey: ['/api/dashboard/trial-admin'],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/dashboard/trial-admin`.replace('//api', '/api'));
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/dashboard/trial-admin`.replace('//api', '/api'), {
+        headers: {
+          'Authorization': `Bearer ${session?.token || ''}`
+        }
+      });
       if (!res.ok) throw new Error('Failed to fetch dashboard');
       return res.json();
     },
-    enabled: activePage === TrialAdminTabs.DASHBOARD
+    enabled: activePage === TrialAdminTabs.DASHBOARD && !!session?.token
   });
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
 
@@ -150,13 +155,13 @@ export function TrialAdminPage() {
               } : undefined}
             actionMetrics={TRIAL_ADMIN_METRICS_CONFIG.map((metric) => ({
               icon: metric.icon,
-              numericValue: dashboardData.metrics[metric.metricKey] || 0,
+              numericValue: dashboardData.metrics[metric.metricKey as keyof TrialAdminMetricsDto] || 0,
               label: metric.label,
               containerColorClass: metric.containerColorClass,
               onClick: () => handlePageChange(metric.targetPage as TrialAdminPageName)
             }))}
             activityTitle={dashboardData.activityTitle}
-            activities={dashboardData.activities}
+            activities={dashboardData.activities ?? []}
           />
         </>) : null;
       default:

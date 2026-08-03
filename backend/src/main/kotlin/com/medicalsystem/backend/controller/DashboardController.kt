@@ -1,8 +1,8 @@
 package com.medicalsystem.backend.controller
 
-import com.medicalsystem.backend.dto.ProfileSummaryDto
-import com.medicalsystem.backend.security.CurrentUser
+import com.medicalsystem.backend.dto.*
 import com.medicalsystem.backend.model.User
+import com.medicalsystem.backend.security.CurrentUser
 import com.medicalsystem.backend.service.DashboardService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -33,4 +33,24 @@ class DashboardController(
     @GetMapping("/doctor/profile")
     fun getDoctorProfile(@CurrentUser user: User): ResponseEntity<ProfileSummaryDto> =
         ResponseEntity.ok(dashboardService.getDoctorProfile(user))
+
+    @GetMapping("/student")
+    fun getStudentDashboard(@CurrentUser user: User): ResponseEntity<DashboardResponseDto<StudentMetricsDto>> =
+        ResponseEntity.ok(dashboardService.getStudentDashboard(user))
+
+    @GetMapping("/teacher")
+    fun getTeacherDashboard(@CurrentUser user: User): ResponseEntity<DashboardResponseDto<TeacherMetricsDto>> =
+        ResponseEntity.ok(dashboardService.getTeacherDashboard(user))
+
+    @GetMapping("/head-councillor")
+    fun getHeadCounsellorDashboard(@CurrentUser user: User): ResponseEntity<DashboardResponseDto<HeadCounsellorMetricsDto>> =
+        ResponseEntity.ok(dashboardService.getHeadCounsellorDashboard(user))
+
+    @GetMapping("/trial-admin")
+    fun getTrialAdminDashboard(@CurrentUser user: User): ResponseEntity<DashboardResponseDto<TrialAdminMetricsDto>> =
+        ResponseEntity.ok(dashboardService.getTrialAdminDashboard(user))
+
+    @GetMapping("/doctor")
+    fun getDoctorDashboard(@CurrentUser user: User): ResponseEntity<DashboardResponseDto<DoctorMetricsDto>> =
+        ResponseEntity.ok(dashboardService.getDoctorDashboard(user))
 }
