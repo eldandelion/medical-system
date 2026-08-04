@@ -213,4 +213,5 @@ The University Medical Screening System is a full-stack platform managing studen
 | Backend Data Architecture & Persistence | `.ai/reference/backend-data.md` |
 | Backend Services & Domain Logic | `.ai/reference/backend-services.md` |
 | Security, Authentication, & Error Handling | `.ai/reference/security-errors.md` |
+| Assessment UI & Data Catalog | `.ai/reference/assessment-ui.md` |
 
