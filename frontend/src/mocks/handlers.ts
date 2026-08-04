@@ -164,8 +164,8 @@ export const handlers = [
         console.warn(`Could not submit real assessment ${id}, falling back to mock`, e);
       }
     }
-    const data = await request.json() as { answers: Record<string, number> };
-    const answeredCount = Object.keys(data?.answers || {}).length;
+    const data = await request.json() as { answers: { questionId: string; selectedValue: number }[] };
+    const answeredCount = data?.answers?.length || 0;
     return HttpResponse.json({
       success: true,
       message: '测评已完成并提交',

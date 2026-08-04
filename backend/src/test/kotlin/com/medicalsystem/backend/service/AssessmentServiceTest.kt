@@ -1,5 +1,6 @@
 package com.medicalsystem.backend.service
 
+import com.medicalsystem.backend.dto.AnswerSubmissionDto
 import com.medicalsystem.backend.dto.AssignAssessmentRequest
 import com.medicalsystem.backend.dto.SubmitAssessmentRequest
 import com.medicalsystem.backend.event.DomainEventPublisher
@@ -177,7 +178,7 @@ class AssessmentServiceTest {
             status = AssessmentStatus.PENDING
         )
 
-        val answers = (1..9).associate { "phq9_$it" to 2 } // Total: 18 -> High Risk
+        val answers = (1..9).map { AnswerSubmissionDto("phq9_$it", 2) } // Total: 18 -> High Risk
         val request = SubmitAssessmentRequest(answers = answers)
 
         val profile = StudentHealthProfile(
@@ -217,7 +218,7 @@ class AssessmentServiceTest {
             status = AssessmentStatus.COMPLETED
         )
 
-        val answers = (1..9).associate { "phq9_$it" to 0 }
+        val answers = (1..9).map { AnswerSubmissionDto("phq9_$it", 0) }
         val request = SubmitAssessmentRequest(answers = answers)
 
         `when`(assignmentRepository.findById(1L)).thenReturn(Optional.of(assignment))

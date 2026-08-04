@@ -32,4 +32,16 @@ class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(mapOf("error" to "Validation failed", "details" to errors))
     }
+
+    @ExceptionHandler(AssessmentValidationException::class)
+    fun handleAssessmentValidation(e: AssessmentValidationException): ResponseEntity<Map<String, Any>> {
+        val body = mutableMapOf<String, Any>("error" to "Validation failed")
+        if (e.missingKeys.isNotEmpty()) {
+            body["missingKeys"] = e.missingKeys
+        }
+        if (e.invalidKeys.isNotEmpty()) {
+            body["invalidKeys"] = e.invalidKeys
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body)
+    }
 }

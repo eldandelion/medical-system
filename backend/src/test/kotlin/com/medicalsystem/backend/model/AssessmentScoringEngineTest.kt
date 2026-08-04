@@ -1,6 +1,6 @@
 package com.medicalsystem.backend.model
 
-import com.medicalsystem.backend.exception.ValidationException
+import com.medicalsystem.backend.exception.AssessmentValidationException
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -68,22 +68,22 @@ class AssessmentScoringEngineTest {
     }
 
     @Test
-    fun `score with missing answers throws ValidationException`() {
+    fun `score with missing answers throws AssessmentValidationException`() {
         val partialAnswers = mapOf("phq9_1" to 1, "phq9_2" to 2)
-        val ex = assertThrows<ValidationException> {
+        val ex = assertThrows<AssessmentValidationException> {
             AssessmentScoringEngine.score(AssessmentScaleType.PHQ_9, partialAnswers)
         }
-        assertTrue(ex.message!!.contains("问卷未全部完成"))
+        assertTrue(ex.missingKeys.contains("phq9_9"))
     }
 
     @Test
-    fun `score with out-of-range value throws ValidationException`() {
+    fun `score with out-of-range value throws AssessmentValidationException`() {
         val answers = (1..9).associate { "phq9_$it" to 0 }.toMutableMap()
         answers["phq9_1"] = 5 // Out of range for PHQ-9 (0-3)
 
-        val ex = assertThrows<ValidationException> {
+        val ex = assertThrows<AssessmentValidationException> {
             AssessmentScoringEngine.score(AssessmentScaleType.PHQ_9, answers)
         }
-        assertTrue(ex.message!!.contains("超出有效范围"))
+        assertTrue(ex.invalidKeys.contains("phq9_1"))
     }
 }

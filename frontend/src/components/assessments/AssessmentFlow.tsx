@@ -77,10 +77,10 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
 
   const currentSection = activeSections[currentSectionIdx];
   const currentQuestion = currentSection?.questions[currentQuestionIdx];
-  const questionKey = `${currentSection?.id}_${currentQuestionIdx}`;
+  const questionKey = currentQuestion?.id || '';
 
-  const questionText = typeof currentQuestion === 'string' ? currentQuestion : currentQuestion?.text;
-  const questionOptions = typeof currentQuestion === 'string' ? DEFAULT_OPTIONS : currentQuestion?.options || DEFAULT_OPTIONS;
+  const questionText = currentQuestion?.text || '';
+  const questionOptions = currentQuestion?.options || DEFAULT_OPTIONS;
 
   const totalQuestions = activeSections.reduce((acc, section) => acc + section.questions.length, 0);
   const answeredCount = Object.keys(answers).length;
@@ -94,16 +94,23 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
     setSubmitting(true);
     try {
       if (assessmentId) {
+        const answersList = Object.entries(finalAnswers).map(([k, v]) => ({ questionId: k, selectedValue: v }));
         const res = await fetch(`${import.meta.env.BASE_URL}/api/assessments/${assessmentId}/submit`.replace('//api', '/api'), {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${session.token}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ answers: finalAnswers })
+          body: JSON.stringify({ answers: answersList })
         });
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
+          if (errData.missingKeys && errData.missingKeys.length > 0) {
+            throw new Error(`问卷未全部完成，缺失条目: ${errData.missingKeys.join(', ')}`);
+          }
+          if (errData.invalidKeys && errData.invalidKeys.length > 0) {
+            throw new Error(`答题内容无效，问题条目: ${errData.invalidKeys.join(', ')}`);
+          }
           throw new Error(errData.error || '提交测评失败');
         }
       }
@@ -159,8 +166,8 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
           </h4>
           <div className="flex flex-col gap-1">
             {section.questions.map((q, qIdx) => {
-              const qKey = `${section.id}_${qIdx}`;
-              const isAnswered = answers[qKey] !== undefined;
+              const qKey = typeof q === 'string' ? '' : (q as any).id;
+              const isAnswered = qKey ? answers[qKey] !== undefined : false;
               const isActive = currentSectionIdx === sIdx && currentQuestionIdx === qIdx;
 
               return (
@@ -177,7 +184,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
                 >
                   <span className={`truncate pr-4 flex-1 text-[13px] transition-opacity duration-200 ${isActive || isAnswered ? 'text-[var(--md-sys-color-on-surface)] opacity-100' : 'text-[var(--md-sys-color-on-surface-variant)] opacity-60 group-hover:opacity-100'
                     }`}>
-                    {qIdx + 1}. {typeof q === 'string' ? q : q.text}
+                    {qIdx + 1}. {(q as any).text || ''}
                   </span>
                   <div className={`w-2 h-2 rounded-full shrink-0 transition-all ${isActive ? 'bg-[var(--md-sys-color-primary)] ring-4 ring-[var(--md-sys-color-primary)] ring-opacity-20' :
                     isAnswered ? 'bg-[var(--md-sys-color-primary)]' :

@@ -82,10 +82,10 @@ describe('MSW Handlers - Assessments', () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        answers: {
-          'phq9_0': 1,
-          'phq9_1': 2
-        }
+        answers: [
+          { questionId: 'phq9_1', selectedValue: 1 },
+          { questionId: 'phq9_2', selectedValue: 2 }
+        ]
       })
     });
     expect(response.status).toBe(200);

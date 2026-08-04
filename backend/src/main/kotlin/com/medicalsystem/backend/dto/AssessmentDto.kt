@@ -64,7 +64,8 @@ data class AssessmentDetailsDto(
     val assignedBy: AssignedByDto,
     val duration: String,
     val status: AssessmentStatus,
-    val sections: List<AssessmentSectionDto>
+    val sections: List<AssessmentSectionDto>,
+    val requiredQuestionIds: List<String>
 )
 
 data class AssignAssessmentRequest(
@@ -89,9 +90,16 @@ data class BatchAssignResultDto(
     val message: String
 )
 
+data class AnswerSubmissionDto(
+    @field:NotEmpty(message = "questionId is required")
+    val questionId: String,
+    @field:NotNull(message = "selectedValue is required")
+    val selectedValue: Int
+)
+
 data class SubmitAssessmentRequest(
-    @field:NotEmpty(message = "answers map cannot be empty")
-    val answers: Map<String, Int>
+    @field:NotEmpty(message = "answers cannot be empty")
+    val answers: List<AnswerSubmissionDto>
 )
 
 data class AssessmentSubmissionResponseDto(

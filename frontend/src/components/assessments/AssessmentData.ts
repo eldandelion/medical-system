@@ -4,6 +4,7 @@ export interface QuestionOption {
 }
 
 export interface Question {
+  id: string;
   text: string;
   options?: QuestionOption[];
 }
@@ -13,7 +14,19 @@ export interface AssessmentSection {
   title: string;
   subtitle: string;
   description: string;
-  questions: (string | Question)[];
+  questions: Question[];
+}
+
+export function defineSection(section: Omit<AssessmentSection, 'questions'> & { questions: (string | Omit<Question, 'id'>)[] }): AssessmentSection {
+  return {
+    ...section,
+    questions: section.questions.map((q, i) => {
+      if (typeof q === 'string') {
+        return { id: `${section.id}_${i + 1}`, text: q };
+      }
+      return { id: `${section.id}_${i + 1}`, ...q };
+    })
+  };
 }
 
 export const APQ_OPTIONS: QuestionOption[] = [
@@ -25,7 +38,7 @@ export const APQ_OPTIONS: QuestionOption[] = [
 ];
 
 export const MENTAL_HEALTH_ASSESSMENT: AssessmentSection[] = [
-  {
+  defineSection({
     id: 'phq9',
     title: '情绪状况评估',
     subtitle: 'PHQ-9',
@@ -41,8 +54,8 @@ export const MENTAL_HEALTH_ASSESSMENT: AssessmentSection[] = [
       '动作或说话速度缓慢到别人已经察觉，或正好相反，烦躁或坐立不安、动来动去的情况比平常更多',
       '有不如死掉或用某种方式伤害自己的念头'
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'gad7',
     title: '焦虑状况评估',
     subtitle: 'GAD-7',
@@ -56,8 +69,8 @@ export const MENTAL_HEALTH_ASSESSMENT: AssessmentSection[] = [
       '变得容易烦恼或急躁',
       '感到似乎将有可怕的事情发生而害怕'
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'apq9_father',
     title: '教养行为评估 (父亲篇)',
     subtitle: 'APQ-9 父亲',
@@ -73,8 +86,8 @@ export const MENTAL_HEALTH_ASSESSMENT: AssessmentSection[] = [
       { text: '父亲不知道我和谁一起出去玩耍', options: APQ_OPTIONS },
       { text: '父亲会提前结束对我的惩罚（如惩罚结束的时间比之前说得更早）', options: APQ_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'apq9_mother',
     title: '教养行为评估 (母亲篇)',
     subtitle: 'APQ-9 母亲',
@@ -90,11 +103,11 @@ export const MENTAL_HEALTH_ASSESSMENT: AssessmentSection[] = [
       { text: '母亲不知道我和谁一起出去玩耍', options: APQ_OPTIONS },
       { text: '母亲会提前结束对我的惩罚（如惩罚结束的时间比之前说得更早）', options: APQ_OPTIONS }
     ]
-  }
+  })
 ];
 
 export const SLEEP_ASSESSMENT: AssessmentSection[] = [
-  {
+  defineSection({
     id: 'sleep',
     title: '睡眠状况评估',
     subtitle: '睡眠问卷',
@@ -200,7 +213,7 @@ export const SLEEP_ASSESSMENT: AssessmentSection[] = [
         ]
       }
     ]
-  }
+  })
 ];
 
 export const MOBILE_ADDICTION_OPTIONS = [
@@ -273,7 +286,7 @@ export const EATING_HABITS_Q18_OPTIONS = [
 ];
 
 export const DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT: AssessmentSection[] = [
-  {
+  defineSection({
     id: 'mobile_addiction',
     title: '数字化行为评估 (手机成瘾)',
     subtitle: '手机成瘾量表',
@@ -286,8 +299,8 @@ export const DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT: AssessmentSection[] = [
       { text: '在我想要时，如果我不能使用或接触手机，我觉得难过，喜怒无常，或急躁易怒', options: MOBILE_ADDICTION_OPTIONS },
       { text: '当我试着减少使用手机的时间，我只能坚持一段时间，但最终我还是会像以前那样使用它，甚至使用的更多', options: MOBILE_ADDICTION_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'game_addiction',
     title: '数字化行为评估 (网络游戏)',
     subtitle: '网络游戏成瘾量表',
@@ -303,8 +316,8 @@ export const DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT: AssessmentSection[] = [
       { text: '你是否为了暂时逃避或缓解负面情绪（如无助、内疚、焦虑）而玩游戏？', options: GAME_ADDICTION_OPTIONS },
       { text: '你是否因为你的游戏活动而危及或失去了一段重要的关系、教育或职业机会？', options: GAME_ADDICTION_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'procrastination',
     title: '自律与自控评估 (拖延倾向)',
     subtitle: '拖延量表',
@@ -321,8 +334,8 @@ export const DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT: AssessmentSection[] = [
       { text: '我一般不能够在截止时间前完成必须做的事情。', options: PROCRASTINATION_OPTIONS },
       { text: '我曾经拖延工作，代价不菲。', options: PROCRASTINATION_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'eating_habits',
     title: '日常生活评估 (饮食习惯)',
     subtitle: '饮食情况评估',
@@ -347,7 +360,7 @@ export const DIGITAL_HABITS_DAILY_BEHAVIORS_ASSESSMENT: AssessmentSection[] = [
       { text: '你曾在不饿时也拼命地大吃吗？', options: EATING_HABITS_Q17_OPTIONS },
       { text: '请从以下选项中勾选出一个最符合你自己吃东西情况的描述：', options: EATING_HABITS_Q18_OPTIONS }
     ]
-  }
+  })
 ];
 
 export const PEER_RELATIONSHIP_OPTIONS = [
@@ -376,7 +389,7 @@ export const SOCIAL_SUPPORT_OPTIONS = [
 ];
 
 export const SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT: AssessmentSection[] = [
-  {
+  defineSection({
     id: 'peer_relationship',
     title: '社交环境评估 (同伴关系)',
     subtitle: '同伴关系量表',
@@ -389,8 +402,8 @@ export const SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT: AssessmentSection[] = [
       { text: '在班上，我没有朋友可以交谈', options: PEER_RELATIONSHIP_OPTIONS },
       { text: '同学们对我不好', options: PEER_RELATIONSHIP_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'teacher_relationship',
     title: '社交环境评估 (师生关系)',
     subtitle: '师生关系量表',
@@ -401,8 +414,8 @@ export const SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT: AssessmentSection[] = [
       { text: '有时我觉得老师故意找我的麻烦', options: PEER_RELATIONSHIP_OPTIONS },
       { text: '老师对我很轻视', options: PEER_RELATIONSHIP_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'loneliness',
     title: '心理感受评估 (孤独体验)',
     subtitle: '孤独感量表',
@@ -417,8 +430,8 @@ export const SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT: AssessmentSection[] = [
       { text: '对于自己的离群（或孤独），我是不开心的', options: LONELINESS_OPTIONS },
       { text: '我感觉我周围的人不关心我', options: LONELINESS_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'social_support',
     title: '支持系统评估 (社会支持)',
     subtitle: '社会支持量表',
@@ -437,7 +450,7 @@ export const SOCIAL_ENVIRONMENT_SUPPORT_ASSESSMENT: AssessmentSection[] = [
       { text: '我的家庭能协助我作出各种决定', options: SOCIAL_SUPPORT_OPTIONS },
       { text: '我能与朋友们讨论自己的难题', options: SOCIAL_SUPPORT_OPTIONS }
     ]
-  }
+  })
 ];
 
 export const IMPULSIVITY_OPTIONS = [
@@ -474,7 +487,7 @@ export const EMOTION_REGULATION_OPTIONS = [
 ];
 
 export const SELF_REGULATION_PERSONALITY_ASSESSMENT: AssessmentSection[] = [
-  {
+  defineSection({
     id: 'impulsivity',
     title: '行为倾向评估 (冲动程度)',
     subtitle: '冲动量表',
@@ -489,8 +502,8 @@ export const SELF_REGULATION_PERSONALITY_ASSESSMENT: AssessmentSection[] = [
       { text: '我能够自我控制', options: IMPULSIVITY_OPTIONS },
       { text: '我说话不加思考', options: IMPULSIVITY_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'self_control',
     title: '自我管理评估 (自制力状况)',
     subtitle: '自我控制量表',
@@ -504,8 +517,8 @@ export const SELF_REGULATION_PERSONALITY_ASSESSMENT: AssessmentSection[] = [
       { text: '有时我会忍不住去做一些明明知道不对的事情', options: SELF_CONTROL_OPTIONS },
       { text: '我常常考虑不周就付诸行动', options: SELF_CONTROL_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'grit',
     title: '意志毅力评估 (坚毅品质)',
     subtitle: '坚毅量表',
@@ -520,8 +533,8 @@ export const SELF_REGULATION_PERSONALITY_ASSESSMENT: AssessmentSection[] = [
       { text: '无论什么事情，我开了头就要完成它。', options: GRIT_OPTIONS },
       { text: '我很勤劳（我不轻言放弃）。', options: GRIT_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'emotion_regulation',
     title: '情绪机制评估 (调节策略)',
     subtitle: '认知重评与表达抑制量表',
@@ -538,7 +551,7 @@ export const SELF_REGULATION_PERSONALITY_ASSESSMENT: AssessmentSection[] = [
       { text: '当我体验到消极情绪时，我会压抑这种情绪表现出来', options: EMOTION_REGULATION_OPTIONS },
       { text: '当想减少消极情绪，我会换种方式看待不利处境', options: EMOTION_REGULATION_OPTIONS }
     ]
-  }
+  })
 ];
 
 export const LIFE_EVENTS_OPTIONS = [
@@ -569,7 +582,7 @@ export const CHILDHOOD_TRAUMA_OPTIONS = [
 ];
 
 export const FAMILY_BACKGROUND_EARLY_EXPERIENCES_ASSESSMENT: AssessmentSection[] = [
-  {
+  defineSection({
     id: 'life_events',
     title: '家庭背景与环境评估 (生活事件)',
     subtitle: '一般生活事件量表',
@@ -588,8 +601,8 @@ export const FAMILY_BACKGROUND_EARLY_EXPERIENCES_ASSESSMENT: AssessmentSection[]
       { text: '被虐待', options: LIFE_EVENTS_OPTIONS },
       { text: '其它负性生活事件', options: LIFE_EVENTS_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'childhood_ses',
     title: '早期经历与背景评估 (经济地位)',
     subtitle: '童年社会经济地位量表',
@@ -600,8 +613,8 @@ export const FAMILY_BACKGROUND_EARLY_EXPERIENCES_ASSESSMENT: AssessmentSection[]
       { text: '相比于童年的伙伴，我的生活更加富足', options: CHILDHOOD_SES_OPTIONS },
       { text: '我成长在一个富足稳定的小区环境', options: CHILDHOOD_SES_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'childhood_trauma',
     title: '早期经历评估 (成长逆境)',
     subtitle: '儿童期虐待与忽视量表',
@@ -637,7 +650,7 @@ export const FAMILY_BACKGROUND_EARLY_EXPERIENCES_ASSESSMENT: AssessmentSection[]
       { text: '我觉得自己受到了性虐待', options: CHILDHOOD_TRAUMA_OPTIONS },
       { text: '家是我获得力量和支持的源泉', options: CHILDHOOD_TRAUMA_OPTIONS }
     ]
-  }
+  })
 ];
 
 export const NSSI_OPTIONS = [
@@ -670,7 +683,7 @@ export const BRIEF_A_OPTIONS = [
 ];
 
 export const CLINICAL_SCREENING_NEURODIVERGENCE_ASSESSMENT: AssessmentSection[] = [
-  {
+  defineSection({
     id: 'nssi',
     title: '高危筛查评估 (非自杀性自伤行为)',
     subtitle: '自伤量表',
@@ -682,8 +695,8 @@ export const CLINICAL_SCREENING_NEURODIVERGENCE_ASSESSMENT: AssessmentSection[] 
       { text: '刻意将物体刺入指甲或皮肤', options: NSSI_OPTIONS },
       { text: '刻意用拳头猛打自己', options: NSSI_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'pq16',
     title: '临床筛查评估 (感知与思维模式)',
     subtitle: '超高危筛查量表',
@@ -706,8 +719,8 @@ export const CLINICAL_SCREENING_NEURODIVERGENCE_ASSESSMENT: AssessmentSection[] 
       { text: '我曾感到过有人或某种力量在我周围，虽然我看不见。', options: PQ16_OPTIONS },
       { text: '我感到身体的某些部位以某种方式发生了变化，或某些部位的功能与以往不同。', options: PQ16_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'adhd',
     title: '神经多样性评估 (执行力与注意力)',
     subtitle: '成人 ADHD 自我报告量表 (ASRS)',
@@ -733,8 +746,8 @@ export const CLINICAL_SCREENING_NEURODIVERGENCE_ASSESSMENT: AssessmentSection[] 
       { text: '你会多常在别人忙碌时打断别人？', options: ADHD_OPTIONS },
       { text: '小时候老师或家长多常会说你容易走神/坐不住/太好动？', options: ADHD_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'brief_a',
     title: '神经多样性评估 (执行功能障碍)',
     subtitle: '行为评定量表 (Brief-A)',
@@ -759,7 +772,7 @@ export const CLINICAL_SCREENING_NEURODIVERGENCE_ASSESSMENT: AssessmentSection[] 
       { text: '我难以组织活动', options: BRIEF_A_OPTIONS },
       { text: '我难以组织工作', options: BRIEF_A_OPTIONS }
     ]
-  }
+  })
 ];
 
 export const AGGRESSION_OPTIONS = [
@@ -797,7 +810,7 @@ export const BIG_FIVE_OPTIONS = [
 ];
 
 export const PERSONALITY_COPING_OUTLOOK_ASSESSMENT: AssessmentSection[] = [
-  {
+  defineSection({
     id: 'aggression',
     title: '人格倾向评估 (情绪宣泄方式)',
     subtitle: '攻击量表',
@@ -817,8 +830,8 @@ export const PERSONALITY_COPING_OUTLOOK_ASSESSMENT: AssessmentSection[] = [
       { text: '有时我会无缘无故地发火', options: AGGRESSION_OPTIONS },
       { text: '请在此题选择第一个选项', options: AGGRESSION_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'coping_styles',
     title: '压力应对评估 (心理防卫机制)',
     subtitle: '应对方式量表',
@@ -833,8 +846,8 @@ export const PERSONALITY_COPING_OUTLOOK_ASSESSMENT: AssessmentSection[] = [
       { text: '幻想可能会发生某种奇迹改变现状', options: COPING_OPTIONS },
       { text: '自己安慰自己', options: COPING_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'swls',
     title: '生活展望评估 (主观幸福感)',
     subtitle: '生活满意度量表',
@@ -846,8 +859,8 @@ export const PERSONALITY_COPING_OUTLOOK_ASSESSMENT: AssessmentSection[] = [
       { text: '我满意自己的生活', options: SWLS_OPTIONS },
       { text: '如果回到过去我也不想改变什么', options: SWLS_OPTIONS }
     ]
-  },
-  {
+  }),
+  defineSection({
     id: 'big_five',
     title: '核心特质评估 (基本人格特质)',
     subtitle: '大五人格量表',
@@ -870,5 +883,5 @@ export const PERSONALITY_COPING_OUTLOOK_ASSESSMENT: AssessmentSection[] = [
       { text: '我喜欢参加社交与娱乐聚会', options: BIG_FIVE_OPTIONS },
       { text: '做事讲究逻辑和条理是我的一个特点', options: BIG_FIVE_OPTIONS }
     ]
-  }
+  })
 ];

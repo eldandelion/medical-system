@@ -1,6 +1,6 @@
 package com.medicalsystem.backend.model
 
-import com.medicalsystem.backend.exception.ValidationException
+import com.medicalsystem.backend.exception.AssessmentValidationException
 
 data class ScoringResult(
     val scaleType: AssessmentScaleType,
@@ -19,42 +19,47 @@ object AssessmentScoringEngine {
         val requiredIds = scale.allQuestionIds
 
         val missingKeys = requiredIds.filter { !answers.containsKey(it) }
-        if (missingKeys.isNotEmpty()) {
-            throw ValidationException("问卷未全部完成，缺失条目: ${missingKeys.take(5).joinToString(", ")}${if (missingKeys.size > 5) " 等" else ""}")
-        }
+        val invalidKeys = mutableListOf<String>()
 
         // Validate values
         when (scaleType) {
             AssessmentScaleType.PHQ_9, AssessmentScaleType.GAD_7 -> {
                 answers.forEach { (key, value) ->
                     if (value !in 0..3) {
-                        throw ValidationException("条目 $key 的选项值 $value 超出有效范围 (0-3)")
+                        invalidKeys.add(key)
                     }
                 }
             }
             AssessmentScaleType.SCL_90 -> {
                 answers.forEach { (key, value) ->
                     if (value !in 1..5) {
-                        throw ValidationException("条目 $key 的选项值 $value 超出有效范围 (1-5)")
+                        invalidKeys.add(key)
                     }
                 }
             }
             AssessmentScaleType.PSQI -> {
                 answers.forEach { (key, value) ->
                     if (value !in 0..4) {
-                        throw ValidationException("条目 $key 的选项值 $value 超出有效范围 (0-4)")
+                        invalidKeys.add(key)
                     }
                 }
             }
             AssessmentScaleType.ANNUAL_COMPREHENSIVE -> {
                 answers.forEach { (key, value) ->
                     if (key.startsWith("phq9_") || key.startsWith("gad7_")) {
-                        if (value !in 0..3) throw ValidationException("条目 $key 的选项值 $value 超出有效范围 (0-3)")
+                        if (value !in 0..3) invalidKeys.add(key)
                     } else if (key.startsWith("psqi_")) {
-                        if (value !in 0..4) throw ValidationException("条目 $key 的选项值 $value 超出有效范围 (0-4)")
+                        if (value !in 0..4) invalidKeys.add(key)
                     }
                 }
             }
+        }
+
+        if (missingKeys.isNotEmpty() || invalidKeys.isNotEmpty()) {
+            throw AssessmentValidationException(
+                missingKeys = missingKeys,
+                invalidKeys = invalidKeys
+            )
         }
     }
 

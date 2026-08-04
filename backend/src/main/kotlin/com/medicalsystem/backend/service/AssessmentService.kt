@@ -107,7 +107,8 @@ class AssessmentService(
             ),
             duration = scale.duration,
             status = assignment.status,
-            sections = sections
+            sections = sections,
+            requiredQuestionIds = scale.allQuestionIds.toList()
         )
     }
 
@@ -239,8 +240,9 @@ class AssessmentService(
             throw ForbiddenException("You can only submit your own assigned assessments")
         }
 
+        val answersMap = request.answers.associate { it.questionId to it.selectedValue }
         // 1. Scoring & Validation
-        val scoringResult = AssessmentScoringEngine.score(assignment.scaleType, request.answers)
+        val scoringResult = AssessmentScoringEngine.score(assignment.scaleType, answersMap)
 
         // 2. Atomic health profile recording
         val profile = studentHealthProfileRepository.findByStudentId(assignment.studentId).orElseGet {
@@ -254,7 +256,7 @@ class AssessmentService(
 
         // 3. Complete assignment aggregate root & register domain event
         assignment.complete(
-            responses = request.answers,
+            responses = answersMap,
             scoringResult = scoringResult,
             createdPsychometricTestId = recordedTest.id
         )

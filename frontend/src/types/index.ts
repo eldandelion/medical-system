@@ -186,7 +186,7 @@ export interface AssessmentOptionDto {
 }
 
 export interface AssessmentQuestionDto {
-  id?: string;
+  id: string;
   text: string;
   options?: AssessmentOptionDto[];
 }
@@ -196,7 +196,7 @@ export interface AssessmentSectionDto {
   title: string;
   subtitle: string;
   description: string;
-  questions: (string | AssessmentQuestionDto)[];
+  questions: AssessmentQuestionDto[];
 }
 
 export interface AssessmentCatalogItemDto {
@@ -239,6 +239,7 @@ export interface AssessmentDetailsDto {
   duration: string;
   status: AssessmentStatus;
   sections: AssessmentSectionDto[];
+  requiredQuestionIds: string[];
 }
 
 export interface AssignAssessmentRequest {
@@ -261,7 +262,7 @@ export interface BatchAssignResultDto {
 }
 
 export interface SubmitAssessmentRequest {
-  answers: Record<string, number>;
+  answers: { questionId: string; selectedValue: number }[];
 }
 
 export interface AssessmentSubmissionResponseDto {
