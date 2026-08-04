@@ -258,7 +258,6 @@ export interface AssignCohortAssessmentRequest {
 
 export interface BatchAssignResultDto {
   assignedCount: number;
-  message: string;
 }
 
 export interface SubmitAssessmentRequest {
@@ -267,7 +266,7 @@ export interface SubmitAssessmentRequest {
 
 export interface AssessmentSubmissionResponseDto {
   success: boolean;
-  message: string;
-  assignmentId: number | string;
+  assignmentId: number;
   totalQuestionsAnswered: number;
+  completedAt: string;
 }

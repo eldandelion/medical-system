@@ -19,4 +19,10 @@ interface AssessmentAssignmentJpaRepository : JpaRepository<AssessmentAssignment
         @Param("scaleType") scaleType: AssessmentScaleType,
         @Param("status") status: AssessmentStatus
     ): Optional<AssessmentAssignmentEntity>
+    @Query("SELECT a FROM AssessmentAssignmentEntity a WHERE a.student.id IN :studentIds AND a.scaleType = :scaleType AND a.status = :status")
+    fun findByStudentIdInAndScaleTypeAndStatus(
+        @Param("studentIds") studentIds: List<Long>,
+        @Param("scaleType") scaleType: AssessmentScaleType,
+        @Param("status") status: AssessmentStatus
+    ): List<AssessmentAssignmentEntity>
 }

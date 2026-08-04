@@ -63,6 +63,10 @@ The University Medical Screening System is a full-stack platform managing studen
 - **Frontend**: 2-space indentation, semicolons enabled, single/double quotes, TypeScript strict type checking (`tsc --noEmit`).
 - **Backend**: 4-space indentation, standard Kotlin coding conventions, trailing commas supported.
 
+### Magic Strings & Language-Agnostic Backend Design
+- **No Presentation Strings in Backend**: The backend MUST remain strictly language-agnostic. Never create string `message` fields in DTOs intended for direct frontend display (e.g., success toasts like "提交成功"). Use booleans, enums, or IDs instead, and let the frontend define the localized UI text.
+- **No Magic Strings**: Always avoid hardcoded magic strings in code logic. If a string is required for business logic, extract it to a constant or an enum.
+
 ---
 
 ## Error Handling

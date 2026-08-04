@@ -88,7 +88,7 @@ export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, assigned
       onAssign(newAssignedIds);
       queryClient.invalidateQueries({ queryKey: ['/api/assessments'] });
       queryClient.invalidateQueries({ queryKey: ['/api/students'] });
-      showSnackbar({ message: result.message || '问卷已成功分配', duration: 3000 });
+      showSnackbar({ message: result.assignedCount > 0 ? `已成功分配 ${result.assignedCount} 份问卷` : '问卷已成功分配', duration: 3000 });
       setIsSubmitting(false);
       onClose();
     } catch (err: any) {

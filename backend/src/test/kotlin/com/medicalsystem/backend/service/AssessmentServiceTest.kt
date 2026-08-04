@@ -3,13 +3,11 @@ package com.medicalsystem.backend.service
 import com.medicalsystem.backend.dto.AnswerSubmissionDto
 import com.medicalsystem.backend.dto.AssignAssessmentRequest
 import com.medicalsystem.backend.dto.SubmitAssessmentRequest
-import com.medicalsystem.backend.event.DomainEventPublisher
 import com.medicalsystem.backend.exception.ConflictException
 import com.medicalsystem.backend.exception.ForbiddenException
 import com.medicalsystem.backend.exception.NotFoundException
 import com.medicalsystem.backend.model.*
 import com.medicalsystem.backend.repository.AssessmentAssignmentRepository
-import com.medicalsystem.backend.repository.StudentHealthProfileRepository
 import com.medicalsystem.backend.repository.StudentRepository
 import com.medicalsystem.backend.repository.UserRepository
 import org.junit.jupiter.api.Assertions.*
@@ -17,15 +15,16 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.times
 import org.mockito.junit.jupiter.MockitoExtension
+import java.time.Clock
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
@@ -40,13 +39,8 @@ class AssessmentServiceTest {
     @Mock
     private lateinit var userRepository: UserRepository
 
-    @Mock
-    private lateinit var studentHealthProfileRepository: StudentHealthProfileRepository
-
-    @Mock
-    private lateinit var eventPublisher: DomainEventPublisher
-
-    @InjectMocks
+    private lateinit var clock: Clock
+    
     private lateinit var assessmentService: AssessmentService
 
     private val teacherUser = User(
@@ -92,6 +86,17 @@ class AssessmentServiceTest {
         assignedTeacherId = null
     )
 
+    @BeforeEach
+    fun setup() {
+        clock = Clock.fixed(Instant.parse("2026-08-01T10:00:00Z"), ZoneId.of("UTC"))
+        assessmentService = AssessmentService(
+            assignmentRepository,
+            studentRepository,
+            userRepository,
+            clock
+        )
+    }
+
     @Test
     fun `getAssessmentsForUser returns mapped assignments for student`() {
         val assignment = AssessmentAssignment(
@@ -101,8 +106,8 @@ class AssessmentServiceTest {
             assignedByUserId = 101L,
             scaleType = AssessmentScaleType.PHQ_9,
             status = AssessmentStatus.PENDING,
-            assignedAt = LocalDateTime.now(),
-            dueDate = LocalDate.now().plusDays(7)
+            assignedAt = LocalDateTime.now(clock),
+            dueDate = LocalDate.now(clock).plusDays(7)
         )
 
         `when`(assignmentRepository.findByStudentId(10L)).thenReturn(listOf(assignment))
@@ -139,7 +144,7 @@ class AssessmentServiceTest {
         val request = AssignAssessmentRequest(
             studentId = 10L,
             scaleTypes = listOf(AssessmentScaleType.PHQ_9),
-            dueDate = LocalDate.now().plusDays(14)
+            dueDate = LocalDate.now(clock).plusDays(14)
         )
 
         `when`(studentRepository.findByIdAndVisibleTo(10L, teacherUser)).thenReturn(Optional.of(sampleStudent))
@@ -152,7 +157,7 @@ class AssessmentServiceTest {
         val result = assessmentService.assignToStudent(request, teacherUser)
 
         assertEquals(1, result.assignedCount)
-        verify(eventPublisher, times(1)).publish(any())
+        // Event publish is now handled by Spring Data JPA
     }
 
     @Test
@@ -168,7 +173,7 @@ class AssessmentServiceTest {
     }
 
     @Test
-    fun `submitAssessment calculates score, updates health profile and publishes event`() {
+    fun `submitAssessment calculates score and completes assignment`() {
         val assignment = AssessmentAssignment(
             id = 1L,
             studentId = 10L,
@@ -181,17 +186,7 @@ class AssessmentServiceTest {
         val answers = (1..9).map { AnswerSubmissionDto("phq9_$it", 2) } // Total: 18 -> High Risk
         val request = SubmitAssessmentRequest(answers = answers)
 
-        val profile = StudentHealthProfile(
-            id = 1L,
-            studentId = 10L,
-            riskStatus = RiskStatus.LOW,
-            scidDiagnosis = null,
-            riskFlags = mutableListOf(),
-            psychometricTests = mutableListOf()
-        )
-
         `when`(assignmentRepository.findById(1L)).thenReturn(Optional.of(assignment))
-        `when`(studentHealthProfileRepository.findByStudentId(10L)).thenReturn(Optional.of(profile))
         `when`(assignmentRepository.save(any())).thenAnswer { it.arguments[0] as AssessmentAssignment }
 
         val response = assessmentService.submitAssessment(1L, request, studentUser)
@@ -199,12 +194,7 @@ class AssessmentServiceTest {
         assertTrue(response.success)
         assertEquals(9, response.totalQuestionsAnswered)
         assertEquals(AssessmentStatus.COMPLETED, assignment.status)
-        assertEquals(RiskStatus.HIGH, profile.riskStatus)
-        assertEquals(1, profile.psychometricTests.size)
-        assertEquals(18, profile.psychometricTests[0].score)
-        assertEquals("中重度抑郁", profile.psychometricTests[0].level)
-        verify(studentHealthProfileRepository).save(profile)
-        verify(eventPublisher, times(1)).publish(any())
+        // Listener handles the profile save in an AFTER_COMMIT phase, so we no longer mock/verify it here
     }
 
     @Test

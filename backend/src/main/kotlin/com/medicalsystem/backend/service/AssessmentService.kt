@@ -1,17 +1,19 @@
 package com.medicalsystem.backend.service
 
 import com.medicalsystem.backend.dto.*
-import com.medicalsystem.backend.event.DomainEventPublisher
 import com.medicalsystem.backend.exception.ForbiddenException
 import com.medicalsystem.backend.exception.NotFoundException
-import com.medicalsystem.backend.exception.ValidationException
+import com.medicalsystem.backend.mapper.AssessmentMapper.toCatalogItemDto
+import com.medicalsystem.backend.mapper.AssessmentMapper.toDetailsDto
+import com.medicalsystem.backend.mapper.AssessmentMapper.toListItemDto
 import com.medicalsystem.backend.model.*
 import com.medicalsystem.backend.repository.AssessmentAssignmentRepository
-import com.medicalsystem.backend.repository.StudentHealthProfileRepository
+import com.medicalsystem.backend.repository.AssessmentCohortSpecification
 import com.medicalsystem.backend.repository.StudentRepository
 import com.medicalsystem.backend.repository.UserRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
 import java.time.LocalDateTime
 
 @Service
@@ -20,8 +22,7 @@ class AssessmentService(
     private val assignmentRepository: AssessmentAssignmentRepository,
     private val studentRepository: StudentRepository,
     private val userRepository: UserRepository,
-    private val studentHealthProfileRepository: StudentHealthProfileRepository,
-    private val eventPublisher: DomainEventPublisher
+    private val clock: Clock
 ) {
 
     @Transactional(readOnly = true)
@@ -38,29 +39,8 @@ class AssessmentService(
 
         return assignments.map { assignment ->
             val scale = AssessmentScaleCatalog.getScale(assignment.scaleType)
-            val assigner = assignerMap[assignment.assignedByUserId]
-            val assignerName = assigner?.name ?: "心理中心"
-            val initial = if (assignerName.isNotBlank()) assignerName.take(1) else "心"
-
-            val percentage = if (assignment.status == AssessmentStatus.COMPLETED) 100 else 0
-
-            AssessmentListItemDto(
-                id = assignment.id ?: 0L,
-                title = scale.title,
-                subtitle = scale.subtitle,
-                scaleType = assignment.scaleType,
-                assignedBy = AssignedByDto(
-                    name = assignerName,
-                    initial = initial
-                ),
-                type = "测试",
-                completionPercentage = percentage,
-                duration = scale.duration,
-                status = assignment.status,
-                assignedAt = assignment.assignedAt,
-                completedAt = assignment.completedAt,
-                dueDate = assignment.dueDate
-            )
+            val assignerName = assignerMap[assignment.assignedByUserId]?.name
+            assignment.toListItemDto(scale, assignerName)
         }
     }
 
@@ -75,71 +55,15 @@ class AssessmentService(
         }
 
         val scale = AssessmentScaleCatalog.getScale(assignment.scaleType)
-        val assigner = userRepository.findById(assignment.assignedByUserId).orElse(null)
-        val assignerName = assigner?.name ?: "心理中心"
-
-        val sections = scale.sections.map { sec ->
-            AssessmentSectionDto(
-                id = sec.id,
-                title = sec.title,
-                subtitle = sec.subtitle,
-                description = sec.description,
-                questions = sec.questions.map { q ->
-                    AssessmentQuestionDto(
-                        id = q.id,
-                        text = q.text,
-                        options = q.options?.map { opt ->
-                            AssessmentOptionDto(value = opt.value, label = opt.label)
-                        }
-                    )
-                }
-            )
-        }
-
-        return AssessmentDetailsDto(
-            id = assignment.id ?: 0L,
-            title = scale.title,
-            subtitle = scale.subtitle,
-            scaleType = assignment.scaleType,
-            assignedBy = AssignedByDto(
-                name = assignerName,
-                initial = if (assignerName.isNotBlank()) assignerName.take(1) else "心"
-            ),
-            duration = scale.duration,
-            status = assignment.status,
-            sections = sections,
-            requiredQuestionIds = scale.allQuestionIds.toList()
-        )
+        val assignerName = userRepository.findById(assignment.assignedByUserId).orElse(null)?.name
+        
+        return scale.toDetailsDto(assignment, assignerName)
     }
 
     @Transactional(readOnly = true)
     fun getCatalog(): List<AssessmentCatalogItemDto> {
         return AssessmentScaleCatalog.getAllScales().map { scale ->
-            AssessmentCatalogItemDto(
-                scaleType = scale.scaleType,
-                title = scale.title,
-                subtitle = scale.subtitle,
-                description = scale.description,
-                duration = scale.duration,
-                questionCount = scale.totalQuestions,
-                sections = scale.sections.map { sec ->
-                    AssessmentSectionDto(
-                        id = sec.id,
-                        title = sec.title,
-                        subtitle = sec.subtitle,
-                        description = sec.description,
-                        questions = sec.questions.map { q ->
-                            AssessmentQuestionDto(
-                                id = q.id,
-                                text = q.text,
-                                options = q.options?.map { opt ->
-                                    AssessmentOptionDto(value = opt.value, label = opt.label)
-                                }
-                            )
-                        }
-                    )
-                }
-            )
+            scale.toCatalogItemDto()
         }
     }
 
@@ -162,20 +86,17 @@ class AssessmentService(
                     assignedByUserId = assigner.id,
                     scaleType = scaleType,
                     status = AssessmentStatus.PENDING,
-                    assignedAt = LocalDateTime.now(),
+                    assignedAt = LocalDateTime.now(clock),
                     dueDate = request.dueDate
                 )
-                val saved = assignmentRepository.save(newAssignment)
-                saved.initAssignedEvent()
-                saved.getDomainEvents().forEach { eventPublisher.publish(it) }
-                saved.clearDomainEvents()
+                newAssignment.initAssignedEvent()
+                assignmentRepository.save(newAssignment)
                 assignedCount++
             }
         }
 
         return BatchAssignResultDto(
-            assignedCount = assignedCount,
-            message = "Successfully assigned $assignedCount assessment(s) to student ${student.name}"
+            assignedCount = assignedCount
         )
     }
 
@@ -184,46 +105,46 @@ class AssessmentService(
             throw ForbiddenException("Only educators and administrators can assign assessments")
         }
 
-        val visibleStudents = studentRepository.findVisibleStudentsFor(assigner).filter { s ->
-            val matchMajor = request.majorId == null || s.major.id == request.majorId
-            val matchCollege = request.collegeId == null || s.major.college?.id == request.collegeId
-            val matchYear = request.academicYear == null || s.enrollmentDate.year == request.academicYear
-            matchMajor && matchCollege && matchYear
-        }
+        val spec = AssessmentCohortSpecification.buildSpecification(
+            request.majorId, request.collegeId, request.academicYear, assigner
+        )
+        val visibleStudents = studentRepository.findAll(spec)
 
         if (visibleStudents.isEmpty()) {
             return BatchAssignResultDto(
-                assignedCount = 0,
-                message = "No matching students found in your scope"
+                assignedCount = 0
             )
         }
 
         var totalAssigned = 0
-        visibleStudents.forEach { student ->
-            request.scaleTypes.forEach { scaleType ->
-                val existingPending = assignmentRepository.findPendingByStudentIdAndScaleType(student.id, scaleType)
-                if (existingPending.isEmpty) {
-                    val assignment = AssessmentAssignment(
-                        studentId = student.id,
-                        studentUserId = student.id,
-                        assignedByUserId = assigner.id,
-                        scaleType = scaleType,
-                        status = AssessmentStatus.PENDING,
-                        assignedAt = LocalDateTime.now(),
-                        dueDate = request.dueDate
-                    )
-                    val saved = assignmentRepository.save(assignment)
-                    saved.initAssignedEvent()
-                    saved.getDomainEvents().forEach { eventPublisher.publish(it) }
-                    saved.clearDomainEvents()
-                    totalAssigned++
-                }
+        val studentIds = visibleStudents.map { it.id }
+        
+        request.scaleTypes.forEach { scaleType ->
+            val pendingAssignments = assignmentRepository.findPendingByStudentIdInAndScaleType(studentIds, scaleType)
+            val studentsWithPending = pendingAssignments.map { it.studentId }.toSet()
+            
+            val toSave = visibleStudents.filter { !studentsWithPending.contains(it.id) }.map { student ->
+                val assignment = AssessmentAssignment(
+                    studentId = student.id,
+                    studentUserId = student.id,
+                    assignedByUserId = assigner.id,
+                    scaleType = scaleType,
+                    status = AssessmentStatus.PENDING,
+                    assignedAt = LocalDateTime.now(clock),
+                    dueDate = request.dueDate
+                )
+                assignment.initAssignedEvent()
+                assignment
+            }
+            
+            if (toSave.isNotEmpty()) {
+                assignmentRepository.saveAll(toSave)
+                totalAssigned += toSave.size
             }
         }
 
         return BatchAssignResultDto(
-            assignedCount = totalAssigned,
-            message = "Successfully assigned assessments to ${visibleStudents.size} student(s) (total $totalAssigned assignments created)"
+            assignedCount = totalAssigned
         )
     }
 
@@ -241,38 +162,21 @@ class AssessmentService(
         }
 
         val answersMap = request.answers.associate { it.questionId to it.selectedValue }
-        // 1. Scoring & Validation
         val scoringResult = AssessmentScoringEngine.score(assignment.scaleType, answersMap)
 
-        // 2. Atomic health profile recording
-        val profile = studentHealthProfileRepository.findByStudentId(assignment.studentId).orElseGet {
-            StudentHealthProfileFactory.createInitialProfile(
-                studentId = assignment.studentId,
-                riskLevelStr = "LOW"
-            )
-        }
-        val recordedTest = profile.recordAssessmentResult(scoringResult)
-        studentHealthProfileRepository.save(profile)
-
-        // 3. Complete assignment aggregate root & register domain event
         assignment.complete(
             responses = answersMap,
-            scoringResult = scoringResult,
-            createdPsychometricTestId = recordedTest.id
+            scoringResult = scoringResult
         )
+        assignment.completedAt = LocalDateTime.now(clock) // override to use clock
 
         val savedAssignment = assignmentRepository.save(assignment)
 
-        // 4. Publish domain events (dispatches transactional notifications AFTER_COMMIT)
-        savedAssignment.getDomainEvents().forEach { eventPublisher.publish(it) }
-        savedAssignment.clearDomainEvents()
-
         return AssessmentSubmissionResponseDto(
             success = true,
-            message = "问卷测评提交成功",
             assignmentId = savedAssignment.id ?: assignmentId,
             totalQuestionsAnswered = request.answers.size,
-            completedAt = savedAssignment.completedAt ?: LocalDateTime.now()
+            completedAt = savedAssignment.completedAt ?: LocalDateTime.now(clock)
         )
     }
 }

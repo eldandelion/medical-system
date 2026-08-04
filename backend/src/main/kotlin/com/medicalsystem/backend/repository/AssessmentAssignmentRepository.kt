@@ -14,4 +14,5 @@ interface AssessmentAssignmentRepository {
     fun save(assignment: AssessmentAssignment): AssessmentAssignment
     fun saveAll(assignments: List<AssessmentAssignment>): List<AssessmentAssignment>
     fun findAll(): List<AssessmentAssignment>
+    fun findPendingByStudentIdInAndScaleType(studentIds: List<Long>, scaleType: AssessmentScaleType): List<AssessmentAssignment>
 }

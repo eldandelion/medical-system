@@ -15,4 +15,5 @@ interface StudentRepository {
     fun findAllById(ids: Set<Long>): List<Student>
     fun save(student: Student): Student
     fun countVisibleStudentsFor(user: User): Long
+    fun findAll(spec: org.springframework.data.jpa.domain.Specification<com.medicalsystem.backend.entity.StudentEntity>): List<Student>
 }

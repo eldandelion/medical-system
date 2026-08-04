@@ -52,4 +52,11 @@ class AssessmentAssignmentRepositoryAdapter(
     override fun findAll(): List<AssessmentAssignment> {
         return jpaRepository.findAll().map { mapper.toModel(it) }
     }
+    override fun findPendingByStudentIdInAndScaleType(
+        studentIds: List<Long>,
+        scaleType: AssessmentScaleType
+    ): List<AssessmentAssignment> {
+        return jpaRepository.findByStudentIdInAndScaleTypeAndStatus(studentIds, scaleType, AssessmentStatus.PENDING)
+            .map { mapper.toModel(it) }
+    }
 }

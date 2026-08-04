@@ -116,8 +116,7 @@ export const handlers = [
     }
     const body = await request.json() as { studentId: string | number; scaleTypes: string[] };
     return HttpResponse.json({
-      assignedCount: body?.scaleTypes?.length ?? 1,
-      message: `成功为学生分配了 ${body?.scaleTypes?.length ?? 1} 份心理测评问卷`
+      assignedCount: body?.scaleTypes?.length ?? 1
     }, { status: 201 });
   }),
 
@@ -140,8 +139,7 @@ export const handlers = [
       }
     }
     return HttpResponse.json({
-      assignedCount: 5,
-      message: '成功为年级/专业批量分配测评问卷'
+      assignedCount: 5
     }, { status: 201 });
   }),
 
@@ -168,9 +166,9 @@ export const handlers = [
     const answeredCount = data?.answers?.length || 0;
     return HttpResponse.json({
       success: true,
-      message: '测评已完成并提交',
       assignmentId: id,
-      totalQuestionsAnswered: answeredCount
+      totalQuestionsAnswered: answeredCount,
+      completedAt: new Date().toISOString()
     });
   }),
 

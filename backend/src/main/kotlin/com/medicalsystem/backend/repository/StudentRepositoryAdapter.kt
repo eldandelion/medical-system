@@ -62,4 +62,8 @@ class StudentRepositoryAdapter(
         val savedEntity = jpaRepository.save(entity)
         return mapper.toModel(savedEntity)
     }
+
+    override fun findAll(spec: org.springframework.data.jpa.domain.Specification<com.medicalsystem.backend.entity.StudentEntity>): List<Student> {
+        return jpaRepository.findAll(spec).map { mapper.toModel(it) }
+    }
 }

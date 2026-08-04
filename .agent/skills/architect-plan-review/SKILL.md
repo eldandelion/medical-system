@@ -156,6 +156,7 @@ Evaluate the plan against these core dimensions:
 3. Error Handling & Edge Cases: Does the plan account for failure paths, validation errors, timeouts, and state rollbacks?
 4. Testability & TDD Strategy: Does the plan define clear unit, integration, and mock testing steps? Are side-effects easily mockable?
 5. Component & API Interface Design: Are contracts between modules (and between frontend/backend) explicit, minimal, and type-safe?
+6. Magic Strings & Hardcoded Text: Does the plan strictly avoid hardcoded UI strings in backend logic? Are backend DTOs purely data-driven, avoiding messages meant for frontend presentation? Are magic strings eliminated?
 
 Provide your review structured as follows:
 - Clean Code Score (0-10) with rationale.
@@ -229,4 +230,5 @@ Before finalizing the adjusted plan, verify:
 - [ ] Aggregate roots enforce all business invariants; JPA entity mapping is decoupled from domain aggregates.
 - [ ] Error paths, validation rules, and rollback behavior are documented for every step.
 - [ ] The testing strategy includes unit tests for domain logic and integration tests for external boundaries.
+- [ ] Backend logic and API contracts are strictly language-agnostic, containing no hardcoded UI presentation strings or magic strings.
 - [ ] Architectural trade-offs are explicitly documented with rationale.

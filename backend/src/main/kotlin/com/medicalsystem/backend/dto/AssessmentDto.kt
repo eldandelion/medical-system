@@ -86,8 +86,7 @@ data class AssignCohortAssessmentRequest(
 )
 
 data class BatchAssignResultDto(
-    val assignedCount: Int,
-    val message: String
+    val assignedCount: Int
 )
 
 data class AnswerSubmissionDto(
@@ -104,7 +103,6 @@ data class SubmitAssessmentRequest(
 
 data class AssessmentSubmissionResponseDto(
     val success: Boolean,
-    val message: String,
     val assignmentId: Long,
     val totalQuestionsAnswered: Int,
     val completedAt: LocalDateTime
