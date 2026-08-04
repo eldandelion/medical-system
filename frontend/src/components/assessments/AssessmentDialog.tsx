@@ -3,7 +3,7 @@ import { GenericDialog } from '../common/GenericDialog';
 import { PrimaryButton, TertiaryButton } from '../common/Buttons';
 
 interface Assessment {
-  id: string;
+  id: string | number;
   title: string;
   assignedBy: {
     name: string;

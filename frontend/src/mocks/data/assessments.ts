@@ -8,11 +8,13 @@ import {
   CLINICAL_SCREENING_NEURODIVERGENCE_ASSESSMENT,
   PERSONALITY_COPING_OUTLOOK_ASSESSMENT
 } from '../../components/assessments/AssessmentData';
+import { AssessmentCatalogItemDto, AssessmentScaleType } from '../../types';
 
 export interface Assessment {
   id: string;
   title: string;
   subtitle?: string;
+  scaleType?: AssessmentScaleType;
   sections?: any[];
   assignedBy: {
     name: string;
@@ -21,8 +23,68 @@ export interface Assessment {
   type: string;
   completionPercentage: number;
   duration: string;
-  status: 'All' | 'In progress' | 'Completed';
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'All' | 'In progress' | 'Completed';
+  assignedAt?: string;
+  completedAt?: string | null;
+  dueDate?: string | null;
 }
+
+export const mockAssessmentCatalog: AssessmentCatalogItemDto[] = [
+  {
+    scaleType: 'PHQ_9',
+    title: '情绪状况评估 (PHQ-9)',
+    subtitle: '抑郁症筛查量表',
+    description: '在过去的两周里，您有多少时间受到情绪问题的困扰？',
+    duration: '5 分钟',
+    questionCount: 9,
+    sections: [MENTAL_HEALTH_ASSESSMENT[0]]
+  },
+  {
+    scaleType: 'GAD_7',
+    title: '焦虑状况评估 (GAD-7)',
+    subtitle: '广泛性焦虑量表',
+    description: '在过去的两周里，您有多少时间受到焦虑或担忧的困扰？',
+    duration: '5 分钟',
+    questionCount: 7,
+    sections: [MENTAL_HEALTH_ASSESSMENT[1]]
+  },
+  {
+    scaleType: 'SLEEP_DISORDER',
+    title: '睡眠状况评估',
+    subtitle: '最近1个月的睡眠与失眠状况调查',
+    description: '综合评估睡眠质量、入睡时间与睡眠障碍。',
+    duration: '10 分钟',
+    questionCount: 7,
+    sections: SLEEP_ASSESSMENT
+  },
+  {
+    scaleType: 'APQ_9_FATHER',
+    title: '教养行为评估 (父亲篇)',
+    subtitle: 'APQ-9 父亲',
+    description: '此问卷是关于您的父亲对您的教养方式，请实事求是地回答。',
+    duration: '5 分钟',
+    questionCount: 9,
+    sections: [MENTAL_HEALTH_ASSESSMENT[2]]
+  },
+  {
+    scaleType: 'APQ_9_MOTHER',
+    title: '教养行为评估 (母亲篇)',
+    subtitle: 'APQ-9 母亲',
+    description: '此问卷是关于您的母亲对您的教养方式，请实事求是地回答。',
+    duration: '5 分钟',
+    questionCount: 9,
+    sections: [MENTAL_HEALTH_ASSESSMENT[3]]
+  },
+  {
+    scaleType: 'COMPREHENSIVE_MENTAL',
+    title: '年度身心健康状况综合评估',
+    subtitle: '2025-2026 学年学生心理健康普查',
+    description: '涵盖抑郁、焦虑及家庭教养方式的全方位综合身心健康评估。',
+    duration: '15 分钟',
+    questionCount: 34,
+    sections: MENTAL_HEALTH_ASSESSMENT
+  }
+];
 
 export const mockAssessmentsDb: Assessment[] = [
   {

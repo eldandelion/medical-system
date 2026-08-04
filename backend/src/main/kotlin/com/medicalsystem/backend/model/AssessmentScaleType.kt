@@ -1,13 +1,9 @@
 package com.medicalsystem.backend.model
 
-enum class TestResultName {
+enum class AssessmentScaleType {
     PHQ_9,
     GAD_7,
-    BDI_II,
-    BAI,
-    PSQI,
-    ISS,
-    ESS,
     SCL_90,
+    PSQI,
     ANNUAL_COMPREHENSIVE
 }

@@ -5,7 +5,7 @@ import { AssessmentSection } from '../components/assessments/AssessmentData';
 
 
 interface Assessment {
-  id: string;
+  id: string | number;
   title: string;
   subtitle?: string;
   sections?: AssessmentSection[];
@@ -64,7 +64,7 @@ export function AssessmentDialogProvider({ children }: { children: React.ReactNo
       <AssessmentFlow
         isOpen={isFullScreenOpen}
         onClose={() => setIsFullScreenOpen(false)}
-        assessmentId={selectedAssessment?.id || ''}
+        assessmentId={selectedAssessment ? String(selectedAssessment.id) : ''}
         assessmentTitle={selectedAssessment?.title || ''}
         assessmentSubtitle={selectedAssessment?.subtitle}
         sections={selectedAssessment?.sections || []}

@@ -35,8 +35,10 @@ class DataInitializer {
         headCounsellorJpaRepository: HeadCounsellorJpaRepository,
         schoolDepartmentJpaRepository: SchoolDepartmentJpaRepository,
         studentHealthProfileRepository: StudentHealthProfileJpaRepository,
+        assessmentAssignmentRepository: AssessmentAssignmentJpaRepository,
         jdbcTemplate: JdbcTemplate
     ) = CommandLineRunner {
+        assessmentAssignmentRepository.deleteAll()
         referralRepository.deleteAll()
         studentHealthProfileRepository.deleteAll()
         studentRepository.deleteAll()
@@ -264,6 +266,43 @@ class DataInitializer {
 
         referralRepository.saveAll(listOf(ref1, ref2))
 
-        println("Initialized Colleges, Majors, Students, and Referrals into the database.")
+        val assignerUser = referrerBase
+        val a1 = AssessmentAssignmentEntity(
+            student = s1,
+            assignedByUser = assignerUser,
+            scaleType = AssessmentScaleType.PHQ_9,
+            status = AssessmentStatus.PENDING,
+            assignedAt = LocalDateTime.now().minusDays(1),
+            dueDate = LocalDate.now().plusDays(6)
+        )
+        val a2 = AssessmentAssignmentEntity(
+            student = s1,
+            assignedByUser = assignerUser,
+            scaleType = AssessmentScaleType.GAD_7,
+            status = AssessmentStatus.COMPLETED,
+            assignedAt = LocalDateTime.now().minusDays(5),
+            completedAt = LocalDateTime.now().minusDays(3),
+            dueDate = LocalDate.now().plusDays(2),
+            answersJson = "{\"gad7_1\":2,\"gad7_2\":2,\"gad7_3\":2,\"gad7_4\":2,\"gad7_5\":2,\"gad7_6\":2,\"gad7_7\":2}"
+        )
+        val a3 = AssessmentAssignmentEntity(
+            student = s2,
+            assignedByUser = assignerUser,
+            scaleType = AssessmentScaleType.GAD_7,
+            status = AssessmentStatus.PENDING,
+            assignedAt = LocalDateTime.now(),
+            dueDate = LocalDate.now().plusDays(7)
+        )
+        val a4 = AssessmentAssignmentEntity(
+            student = s3,
+            assignedByUser = assignerUser,
+            scaleType = AssessmentScaleType.SCL_90,
+            status = AssessmentStatus.PENDING,
+            assignedAt = LocalDateTime.now().minusHours(6),
+            dueDate = LocalDate.now().plusDays(10)
+        )
+        assessmentAssignmentRepository.saveAll(listOf(a1, a2, a3, a4))
+
+        println("Initialized Colleges, Majors, Students, Referrals, and Assessments into the database.")
     }
 }

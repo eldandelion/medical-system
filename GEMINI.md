@@ -135,6 +135,23 @@ The University Medical Screening System is a full-stack platform managing studen
    - UI components rendering lists, nested objects, or optional DTO fields must always supply default fallbacks (e.g. `items = []`, `data?.list ?? []`) and use optional chaining (`items?.map(...)`).
    - Components must gracefully render empty or loading placeholder states when partial data is returned.
 
+4. **Mandatory Auth Header & React Query Scoping**:
+   - Every frontend `fetch` call targeting protected backend endpoints (`/api/*`) MUST attach authorization credentials via `useAuth()`:
+     ```ts
+     const { session } = useAuth();
+     fetch(url, {
+       headers: {
+         'Authorization': `Bearer ${session.token}`,
+         'Content-Type': 'application/json',
+       },
+     });
+     ```
+   - Every `useQuery` hook for user-scoped or role-scoped data MUST include `session.token` in its `queryKey` (e.g. `queryKey: ['/api/assessments', session.token]`) so that switching user roles in `AuthContext` immediately invalidates and re-fetches data for the newly active user.
+
+5. **MSW Fallback Transparency (No Masking 4xx Errors)**:
+   - MSW bypass handlers must only fall back to mock data on real network connection errors (backend server offline).
+   - If the backend actively responds with a client error (`401 Unauthorized`, `403 Forbidden`, `400 Bad Request`), MSW must NOT silently return mock datasets—it must forward the response or log explicit warnings to prevent masking missing auth headers or parameter bugs.
+
 ---
 
 ## Domain Policies & Aggregate Invariant Synchronization
@@ -151,6 +168,10 @@ The University Medical Screening System is a full-stack platform managing studen
    - Never assume entity identifier properties are named `id`. Role-extension entities (`DoctorEntity`, `TeacherEntity`, `TrialAdminEntity`, `HeadCounsellorEntity`) use `@Id val userId: Long` mapped to `user_id`.
    - Always verify exact Kotlin property names when composing JPA Criteria API predicates (`root.join(...).get("userId")`).
    - Every branch of a `JpaSpecification` (e.g. `ReferralJpaSpecification.fromVisibilityCriteria`) MUST be covered by an integration test (`@SpringBootTest`) against the test database to ensure criteria queries execute valid SQL without silent filtering bugs or attribute name errors.
+
+2. **Schema Table Naming & Server Boot Verification**:
+   - JPA Entities must explicitly declare `@Table(name = "...")` matching the plural `snake_case` definitions in `PRD.md` (e.g. `@Table(name = "assessment_assignments")`).
+   - Distinguish test runs from persistent DB migrations: `./mvnw test` executes strictly against the in-memory H2 database. To generate and verify newly added tables in the local MySQL instance (`localhost:3307`), the Spring Boot application server must be booted (`./mvnw spring-boot:run` or `docker compose up backend`).
 
 
 ---

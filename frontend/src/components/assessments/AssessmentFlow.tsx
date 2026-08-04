@@ -1,10 +1,12 @@
 import * as React from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { FullScreenView } from '../common/FullScreenView';
 import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
 import { GenericDialog } from '../common/GenericDialog';
 import { motion, AnimatePresence } from 'motion/react';
 import { Header } from '../layout/Header';
 import { useSnackbar } from '../../contexts/SnackbarContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { AssessmentSection, Question } from './AssessmentData';
 
 const DEFAULT_OPTIONS = [
@@ -26,6 +28,8 @@ interface AssessmentFlowProps {
 type AppState = 'intro' | 'assessment' | 'outro';
 
 export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle, assessmentSubtitle, sections }: AssessmentFlowProps) {
+  const { session } = useAuth();
+  const queryClient = useQueryClient();
   const { showSnackbar } = useSnackbar();
   const [appState, setAppState] = React.useState<AppState>('intro');
   const [currentSectionIdx, setCurrentSectionIdx] = React.useState(0);
@@ -33,6 +37,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
   const [answers, setAnswers] = React.useState<Record<string, number>>({});
   const [loadedSections, setLoadedSections] = React.useState<AssessmentSection[]>(sections);
   const [loading, setLoading] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
 
   // Fetch sections from API dynamically if assessmentId is provided
   React.useEffect(() => {
@@ -45,7 +50,11 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
 
       if (assessmentId) {
         setLoading(true);
-        fetch(`${import.meta.env.BASE_URL}/api/assessments/${assessmentId}`.replace('//api', '/api'))
+        fetch(`${import.meta.env.BASE_URL}/api/assessments/${assessmentId}`.replace('//api', '/api'), {
+          headers: {
+            'Authorization': `Bearer ${session.token}`
+          }
+        })
           .then((res) => {
             if (!res.ok) throw new Error('Failed to fetch assessment');
             return res.json();
@@ -62,7 +71,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
           });
       }
     }
-  }, [isOpen, assessmentId, sections]);
+  }, [isOpen, assessmentId, sections, session.token]);
 
   const activeSections = loadedSections || [];
 
@@ -81,6 +90,36 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
     setAnswers(prev => ({ ...prev, [questionKey]: val }));
   };
 
+  const submitAssessment = async (finalAnswers: Record<string, number>) => {
+    setSubmitting(true);
+    try {
+      if (assessmentId) {
+        const res = await fetch(`${import.meta.env.BASE_URL}/api/assessments/${assessmentId}/submit`.replace('//api', '/api'), {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ answers: finalAnswers })
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || '提交测评失败');
+        }
+      }
+      queryClient.invalidateQueries({ queryKey: ['/api/assessments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/students'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      setAppState('outro');
+      showSnackbar({ message: '评估已顺利完成并提交', duration: 3000 });
+    } catch (err: any) {
+      console.error('Failed to submit assessment:', err);
+      showSnackbar({ message: err.message || '提交测评失败，请重试', duration: 4000 });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleNext = () => {
     if (!currentSection) return;
     if (currentQuestionIdx < currentSection.questions.length - 1) {
@@ -89,7 +128,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
       setCurrentSectionIdx(prev => prev + 1);
       setCurrentQuestionIdx(0);
     } else {
-      setAppState('outro');
+      submitAssessment(answers);
     }
   };
 
@@ -113,7 +152,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
   // Detailed sidebar content showing all sections and questions
   const sidebar = (
     <div className="flex flex-col py-6 gap-6">
-      {sections.map((section, sIdx) => (
+      {activeSections.map((section, sIdx) => (
         <div key={section.id} className="flex flex-col gap-2 px-4">
           <h4 className="text-[11px] font-bold text-[var(--md-sys-color-primary)] uppercase tracking-[0.1em] px-4 mb-1">
             {section.subtitle}
@@ -171,7 +210,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
     <div className="bg-transparent text-[var(--md-sys-color-primary)] px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 border border-[var(--md-sys-color-outline-variant)] animate-in fade-in zoom-in duration-300">
       <md-icon style={{ fontSize: '18px' }}>list_alt</md-icon>
       <span>
-        {sections.slice(0, currentSectionIdx).reduce((acc, section) => acc + section.questions.length, 0) + currentQuestionIdx + 1} / {totalQuestions}
+        {activeSections.slice(0, currentSectionIdx).reduce((acc, section) => acc + section.questions.length, 0) + currentQuestionIdx + 1} / {totalQuestions}
       </span>
     </div>
   );
@@ -194,7 +233,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
     }
   };
 
-  const sectionsSummary = `本评估包括 ${sections.length} 个部分（${sections.map(s => s.subtitle || s.title).join(' 与 ')}），旨在全面了解您近期的健康状况。`;
+  const sectionsSummary = `本评估包括 ${activeSections.length} 个部分（${activeSections.map(s => s.subtitle || s.title).join(' 与 ')}），旨在全面了解您近期的健康状况。`;
 
   return (
     <>
@@ -208,7 +247,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
         progress={appState === 'assessment' && isUIVisible ? (answeredCount / totalQuestions) : undefined}
         activeTab={currentSection?.id}
         onTabChange={(id) => {
-          const idx = sections.findIndex(s => s.id === id);
+          const idx = activeSections.findIndex(s => s.id === id);
           if (idx !== -1) {
             setCurrentSectionIdx(idx);
             setCurrentQuestionIdx(0);
@@ -330,12 +369,19 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
 
                       <PrimaryButton
                         onClick={handleNext}
-                        label={currentSectionIdx === activeSections.length - 1 && currentQuestionIdx === currentSection.questions.length - 1 ? '完成' : '下一题'}
+                        label={
+                          submitting
+                            ? '提交中...'
+                            : currentSectionIdx === activeSections.length - 1 && currentQuestionIdx === currentSection.questions.length - 1
+                              ? '完成'
+                              : '下一题'
+                        }
                         icon={currentSectionIdx === activeSections.length - 1 && currentQuestionIdx === currentSection.questions.length - 1 ? 'check' : 'chevron_right'}
                         trailingIcon={true}
                         className="h-12 px-8"
                         noCollapse
-                        style={!isCurrentQuestionAnswered ? { opacity: 0.5, pointerEvents: 'none' } : {}}
+                        disabled={submitting}
+                        style={!isCurrentQuestionAnswered || submitting ? { opacity: 0.5, pointerEvents: 'none' } : {}}
                       />
                     </div>
                   </div>

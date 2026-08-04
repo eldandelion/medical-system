@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from 'msw';
-import { mockAssessmentsDb, mockDashboardDb, mockStudentsDb, mockReferralsDb, generateTrackerSteps } from './db';
+import { mockAssessmentsDb, mockAssessmentCatalog, mockDashboardDb, mockStudentsDb, mockReferralsDb, generateTrackerSteps } from './db';
 const MOCK_DELAY_MS = 1000;
 
 import { Referral, ReferralAction } from '../types';
@@ -29,13 +29,66 @@ const mockComputeAvailableActions = (referral: Referral, authHeader: string): Re
 const api = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`;
 
 export const handlers = [
-  http.get(api('/api/assessments'), async () => {
+  http.get(api('/api/assessments'), async ({ request }) => {
     await delay(MOCK_DELAY_MS);
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          console.warn(`[MSW Bypass] Backend rejected /api/assessments with status ${res.status}`);
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not fetch real assessments data, falling back to mock", e);
+      }
+    }
     return HttpResponse.json(mockAssessmentsDb);
   }),
 
-  http.get(api('/api/assessments/:id'), ({ params }) => {
+  http.get(api('/api/assessments/catalog'), async ({ request }) => {
+    await delay(MOCK_DELAY_MS);
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          console.warn(`[MSW Bypass] Backend rejected /api/assessments/catalog with status ${res.status}`);
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not fetch real assessment catalog, falling back to mock", e);
+      }
+    }
+    return HttpResponse.json(mockAssessmentCatalog);
+  }),
+
+  http.get(api('/api/assessments/:id'), async ({ request, params }) => {
     const { id } = params;
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          console.warn(`[MSW Bypass] Backend rejected /api/assessments/${id} with status ${res.status}`);
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn(`Could not fetch real assessment ${id}, falling back to mock`, e);
+      }
+    }
     const assessment = mockAssessmentsDb.find((a) => a.id === id);
     if (!assessment) {
       return new HttpResponse(null, { status: 404 });
@@ -43,13 +96,81 @@ export const handlers = [
     return HttpResponse.json(assessment);
   }),
 
-  http.post(api('/api/assessments/:id/submit'), async ({ request }) => {
+  http.post(api('/api/assessments/assign'), async ({ request }) => {
     await delay(MOCK_DELAY_MS);
-    const data = await request.json();
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          console.warn(`[MSW Bypass] Backend rejected /api/assessments/assign with status ${res.status}`);
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not assign real assessment, falling back to mock", e);
+      }
+    }
+    const body = await request.json() as { studentId: string | number; scaleTypes: string[] };
+    return HttpResponse.json({
+      assignedCount: body?.scaleTypes?.length ?? 1,
+      message: `成功为学生分配了 ${body?.scaleTypes?.length ?? 1} 份心理测评问卷`
+    }, { status: 201 });
+  }),
+
+  http.post(api('/api/assessments/assign/cohort'), async ({ request }) => {
+    await delay(MOCK_DELAY_MS);
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          console.warn(`[MSW Bypass] Backend rejected /api/assessments/assign/cohort with status ${res.status}`);
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not assign cohort assessment, falling back to mock", e);
+      }
+    }
+    return HttpResponse.json({
+      assignedCount: 5,
+      message: '成功为年级/专业批量分配测评问卷'
+    }, { status: 201 });
+  }),
+
+  http.post(api('/api/assessments/:id/submit'), async ({ request, params }) => {
+    const { id } = params;
+    await delay(MOCK_DELAY_MS);
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          console.warn(`[MSW Bypass] Backend rejected /api/assessments/${id}/submit with status ${res.status}`);
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn(`Could not submit real assessment ${id}, falling back to mock`, e);
+      }
+    }
+    const data = await request.json() as { answers: Record<string, number> };
+    const answeredCount = Object.keys(data?.answers || {}).length;
     return HttpResponse.json({
       success: true,
-      message: 'Assessment submitted successfully',
-      submission: data,
+      message: '测评已完成并提交',
+      assignmentId: id,
+      totalQuestionsAnswered: answeredCount
     });
   }),
 

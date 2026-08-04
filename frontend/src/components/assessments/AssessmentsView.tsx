@@ -3,10 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { AssessmentCard } from './AssessmentCard';
 import { SegmentedButton } from '../common/Buttons';
 import { AssessmentDialogProvider, useAssessmentDialog } from '../../contexts/AssessmentDialogContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { AssessmentSection } from './AssessmentData';
 
 interface Assessment {
-  id: string;
+  id: string | number;
   title: string;
   subtitle?: string;
   sections?: AssessmentSection[];
@@ -17,7 +18,7 @@ interface Assessment {
   type: string;
   completionPercentage: number;
   duration: string;
-  status: 'All' | 'In progress' | 'Completed';
+  status: string;
 }
 
 // Module-level variable to persist filter state across component remounts (tab switches)
@@ -28,11 +29,16 @@ export interface AssessmentsViewProps {
 }
 
 function AssessmentsContent({ header }: AssessmentsViewProps) {
+  const { session } = useAuth();
   const [selectedFilter, setSelectedFilter] = React.useState(persistentFilter);
   const { data: assessmentsData, isLoading: loading } = useQuery<Assessment[]>({
-    queryKey: ['/api/assessments'],
+    queryKey: ['/api/assessments', session.token],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/assessments`.replace('//api', '/api'));
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/assessments`.replace('//api', '/api'), {
+        headers: {
+          'Authorization': `Bearer ${session.token}`
+        }
+      });
       if (!res.ok) throw new Error('Failed to fetch assessments');
       return res.json();
     }
@@ -45,9 +51,14 @@ function AssessmentsContent({ header }: AssessmentsViewProps) {
     setSelectedFilter(filter);
   };
 
-  const filteredAssessments = assessments.filter(a =>
-    selectedFilter === '全部' || (selectedFilter === '进行中' && a.status === 'In progress') || (selectedFilter === '已完成' && a.status === 'Completed')
-  );
+  const isCompleted = (a: Assessment) => a.status === 'COMPLETED' || a.status === 'Completed' || a.completionPercentage === 100;
+
+  const filteredAssessments = assessments.filter(a => {
+    if (selectedFilter === '全部') return true;
+    if (selectedFilter === '已完成') return isCompleted(a);
+    if (selectedFilter === '进行中') return !isCompleted(a);
+    return true;
+  });
 
   const filters = ['全部', '进行中', '已完成'];
 

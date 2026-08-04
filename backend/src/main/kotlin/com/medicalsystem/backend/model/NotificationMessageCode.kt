@@ -30,7 +30,10 @@ enum class NotificationMessageCode(val code: Int) {
     REFERRAL_REJECTED_STUDENT(27),
     REFERRAL_REJECTED_HC(28),
     REFERRAL_NEEDS_REASSIGNMENT_ADMIN(29),
-    REFERRAL_RECALLED_HC(30);
+    REFERRAL_RECALLED_HC(30),
+    ASSESSMENT_ASSIGNED_STUDENT(31),
+    ASSESSMENT_COMPLETED_TEACHER(32),
+    ASSESSMENT_HIGH_RISK_ALERT_HC(33);
 
     companion object {
         fun fromCode(code: Int): NotificationMessageCode = entries.find { it.code == code }

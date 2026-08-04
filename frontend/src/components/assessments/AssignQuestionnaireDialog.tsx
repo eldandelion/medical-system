@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { GenericDialog } from '../common/GenericDialog';
 import { PrimaryButton, SecondaryButton } from '../common/Buttons';
-import { Assessment } from '../../mocks/data/assessments';
+import { AssessmentCatalogItemDto, AssessmentScaleType } from '../../types';
 import { useSnackbar } from '../../contexts/SnackbarContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface AssignQuestionnaireDialogProps {
   isOpen: boolean;
@@ -13,53 +15,87 @@ interface AssignQuestionnaireDialogProps {
 }
 
 export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, assignedIds, onAssign }: AssignQuestionnaireDialogProps) {
-  const [allAssessments, setAllAssessments] = useState<Assessment[]>([]);
+  const { session } = useAuth();
+  const queryClient = useQueryClient();
+  const [allAssessments, setAllAssessments] = useState<AssessmentCatalogItemDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedScaleTypes, setSelectedScaleTypes] = useState<Set<AssessmentScaleType>>(new Set());
   const { showSnackbar } = useSnackbar();
 
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
       setIsSubmitting(false);
-      fetch(`${import.meta.env.BASE_URL}/api/assessments`.replace('//api', '/api'))
-        .then(res => res.json())
-        .then((data: Assessment[]) => {
-          setAllAssessments(data);
+      fetch(`${import.meta.env.BASE_URL}/api/assessments/catalog`.replace('//api', '/api'), {
+        headers: {
+          'Authorization': `Bearer ${session.token}`
+        }
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch catalog');
+          return res.json();
+        })
+        .then((data: AssessmentCatalogItemDto[]) => {
+          setAllAssessments(data || []);
           setLoading(false);
         })
         .catch(err => {
-          console.error('Failed to fetch assessments:', err);
+          console.error('Failed to fetch assessment catalog:', err);
           setLoading(false);
         });
-      setSelectedIds(new Set());
+      setSelectedScaleTypes(new Set());
     }
-  }, [isOpen]);
+  }, [isOpen, session.token]);
 
-  const assignedAssessments = allAssessments.filter(a => assignedIds.includes(a.id));
-  const availableAssessments = allAssessments.filter(a => !assignedIds.includes(a.id));
+  const assignedAssessments = allAssessments.filter(a => assignedIds.includes(a.scaleType));
+  const availableAssessments = allAssessments.filter(a => !assignedIds.includes(a.scaleType));
 
-  const toggleSelection = (id: string) => {
+  const toggleSelection = (scaleType: AssessmentScaleType) => {
     if (isSubmitting) return;
-    const newSelection = new Set(selectedIds);
-    if (newSelection.has(id)) {
-      newSelection.delete(id);
+    const newSelection = new Set(selectedScaleTypes);
+    if (newSelection.has(scaleType)) {
+      newSelection.delete(scaleType);
     } else {
-      newSelection.add(id);
+      newSelection.add(scaleType);
     }
-    setSelectedIds(newSelection);
+    setSelectedScaleTypes(newSelection);
   };
 
-  const handleAssign = () => {
+  const handleAssign = async () => {
+    if (selectedScaleTypes.size === 0) return;
     setIsSubmitting(true);
-    setTimeout(() => {
-      const newAssignedIds = [...assignedIds, ...Array.from(selectedIds)];
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}/api/assessments/assign`.replace('//api', '/api'), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          studentId: Number(studentId) || studentId,
+          scaleTypes: Array.from(selectedScaleTypes)
+        })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || '分配问卷失败');
+      }
+
+      const result = await res.json();
+      const newAssignedIds = [...assignedIds, ...Array.from(selectedScaleTypes)];
       onAssign(newAssignedIds);
-      showSnackbar({ message: '问卷已成功分配', duration: 3000 });
+      queryClient.invalidateQueries({ queryKey: ['/api/assessments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/students'] });
+      showSnackbar({ message: result.message || '问卷已成功分配', duration: 3000 });
       setIsSubmitting(false);
       onClose();
-    }, 1500); // Simulate network delay
+    } catch (err: any) {
+      console.error('Failed to assign assessments:', err);
+      showSnackbar({ message: err.message || '分配问卷失败，请重试', duration: 4000 });
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -74,9 +110,9 @@ export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, assigned
         <>
           <SecondaryButton label="取消" onClick={onClose} disabled={isSubmitting} noCollapse />
           <PrimaryButton 
-            label={isSubmitting ? '分配中...' : `分配 ${selectedIds.size > 0 ? `(${selectedIds.size})` : ''}`}
+            label={isSubmitting ? '分配中...' : `分配 ${selectedScaleTypes.size > 0 ? `(${selectedScaleTypes.size})` : ''}`}
             onClick={handleAssign} 
-            disabled={selectedIds.size === 0 || isSubmitting} 
+            disabled={selectedScaleTypes.size === 0 || isSubmitting} 
             noCollapse 
           />
         </>
@@ -98,25 +134,25 @@ export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, assigned
                 <div className="flex flex-col gap-2">
                   {availableAssessments.map(assessment => (
                     <label 
-                      key={assessment.id} 
+                      key={assessment.scaleType} 
                       className={`flex items-start gap-4 p-4 rounded-2xl cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-[var(--md-sys-color-primary)] outline-none ${
-                        selectedIds.has(assessment.id) 
+                        selectedScaleTypes.has(assessment.scaleType) 
                           ? 'bg-[var(--md-sys-color-primary-container)]' 
                           : 'bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-surface-variant)]'
                       }`}
                       onClick={(e) => {
                         e.preventDefault();
-                        toggleSelection(assessment.id);
+                        toggleSelection(assessment.scaleType);
                       }}
                     >
-                      <div className={`pt-0.5 transition-opacity ${selectedIds.has(assessment.id) ? 'opacity-100' : 'opacity-40'}`}>
+                      <div className={`pt-0.5 transition-opacity ${selectedScaleTypes.has(assessment.scaleType) ? 'opacity-100' : 'opacity-40'}`}>
                         {/* @ts-ignore */}
                         <md-checkbox 
-                          checked={selectedIds.has(assessment.id) || undefined}
+                          checked={selectedScaleTypes.has(assessment.scaleType) || undefined}
                           onKeyDown={(e: React.KeyboardEvent) => {
                             if (e.key === 'Enter' || e.key === ' ') {
                               e.preventDefault();
-                              toggleSelection(assessment.id);
+                              toggleSelection(assessment.scaleType);
                             }
                           }}
                         />
@@ -131,9 +167,11 @@ export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, assigned
                           </span>
                         )}
                         <div className="flex items-center gap-1.5 mt-1 text-[12px] text-[var(--md-sys-color-on-surface-variant)] opacity-70">
-                          <span className="font-medium">{assessment.type}</span>
+                          <span className="font-medium">测试</span>
                           <span className="opacity-40 shrink-0">•</span>
                           <span>{assessment.duration}</span>
+                          <span className="opacity-40 shrink-0">•</span>
+                          <span>{assessment.questionCount} 题</span>
                         </div>
                       </div>
                     </label>
@@ -155,7 +193,7 @@ export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, assigned
                 <div className="flex flex-col gap-2">
                   {assignedAssessments.map(assessment => (
                     <div 
-                      key={assessment.id} 
+                      key={assessment.scaleType} 
                       className="flex items-start gap-2.5 p-4 rounded-2xl bg-[var(--md-sys-color-surface-container)] opacity-70"
                     >
                       <div className="pt-0.5">
@@ -167,7 +205,9 @@ export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, assigned
                           {assessment.title}
                         </span>
                         <div className="flex items-center gap-1.5 mt-1 text-[12px] text-[var(--md-sys-color-on-surface-variant)] opacity-70">
-                          <span className="font-medium">{assessment.type}</span>
+                          <span className="font-medium">测试</span>
+                          <span className="opacity-40 shrink-0">•</span>
+                          <span>{assessment.duration}</span>
                           <span className="opacity-40 shrink-0">•</span>
                           <span className="flex items-center gap-1">
                             已分配给此学生

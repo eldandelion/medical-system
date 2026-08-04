@@ -169,3 +169,104 @@ export interface DashboardResponseDto<T> {
     statusType?: any;
   }>;
 }
+
+export type AssessmentScaleType =
+  | 'PHQ_9'
+  | 'GAD_7'
+  | 'SLEEP_DISORDER'
+  | 'APQ_9_FATHER'
+  | 'APQ_9_MOTHER'
+  | 'COMPREHENSIVE_MENTAL';
+
+export type AssessmentStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED';
+
+export interface AssessmentOptionDto {
+  value: number;
+  label: string;
+}
+
+export interface AssessmentQuestionDto {
+  id?: string;
+  text: string;
+  options?: AssessmentOptionDto[];
+}
+
+export interface AssessmentSectionDto {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  questions: (string | AssessmentQuestionDto)[];
+}
+
+export interface AssessmentCatalogItemDto {
+  scaleType: AssessmentScaleType;
+  title: string;
+  subtitle: string;
+  description: string;
+  duration: string;
+  questionCount: number;
+  sections: AssessmentSectionDto[];
+}
+
+export interface AssignedByDto {
+  name: string;
+  initial: string;
+}
+
+export interface AssessmentListItemDto {
+  id: number | string;
+  title: string;
+  subtitle?: string;
+  scaleType: AssessmentScaleType;
+  assignedBy: AssignedByDto;
+  type: string;
+  completionPercentage: number;
+  duration: string;
+  status: AssessmentStatus;
+  assignedAt: string;
+  completedAt?: string | null;
+  dueDate?: string | null;
+  sections?: AssessmentSectionDto[];
+}
+
+export interface AssessmentDetailsDto {
+  id: number | string;
+  title: string;
+  subtitle?: string;
+  scaleType: AssessmentScaleType;
+  assignedBy: AssignedByDto;
+  duration: string;
+  status: AssessmentStatus;
+  sections: AssessmentSectionDto[];
+}
+
+export interface AssignAssessmentRequest {
+  studentId: number | string;
+  scaleTypes: AssessmentScaleType[];
+  dueDate?: string | null;
+}
+
+export interface AssignCohortAssessmentRequest {
+  majorId?: number | string | null;
+  collegeId?: number | string | null;
+  academicYear?: number | null;
+  scaleTypes: AssessmentScaleType[];
+  dueDate?: string | null;
+}
+
+export interface BatchAssignResultDto {
+  assignedCount: number;
+  message: string;
+}
+
+export interface SubmitAssessmentRequest {
+  answers: Record<string, number>;
+}
+
+export interface AssessmentSubmissionResponseDto {
+  success: boolean;
+  message: string;
+  assignmentId: number | string;
+  totalQuestionsAnswered: number;
+}
