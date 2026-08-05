@@ -6,13 +6,11 @@ data class AssessmentOption(
 )
 
 data class AssessmentOptionGroup(
-    val id: Long? = null,
     val name: String,
     val options: List<AssessmentOption> = emptyList()
 )
 
 data class AssessmentQuestion(
-    val id: Long? = null,
     val code: String,
     val text: String,
     val orderNum: Int = 0,
@@ -24,7 +22,6 @@ data class AssessmentQuestion(
 }
 
 data class AssessmentSection(
-    val id: Long? = null,
     val code: String,
     val title: String,
     val subtitle: String? = null,
@@ -34,7 +31,6 @@ data class AssessmentSection(
 )
 
 data class AssessmentScoringRule(
-    val id: Long? = null,
     val ruleType: String,
     val minScore: Int? = null,
     val maxScore: Int? = null,
@@ -45,7 +41,6 @@ data class AssessmentScoringRule(
 )
 
 data class AssessmentScale(
-    val id: Long? = null,
     val scaleType: AssessmentScaleType,
     val title: String,
     val subtitle: String? = null,

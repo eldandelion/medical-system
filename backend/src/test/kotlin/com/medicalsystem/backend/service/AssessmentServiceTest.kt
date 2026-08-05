@@ -89,8 +89,7 @@ class AssessmentServiceTest {
     )
 
     private val sampleScale = AssessmentScale(
-        id = 1L,
-        scaleType = AssessmentScaleType.PHQ_9,
+        scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
         title = "PHQ-9 抑郁症筛查量表",
         subtitle = "Patient Health Questionnaire-9",
         description = "国际公认的抑郁症状自评筛查量表",
@@ -142,7 +141,7 @@ class AssessmentServiceTest {
             studentId = 10L,
             studentUserId = 10L,
             assignedByUserId = 101L,
-            scaleType = AssessmentScaleType.PHQ_9,
+            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
             status = AssessmentStatus.PENDING,
             assignedAt = LocalDateTime.now(clock),
             dueDate = LocalDate.now(clock).plusDays(7)
@@ -168,7 +167,7 @@ class AssessmentServiceTest {
             studentId = 10L,
             studentUserId = 10L,
             assignedByUserId = 101L,
-            scaleType = AssessmentScaleType.PHQ_9
+            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT
         )
 
         `when`(assignmentRepository.findById(1L)).thenReturn(Optional.of(assignment))
@@ -185,12 +184,12 @@ class AssessmentServiceTest {
             studentId = 10L,
             studentUserId = 10L,
             assignedByUserId = 101L,
-            scaleType = AssessmentScaleType.PHQ_9,
+            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
             status = AssessmentStatus.PENDING
         )
 
         `when`(assignmentRepository.findById(1L)).thenReturn(Optional.of(assignment))
-        `when`(scaleRepository.findByScaleType(AssessmentScaleType.PHQ_9)).thenReturn(Optional.of(sampleScale))
+        `when`(scaleRepository.findByScaleType(AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT)).thenReturn(Optional.of(sampleScale))
         `when`(userRepository.findById(101L)).thenReturn(Optional.of(teacherUser))
 
         val result = assessmentService.getAssessmentDetails(1L, studentUser)
@@ -205,12 +204,12 @@ class AssessmentServiceTest {
     fun `assignToStudent succeeds when educator has visibility`() {
         val request = AssignAssessmentRequest(
             studentId = 10L,
-            scaleTypes = listOf(AssessmentScaleType.PHQ_9),
+            scaleTypes = listOf(AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT),
             dueDate = LocalDate.now(clock).plusDays(14)
         )
 
         `when`(studentRepository.findByIdAndVisibleTo(10L, teacherUser)).thenReturn(Optional.of(sampleStudent))
-        `when`(assignmentRepository.findPendingByStudentIdAndScaleType(10L, AssessmentScaleType.PHQ_9)).thenReturn(Optional.empty())
+        `when`(assignmentRepository.findPendingByStudentIdAndScaleType(10L, AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT)).thenReturn(Optional.empty())
         `when`(assignmentRepository.save(any())).thenAnswer { invocation ->
             val arg = invocation.arguments[0] as AssessmentAssignment
             arg.copy(id = 55L)
@@ -225,7 +224,7 @@ class AssessmentServiceTest {
     fun `assignToStudent throws ForbiddenException if student attempts to assign`() {
         val request = AssignAssessmentRequest(
             studentId = 10L,
-            scaleTypes = listOf(AssessmentScaleType.PHQ_9)
+            scaleTypes = listOf(AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT)
         )
 
         assertThrows<ForbiddenException> {
@@ -240,7 +239,7 @@ class AssessmentServiceTest {
             studentId = 10L,
             studentUserId = 10L,
             assignedByUserId = 101L,
-            scaleType = AssessmentScaleType.PHQ_9,
+            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
             status = AssessmentStatus.PENDING
         )
 
@@ -248,7 +247,7 @@ class AssessmentServiceTest {
         val request = SubmitAssessmentRequest(answers = answers)
 
         `when`(assignmentRepository.findById(1L)).thenReturn(Optional.of(assignment))
-        `when`(scaleRepository.findByScaleType(AssessmentScaleType.PHQ_9)).thenReturn(Optional.of(sampleScale))
+        `when`(scaleRepository.findByScaleType(AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT)).thenReturn(Optional.of(sampleScale))
         `when`(assignmentRepository.save(any())).thenAnswer { it.arguments[0] as AssessmentAssignment }
 
         val response = assessmentService.submitAssessment(1L, request, studentUser)
@@ -265,7 +264,7 @@ class AssessmentServiceTest {
             studentId = 10L,
             studentUserId = 10L,
             assignedByUserId = 101L,
-            scaleType = AssessmentScaleType.PHQ_9,
+            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
             status = AssessmentStatus.COMPLETED
         )
 

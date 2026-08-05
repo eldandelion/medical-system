@@ -32,7 +32,7 @@ class AssessmentCompletedListenerTest {
             assignmentId = 100L,
             studentId = studentId,
             studentUserId = 10L,
-            scaleType = AssessmentScaleType.PHQ_9,
+            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
             totalScore = 18,
             maxScore = 27,
             level = "中重度抑郁",
@@ -57,7 +57,7 @@ class AssessmentCompletedListenerTest {
             assignmentId = 100L,
             studentId = studentId,
             studentUserId = 10L,
-            scaleType = AssessmentScaleType.PHQ_9,
+            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
             totalScore = 18,
             maxScore = 27,
             level = "中重度抑郁",
@@ -72,7 +72,7 @@ class AssessmentCompletedListenerTest {
 
         assertEquals(RiskStatus.HIGH, profile.riskStatus)
         assertTrue(profile.psychometricTests.isNotEmpty())
-        assertEquals(TestResultName.PHQ_9, profile.psychometricTests.first().testResultName)
+        assertEquals(TestResultName.MENTAL_HEALTH_ASSESSMENT, profile.psychometricTests.first().testResultName)
         verify(studentHealthProfileRepository).save(profile)
     }
 }

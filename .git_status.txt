@@ -1,0 +1,8 @@
+On branch feature/medical-assessments-system
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	.git_log.txt
+	.git_ls_files.txt
+	.git_status.txt
+
+nothing added to commit but untracked files present (use "git add" to track)

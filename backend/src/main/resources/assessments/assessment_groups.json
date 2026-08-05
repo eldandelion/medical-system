@@ -18,7 +18,7 @@
     "description": "综合评估睡眠质量、入睡时间与睡眠障碍。",
     "duration": "10 分钟",
     "questionnaires": [
-      "sleep",
+      "sleep_disorder",
       "psqi"
     ]
   },

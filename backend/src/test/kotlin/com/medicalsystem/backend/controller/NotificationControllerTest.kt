@@ -53,7 +53,7 @@ class NotificationControllerTest {
         mockMvc.perform(get("/api/notifications").requestAttr("currentUser", user))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$[0].messageCode").value("REFERRAL_SUBMITTED_INITIATOR"))
-            .andExpect(jsonPath("$[0].isRead").value(false))
+            .andExpect(jsonPath("$[0].read").value(false))
     }
 
     @Test

@@ -1,38 +1,42 @@
 package com.medicalsystem.backend.repository
 
-import com.medicalsystem.backend.mapper.AssessmentScaleMapper
+import com.medicalsystem.backend.config.AssessmentCatalogLoader
 import com.medicalsystem.backend.model.AssessmentScale
 import com.medicalsystem.backend.model.AssessmentScaleRepository
 import com.medicalsystem.backend.model.AssessmentScaleType
+import jakarta.annotation.PostConstruct
 import org.springframework.stereotype.Repository
 import java.util.Optional
 
 @Repository
 class AssessmentScaleRepositoryAdapter(
-    private val jpaRepository: AssessmentScaleJpaRepository,
-    private val mapper: AssessmentScaleMapper
+    private val catalogLoader: AssessmentCatalogLoader
 ) : AssessmentScaleRepository {
 
+    private lateinit var scalesCache: Map<AssessmentScaleType, AssessmentScale>
+
+    @PostConstruct
+    fun init() {
+        scalesCache = catalogLoader.loadCatalog()
+    }
+
     override fun findByScaleType(scaleType: AssessmentScaleType): Optional<AssessmentScale> {
-        val entity = jpaRepository.findByScaleType(scaleType)
-        return Optional.ofNullable(entity?.let { mapper.toModel(it) })
+        return Optional.ofNullable(scalesCache[scaleType])
     }
 
     override fun findAll(): List<AssessmentScale> {
-        return jpaRepository.findAll().map { mapper.toModel(it) }
+        return scalesCache.values.toList()
     }
 
     override fun save(scale: AssessmentScale): AssessmentScale {
-        val entity = mapper.toEntity(scale)
-        val saved = jpaRepository.save(entity)
-        return mapper.toModel(saved)
+        throw UnsupportedOperationException("Saving assessment scales is not supported in the static JSON catalog.")
     }
 
     override fun count(): Long {
-        return jpaRepository.count()
+        return scalesCache.size.toLong()
     }
 
     override fun deleteAll() {
-        jpaRepository.deleteAll()
+        throw UnsupportedOperationException("Deleting assessment scales is not supported in the static JSON catalog.")
     }
 }

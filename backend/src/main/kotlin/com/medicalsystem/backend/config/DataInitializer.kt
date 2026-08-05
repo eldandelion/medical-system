@@ -270,7 +270,7 @@ class DataInitializer {
         val a1 = AssessmentAssignmentEntity(
             student = s1,
             assignedByUser = assignerUser,
-            scaleType = AssessmentScaleType.PHQ_9,
+            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
             status = AssessmentStatus.PENDING,
             assignedAt = LocalDateTime.now().minusDays(1),
             dueDate = LocalDate.now().plusDays(6)
@@ -278,7 +278,7 @@ class DataInitializer {
         val a2 = AssessmentAssignmentEntity(
             student = s1,
             assignedByUser = assignerUser,
-            scaleType = AssessmentScaleType.GAD_7,
+            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
             status = AssessmentStatus.COMPLETED,
             assignedAt = LocalDateTime.now().minusDays(5),
             completedAt = LocalDateTime.now().minusDays(3),
@@ -288,7 +288,7 @@ class DataInitializer {
         val a3 = AssessmentAssignmentEntity(
             student = s2,
             assignedByUser = assignerUser,
-            scaleType = AssessmentScaleType.GAD_7,
+            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
             status = AssessmentStatus.PENDING,
             assignedAt = LocalDateTime.now(),
             dueDate = LocalDate.now().plusDays(7)
@@ -296,7 +296,7 @@ class DataInitializer {
         val a4 = AssessmentAssignmentEntity(
             student = s3,
             assignedByUser = assignerUser,
-            scaleType = AssessmentScaleType.SCL_90,
+            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
             status = AssessmentStatus.PENDING,
             assignedAt = LocalDateTime.now().minusHours(6),
             dueDate = LocalDate.now().plusDays(10)

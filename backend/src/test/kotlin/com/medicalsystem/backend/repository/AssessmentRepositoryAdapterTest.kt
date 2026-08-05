@@ -57,7 +57,7 @@ class AssessmentRepositoryAdapterTest {
             studentId = studentEntity.id,
             studentUserId = studentEntity.id,
             assignedByUserId = teacherUser.id,
-            scaleType = AssessmentScaleType.GAD_7,
+            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
             status = AssessmentStatus.PENDING,
             assignedAt = LocalDateTime.now(),
             dueDate = LocalDate.now().plusDays(7)
@@ -68,10 +68,10 @@ class AssessmentRepositoryAdapterTest {
 
         val foundList = assignmentRepository.findByStudentId(studentEntity.id)
         assertEquals(1, foundList.size)
-        assertEquals(AssessmentScaleType.GAD_7, foundList[0].scaleType)
+        assertEquals(AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT, foundList[0].scaleType)
         assertEquals(AssessmentStatus.PENDING, foundList[0].status)
 
-        val pendingOpt = assignmentRepository.findPendingByStudentIdAndScaleType(studentEntity.id, AssessmentScaleType.GAD_7)
+        val pendingOpt = assignmentRepository.findPendingByStudentIdAndScaleType(studentEntity.id, AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT)
         assertTrue(pendingOpt.isPresent)
     }
 }
