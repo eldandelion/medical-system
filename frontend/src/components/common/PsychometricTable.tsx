@@ -7,6 +7,7 @@ export interface PsychometricScore {
   max: number;
   level: string;
   date?: string;
+  sourceAssignmentId?: number;
 }
 
 interface PsychometricTableProps {
@@ -28,8 +29,19 @@ export function PsychometricTable({ scores }: PsychometricTableProps) {
           {scores.map((score, idx) => (
             <tr key={idx} className="border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 last:border-0 hover:bg-[var(--md-sys-color-surface-container-lowest)] transition-colors">
               <td className="px-4 py-3">
-                <div className="flex flex-col">
-                  <span className="text-[13px] font-medium text-[var(--md-sys-color-on-surface)]">{score.name}</span>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] font-medium text-[var(--md-sys-color-on-surface)]">{score.name}</span>
+                    {score.sourceAssignmentId ? (
+                      <span className="bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface-variant)] px-2 py-0.5 rounded-full text-[10px] font-medium">
+                        Internal
+                      </span>
+                    ) : (
+                      <span className="bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] px-2 py-0.5 rounded-full text-[10px] font-medium">
+                        Imported
+                      </span>
+                    )}
+                  </div>
                   {score.date && (
                     <span className="text-[10px] text-[var(--md-sys-color-on-surface-variant)] opacity-60">{score.date}</span>
                   )}

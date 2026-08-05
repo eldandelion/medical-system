@@ -32,5 +32,6 @@ data class PsychometricTestDto(
     val value: Int,
     val max: Int,
     val level: String,
-    val date: String
+    val date: String,
+    val sourceAssignmentId: Long? = null
 )

@@ -7,5 +7,6 @@ data class PsychometricTest(
     val studentId: Long,
     val testType: PsychometricTestType,
     val score: Score,
-    val testDate: LocalDate
+    val testDate: LocalDate,
+    val sourceAssignmentId: Long? = null
 )

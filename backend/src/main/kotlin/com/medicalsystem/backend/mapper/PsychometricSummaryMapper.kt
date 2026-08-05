@@ -34,7 +34,8 @@ class PsychometricSummaryMapper {
                 value = test.score.points,
                 max = test.score.max,
                 level = if (test.score.points > test.score.max * 0.8) "High" else "Normal",
-                date = test.testDate.toString()
+                date = test.testDate.toString(),
+                sourceAssignmentId = test.sourceAssignmentId
             )
         }
 

@@ -25,5 +25,8 @@ data class PsychometricTestEntity(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "health_profile_id", nullable = false)
-    val healthProfile: StudentHealthProfileEntity
+    val healthProfile: StudentHealthProfileEntity,
+
+    @Column(name = "source_assignment_id", nullable = true)
+    val sourceAssignmentId: Long? = null
 )

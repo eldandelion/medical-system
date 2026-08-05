@@ -171,7 +171,7 @@ class AssessmentService(
         AssessmentScoringEngine.validateAnswers(scale, answersMap)
         
         val completedTests = scale.sections.map { section ->
-            AssessmentScoringEngine.scoreSection(assignment.studentId, section, answersMap)
+            AssessmentScoringEngine.scoreSection(assignment.studentId, section, answersMap, assignment.id)
         }
 
         assignment.complete(

@@ -30,7 +30,8 @@ class StudentHealthProfileMapper {
                     studentId = entity.studentId,
                     testType = testEntity.testType,
                     score = Score(points = testEntity.score, max = testEntity.maxScore),
-                    testDate = testEntity.testDate
+                    testDate = testEntity.testDate,
+                    sourceAssignmentId = testEntity.sourceAssignmentId
                 )
             }.toMutableList()
         )
@@ -59,7 +60,8 @@ class StudentHealthProfileMapper {
                 score = testModel.score.points,
                 maxScore = testModel.score.max,
                 testDate = testModel.testDate,
-                healthProfile = entity
+                healthProfile = entity,
+                sourceAssignmentId = testModel.sourceAssignmentId
             )
         }.toMutableList()
         
