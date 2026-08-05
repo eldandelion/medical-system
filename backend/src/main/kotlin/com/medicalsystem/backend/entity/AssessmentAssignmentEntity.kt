@@ -1,6 +1,5 @@
 package com.medicalsystem.backend.entity
 
-import com.medicalsystem.backend.model.AssessmentScaleType
 import com.medicalsystem.backend.model.AssessmentStatus
 import jakarta.persistence.*
 import java.time.LocalDate
@@ -12,7 +11,7 @@ import java.time.LocalDateTime
     indexes = [
         Index(name = "idx_assignment_student", columnList = "student_id"),
         Index(name = "idx_assignment_status", columnList = "status"),
-        Index(name = "idx_assignment_scale_type", columnList = "scale_type")
+        Index(name = "idx_assignment_battery_code", columnList = "battery_code")
     ]
 )
 class AssessmentAssignmentEntity(
@@ -28,8 +27,8 @@ class AssessmentAssignmentEntity(
     @JoinColumn(name = "assigned_by_user_id", nullable = false)
     var assignedByUser: UserEntity,
 
-    @Column(name = "scale_type", nullable = false)
-    var scaleType: AssessmentScaleType,
+    @Column(name = "battery_code", nullable = false)
+    var batteryCode: String,
 
     @Column(nullable = false)
     var status: AssessmentStatus = AssessmentStatus.PENDING,
@@ -44,8 +43,5 @@ class AssessmentAssignmentEntity(
     var dueDate: LocalDate? = null,
 
     @Column(name = "answers_json", columnDefinition = "TEXT")
-    var answersJson: String? = null,
-
-    @Column(name = "psychometric_test_id")
-    var psychometricTestId: Long? = null
+    var answersJson: String? = null
 )

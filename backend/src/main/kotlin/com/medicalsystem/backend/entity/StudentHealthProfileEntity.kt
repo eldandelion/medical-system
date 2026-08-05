@@ -1,7 +1,6 @@
 package com.medicalsystem.backend.entity
 
 import jakarta.persistence.*
-import com.medicalsystem.backend.model.RiskStatus
 
 @Entity
 @Table(name = "student_health_profiles")
@@ -11,9 +10,6 @@ class StudentHealthProfileEntity(
 
     @Column(name = "student_id", unique = true, nullable = false)
     val studentId: Long,
-
-    @Column(nullable = false)
-    var riskStatus: RiskStatus = RiskStatus.LOW,
 
     @Column(columnDefinition = "TEXT")
     var scidDiagnosis: String? = null,

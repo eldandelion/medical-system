@@ -31,7 +31,7 @@ class AssessmentEventListener(
             messageCode = NotificationMessageCode.ASSESSMENT_ASSIGNED_STUDENT,
             payload = mapOf(
                 "assignmentId" to event.assignmentId.toString(),
-                "scaleType" to event.scaleType.name
+                "batteryCode" to event.batteryCode
             ),
             actionType = NotificationActionType.START_ASSESSMENT,
             actionTargetId = event.assignmentId,
@@ -45,6 +45,9 @@ class AssessmentEventListener(
     fun handleAssessmentCompleted(event: AssessmentCompletedEvent) {
         val student = studentRepository.findById(event.studentId).orElse(null) ?: return
 
+        // Flag as high risk if any test scores above 80%
+        val isHighRisk = event.completedTests.any { it.score.points > it.score.max * 0.8 }
+
         // 1. Notify assigned teacher
         val teacherUserId = student.assignedTeacherId
         if (teacherUserId != null) {
@@ -54,9 +57,9 @@ class AssessmentEventListener(
                 payload = mapOf(
                     "studentId" to student.id.toString(),
                     "studentName" to student.name,
-                    "scaleType" to event.scaleType.name,
-                    "level" to event.level,
-                    "isHighRisk" to event.isHighRisk.toString()
+                    "batteryCode" to event.batteryCode,
+                    "level" to event.completedTests.joinToString { if (it.score.points > it.score.max * 0.8) "SEVERE" else "NORMAL" },
+                    "isHighRisk" to isHighRisk.toString()
                 ),
                 actionType = NotificationActionType.VIEW_RECORDS,
                 actionTargetId = student.id,
@@ -66,7 +69,7 @@ class AssessmentEventListener(
         }
 
         // 2. High risk alert for Head Counsellor
-        if (event.isHighRisk) {
+        if (isHighRisk) {
             val schoolId = student.demographics?.school?.id
             val hcUserId = schoolId?.let {
                 headCounsellorRepository.findBySchoolId(it).orElse(null)?.userId
@@ -78,9 +81,9 @@ class AssessmentEventListener(
                     payload = mapOf(
                         "studentId" to student.id.toString(),
                         "studentName" to student.name,
-                        "scaleType" to event.scaleType.name,
-                        "crisisFlags" to event.crisisFlags.joinToString("; "),
-                        "level" to event.level
+                        "batteryCode" to event.batteryCode,
+                        "crisisFlags" to event.completedTests.filter { it.score.points > it.score.max * 0.8 }.joinToString { it.testType.name },
+                        "level" to event.completedTests.joinToString { if (it.score.points > it.score.max * 0.8) "SEVERE" else "NORMAL" }
                     ),
                     actionType = NotificationActionType.VIEW_RECORDS,
                     actionTargetId = student.id,

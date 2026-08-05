@@ -17,9 +17,9 @@ object AssessmentMapper {
 
         return AssessmentListItemDto(
             id = this.id ?: 0L,
-            title = scale?.title ?: this.scaleType.name,
+            title = scale?.title ?: this.batteryCode.value,
             subtitle = scale?.subtitle,
-            scaleType = this.scaleType,
+            batteryCode = this.batteryCode.value,
             assignedBy = AssignedByDto(
                 name = finalAssignerName,
                 initial = initial
@@ -60,7 +60,7 @@ object AssessmentMapper {
             id = assignment.id ?: 0L,
             title = this.title,
             subtitle = this.subtitle,
-            scaleType = assignment.scaleType,
+            batteryCode = assignment.batteryCode.value,
             assignedBy = AssignedByDto(
                 name = finalAssignerName,
                 initial = initial
@@ -74,7 +74,7 @@ object AssessmentMapper {
 
     fun AssessmentScale.toCatalogItemDto(): AssessmentCatalogItemDto {
         return AssessmentCatalogItemDto(
-            scaleType = this.scaleType,
+            batteryCode = this.batteryCode,
             title = this.title,
             subtitle = this.subtitle,
             description = this.description,

@@ -9,7 +9,7 @@ import com.medicalsystem.backend.model.FlagStatus
 import com.medicalsystem.backend.model.RiskFlagName
 import com.medicalsystem.backend.model.Student
 import com.medicalsystem.backend.model.StudentHealthProfile
-import com.medicalsystem.backend.model.TestResultName
+import com.medicalsystem.backend.model.PsychometricTestType
 import org.springframework.stereotype.Component
 
 @Component
@@ -30,20 +30,20 @@ class PsychometricSummaryMapper {
         val tests = profile?.getLatestTests() ?: emptyList()
         val testDtos = tests.map { test ->
             PsychometricTestDto(
-                name = test.testResultName.name,
-                value = test.score,
-                max = test.maxScore,
-                level = test.level,
+                name = test.testType.name,
+                value = test.score.points,
+                max = test.score.max,
+                level = if (test.score.points > test.score.max * 0.8) "High" else "Normal",
                 date = test.testDate.toString()
             )
         }
 
         // Extract Trend (GAD-7 as an example)
-        val gad7Tests = tests.filter { it.testResultName == TestResultName.GAD_7 }.sortedBy { it.testDate }
+        val gad7Tests = tests.filter { it.testType == PsychometricTestType.GAD_7 }.sortedBy { it.testDate }
         val scores = gad7Tests.map { test ->
             ScoreTrendDto(
                 date = test.testDate.toString(),
-                value = test.score
+                value = test.score.points
             )
         }
 
@@ -51,9 +51,9 @@ class PsychometricSummaryMapper {
         val latestTests = profile?.getUniqueLatestTests() ?: emptyMap()
         val radarData = latestTests.values.map { test ->
             RadarDataDto(
-                subject = test.testResultName.name,
-                A = test.score,
-                fullMark = test.maxScore
+                subject = test.testType.name,
+                A = test.score.points,
+                fullMark = test.score.max
             )
         }
 

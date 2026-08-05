@@ -2,7 +2,6 @@ package com.medicalsystem.backend.repository
 
 import com.medicalsystem.backend.mapper.AssessmentAssignmentMapper
 import com.medicalsystem.backend.model.AssessmentAssignment
-import com.medicalsystem.backend.model.AssessmentScaleType
 import com.medicalsystem.backend.model.AssessmentStatus
 import org.springframework.stereotype.Repository
 import java.util.Optional
@@ -29,11 +28,11 @@ class AssessmentAssignmentRepositoryAdapter(
         return jpaRepository.findByAssignedByUserId(userId).map { mapper.toModel(it) }
     }
 
-    override fun findPendingByStudentIdAndScaleType(
+    override fun findPendingByStudentIdAndBatteryCode(
         studentId: Long,
-        scaleType: AssessmentScaleType
+        batteryCode: String
     ): Optional<AssessmentAssignment> {
-        return jpaRepository.findByStudentIdAndScaleTypeAndStatus(studentId, scaleType, AssessmentStatus.PENDING)
+        return jpaRepository.findByStudentIdAndBatteryCodeAndStatus(studentId, batteryCode, AssessmentStatus.PENDING)
             .map { mapper.toModel(it) }
     }
 
@@ -52,11 +51,11 @@ class AssessmentAssignmentRepositoryAdapter(
     override fun findAll(): List<AssessmentAssignment> {
         return jpaRepository.findAll().map { mapper.toModel(it) }
     }
-    override fun findPendingByStudentIdInAndScaleType(
+    override fun findPendingByStudentIdInAndBatteryCode(
         studentIds: List<Long>,
-        scaleType: AssessmentScaleType
+        batteryCode: String
     ): List<AssessmentAssignment> {
-        return jpaRepository.findByStudentIdInAndScaleTypeAndStatus(studentIds, scaleType, AssessmentStatus.PENDING)
+        return jpaRepository.findByStudentIdInAndBatteryCodeAndStatus(studentIds, batteryCode, AssessmentStatus.PENDING)
             .map { mapper.toModel(it) }
     }
 }

@@ -23,7 +23,8 @@ class StudentMapper(
     private val ethnicityRepository: com.medicalsystem.backend.repository.EthnicityJpaRepository,
     private val schoolRepository: com.medicalsystem.backend.repository.SchoolJpaRepository,
     private val healthProfileRepository: StudentHealthProfileRepository,
-    private val teacherRepository: com.medicalsystem.backend.repository.TeacherRepository
+    private val teacherRepository: com.medicalsystem.backend.repository.TeacherRepository,
+    private val riskEvaluator: com.medicalsystem.backend.service.StudentRiskEvaluator
 ) {
     fun toModel(entity: StudentEntity): Student {
         val profile = healthProfileRepository.findByStudentId(entity.id).orElse(null)
@@ -33,7 +34,7 @@ class StudentMapper(
             name = entity.name,
             major = majorMapper.toModel(entity.major),
             enrollmentDate = entity.enrollmentDate,
-            riskStatus = profile?.riskStatus ?: com.medicalsystem.backend.model.RiskStatus.LOW,
+            riskStatus = profile?.evaluateRisk(riskEvaluator) ?: com.medicalsystem.backend.model.RiskStatus.LOW,
             demographics = entity.demographics?.let {
                 Demographics(
                     gender = it.gender,

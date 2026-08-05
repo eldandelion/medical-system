@@ -37,11 +37,8 @@ class StudentHealthProfileRiskListener(
         if (profile != null) {
             try {
                 val newStatus = RiskStatus.valueOf(newRiskLevel.uppercase())
-                if (newStatus.ordinal > profile.riskStatus.ordinal) {
-                    profile.riskStatus = newStatus
-                    healthProfileRepository.save(profile)
-                    logger.info("Updated risk status for student $studentId to $newStatus")
-                }
+                // TODO("Store an override flag in RiskFlags for referral overrides if necessary")
+                logger.info("TODO: Handle referral risk override for student $studentId with status $newStatus")
             } catch (e: Exception) {
                 logger.warn("Failed to parse risk level $newRiskLevel", e)
             }

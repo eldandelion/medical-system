@@ -13,6 +13,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.Optional
 
@@ -31,13 +32,14 @@ class AssessmentCompletedListenerTest {
         val event = AssessmentCompletedEvent(
             assignmentId = 100L,
             studentId = studentId,
-            studentUserId = 10L,
-            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
-            totalScore = 18,
-            maxScore = 27,
-            level = "中重度抑郁",
-            isHighRisk = true,
-            crisisFlags = listOf("重度抑郁倾向"),
+            batteryCode = "MENTAL_HEALTH_ASSESSMENT",
+            completedTests = listOf(
+                PsychometricTest(
+                    testType = PsychometricTestType.PHQ_9,
+                    score = Score(18, 27),
+                    testDate = LocalDate.now()
+                )
+            ),
             completedAt = LocalDateTime.now()
         )
 
@@ -51,18 +53,19 @@ class AssessmentCompletedListenerTest {
     @Test
     fun `handleAssessmentCompleted updates existing health profile`() {
         val studentId = 1L
-        val profile = StudentHealthProfileFactory.createInitialProfile(studentId, RiskStatus.LOW)
+        val profile = StudentHealthProfileFactory.createInitialProfile(studentId)
         
         val event = AssessmentCompletedEvent(
             assignmentId = 100L,
             studentId = studentId,
-            studentUserId = 10L,
-            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
-            totalScore = 18,
-            maxScore = 27,
-            level = "中重度抑郁",
-            isHighRisk = true,
-            crisisFlags = listOf("重度抑郁倾向"),
+            batteryCode = "MENTAL_HEALTH_ASSESSMENT",
+            completedTests = listOf(
+                PsychometricTest(
+                    testType = PsychometricTestType.PHQ_9,
+                    score = Score(25, 27),
+                    testDate = LocalDate.now()
+                )
+            ),
             completedAt = LocalDateTime.now()
         )
 
@@ -70,9 +73,9 @@ class AssessmentCompletedListenerTest {
 
         listener.handleAssessmentCompleted(event)
 
-        assertEquals(RiskStatus.HIGH, profile.riskStatus)
         assertTrue(profile.psychometricTests.isNotEmpty())
-        assertEquals(TestResultName.MENTAL_HEALTH_ASSESSMENT, profile.psychometricTests.first().testResultName)
+        assertEquals(PsychometricTestType.PHQ_9, profile.psychometricTests.first().testType)
         verify(studentHealthProfileRepository).save(profile)
     }
 }
+

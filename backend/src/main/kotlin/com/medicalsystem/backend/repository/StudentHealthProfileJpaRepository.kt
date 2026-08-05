@@ -7,5 +7,7 @@ import java.util.Optional
 
 @Repository
 interface StudentHealthProfileJpaRepository : JpaRepository<StudentHealthProfileEntity, Long> {
+    
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = ["psychometricTests"])
     fun findByStudentId(studentId: Long): Optional<StudentHealthProfileEntity>
 }

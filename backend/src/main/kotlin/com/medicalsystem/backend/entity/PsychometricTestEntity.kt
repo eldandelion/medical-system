@@ -1,6 +1,6 @@
 package com.medicalsystem.backend.entity
 
-import com.medicalsystem.backend.model.TestResultName
+import com.medicalsystem.backend.model.PsychometricTestType
 import jakarta.persistence.*
 import java.time.LocalDate
 
@@ -11,8 +11,8 @@ data class PsychometricTestEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @Column(nullable = false)
-    val testResultName: TestResultName,
+    @Column(name = "test_type", nullable = false)
+    val testType: PsychometricTestType,
 
     @Column(nullable = false)
     val score: Int,
@@ -20,13 +20,10 @@ data class PsychometricTestEntity(
     @Column(nullable = false)
     val maxScore: Int,
 
-    @Column(nullable = false)
-    val level: String,
-
-    @Column(nullable = false)
+    @Column(name = "test_date", nullable = false)
     val testDate: LocalDate,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "health_profile_id", nullable = false)
-    var healthProfile: StudentHealthProfileEntity? = null
+    val healthProfile: StudentHealthProfileEntity
 )

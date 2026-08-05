@@ -75,9 +75,9 @@ class FlagStatusConverter : AttributeConverter<FlagStatus, Int> {
 }
 
 @Converter(autoApply = true)
-class TestResultNameConverter : AttributeConverter<TestResultName, Int> {
-    override fun convertToDatabaseColumn(attribute: TestResultName?) = getIdFromEnum(attribute)
-    override fun convertToEntityAttribute(dbData: Int?) = getEnumFromId<TestResultName>(dbData)
+class PsychometricTestTypeConverter : AttributeConverter<PsychometricTestType, Int> {
+    override fun convertToDatabaseColumn(attribute: PsychometricTestType?) = getIdFromEnum(attribute)
+    override fun convertToEntityAttribute(dbData: Int?) = getEnumFromId<PsychometricTestType>(dbData)
 }
 
 @Converter(autoApply = true)

@@ -37,10 +37,10 @@ class AssessmentService(
 
         val assignerIds = assignments.map { it.assignedByUserId }.toSet()
         val assignerMap = userRepository.findAllById(assignerIds).associateBy { it.id }
-        val scaleMap = scaleRepository.findAll().associateBy { it.scaleType }
+        val scaleMap = scaleRepository.findAll().associateBy { it.batteryCode }
 
         return assignments.map { assignment ->
-            val scale = scaleMap[assignment.scaleType]
+            val scale = scaleMap[assignment.batteryCode.value]
             val assignerName = assignerMap[assignment.assignedByUserId]?.name
             assignment.toListItemDto(scale, assignerName)
         }
@@ -52,12 +52,12 @@ class AssessmentService(
             NotFoundException("Assessment assignment with id $id not found")
         }
 
-        if (user.role == UserRole.STUDENT && assignment.studentUserId != user.id) {
-            throw ForbiddenException("You are not authorized to view this assessment")
+        if (user.role == UserRole.STUDENT && assignment.studentId != user.id) {
+            throw ForbiddenException("You do not have permission to view this assignment")
         }
 
-        val scale = scaleRepository.findByScaleType(assignment.scaleType).orElseThrow {
-            NotFoundException("Assessment scale definition not found for ${assignment.scaleType}")
+        val scale = scaleRepository.findByBatteryCode(assignment.batteryCode.value).orElseThrow {
+            NotFoundException("Assessment scale definition not found for ${assignment.batteryCode.value}")
         }
         val assignerName = userRepository.findById(assignment.assignedByUserId).orElse(null)?.name
         
@@ -81,14 +81,13 @@ class AssessmentService(
         }
 
         var assignedCount = 0
-        request.scaleTypes.forEach { scaleType ->
-            val existingPending = assignmentRepository.findPendingByStudentIdAndScaleType(student.id, scaleType)
+        request.batteryCodes.forEach { batteryCode ->
+            val existingPending = assignmentRepository.findPendingByStudentIdAndBatteryCode(student.id, batteryCode)
             if (existingPending.isEmpty) {
                 val newAssignment = AssessmentAssignment(
                     studentId = student.id,
-                    studentUserId = student.id,
                     assignedByUserId = assigner.id,
-                    scaleType = scaleType,
+                    batteryCode = BatteryId(batteryCode),
                     status = AssessmentStatus.PENDING,
                     assignedAt = LocalDateTime.now(clock),
                     dueDate = request.dueDate
@@ -123,16 +122,15 @@ class AssessmentService(
         var totalAssigned = 0
         val studentIds = visibleStudents.map { it.id }
         
-        request.scaleTypes.forEach { scaleType ->
-            val pendingAssignments = assignmentRepository.findPendingByStudentIdInAndScaleType(studentIds, scaleType)
+        request.batteryCodes.forEach { batteryCode ->
+            val pendingAssignments = assignmentRepository.findPendingByStudentIdInAndBatteryCode(studentIds, batteryCode)
             val studentsWithPending = pendingAssignments.map { it.studentId }.toSet()
             
             val toSave = visibleStudents.filter { !studentsWithPending.contains(it.id) }.map { student ->
                 val assignment = AssessmentAssignment(
                     studentId = student.id,
-                    studentUserId = student.id,
                     assignedByUserId = assigner.id,
-                    scaleType = scaleType,
+                    batteryCode = BatteryId(batteryCode),
                     status = AssessmentStatus.PENDING,
                     assignedAt = LocalDateTime.now(clock),
                     dueDate = request.dueDate
@@ -161,17 +159,24 @@ class AssessmentService(
             NotFoundException("Assessment assignment with id $assignmentId not found")
         }
 
-        if (assignment.studentUserId != currentUser.id) {
-            throw ForbiddenException("You can only submit your own assigned assessments")
+        if (assignment.studentId != currentUser.id) {
+            throw ForbiddenException("You can only submit your own assessments")
         }
 
-        val scale = scaleRepository.findByScaleType(assignment.scaleType).orElse(null)
+        val scale = scaleRepository.findByBatteryCode(assignment.batteryCode.value).orElseThrow {
+            NotFoundException("Assessment scale definition not found for ${assignment.batteryCode.value}")
+        }
         val answersMap = request.answers.associate { it.questionId to it.selectedValue }
-        val scoringResult = AssessmentScoringEngine.score(assignment.scaleType, answersMap, scale)
+        
+        AssessmentScoringEngine.validateAnswers(scale, answersMap)
+        
+        val completedTests = scale.sections.map { section ->
+            AssessmentScoringEngine.scoreSection(section, answersMap)
+        }
 
         assignment.complete(
             responses = answersMap,
-            scoringResult = scoringResult
+            completedTests = completedTests
         )
         assignment.completedAt = LocalDateTime.now(clock) // override to use clock
 

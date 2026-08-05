@@ -121,35 +121,35 @@ class DataInitializer {
         val s9 = studentRepository.save(StudentEntity(id = u9.id, studentNumber = "S2023009", name = "周梅", major = medMajor, enrollmentDate = LocalDate.of(2024, 9, 1), demographics = s9Demo))
         val s10 = studentRepository.save(StudentEntity(id = u10.id, studentNumber = "S2023010", name = "郑奇", major = csMajor, enrollmentDate = LocalDate.of(2023, 9, 1), demographics = s10Demo))
 
-        val hp1 = studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s1.id, riskStatus = RiskStatus.MEDIUM, scidDiagnosis = "重度抑郁症，伴随焦虑症状"))
-        val hp2 = studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s2.id, riskStatus = RiskStatus.LOW))
-        val hp3 = studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s3.id, riskStatus = RiskStatus.HIGH, scidDiagnosis = "广泛性焦虑障碍"))
-        val hp4 = studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s4.id, riskStatus = RiskStatus.LOW))
+        val hp1 = studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s1.id, scidDiagnosis = "重度抑郁症，伴随焦虑症状"))
+        val hp2 = studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s2.id))
+        val hp3 = studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s3.id, scidDiagnosis = "广泛性焦虑障碍"))
+        val hp4 = studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s4.id))
 
         val rf1 = RiskFlagEntity(name = com.medicalsystem.backend.model.RiskFlagName.SUICIDAL_IDEATION, status = com.medicalsystem.backend.model.FlagStatus.POSITIVE, healthProfile = hp1)
         val rf2 = RiskFlagEntity(name = com.medicalsystem.backend.model.RiskFlagName.SELF_HARM, status = com.medicalsystem.backend.model.FlagStatus.NEGATIVE, healthProfile = hp1)
         hp1.riskFlags.addAll(listOf(rf1, rf2))
         
-        val pt1 = PsychometricTestEntity(testResultName = com.medicalsystem.backend.model.TestResultName.GAD_7, score = 15, maxScore = 21, level = "重度", testDate = LocalDate.now().minusDays(30), healthProfile = hp1)
-        val pt2 = PsychometricTestEntity(testResultName = com.medicalsystem.backend.model.TestResultName.GAD_7, score = 18, maxScore = 21, level = "重度", testDate = LocalDate.now().minusDays(15), healthProfile = hp1)
-        val pt3 = PsychometricTestEntity(testResultName = com.medicalsystem.backend.model.TestResultName.GAD_7, score = 20, maxScore = 21, level = "重度", testDate = LocalDate.now().minusDays(5), healthProfile = hp1)
-        val pt4 = PsychometricTestEntity(testResultName = com.medicalsystem.backend.model.TestResultName.PHQ_9, score = 22, maxScore = 27, level = "重度", testDate = LocalDate.now().minusDays(5), healthProfile = hp1)
-        val pt5 = PsychometricTestEntity(testResultName = com.medicalsystem.backend.model.TestResultName.PSQI, score = 16, maxScore = 21, level = "较差", testDate = LocalDate.now().minusDays(5), healthProfile = hp1)
+        val pt1 = PsychometricTestEntity(testType = com.medicalsystem.backend.model.PsychometricTestType.GAD_7, score = 15, maxScore = 21, testDate = LocalDate.now().minusDays(30), healthProfile = hp1)
+        val pt2 = PsychometricTestEntity(testType = com.medicalsystem.backend.model.PsychometricTestType.GAD_7, score = 18, maxScore = 21, testDate = LocalDate.now().minusDays(15), healthProfile = hp1)
+        val pt3 = PsychometricTestEntity(testType = com.medicalsystem.backend.model.PsychometricTestType.GAD_7, score = 20, maxScore = 21, testDate = LocalDate.now().minusDays(5), healthProfile = hp1)
+        val pt4 = PsychometricTestEntity(testType = com.medicalsystem.backend.model.PsychometricTestType.PHQ_9, score = 22, maxScore = 27, testDate = LocalDate.now().minusDays(5), healthProfile = hp1)
+        val pt5 = PsychometricTestEntity(testType = com.medicalsystem.backend.model.PsychometricTestType.PSQI, score = 16, maxScore = 21, testDate = LocalDate.now().minusDays(5), healthProfile = hp1)
         hp1.psychometricTests.addAll(listOf(pt1, pt2, pt3, pt4, pt5))
         studentHealthProfileRepository.save(hp1)
 
         val rf3 = RiskFlagEntity(name = com.medicalsystem.backend.model.RiskFlagName.SUICIDE_ATTEMPT, status = com.medicalsystem.backend.model.FlagStatus.POSITIVE, healthProfile = hp3)
         hp3.riskFlags.add(rf3)
-        val pt6 = PsychometricTestEntity(testResultName = com.medicalsystem.backend.model.TestResultName.GAD_7, score = 12, maxScore = 21, level = "中度", testDate = LocalDate.now().minusDays(10), healthProfile = hp3)
+        val pt6 = PsychometricTestEntity(testType = com.medicalsystem.backend.model.PsychometricTestType.GAD_7, score = 12, maxScore = 21, testDate = LocalDate.now().minusDays(10), healthProfile = hp3)
         hp3.psychometricTests.add(pt6)
         studentHealthProfileRepository.save(hp3)
 
-        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s5.id, riskStatus = RiskStatus.LOW))
-        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s6.id, riskStatus = RiskStatus.MEDIUM, scidDiagnosis = "轻度焦虑"))
-        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s7.id, riskStatus = RiskStatus.LOW))
-        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s8.id, riskStatus = RiskStatus.HIGH, scidDiagnosis = "双相情感障碍"))
-        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s9.id, riskStatus = RiskStatus.LOW))
-        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s10.id, riskStatus = RiskStatus.MEDIUM, scidDiagnosis = "睡眠障碍"))
+        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s5.id))
+        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s6.id, scidDiagnosis = "轻度焦虑"))
+        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s7.id))
+        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s8.id, scidDiagnosis = "双相情感障碍"))
+        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s9.id))
+        studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s10.id, scidDiagnosis = "睡眠障碍"))
 
         val hosp = hospitalRepository.save(HospitalEntity(name = "中南大学湘雅医院"))
         val medDept = hospitalDepartmentRepository.save(HospitalDepartmentEntity(name = "内科", hospital = hosp))
@@ -270,7 +270,7 @@ class DataInitializer {
         val a1 = AssessmentAssignmentEntity(
             student = s1,
             assignedByUser = assignerUser,
-            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
+            batteryCode = "MENTAL_HEALTH_ASSESSMENT",
             status = AssessmentStatus.PENDING,
             assignedAt = LocalDateTime.now().minusDays(1),
             dueDate = LocalDate.now().plusDays(6)
@@ -278,7 +278,7 @@ class DataInitializer {
         val a2 = AssessmentAssignmentEntity(
             student = s1,
             assignedByUser = assignerUser,
-            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
+            batteryCode = "MENTAL_HEALTH_ASSESSMENT",
             status = AssessmentStatus.COMPLETED,
             assignedAt = LocalDateTime.now().minusDays(5),
             completedAt = LocalDateTime.now().minusDays(3),
@@ -288,7 +288,7 @@ class DataInitializer {
         val a3 = AssessmentAssignmentEntity(
             student = s2,
             assignedByUser = assignerUser,
-            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
+            batteryCode = "MENTAL_HEALTH_ASSESSMENT",
             status = AssessmentStatus.PENDING,
             assignedAt = LocalDateTime.now(),
             dueDate = LocalDate.now().plusDays(7)
@@ -296,7 +296,7 @@ class DataInitializer {
         val a4 = AssessmentAssignmentEntity(
             student = s3,
             assignedByUser = assignerUser,
-            scaleType = AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT,
+            batteryCode = "MENTAL_HEALTH_ASSESSMENT",
             status = AssessmentStatus.PENDING,
             assignedAt = LocalDateTime.now().minusHours(6),
             dueDate = LocalDate.now().plusDays(10)

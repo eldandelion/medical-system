@@ -3,7 +3,6 @@ package com.medicalsystem.backend.repository
 import com.medicalsystem.backend.config.AssessmentCatalogLoader
 import com.medicalsystem.backend.model.AssessmentScale
 import com.medicalsystem.backend.model.AssessmentScaleRepository
-import com.medicalsystem.backend.model.AssessmentScaleType
 import jakarta.annotation.PostConstruct
 import org.springframework.stereotype.Repository
 import java.util.Optional
@@ -13,15 +12,15 @@ class AssessmentScaleRepositoryAdapter(
     private val catalogLoader: AssessmentCatalogLoader
 ) : AssessmentScaleRepository {
 
-    private lateinit var scalesCache: Map<AssessmentScaleType, AssessmentScale>
+    private lateinit var scalesCache: Map<String, AssessmentScale>
 
     @PostConstruct
     fun init() {
         scalesCache = catalogLoader.loadCatalog()
     }
 
-    override fun findByScaleType(scaleType: AssessmentScaleType): Optional<AssessmentScale> {
-        return Optional.ofNullable(scalesCache[scaleType])
+    override fun findByBatteryCode(batteryCode: String): Optional<AssessmentScale> {
+        return Optional.ofNullable(scalesCache[batteryCode])
     }
 
     override fun findAll(): List<AssessmentScale> {

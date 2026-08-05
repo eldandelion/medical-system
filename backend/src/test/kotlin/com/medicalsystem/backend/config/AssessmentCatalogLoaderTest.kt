@@ -2,7 +2,6 @@ package com.medicalsystem.backend.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.medicalsystem.backend.exception.AssessmentCatalogInitializationException
-import com.medicalsystem.backend.model.AssessmentScaleType
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -26,7 +25,7 @@ class AssessmentCatalogLoaderTest {
         assertFalse(catalog.isEmpty(), "Catalog should not be empty")
         
         // Assert that MENTAL_HEALTH_ASSESSMENT exists and is mapped properly
-        val mentalHealthScale = catalog[AssessmentScaleType.MENTAL_HEALTH_ASSESSMENT]
+        val mentalHealthScale = catalog["MENTAL_HEALTH_ASSESSMENT"]
         assertNotNull(mentalHealthScale)
         assertEquals("年度身心健康状况综合评估", mentalHealthScale?.title)
         
@@ -46,7 +45,4 @@ class AssessmentCatalogLoaderTest {
         assertEquals("FOUR_POINT_FREQUENCY", optionGroup?.name)
         assertFalse(optionGroup?.options.isNullOrEmpty())
     }
-
-    // A more thorough failure test would require a custom resource resolver to inject bad files,
-    // but verifying the happy path with production JSON files acts as a solid integration check.
 }

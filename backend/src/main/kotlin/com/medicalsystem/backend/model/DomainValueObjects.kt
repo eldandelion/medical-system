@@ -1,5 +1,7 @@
 package com.medicalsystem.backend.model
 
+import java.time.LocalDate
+
 @JvmInline
 value class MobileNumber(val value: String) {
     init {
@@ -53,3 +55,13 @@ value class HospitalEmployeeId(val value: String) {
         }
     }
 }
+
+data class BatteryId(val value: String)
+
+data class Score(val points: Int, val max: Int)
+
+data class PsychometricTest(
+    val testType: PsychometricTestType,
+    val score: Score,
+    val testDate: LocalDate
+)

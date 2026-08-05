@@ -41,7 +41,7 @@ data class AssessmentScoringRule(
 )
 
 data class AssessmentScale(
-    val scaleType: AssessmentScaleType,
+    val batteryCode: String,
     val title: String,
     val subtitle: String? = null,
     val description: String? = null,

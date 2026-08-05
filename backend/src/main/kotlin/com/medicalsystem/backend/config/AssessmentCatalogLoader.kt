@@ -41,7 +41,7 @@ class AssessmentCatalogLoader {
         val customOptions: List<AssessmentOption>? = null
     )
 
-    fun loadCatalog(): Map<AssessmentScaleType, AssessmentScale> {
+    fun loadCatalog(): Map<String, AssessmentScale> {
         try {
             val resolver = PathMatchingResourcePatternResolver()
             
@@ -79,15 +79,9 @@ class AssessmentCatalogLoader {
             }
 
             // 4. Assemble AssessmentScales
-            val catalog = mutableMapOf<AssessmentScaleType, AssessmentScale>()
+            val catalog = mutableMapOf<String, AssessmentScale>()
             
             for ((key, groupDto) in groupsMap) {
-                val scaleType = try {
-                    AssessmentScaleType.valueOf(key)
-                } catch (e: IllegalArgumentException) {
-                    throw AssessmentCatalogInitializationException("Unknown AssessmentScaleType: $key")
-                }
-                
                 val sections = groupDto.questionnaires.mapIndexed { index, code ->
                     val sectionDto = sectionDtos[code] ?: throw AssessmentCatalogInitializationException("Missing questionnaire definition for code: $code in group $key")
                     
@@ -116,7 +110,7 @@ class AssessmentCatalogLoader {
                 }
                 
                 val scale = AssessmentScale(
-                    scaleType = scaleType,
+                    batteryCode = key,
                     title = groupDto.title,
                     subtitle = groupDto.subtitle,
                     description = groupDto.description,
@@ -126,7 +120,7 @@ class AssessmentCatalogLoader {
                     scoringRules = emptyList()
                 )
                 
-                catalog[scaleType] = scale
+                catalog[key] = scale
             }
             
             logger.info("Successfully loaded ${catalog.size} assessment scales from JSON files.")

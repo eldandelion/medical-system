@@ -1,28 +1,27 @@
 package com.medicalsystem.backend.repository
 
 import com.medicalsystem.backend.entity.AssessmentAssignmentEntity
-import com.medicalsystem.backend.model.AssessmentScaleType
 import com.medicalsystem.backend.model.AssessmentStatus
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
-import org.springframework.data.repository.query.Param
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor
+import org.springframework.stereotype.Repository
 import java.util.Optional
 
-interface AssessmentAssignmentJpaRepository : JpaRepository<AssessmentAssignmentEntity, Long> {
+@Repository
+interface AssessmentAssignmentJpaRepository : JpaRepository<AssessmentAssignmentEntity, Long>, JpaSpecificationExecutor<AssessmentAssignmentEntity> {
     fun findByStudentId(studentId: Long): List<AssessmentAssignmentEntity>
     fun findByStudentIdAndStatus(studentId: Long, status: AssessmentStatus): List<AssessmentAssignmentEntity>
-    fun findByAssignedByUserId(assignedByUserId: Long): List<AssessmentAssignmentEntity>
+    fun findByAssignedByUserId(userId: Long): List<AssessmentAssignmentEntity>
 
-    @Query("SELECT a FROM AssessmentAssignmentEntity a WHERE a.student.id = :studentId AND a.scaleType = :scaleType AND a.status = :status")
-    fun findByStudentIdAndScaleTypeAndStatus(
-        @Param("studentId") studentId: Long,
-        @Param("scaleType") scaleType: AssessmentScaleType,
-        @Param("status") status: AssessmentStatus
+    fun findByStudentIdAndBatteryCodeAndStatus(
+        studentId: Long,
+        batteryCode: String,
+        status: AssessmentStatus
     ): Optional<AssessmentAssignmentEntity>
-    @Query("SELECT a FROM AssessmentAssignmentEntity a WHERE a.student.id IN :studentIds AND a.scaleType = :scaleType AND a.status = :status")
-    fun findByStudentIdInAndScaleTypeAndStatus(
-        @Param("studentIds") studentIds: List<Long>,
-        @Param("scaleType") scaleType: AssessmentScaleType,
-        @Param("status") status: AssessmentStatus
+
+    fun findByStudentIdInAndBatteryCodeAndStatus(
+        studentIds: List<Long>,
+        batteryCode: String,
+        status: AssessmentStatus
     ): List<AssessmentAssignmentEntity>
 }

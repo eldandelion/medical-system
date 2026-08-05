@@ -65,8 +65,7 @@ class StudentService(
         savedModel.clearDomainEvents()
         
         val healthProfile = com.medicalsystem.backend.model.StudentHealthProfileFactory.createInitialProfile(
-            studentId = savedModel.id,
-            riskLevel = dto.riskLevel ?: RiskStatus.LOW
+            studentId = savedModel.id
         )
         healthProfileRepository.save(healthProfile)
         

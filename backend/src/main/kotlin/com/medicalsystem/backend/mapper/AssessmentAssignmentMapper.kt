@@ -6,6 +6,7 @@ import com.medicalsystem.backend.entity.AssessmentAssignmentEntity
 import com.medicalsystem.backend.entity.StudentEntity
 import com.medicalsystem.backend.entity.UserEntity
 import com.medicalsystem.backend.model.AssessmentAssignment
+import com.medicalsystem.backend.model.BatteryId
 import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Component
 
@@ -28,15 +29,13 @@ class AssessmentAssignmentMapper(
         return AssessmentAssignment(
             id = entity.id,
             studentId = entity.student.id,
-            studentUserId = entity.student.id,
             assignedByUserId = entity.assignedByUser.id,
-            scaleType = entity.scaleType,
+            batteryCode = BatteryId(entity.batteryCode),
             status = entity.status,
             assignedAt = entity.assignedAt,
             completedAt = entity.completedAt,
             dueDate = entity.dueDate,
-            answers = parsedAnswers,
-            psychometricTestId = entity.psychometricTestId
+            answers = parsedAnswers
         )
     }
 
@@ -48,17 +47,18 @@ class AssessmentAssignmentMapper(
             objectMapper.writeValueAsString(it)
         }
 
-        return AssessmentAssignmentEntity(
+        val entity = AssessmentAssignmentEntity(
             id = model.id,
             student = studentRef,
             assignedByUser = assignerRef,
-            scaleType = model.scaleType,
+            batteryCode = model.batteryCode.value,
             status = model.status,
             assignedAt = model.assignedAt,
             completedAt = model.completedAt,
             dueDate = model.dueDate,
-            answersJson = answersStr,
-            psychometricTestId = model.psychometricTestId
+            answersJson = answersStr
         )
+        
+        return entity
     }
 }

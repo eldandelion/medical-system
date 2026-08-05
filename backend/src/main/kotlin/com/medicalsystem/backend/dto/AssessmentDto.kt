@@ -1,6 +1,5 @@
 package com.medicalsystem.backend.dto
 
-import com.medicalsystem.backend.model.AssessmentScaleType
 import com.medicalsystem.backend.model.AssessmentStatus
 import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.NotNull
@@ -27,7 +26,7 @@ data class AssessmentSectionDto(
 )
 
 data class AssessmentCatalogItemDto(
-    val scaleType: AssessmentScaleType,
+    val batteryCode: String,
     val title: String,
     val subtitle: String? = null,
     val description: String? = null,
@@ -45,7 +44,7 @@ data class AssessmentListItemDto(
     val id: Long,
     val title: String,
     val subtitle: String?,
-    val scaleType: AssessmentScaleType,
+    val batteryCode: String,
     val assignedBy: AssignedByDto,
     val type: String = "测试",
     val completionPercentage: Int,
@@ -60,7 +59,7 @@ data class AssessmentDetailsDto(
     val id: Long,
     val title: String,
     val subtitle: String?,
-    val scaleType: AssessmentScaleType,
+    val batteryCode: String,
     val assignedBy: AssignedByDto,
     val duration: String,
     val status: AssessmentStatus,
@@ -71,8 +70,8 @@ data class AssessmentDetailsDto(
 data class AssignAssessmentRequest(
     @field:NotNull(message = "studentId is required")
     val studentId: Long,
-    @field:NotEmpty(message = "scaleTypes cannot be empty")
-    val scaleTypes: List<AssessmentScaleType>,
+    @field:NotEmpty(message = "batteryCodes cannot be empty")
+    val batteryCodes: List<String>,
     val dueDate: LocalDate? = null
 )
 
@@ -80,8 +79,8 @@ data class AssignCohortAssessmentRequest(
     val majorId: Long? = null,
     val collegeId: Long? = null,
     val academicYear: Int? = null,
-    @field:NotEmpty(message = "scaleTypes cannot be empty")
-    val scaleTypes: List<AssessmentScaleType>,
+    @field:NotEmpty(message = "batteryCodes cannot be empty")
+    val batteryCodes: List<String>,
     val dueDate: LocalDate? = null
 )
 

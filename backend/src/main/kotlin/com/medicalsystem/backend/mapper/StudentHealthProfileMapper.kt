@@ -5,6 +5,7 @@ import com.medicalsystem.backend.entity.RiskFlagEntity
 import com.medicalsystem.backend.entity.StudentHealthProfileEntity
 import com.medicalsystem.backend.model.PsychometricTest
 import com.medicalsystem.backend.model.RiskFlag
+import com.medicalsystem.backend.model.Score
 import com.medicalsystem.backend.model.StudentHealthProfile
 import org.springframework.stereotype.Component
 
@@ -15,7 +16,6 @@ class StudentHealthProfileMapper {
         return StudentHealthProfile(
             id = entity.id,
             studentId = entity.studentId,
-            riskStatus = entity.riskStatus,
             scidDiagnosis = entity.scidDiagnosis,
             riskFlags = entity.riskFlags.map { flagEntity ->
                 RiskFlag(
@@ -26,11 +26,8 @@ class StudentHealthProfileMapper {
             }.toMutableList(),
             psychometricTests = entity.psychometricTests.map { testEntity ->
                 PsychometricTest(
-                    id = testEntity.id,
-                    testResultName = testEntity.testResultName,
-                    score = testEntity.score,
-                    maxScore = testEntity.maxScore,
-                    level = testEntity.level,
+                    testType = testEntity.testType,
+                    score = Score(points = testEntity.score, max = testEntity.maxScore),
                     testDate = testEntity.testDate
                 )
             }.toMutableList()
@@ -41,7 +38,6 @@ class StudentHealthProfileMapper {
         val entity = StudentHealthProfileEntity(
             id = model.id,
             studentId = model.studentId,
-            riskStatus = model.riskStatus,
             scidDiagnosis = model.scidDiagnosis
         )
         
@@ -56,11 +52,10 @@ class StudentHealthProfileMapper {
         
         entity.psychometricTests = model.psychometricTests.map { testModel ->
             PsychometricTestEntity(
-                id = testModel.id,
-                testResultName = testModel.testResultName,
-                score = testModel.score,
-                maxScore = testModel.maxScore,
-                level = testModel.level,
+                id = null, // Will be recreated by JPA cascades
+                testType = testModel.testType,
+                score = testModel.score.points,
+                maxScore = testModel.score.max,
                 testDate = testModel.testDate,
                 healthProfile = entity
             )
