@@ -9,5 +9,9 @@ enum class TestResultName {
     ISS,
     ESS,
     SCL_90,
-    ANNUAL_COMPREHENSIVE
+    ANNUAL_COMPREHENSIVE,
+    APQ_9_FATHER,
+    APQ_9_MOTHER,
+    SLEEP_DISORDER,
+    COMPREHENSIVE_MENTAL
 }

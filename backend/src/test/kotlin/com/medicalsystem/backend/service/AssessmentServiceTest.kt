@@ -18,7 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
-import org.mockito.kotlin.verify
 import org.mockito.junit.jupiter.MockitoExtension
 import java.time.Clock
 import java.time.Instant
@@ -38,6 +37,9 @@ class AssessmentServiceTest {
 
     @Mock
     private lateinit var userRepository: UserRepository
+
+    @Mock
+    private lateinit var scaleRepository: AssessmentScaleRepository
 
     private lateinit var clock: Clock
     
@@ -86,6 +88,41 @@ class AssessmentServiceTest {
         assignedTeacherId = null
     )
 
+    private val sampleScale = AssessmentScale(
+        id = 1L,
+        scaleType = AssessmentScaleType.PHQ_9,
+        title = "PHQ-9 抑郁症筛查量表",
+        subtitle = "Patient Health Questionnaire-9",
+        description = "国际公认的抑郁症状自评筛查量表",
+        duration = "5-10 分钟",
+        sections = listOf(
+            AssessmentSection(
+                code = "phq9",
+                title = "情绪状况评估",
+                subtitle = "PHQ-9",
+                description = "在过去的两周里，您有多少时间受到以下问题的困扰？",
+                questions = (1..9).map {
+                    AssessmentQuestion(
+                        code = "phq9_$it",
+                        text = "Question $it",
+                        optionGroup = AssessmentOptionGroup(
+                            name = "phq_options",
+                            options = (0..3).map { opt -> AssessmentOption(value = opt, label = "Option $opt") }
+                        )
+                    )
+                }
+            )
+        ),
+        scoringRules = listOf(
+            AssessmentScoringRule(
+                ruleType = "TOTAL_SCORE",
+                minScore = 0,
+                maxScore = 27,
+                level = "正常"
+            )
+        )
+    )
+
     @BeforeEach
     fun setup() {
         clock = Clock.fixed(Instant.parse("2026-08-01T10:00:00Z"), ZoneId.of("UTC"))
@@ -93,6 +130,7 @@ class AssessmentServiceTest {
             assignmentRepository,
             studentRepository,
             userRepository,
+            scaleRepository,
             clock
         )
     }
@@ -112,6 +150,7 @@ class AssessmentServiceTest {
 
         `when`(assignmentRepository.findByStudentId(10L)).thenReturn(listOf(assignment))
         `when`(userRepository.findAllById(setOf(101L))).thenReturn(listOf(teacherUser))
+        `when`(scaleRepository.findAll()).thenReturn(listOf(sampleScale))
 
         val result = assessmentService.getAssessmentsForUser(studentUser)
 
@@ -140,6 +179,29 @@ class AssessmentServiceTest {
     }
 
     @Test
+    fun `getAssessmentDetails returns details when authorized`() {
+        val assignment = AssessmentAssignment(
+            id = 1L,
+            studentId = 10L,
+            studentUserId = 10L,
+            assignedByUserId = 101L,
+            scaleType = AssessmentScaleType.PHQ_9,
+            status = AssessmentStatus.PENDING
+        )
+
+        `when`(assignmentRepository.findById(1L)).thenReturn(Optional.of(assignment))
+        `when`(scaleRepository.findByScaleType(AssessmentScaleType.PHQ_9)).thenReturn(Optional.of(sampleScale))
+        `when`(userRepository.findById(101L)).thenReturn(Optional.of(teacherUser))
+
+        val result = assessmentService.getAssessmentDetails(1L, studentUser)
+
+        assertEquals(1L, result.id)
+        assertEquals("PHQ-9 抑郁症筛查量表", result.title)
+        assertEquals(1, result.sections.size)
+        assertEquals(9, result.requiredQuestionIds.size)
+    }
+
+    @Test
     fun `assignToStudent succeeds when educator has visibility`() {
         val request = AssignAssessmentRequest(
             studentId = 10L,
@@ -157,7 +219,6 @@ class AssessmentServiceTest {
         val result = assessmentService.assignToStudent(request, teacherUser)
 
         assertEquals(1, result.assignedCount)
-        // Event publish is now handled by Spring Data JPA
     }
 
     @Test
@@ -187,6 +248,7 @@ class AssessmentServiceTest {
         val request = SubmitAssessmentRequest(answers = answers)
 
         `when`(assignmentRepository.findById(1L)).thenReturn(Optional.of(assignment))
+        `when`(scaleRepository.findByScaleType(AssessmentScaleType.PHQ_9)).thenReturn(Optional.of(sampleScale))
         `when`(assignmentRepository.save(any())).thenAnswer { it.arguments[0] as AssessmentAssignment }
 
         val response = assessmentService.submitAssessment(1L, request, studentUser)
@@ -194,7 +256,6 @@ class AssessmentServiceTest {
         assertTrue(response.success)
         assertEquals(9, response.totalQuestionsAnswered)
         assertEquals(AssessmentStatus.COMPLETED, assignment.status)
-        // Listener handles the profile save in an AFTER_COMMIT phase, so we no longer mock/verify it here
     }
 
     @Test

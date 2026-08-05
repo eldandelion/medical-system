@@ -22,6 +22,7 @@ class AssessmentService(
     private val assignmentRepository: AssessmentAssignmentRepository,
     private val studentRepository: StudentRepository,
     private val userRepository: UserRepository,
+    private val scaleRepository: AssessmentScaleRepository,
     private val clock: Clock
 ) {
 
@@ -36,9 +37,10 @@ class AssessmentService(
 
         val assignerIds = assignments.map { it.assignedByUserId }.toSet()
         val assignerMap = userRepository.findAllById(assignerIds).associateBy { it.id }
+        val scaleMap = scaleRepository.findAll().associateBy { it.scaleType }
 
         return assignments.map { assignment ->
-            val scale = AssessmentScaleCatalog.getScale(assignment.scaleType)
+            val scale = scaleMap[assignment.scaleType]
             val assignerName = assignerMap[assignment.assignedByUserId]?.name
             assignment.toListItemDto(scale, assignerName)
         }
@@ -54,7 +56,9 @@ class AssessmentService(
             throw ForbiddenException("You are not authorized to view this assessment")
         }
 
-        val scale = AssessmentScaleCatalog.getScale(assignment.scaleType)
+        val scale = scaleRepository.findByScaleType(assignment.scaleType).orElseThrow {
+            NotFoundException("Assessment scale definition not found for ${assignment.scaleType}")
+        }
         val assignerName = userRepository.findById(assignment.assignedByUserId).orElse(null)?.name
         
         return scale.toDetailsDto(assignment, assignerName)
@@ -62,7 +66,7 @@ class AssessmentService(
 
     @Transactional(readOnly = true)
     fun getCatalog(): List<AssessmentCatalogItemDto> {
-        return AssessmentScaleCatalog.getAllScales().map { scale ->
+        return scaleRepository.findAll().map { scale ->
             scale.toCatalogItemDto()
         }
     }
@@ -161,8 +165,9 @@ class AssessmentService(
             throw ForbiddenException("You can only submit your own assigned assessments")
         }
 
+        val scale = scaleRepository.findByScaleType(assignment.scaleType).orElse(null)
         val answersMap = request.answers.associate { it.questionId to it.selectedValue }
-        val scoringResult = AssessmentScoringEngine.score(assignment.scaleType, answersMap)
+        val scoringResult = AssessmentScoringEngine.score(assignment.scaleType, answersMap, scale)
 
         assignment.complete(
             responses = answersMap,

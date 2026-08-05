@@ -21,16 +21,16 @@ data class AssessmentQuestionDto(
 data class AssessmentSectionDto(
     val id: String,
     val title: String,
-    val subtitle: String,
-    val description: String,
+    val subtitle: String? = null,
+    val description: String? = null,
     val questions: List<AssessmentQuestionDto>
 )
 
 data class AssessmentCatalogItemDto(
     val scaleType: AssessmentScaleType,
     val title: String,
-    val subtitle: String,
-    val description: String,
+    val subtitle: String? = null,
+    val description: String? = null,
     val duration: String,
     val questionCount: Int,
     val sections: List<AssessmentSectionDto>

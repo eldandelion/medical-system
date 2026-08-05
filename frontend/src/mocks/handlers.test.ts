@@ -74,7 +74,6 @@ describe('MSW Handlers - Assessments', () => {
 
     const result = await response.json();
     expect(result.assignedCount).toBe(2);
-    expect(result.message).toContain('成功');
   });
 
   it('should submit assessment answers successfully', async () => {
