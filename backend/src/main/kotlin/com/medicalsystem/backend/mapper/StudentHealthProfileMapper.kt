@@ -26,6 +26,8 @@ class StudentHealthProfileMapper {
             }.toMutableList(),
             psychometricTests = entity.psychometricTests.map { testEntity ->
                 PsychometricTest(
+                    id = testEntity.id,
+                    studentId = entity.studentId,
                     testType = testEntity.testType,
                     score = Score(points = testEntity.score, max = testEntity.maxScore),
                     testDate = testEntity.testDate
@@ -52,7 +54,7 @@ class StudentHealthProfileMapper {
         
         entity.psychometricTests = model.psychometricTests.map { testModel ->
             PsychometricTestEntity(
-                id = null, // Will be recreated by JPA cascades
+                id = testModel.id,
                 testType = testModel.testType,
                 score = testModel.score.points,
                 maxScore = testModel.score.max,

@@ -35,6 +35,8 @@ class AssessmentCompletedListenerTest {
             batteryCode = "MENTAL_HEALTH_ASSESSMENT",
             completedTests = listOf(
                 PsychometricTest(
+                    id = null,
+                    studentId = studentId,
                     testType = PsychometricTestType.PHQ_9,
                     score = Score(18, 27),
                     testDate = LocalDate.now()
@@ -61,6 +63,8 @@ class AssessmentCompletedListenerTest {
             batteryCode = "MENTAL_HEALTH_ASSESSMENT",
             completedTests = listOf(
                 PsychometricTest(
+                    id = null,
+                    studentId = studentId,
                     testType = PsychometricTestType.PHQ_9,
                     score = Score(25, 27),
                     testDate = LocalDate.now()

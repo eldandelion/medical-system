@@ -10,7 +10,7 @@ object AssessmentScoringEngine {
         // Just return for now, bypassing validation until implemented
     }
 
-    fun scoreSection(section: AssessmentSection, answers: Map<String, Int>): PsychometricTest {
+    fun scoreSection(studentId: Long, section: AssessmentSection, answers: Map<String, Int>): PsychometricTest {
         // TODO("Implement real psychometric formula scoring")
         val testType = try {
             PsychometricTestType.valueOf(section.code)
@@ -19,6 +19,7 @@ object AssessmentScoringEngine {
         }
 
         return PsychometricTest(
+            studentId = studentId,
             testType = testType,
             score = Score(points = 0, max = 0),
             testDate = LocalDate.now()

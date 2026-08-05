@@ -22,6 +22,8 @@ class StudentRiskEvaluatorTest {
     fun `evaluate returns LOW as default fallback for now`() {
         val tests = listOf(
             PsychometricTest(
+                id = null,
+                studentId = 1L,
                 testType = PsychometricTestType.PHQ_9,
                 score = Score(15, 27),
                 testDate = LocalDate.now()

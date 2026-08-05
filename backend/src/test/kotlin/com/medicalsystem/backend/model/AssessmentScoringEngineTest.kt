@@ -38,7 +38,7 @@ class AssessmentScoringEngineTest {
             )
         )
         
-        val result = AssessmentScoringEngine.scoreSection(scale.sections.first(), answers)
+        val result = AssessmentScoringEngine.scoreSection(1L, scale.sections.first(), answers)
 
         assertEquals(PsychometricTestType.PHQ_9, result.testType)
         // Score is 0 since the actual engine is stubbed out

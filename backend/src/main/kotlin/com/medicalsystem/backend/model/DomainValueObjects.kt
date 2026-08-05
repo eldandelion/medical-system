@@ -60,8 +60,3 @@ data class BatteryId(val value: String)
 
 data class Score(val points: Int, val max: Int)
 
-data class PsychometricTest(
-    val testType: PsychometricTestType,
-    val score: Score,
-    val testDate: LocalDate
-)
