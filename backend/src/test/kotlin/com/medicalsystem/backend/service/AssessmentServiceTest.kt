@@ -268,4 +268,64 @@ class AssessmentServiceTest {
             assessmentService.submitAssessment(1L, request, studentUser)
         }
     }
+
+    @Test
+    fun `recordProgress saves draft answers successfully`() {
+        val assignment = AssessmentAssignment(
+            id = 1L,
+            studentId = 10L,
+            assignedByUserId = 101L,
+            batteryCode = BatteryId("MENTAL_HEALTH_ASSESSMENT"),
+            status = AssessmentStatus.PENDING
+        )
+
+        val answers = mapOf("phq9_1" to 2, "phq9_2" to 1)
+        val request = com.medicalsystem.backend.dto.RecordProgressRequest(answers = answers)
+
+        `when`(assignmentRepository.findById(1L)).thenReturn(Optional.of(assignment))
+
+        assessmentService.recordProgress(1L, request, studentUser)
+
+        assertEquals(answers, assignment.answers)
+    }
+
+    @Test
+    fun `recordProgress throws ForbiddenException for different user`() {
+        val assignment = AssessmentAssignment(
+            id = 1L,
+            studentId = 10L,
+            assignedByUserId = 101L,
+            batteryCode = BatteryId("MENTAL_HEALTH_ASSESSMENT"),
+            status = AssessmentStatus.PENDING
+        )
+
+        val answers = mapOf("phq9_1" to 2)
+        val request = com.medicalsystem.backend.dto.RecordProgressRequest(answers = answers)
+
+        `when`(assignmentRepository.findById(1L)).thenReturn(Optional.of(assignment))
+
+        assertThrows<ForbiddenException> {
+            assessmentService.recordProgress(1L, request, otherStudentUser)
+        }
+    }
+
+    @Test
+    fun `recordProgress throws IllegalStateException if already completed`() {
+        val assignment = AssessmentAssignment(
+            id = 1L,
+            studentId = 10L,
+            assignedByUserId = 101L,
+            batteryCode = BatteryId("MENTAL_HEALTH_ASSESSMENT"),
+            status = AssessmentStatus.COMPLETED
+        )
+
+        val answers = mapOf("phq9_1" to 2)
+        val request = com.medicalsystem.backend.dto.RecordProgressRequest(answers = answers)
+
+        `when`(assignmentRepository.findById(1L)).thenReturn(Optional.of(assignment))
+
+        assertThrows<IllegalStateException> {
+            assessmentService.recordProgress(1L, request, studentUser)
+        }
+    }
 }

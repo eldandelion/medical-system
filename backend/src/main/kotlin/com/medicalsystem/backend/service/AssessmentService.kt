@@ -189,4 +189,17 @@ class AssessmentService(
             completedAt = savedAssignment.completedAt ?: LocalDateTime.now(clock)
         )
     }
+
+    fun recordProgress(
+        assignmentId: Long,
+        request: RecordProgressRequest,
+        currentUser: User
+    ) {
+        val assignment = assignmentRepository.findById(assignmentId).orElseThrow {
+            NotFoundException("Assessment assignment with id $assignmentId not found")
+        }
+
+        assignment.recordProgress(request.answers, currentUser.id)
+        assignmentRepository.save(assignment)
+    }
 }

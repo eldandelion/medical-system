@@ -64,7 +64,8 @@ data class AssessmentDetailsDto(
     val duration: String,
     val status: AssessmentStatus,
     val sections: List<AssessmentSectionDto>,
-    val requiredQuestionIds: List<String>
+    val requiredQuestionIds: List<String>,
+    val savedAnswers: Map<String, Int>? = null
 )
 
 data class AssignAssessmentRequest(
@@ -105,4 +106,8 @@ data class AssessmentSubmissionResponseDto(
     val assignmentId: Long,
     val totalQuestionsAnswered: Int,
     val completedAt: LocalDateTime
+)
+
+data class RecordProgressRequest(
+    val answers: Map<String, Int>
 )

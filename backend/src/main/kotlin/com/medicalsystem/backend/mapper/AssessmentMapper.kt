@@ -13,7 +13,7 @@ object AssessmentMapper {
     fun AssessmentAssignment.toListItemDto(scale: AssessmentScale?, assignerName: String?): AssessmentListItemDto {
         val finalAssignerName = assignerName ?: DEFAULT_ASSIGNER_NAME
         val initial = if (finalAssignerName.isNotBlank()) finalAssignerName.take(1) else DEFAULT_ASSIGNER_INITIAL
-        val percentage = if (this.status == AssessmentStatus.COMPLETED) 100 else 0
+        val percentage = this.calculateProgress(scale?.totalQuestions ?: 1)
 
         return AssessmentListItemDto(
             id = this.id ?: 0L,
@@ -68,7 +68,8 @@ object AssessmentMapper {
             duration = this.duration,
             status = assignment.status,
             sections = sectionDtos,
-            requiredQuestionIds = this.allQuestionCodes.toList()
+            requiredQuestionIds = this.allQuestionCodes.toList(),
+            savedAnswers = assignment.answers
         )
     }
 

@@ -172,6 +172,22 @@ export const handlers = [
     });
   }),
 
+  http.put(api('/api/assessments/:id/progress'), async ({ request }) => {
+    await delay(MOCK_DELAY_MS);
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not save real progress, falling back to mock");
+      }
+    }
+    return HttpResponse.json({ success: true });
+  }),
+
   http.get(api('/api/students'), async ({ request }) => {
     await delay(MOCK_DELAY_MS);
     

@@ -64,4 +64,14 @@ class AssessmentController(
         val currentUser = user ?: throw ForbiddenException("Authorized user not found")
         return assessmentService.submitAssessment(id, request, currentUser)
     }
+
+    @PutMapping("/{id}/progress")
+    fun recordProgress(
+        @PathVariable id: Long,
+        @Valid @RequestBody request: RecordProgressRequest,
+        @CurrentUser user: User?
+    ) {
+        val currentUser = user ?: throw ForbiddenException("Authorized user not found")
+        assessmentService.recordProgress(id, request, currentUser)
+    }
 }

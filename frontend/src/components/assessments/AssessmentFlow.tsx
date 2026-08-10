@@ -8,6 +8,8 @@ import { Header } from '../layout/Header';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { AssessmentSection, Question } from './AssessmentData';
+import { useRecordProgress } from '../../hooks/useRecordProgress';
+import { useAssessmentPosition } from '../../hooks/useAssessmentPosition';
 
 const DEFAULT_OPTIONS = [
   { value: 0, label: '完全不会' },
@@ -39,14 +41,17 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
   const [loading, setLoading] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
 
+  useRecordProgress(assessmentId, answers);
+  const { getPosition, hasSavedPosition, savePosition, clearPosition } = useAssessmentPosition(session?.token, assessmentId);
+
   // Fetch sections from API dynamically if assessmentId is provided
   React.useEffect(() => {
     if (isOpen) {
-      setAppState('intro');
       setCurrentSectionIdx(0);
       setCurrentQuestionIdx(0);
       setAnswers({});
       setLoadedSections(sections);
+      setIsUIVisible(false);
 
       if (assessmentId) {
         setLoading(true);
@@ -60,18 +65,45 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
             return res.json();
           })
           .then((data) => {
+            let hasAnswers = false;
             if (data && data.sections) {
               setLoadedSections(data.sections);
+            }
+            if (data && data.savedAnswers) {
+              setAnswers(data.savedAnswers);
+              if (Object.keys(data.savedAnswers).length > 0) {
+                hasAnswers = true;
+              }
+            }
+
+            if (hasAnswers || hasSavedPosition()) {
+              setAppState('assessment');
+              setIsUIVisible(true);
+              const pos = getPosition(data?.sections || sections);
+              setCurrentSectionIdx(pos.sectionIdx);
+              setCurrentQuestionIdx(pos.questionIdx);
+            } else {
+              setAppState('intro');
             }
             setLoading(false);
           })
           .catch((err) => {
             console.error('Failed to fetch assessment sections:', err);
+            setAppState('intro');
             setLoading(false);
           });
+      } else {
+        setAppState('intro');
       }
     }
-  }, [isOpen, assessmentId, sections, session.token]);
+  }, [isOpen, assessmentId, sections, session.token, getPosition]);
+
+  // Sync current question to localStorage position hook
+  React.useEffect(() => {
+    if (appState === 'assessment') {
+      savePosition(currentSectionIdx, currentQuestionIdx);
+    }
+  }, [currentSectionIdx, currentQuestionIdx, appState, savePosition]);
 
   const activeSections = loadedSections || [];
 
@@ -117,6 +149,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
       queryClient.invalidateQueries({ queryKey: ['/api/assessments'] });
       queryClient.invalidateQueries({ queryKey: ['/api/students'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      clearPosition();
       setAppState('outro');
       showSnackbar({ message: '评估已顺利完成并提交', duration: 3000 });
     } catch (err: any) {
@@ -149,6 +182,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
   };
 
   const startAssessment = () => {
+    setIsUIVisible(true);
     setAppState('assessment');
     setCurrentSectionIdx(0);
     setCurrentQuestionIdx(0);
@@ -236,6 +270,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
     if (appState === 'assessment') {
       setShowExitConfirm(true);
     } else {
+      queryClient.invalidateQueries({ queryKey: ['/api/assessments'] });
       onClose();
     }
   };
@@ -263,14 +298,20 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
       >
         <div className="flex flex-col h-full relative">
           <div className="flex-1 flex flex-col items-center justify-center py-8">
-            <AnimatePresence
-              mode="wait"
-              onExitComplete={() => {
-                if (appState === 'assessment') {
-                  setIsUIVisible(true);
-                }
-              }}
-            >
+            {loading ? (
+              <div className="flex flex-col items-center justify-center gap-4 py-20 text-[var(--md-sys-color-primary)]">
+                <md-icon style={{ fontSize: '36px' }} className="animate-spin">progress_activity</md-icon>
+                <span className="text-sm font-medium text-[var(--md-sys-color-on-surface-variant)]">加载测评中...</span>
+              </div>
+            ) : (
+              <AnimatePresence
+                mode="wait"
+                onExitComplete={() => {
+                  if (appState === 'assessment') {
+                    setIsUIVisible(true);
+                  }
+                }}
+              >
               {appState === 'intro' && (
                 <motion.div
                   key="intro"
@@ -431,6 +472,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
                       <TertiaryButton
                         onClick={() => {
                           setAnswers({});
+                          clearPosition();
                           setAppState('intro');
                         }}
                         label="重新开始"
@@ -444,6 +486,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
                 </motion.div>
               )}
             </AnimatePresence>
+            )}
           </div>
         </div>
       </FullScreenView>
@@ -462,6 +505,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
               label="保存并退出"
               onClick={() => {
                 setShowExitConfirm(false);
+                queryClient.invalidateQueries({ queryKey: ['/api/assessments'] });
                 onClose();
                 showSnackbar({
                   message: '评估进度已保存，您可以稍后继续',

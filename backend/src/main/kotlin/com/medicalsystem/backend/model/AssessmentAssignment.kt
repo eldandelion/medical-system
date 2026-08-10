@@ -61,4 +61,21 @@ data class AssessmentAssignment(
     fun isExpired(currentDate: LocalDate = LocalDate.now()): Boolean {
         return dueDate != null && currentDate.isAfter(dueDate) && status == AssessmentStatus.PENDING
     }
+
+    fun recordProgress(newAnswers: Map<String, Int>, currentUserId: Long) {
+        if (this.studentId != currentUserId) {
+            throw com.medicalsystem.backend.exception.ForbiddenException("You can only record progress for your own assessments")
+        }
+        if (this.status != AssessmentStatus.PENDING) {
+            throw IllegalStateException("Cannot record progress for a non-pending assessment")
+        }
+        this.answers = newAnswers
+    }
+
+    fun calculateProgress(totalQuestions: Int): Int {
+        if (this.status == AssessmentStatus.COMPLETED) return 100
+        val safeTotal = if (totalQuestions > 0) totalQuestions else 1
+        val answered = this.answers?.size ?: 0
+        return ((answered.toDouble() / safeTotal) * 100).toInt()
+    }
 }

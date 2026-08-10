@@ -1,10 +1,10 @@
+b01fdb3 feat: add sourceAssignmentId to PsychometricTest to track test origins
+3b52d5a refactor: elevate PsychometricTest to a domain entity
+1c4b9ae refactor: simplify assessment scoring and risk evaluation
+b767a8c Migrate assessment catalog to static JSON files and refactor tests
+a5ffa21 feat: migrate assessment catalog to dynamic database structure
 15d0157 refactor: Decouple AssessmentService and enforce language-agnostic DTOs
 908d80a docs: create on-demand context for Assessment UI and link it in GEMINI.md
 b809eda feat: implement strict typed assessment api
 c4e6e57 feat: implement student assessment assignment and questionnaire answering system
 5d0f5a1 fix: correct doctor actionable referral policy and JPA criteria mapping
-e785aba feat: implement role-specific dashboard action metrics and defensive UI rendering
-6d7a72f docs: add AI context documentation and architecture references
-70fd3e4 feat: implement end-to-end referral lifecycle notifications
-11e8341 fix: add missing ProfileDetailsView and roleTranslations imports across pages
-c15dbe8 feat: add assigned teacher notification when head counsellor creates referral
