@@ -15,26 +15,25 @@ class AssessmentScoringEngineTest {
             subtitle = "",
             description = "",
             duration = "",
+            orderNum = 1,
             sections = listOf(
                 AssessmentSection(
                     code = "phq_9",
                     title = "PHQ-9",
                     subtitle = "",
                     description = "",
+                    orderNum = 1,
                     questions = listOf(
-                        AssessmentQuestion(code = "q1", text = "Q1", optionGroup = AssessmentOptionGroup("group1", listOf(
+                        AssessmentQuestion(code = "q1", text = "Q1", orderNum = 1, optionGroup = AssessmentOptionGroup("group1", listOf(
                             AssessmentOption(0, "0"),
                             AssessmentOption(1, "1")
                         ))),
-                        AssessmentQuestion(code = "q2", text = "Q2", optionGroup = AssessmentOptionGroup("group2", listOf(
+                        AssessmentQuestion(code = "q2", text = "Q2", orderNum = 2, optionGroup = AssessmentOptionGroup("group2", listOf(
                             AssessmentOption(0, "0"),
                             AssessmentOption(2, "2")
                         )))
                     )
                 )
-            ),
-            scoringRules = listOf(
-                AssessmentScoringRule("phq_9", 0, 3, "NONE")
             )
         )
         

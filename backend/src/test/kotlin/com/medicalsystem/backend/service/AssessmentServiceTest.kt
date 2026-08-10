@@ -94,30 +94,25 @@ class AssessmentServiceTest {
         subtitle = "Patient Health Questionnaire-9",
         description = "国际公认的抑郁症状自评筛查量表",
         duration = "5-10 分钟",
+        orderNum = 1,
         sections = listOf(
             AssessmentSection(
                 code = "phq9",
                 title = "情绪状况评估",
                 subtitle = "PHQ-9",
                 description = "在过去的两周里，您有多少时间受到以下问题的困扰？",
+                orderNum = 1,
                 questions = (1..9).map {
                     AssessmentQuestion(
                         code = "phq9_$it",
                         text = "Question $it",
+                        orderNum = it,
                         optionGroup = AssessmentOptionGroup(
                             name = "phq_options",
                             options = (0..3).map { opt -> AssessmentOption(value = opt, label = "Option $opt") }
                         )
                     )
                 }
-            )
-        ),
-        scoringRules = listOf(
-            AssessmentScoringRule(
-                ruleType = "TOTAL_SCORE",
-                minScore = 0,
-                maxScore = 27,
-                level = "正常"
             )
         )
     )

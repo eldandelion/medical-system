@@ -13,7 +13,7 @@ data class AssessmentOptionGroup(
 data class AssessmentQuestion(
     val code: String,
     val text: String,
-    val orderNum: Int = 0,
+    val orderNum: Int,
     val optionGroup: AssessmentOptionGroup? = null,
     val customOptions: List<AssessmentOption>? = null
 ) {
@@ -26,18 +26,8 @@ data class AssessmentSection(
     val title: String,
     val subtitle: String? = null,
     val description: String? = null,
-    val orderNum: Int = 0,
+    val orderNum: Int,
     val questions: List<AssessmentQuestion> = emptyList()
-)
-
-data class AssessmentScoringRule(
-    val ruleType: String,
-    val minScore: Int? = null,
-    val maxScore: Int? = null,
-    val level: String,
-    val isHighRisk: Boolean = false,
-    val crisisFlag: String? = null,
-    val orderNum: Int = 0
 )
 
 data class AssessmentScale(
@@ -46,9 +36,8 @@ data class AssessmentScale(
     val subtitle: String? = null,
     val description: String? = null,
     val duration: String,
-    val orderNum: Int = 0,
-    val sections: List<AssessmentSection> = emptyList(),
-    val scoringRules: List<AssessmentScoringRule> = emptyList()
+    val orderNum: Int,
+    val sections: List<AssessmentSection> = emptyList()
 ) {
     val totalQuestions: Int
         get() = sections.sumOf { it.questions.size }

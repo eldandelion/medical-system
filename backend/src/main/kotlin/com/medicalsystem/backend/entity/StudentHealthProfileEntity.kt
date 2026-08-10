@@ -14,6 +14,9 @@ class StudentHealthProfileEntity(
     @Column(columnDefinition = "TEXT")
     var scidDiagnosis: String? = null,
 
+    @Column(name = "risk_status", nullable = false)
+    var riskStatus: com.medicalsystem.backend.model.RiskStatus = com.medicalsystem.backend.model.RiskStatus.LOW,
+
     @OneToMany(mappedBy = "healthProfile", cascade = [CascadeType.ALL], orphanRemoval = true)
     var riskFlags: MutableList<RiskFlagEntity> = mutableListOf(),
 

@@ -36,7 +36,7 @@ class AssessmentCatalogLoader {
     data class QuestionDto(
         val code: String,
         val text: String,
-        val orderNum: Int = 0,
+        val orderNum: Int? = null,
         val optionGroupName: String? = null,
         val customOptions: List<AssessmentOption>? = null
     )
@@ -81,11 +81,12 @@ class AssessmentCatalogLoader {
             // 4. Assemble AssessmentScales
             val catalog = mutableMapOf<String, AssessmentScale>()
             
+            var scaleOrder = 1
             for ((key, groupDto) in groupsMap) {
                 val sections = groupDto.questionnaires.mapIndexed { index, code ->
                     val sectionDto = sectionDtos[code] ?: throw AssessmentCatalogInitializationException("Missing questionnaire definition for code: $code in group $key")
                     
-                    val questions = sectionDto.questions.map { qDto ->
+                    val questions = sectionDto.questions.mapIndexed { qIndex, qDto ->
                         val optionGroup = qDto.optionGroupName?.let { 
                             optionGroupsMap[it] ?: throw AssessmentCatalogInitializationException("Unknown option group: $it in question ${qDto.code}")
                         }
@@ -93,7 +94,7 @@ class AssessmentCatalogLoader {
                         AssessmentQuestion(
                             code = qDto.code,
                             text = qDto.text,
-                            orderNum = qDto.orderNum,
+                            orderNum = qDto.orderNum ?: (qIndex + 1),
                             optionGroup = optionGroup,
                             customOptions = qDto.customOptions
                         )
@@ -115,9 +116,8 @@ class AssessmentCatalogLoader {
                     subtitle = groupDto.subtitle,
                     description = groupDto.description,
                     duration = groupDto.duration,
-                    orderNum = 0,
-                    sections = sections,
-                    scoringRules = emptyList()
+                    orderNum = scaleOrder++,
+                    sections = sections
                 )
                 
                 catalog[key] = scale

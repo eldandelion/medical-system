@@ -13,6 +13,7 @@ class StudentHealthProfile(
     val id: Long,
     val studentId: Long,
     var scidDiagnosis: String?,
+    var riskStatus: RiskStatus,
     val riskFlags: MutableList<RiskFlag>,
     val psychometricTests: MutableList<PsychometricTest>
 ) {
@@ -27,6 +28,11 @@ class StudentHealthProfile(
 
     fun recordAssessmentResult(test: PsychometricTest): PsychometricTest {
         psychometricTests.add(test)
+        
+        // TODO: Implement holistic risk calculation based on all historical tests
+        // val evaluator = HolisticRiskEvaluator(...)
+        // this.riskStatus = evaluator.evaluate(this.psychometricTests)
+        
         return test
     }
     

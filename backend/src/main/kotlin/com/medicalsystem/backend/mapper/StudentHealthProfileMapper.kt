@@ -17,6 +17,7 @@ class StudentHealthProfileMapper {
             id = entity.id,
             studentId = entity.studentId,
             scidDiagnosis = entity.scidDiagnosis,
+            riskStatus = entity.riskStatus,
             riskFlags = entity.riskFlags.map { flagEntity ->
                 RiskFlag(
                     id = flagEntity.id,
@@ -41,7 +42,8 @@ class StudentHealthProfileMapper {
         val entity = StudentHealthProfileEntity(
             id = model.id,
             studentId = model.studentId,
-            scidDiagnosis = model.scidDiagnosis
+            scidDiagnosis = model.scidDiagnosis,
+            riskStatus = model.riskStatus
         )
         
         entity.riskFlags = model.riskFlags.map { flagModel ->
