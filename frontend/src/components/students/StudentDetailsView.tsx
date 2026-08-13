@@ -220,11 +220,6 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
                 </div>
                 
 
-
-                <button className="flex items-center justify-center gap-2 py-3 border border-dashed border-[var(--md-sys-color-outline)] rounded-2xl text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] transition-colors mt-4">
-                  <span className="material-symbols-outlined text-sm">add</span>
-                  <span className="text-sm font-medium">添加手动日志</span>
-                </button>
               </motion.div>
             )}
           </AnimatePresence>

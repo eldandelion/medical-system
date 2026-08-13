@@ -54,11 +54,11 @@ export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, onAssign
   }, [isOpen, session.token]);
 
   const assignedAssessments = assignedIds.map(id => {
-    const found = allAssessments.find(a => a.scaleType === id);
+    const found = allAssessments.find(a => a.batteryCode === id);
     if (found) return found;
     // Fallback for missing/older enum types
     return {
-      scaleType: id as AssessmentScaleType,
+      batteryCode: id as AssessmentScaleType,
       title: getAssessmentName(id),
       subtitle: '',
       duration: '未知',
@@ -68,15 +68,15 @@ export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, onAssign
     } as AssessmentCatalogItemDto;
   });
   
-  const availableAssessments = allAssessments.filter(a => !assignedIds.includes(a.scaleType));
+  const availableAssessments = allAssessments.filter(a => !assignedIds.includes(a.batteryCode));
 
-  const toggleSelection = (scaleType: AssessmentScaleType) => {
+  const toggleSelection = (batteryCode: AssessmentScaleType) => {
     if (isSubmitting) return;
     const newSelection = new Set(selectedScaleTypes);
-    if (newSelection.has(scaleType)) {
-      newSelection.delete(scaleType);
+    if (newSelection.has(batteryCode)) {
+      newSelection.delete(batteryCode);
     } else {
-      newSelection.add(scaleType);
+      newSelection.add(batteryCode);
     }
     setSelectedScaleTypes(newSelection);
   };
@@ -164,25 +164,25 @@ export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, onAssign
                 <div className="flex flex-col gap-2">
                   {availableAssessments.map(assessment => (
                     <label 
-                      key={assessment.scaleType} 
+                      key={assessment.batteryCode} 
                       className={`flex items-start gap-4 p-4 rounded-2xl cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-[var(--md-sys-color-primary)] outline-none ${
-                        selectedScaleTypes.has(assessment.scaleType) 
+                        selectedScaleTypes.has(assessment.batteryCode) 
                           ? 'bg-[var(--md-sys-color-primary-container)]' 
                           : 'bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-surface-variant)]'
                       }`}
                       onClick={(e) => {
                         e.preventDefault();
-                        toggleSelection(assessment.scaleType);
+                        toggleSelection(assessment.batteryCode);
                       }}
                     >
-                      <div className={`pt-0.5 transition-opacity ${selectedScaleTypes.has(assessment.scaleType) ? 'opacity-100' : 'opacity-40'}`}>
+                      <div className={`pt-0.5 transition-opacity ${selectedScaleTypes.has(assessment.batteryCode) ? 'opacity-100' : 'opacity-40'}`}>
                         {/* @ts-ignore */}
                         <md-checkbox 
-                          checked={selectedScaleTypes.has(assessment.scaleType) || undefined}
+                          checked={selectedScaleTypes.has(assessment.batteryCode) || undefined}
                           onKeyDown={(e: React.KeyboardEvent) => {
                             if (e.key === 'Enter' || e.key === ' ') {
                               e.preventDefault();
-                              toggleSelection(assessment.scaleType);
+                              toggleSelection(assessment.batteryCode);
                             }
                           }}
                         />
@@ -223,7 +223,7 @@ export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, onAssign
                 <div className="flex flex-col gap-2">
                   {assignedAssessments.map(assessment => (
                     <div 
-                      key={assessment.scaleType} 
+                      key={assessment.batteryCode} 
                       className="flex items-start gap-2.5 p-4 rounded-2xl bg-[var(--md-sys-color-surface-container)] opacity-70"
                     >
                       <div className="pt-0.5">

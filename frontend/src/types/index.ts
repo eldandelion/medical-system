@@ -211,7 +211,7 @@ export interface AssessmentSectionDto {
 }
 
 export interface AssessmentCatalogItemDto {
-  scaleType: AssessmentScaleType;
+  batteryCode: AssessmentScaleType;
   title: string;
   subtitle: string;
   description: string;
@@ -229,7 +229,7 @@ export interface AssessmentListItemDto {
   id: number | string;
   title: string;
   subtitle?: string;
-  scaleType: AssessmentScaleType;
+  batteryCode: AssessmentScaleType;
   assignedBy: AssignedByDto;
   type: string;
   completionPercentage: number;
@@ -245,7 +245,7 @@ export interface AssessmentDetailsDto {
   id: number | string;
   title: string;
   subtitle?: string;
-  scaleType: AssessmentScaleType;
+  batteryCode: AssessmentScaleType;
   assignedBy: AssignedByDto;
   duration: string;
   status: AssessmentStatus;
@@ -255,7 +255,7 @@ export interface AssessmentDetailsDto {
 
 export interface AssignAssessmentRequest {
   studentId: number | string;
-  scaleTypes: AssessmentScaleType[];
+  batteryCodes: AssessmentScaleType[];
   dueDate?: string | null;
 }
 
@@ -263,7 +263,7 @@ export interface AssignCohortAssessmentRequest {
   majorId?: number | string | null;
   collegeId?: number | string | null;
   academicYear?: number | null;
-  scaleTypes: AssessmentScaleType[];
+  batteryCodes: AssessmentScaleType[];
   dueDate?: string | null;
 }
 

@@ -61,7 +61,7 @@ const AssessmentHistoryTab: React.FC<AssessmentHistoryTabProps> = ({ studentId }
   };
   
   const getAssessmentDisplayName = (batteryCode: string) => {
-    const catalogTitle = catalog.find(c => c.scaleType === batteryCode)?.title;
+    const catalogTitle = catalog.find(c => c.batteryCode === batteryCode)?.title;
     return getAssessmentName(batteryCode, catalogTitle);
   };
 

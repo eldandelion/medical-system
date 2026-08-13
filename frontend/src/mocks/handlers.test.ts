@@ -46,7 +46,7 @@ describe('MSW Handlers - Assessments', () => {
     expect(Array.isArray(catalog)).toBe(true);
     expect(catalog.length).toBeGreaterThanOrEqual(5);
 
-    const phq9 = catalog.find((item: any) => item.scaleType === 'PHQ_9');
+    const phq9 = catalog.find((item: any) => item.batteryCode === 'PHQ_9');
     expect(phq9).toBeDefined();
     expect(phq9.title).toContain('情绪状况评估');
     expect(phq9.questionCount).toBe(9);
