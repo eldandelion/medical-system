@@ -11,10 +11,10 @@ interface DataTableProps<T> {
   columns: ColumnDefinition<T>[];
   data: T[];
   onRowClick?: (item: T) => void;
-  selectedId?: string;
+  selectedId?: string | number;
 }
 
-export function DataTable<T extends { id?: string }>({ columns, data, onRowClick, selectedId }: DataTableProps<T>) {
+export function DataTable<T extends { id?: string | number }>({ columns, data, onRowClick, selectedId }: DataTableProps<T>) {
   return (
     <div className="w-full h-full flex flex-col min-h-0 relative">
       {/* Table Headers */}

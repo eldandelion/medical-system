@@ -6,8 +6,15 @@ import java.time.LocalDate
 object AssessmentScoringEngine {
 
     fun validateAnswers(scale: AssessmentScale, answers: Map<String, Int>) {
-        // TODO("Implement real psychometric validation logic")
-        // Just return for now, bypassing validation until implemented
+        val missingQuestionCodes = scale.allQuestionCodes - answers.keys
+        val invalidQuestionCodes = answers.keys - scale.allQuestionCodes
+        
+        if (missingQuestionCodes.isNotEmpty() || invalidQuestionCodes.isNotEmpty()) {
+            throw AssessmentValidationException(
+                missingKeys = missingQuestionCodes.toList(),
+                invalidKeys = invalidQuestionCodes.toList()
+            )
+        }
     }
 
     fun scoreSection(studentId: Long, section: AssessmentSection, answers: Map<String, Int>, assignmentId: Long? = null): PsychometricTest {

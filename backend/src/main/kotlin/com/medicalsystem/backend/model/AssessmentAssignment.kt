@@ -16,7 +16,8 @@ data class AssessmentAssignment(
     val assignedAt: LocalDateTime = LocalDateTime.now(),
     var completedAt: LocalDateTime? = null,
     val dueDate: LocalDate? = null,
-    var answers: Map<String, Int>? = null
+    var answers: Map<String, Int>? = null,
+    var revokedAt: LocalDateTime? = null
 ) : AggregateRoot() {
 
     fun initAssignedEvent() {
@@ -60,6 +61,27 @@ data class AssessmentAssignment(
 
     fun isExpired(currentDate: LocalDate = LocalDate.now()): Boolean {
         return dueDate != null && currentDate.isAfter(dueDate) && status == AssessmentStatus.PENDING
+    }
+
+    fun revoke(revokerId: Long) {
+        if (this.status != AssessmentStatus.PENDING) {
+            throw ConflictException("Only pending assignments can be revoked")
+        }
+        if (this.assignedByUserId != revokerId) {
+            throw com.medicalsystem.backend.exception.ForbiddenException("Only the original assigner can revoke this assignment")
+        }
+        this.status = AssessmentStatus.REVOKED
+        this.revokedAt = LocalDateTime.now()
+
+        if (this.id != null) {
+            registerEvent(
+                com.medicalsystem.backend.event.AssessmentRevokedEvent(
+                    studentId = this.studentId,
+                    batteryCode = this.batteryCode.value,
+                    revokerId = revokerId
+                )
+            )
+        }
     }
 
     fun recordProgress(newAnswers: Map<String, Int>, currentUserId: Long) {

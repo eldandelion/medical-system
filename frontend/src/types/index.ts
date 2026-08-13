@@ -178,7 +178,18 @@ export type AssessmentScaleType =
   | 'APQ_9_MOTHER'
   | 'COMPREHENSIVE_MENTAL';
 
-export type AssessmentStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED';
+export type AssessmentStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED' | 'REVOKED';
+
+export interface AssessmentAssignmentHistoryDto {
+  id: number;
+  batteryCode: string;
+  assignedByName: string;
+  assignedById: number;
+  status: AssessmentStatus;
+  assignedAt: string;
+  completedAt?: string;
+  revokedAt?: string;
+}
 
 export interface AssessmentOptionDto {
   value: number;

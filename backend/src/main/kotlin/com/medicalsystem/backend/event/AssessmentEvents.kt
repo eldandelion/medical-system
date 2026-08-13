@@ -19,3 +19,10 @@ data class AssessmentCompletedEvent(
     val completedAt: LocalDateTime,
     override val occurredOn: LocalDateTime = LocalDateTime.now()
 ) : DomainEvent
+
+data class AssessmentRevokedEvent(
+    val studentId: Long,
+    val batteryCode: String,
+    val revokerId: Long,
+    override val occurredOn: LocalDateTime = LocalDateTime.now()
+) : DomainEvent

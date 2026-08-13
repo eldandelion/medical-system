@@ -62,18 +62,18 @@ describe('MSW Handlers - Assessments', () => {
   });
 
   it('should assign assessments to student successfully', async () => {
-    const response = await fetch('http://localhost:3000/api/assessments/assign', {
+    const response = await fetch('http://localhost:3000/api/assessments/assignments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         studentId: '101',
-        scaleTypes: ['PHQ_9', 'GAD_7']
+        batteryCode: 'PHQ_9'
       })
     });
     expect(response.status).toBe(201);
 
     const result = await response.json();
-    expect(result.assignedCount).toBe(2);
+    expect(result.batteryCode).toBe('PHQ_9');
   });
 
   it('should submit assessment answers successfully', async () => {

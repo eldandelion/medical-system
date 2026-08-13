@@ -35,7 +35,8 @@ class AssessmentAssignmentMapper(
             assignedAt = entity.assignedAt,
             completedAt = entity.completedAt,
             dueDate = entity.dueDate,
-            answers = parsedAnswers
+            answers = parsedAnswers,
+            revokedAt = entity.revokedAt
         )
     }
 
@@ -56,7 +57,8 @@ class AssessmentAssignmentMapper(
             assignedAt = model.assignedAt,
             completedAt = model.completedAt,
             dueDate = model.dueDate,
-            answersJson = answersStr
+            answersJson = answersStr,
+            revokedAt = model.revokedAt
         )
         
         return entity

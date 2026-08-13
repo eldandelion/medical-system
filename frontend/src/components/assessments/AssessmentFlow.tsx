@@ -18,6 +18,8 @@ const DEFAULT_OPTIONS = [
   { value: 3, label: '几乎每天' }
 ];
 
+const INCOMPLETE_ASSESSMENT_MSG = '请先完成所有题目后再提交';
+
 interface AssessmentFlowProps {
   isOpen: boolean;
   onClose: () => void;
@@ -168,6 +170,10 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
       setCurrentSectionIdx(prev => prev + 1);
       setCurrentQuestionIdx(0);
     } else {
+      if (answeredCount < totalQuestions) {
+        showSnackbar({ message: INCOMPLETE_ASSESSMENT_MSG, duration: 3000 });
+        return;
+      }
       submitAssessment(answers);
     }
   };

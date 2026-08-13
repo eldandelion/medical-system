@@ -43,5 +43,8 @@ class AssessmentAssignmentEntity(
     var dueDate: LocalDate? = null,
 
     @Column(name = "answers_json", columnDefinition = "TEXT")
-    var answersJson: String? = null
+    var answersJson: String? = null,
+    
+    @Column(name = "revoked_at")
+    var revokedAt: LocalDateTime? = null
 )

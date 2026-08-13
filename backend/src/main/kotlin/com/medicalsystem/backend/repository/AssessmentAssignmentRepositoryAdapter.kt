@@ -3,6 +3,8 @@ package com.medicalsystem.backend.repository
 import com.medicalsystem.backend.mapper.AssessmentAssignmentMapper
 import com.medicalsystem.backend.model.AssessmentAssignment
 import com.medicalsystem.backend.model.AssessmentStatus
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.util.Optional
 
@@ -11,6 +13,10 @@ class AssessmentAssignmentRepositoryAdapter(
     private val jpaRepository: AssessmentAssignmentJpaRepository,
     private val mapper: AssessmentAssignmentMapper
 ) : AssessmentAssignmentRepository {
+
+    override fun findByStudentIdOrderByAssignedAtDesc(studentId: Long, pageable: Pageable): Page<AssessmentAssignment> {
+        return jpaRepository.findByStudentIdOrderByAssignedAtDesc(studentId, pageable).map { mapper.toModel(it) }
+    }
 
     override fun findById(id: Long): Optional<AssessmentAssignment> {
         return jpaRepository.findById(id).map { mapper.toModel(it) }

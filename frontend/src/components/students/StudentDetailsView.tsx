@@ -13,6 +13,7 @@ import { PrimaryTabs } from '../common/Tabs';
 import { PsychometricsTabContent } from '../assessments/PsychometricsTabContent';
 import { AssignQuestionnaireDialog } from '../assessments/AssignQuestionnaireDialog';
 import { Student } from '../../types';
+import AssessmentHistoryTab from './AssessmentHistoryTab';
 
 interface StudentDetailsViewProps {
   student: Student;
@@ -43,7 +44,6 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
   
   const [isAssignDialogOpen, setIsAssignDialogOpen] = React.useState(false);
-  const [assignedQuestionnaires, setAssignedQuestionnaires] = React.useState<string[]>([]);
 
   const setActiveTab = (tab: TabType) => {
     setInternalActiveTab(tab);
@@ -128,8 +128,6 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
         isOpen={isAssignDialogOpen}
         onClose={() => setIsAssignDialogOpen(false)}
         studentId={student.id}
-        assignedIds={assignedQuestionnaires}
-        onAssign={setAssignedQuestionnaires}
       />
       <AnimatePresence mode="wait">
             {activeTab === StudentDetailsTabs.OVERVIEW && (
@@ -216,32 +214,12 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
                 transition={{ duration: 0.2 }}
                 className="flex flex-col gap-6"
               >
-                {student.history && student.history.length > 0 ? (
-                  <div className="relative pl-8 flex flex-col gap-8 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-[var(--md-sys-color-outline-variant)]">
-                    {student.history.map((entry: { date: string; type: string; description: string }, idx: number) => (
-                      <div key={idx} className="relative flex flex-col gap-2">
-                        <div className="absolute left-[-25px] top-1 w-4 h-4 rounded-full border-2 border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-surface-container-lowest)] z-10" />
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary-container)] px-2 py-0.5 rounded-md">
-                            {entry.date}
-                          </span>
-                          <span className="text-[12px] font-medium text-[var(--md-sys-color-on-surface-variant)]">
-                            {entry.type}
-                          </span>
-                        </div>
-                        <div className="bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)] border-opacity-50 rounded-2xl p-4">
-                          <p className="text-[14px] text-[var(--md-sys-color-on-surface)] leading-relaxed">
-                            {entry.description}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-8 text-center text-sm text-[var(--md-sys-color-on-surface-variant)] opacity-60">
-                    暂无档案记录记录。
-                  </div>
-                )}
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold mb-4 text-[var(--md-sys-color-on-surface)]">测评记录</h3>
+                  <AssessmentHistoryTab studentId={student.id} />
+                </div>
+                
+
 
                 <button className="flex items-center justify-center gap-2 py-3 border border-dashed border-[var(--md-sys-color-outline)] rounded-2xl text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] transition-colors mt-4">
                   <span className="material-symbols-outlined text-sm">add</span>

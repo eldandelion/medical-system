@@ -3,18 +3,19 @@ import { useQueryClient } from '@tanstack/react-query';
 import { GenericDialog } from '../common/GenericDialog';
 import { PrimaryButton, SecondaryButton } from '../common/Buttons';
 import { AssessmentCatalogItemDto, AssessmentScaleType } from '../../types';
+import { getAssessmentName } from '../../constants/assessmentDictionary';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAssessmentHistory } from '../../hooks/useAssessmentAssignments';
 
 interface AssignQuestionnaireDialogProps {
   isOpen: boolean;
   onClose: () => void;
   studentId: string;
-  assignedIds: string[];
-  onAssign: (newAssignedIds: string[]) => void;
+  onAssign?: (ids: string[]) => void;
 }
 
-export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, assignedIds, onAssign }: AssignQuestionnaireDialogProps) {
+export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, onAssign }: AssignQuestionnaireDialogProps) {
   const { session } = useAuth();
   const queryClient = useQueryClient();
   const [allAssessments, setAllAssessments] = useState<AssessmentCatalogItemDto[]>([]);
@@ -22,6 +23,10 @@ export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, assigned
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedScaleTypes, setSelectedScaleTypes] = useState<Set<AssessmentScaleType>>(new Set());
   const { showSnackbar } = useSnackbar();
+
+  // Fetch real history
+  const { data: historyData, isLoading: isHistoryLoading } = useAssessmentHistory(studentId, 0, 100);
+  const assignedIds = historyData?.content?.filter(h => h.status === 'PENDING').map(h => h.batteryCode) || [];
 
   useEffect(() => {
     if (isOpen) {
@@ -48,7 +53,21 @@ export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, assigned
     }
   }, [isOpen, session.token]);
 
-  const assignedAssessments = allAssessments.filter(a => assignedIds.includes(a.scaleType));
+  const assignedAssessments = assignedIds.map(id => {
+    const found = allAssessments.find(a => a.scaleType === id);
+    if (found) return found;
+    // Fallback for missing/older enum types
+    return {
+      scaleType: id as AssessmentScaleType,
+      title: getAssessmentName(id),
+      subtitle: '',
+      duration: '未知',
+      questionCount: 0,
+      description: '',
+      sections: []
+    } as AssessmentCatalogItemDto;
+  });
+  
   const availableAssessments = allAssessments.filter(a => !assignedIds.includes(a.scaleType));
 
   const toggleSelection = (scaleType: AssessmentScaleType) => {
@@ -66,29 +85,40 @@ export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, assigned
     if (selectedScaleTypes.size === 0) return;
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/assessments/assign`.replace('//api', '/api'), {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          studentId: Number(studentId) || studentId,
-          scaleTypes: Array.from(selectedScaleTypes)
-        })
-      });
+      // Assign all selected sequentially since backend API handles one by one
+      const batteryCodes = Array.from(selectedScaleTypes);
+      let successCount = 0;
+      
+      for (const code of batteryCodes) {
+        const res = await fetch(`${import.meta.env.BASE_URL}/api/assessments/assignments`.replace('//api', '/api'), {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            studentId: Number(studentId) || studentId,
+            batteryCode: code
+          })
+        });
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || '分配问卷失败');
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          if (errorData.error === 'DUPLICATE_ASSIGNMENT') {
+            showSnackbar({ message: `问卷 ${code} 已经分配过了`, duration: 4000 });
+          } else {
+            throw new Error(errorData.error || '分配问卷失败');
+          }
+        } else {
+          successCount++;
+        }
       }
 
-      const result = await res.json();
-      const newAssignedIds = [...assignedIds, ...Array.from(selectedScaleTypes)];
-      onAssign(newAssignedIds);
+      if (onAssign) onAssign([]);
       queryClient.invalidateQueries({ queryKey: ['/api/assessments'] });
       queryClient.invalidateQueries({ queryKey: ['/api/students'] });
-      showSnackbar({ message: result.assignedCount > 0 ? `已成功分配 ${result.assignedCount} 份问卷` : '问卷已成功分配', duration: 3000 });
+      queryClient.invalidateQueries({ queryKey: ['/api/assessments/assignments/student'] });
+      showSnackbar({ message: successCount > 0 ? `已成功分配 ${successCount} 份问卷` : '操作完成', duration: 3000 });
       setIsSubmitting(false);
       onClose();
     } catch (err: any) {

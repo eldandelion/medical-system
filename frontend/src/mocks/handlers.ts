@@ -96,7 +96,62 @@ export const handlers = [
     return HttpResponse.json(assessment);
   }),
 
-  http.post(api('/api/assessments/assign'), async ({ request }) => {
+  http.post(api('/api/assessments/assignments'), async ({ request }) => {
+    await delay(MOCK_DELAY_MS);
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json(), { status: 201 });
+        }
+        if (res.status >= 400 && res.status < 500) {
+          console.warn(`[MSW Bypass] Backend rejected /api/assessments/assignments with status ${res.status}`);
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not assign real assessment, falling back to mock", e);
+      }
+    }
+    const body = await request.json() as { studentId: string | number; batteryCode: string };
+    
+    // Simulate conflict
+    if (body.batteryCode === 'GAD_7') {
+      return HttpResponse.json({ error: 'DUPLICATE_ASSIGNMENT' }, { status: 409 });
+    }
+    
+    return HttpResponse.json({
+      id: Math.floor(Math.random() * 1000),
+      batteryCode: body.batteryCode,
+      assignedByName: "Mock User",
+      assignedById: 1,
+      status: 'PENDING',
+      assignedAt: new Date().toISOString()
+    }, { status: 201 });
+  }),
+
+  http.post(api('/api/assessments/assignments/:id/revoke'), async ({ request }) => {
+    await delay(MOCK_DELAY_MS);
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return new HttpResponse(null, { status: 200 });
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not revoke assignment, falling back to mock", e);
+      }
+    }
+    return new HttpResponse(null, { status: 200 });
+  }),
+
+  http.get(api('/api/assessments/assignments/student/:studentId'), async ({ request }) => {
     await delay(MOCK_DELAY_MS);
     if (import.meta.env.MODE !== 'test') {
       try {
@@ -106,18 +161,29 @@ export const handlers = [
           return HttpResponse.json(await res.json());
         }
         if (res.status >= 400 && res.status < 500) {
-          console.warn(`[MSW Bypass] Backend rejected /api/assessments/assign with status ${res.status}`);
           const errBody = await res.json().catch(() => ({}));
           return HttpResponse.json(errBody, { status: res.status });
         }
       } catch (e) {
-        console.warn("Could not assign real assessment, falling back to mock", e);
+        console.warn("Could not fetch assignments, falling back to mock", e);
       }
     }
-    const body = await request.json() as { studentId: string | number; scaleTypes: string[] };
     return HttpResponse.json({
-      assignedCount: body?.scaleTypes?.length ?? 1
-    }, { status: 201 });
+      content: [
+        {
+          id: 1,
+          batteryCode: 'PHQ_9',
+          assignedByName: 'Teacher A',
+          assignedById: 2,
+          status: 'PENDING',
+          assignedAt: new Date().toISOString()
+        }
+      ],
+      totalElements: 1,
+      totalPages: 1,
+      size: 10,
+      number: 0
+    });
   }),
 
   http.post(api('/api/assessments/assign/cohort'), async ({ request }) => {
