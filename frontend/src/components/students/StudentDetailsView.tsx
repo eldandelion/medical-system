@@ -12,6 +12,7 @@ import { useDetails } from '../../contexts/DetailsContext';
 import { PrimaryTabs } from '../common/Tabs';
 import { PsychometricsTabContent } from '../assessments/PsychometricsTabContent';
 import { AssignQuestionnaireDialog } from '../assessments/AssignQuestionnaireDialog';
+import { ReferralCreationForm } from '../records/ReferralCreationForm';
 import { Student } from '../../types';
 import AssessmentHistoryTab from './AssessmentHistoryTab';
 
@@ -50,7 +51,7 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
     onTabChange?.(tab);
   };
 
-  const { openCreation } = useCreationOverlay();
+  const { openCreation, closeCreation } = useCreationOverlay();
   const { isFullScreen } = useDetails();
   const tabs = STUDENT_DETAILS_TABS;
 
@@ -114,7 +115,7 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
           <PrimaryButton
             icon="send_time_extension"
             label="发起转诊"
-            onClick={() => openCreation('拟稿：新转诊', <div className="p-6">转诊表单模板将显示在此处...</div>)}
+            onClick={() => openCreation('拟稿：新转诊', <ReferralCreationForm onClose={closeCreation} />)}
           />
           <SecondaryButton
             icon="assignment"

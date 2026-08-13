@@ -42,7 +42,7 @@ export function CreationSheetTemplate() {
         initial={{ opacity: 0 }}
         animate={{ opacity: isFullscreen ? 0 : 0.4 }}
         exit={{ opacity: 0 }}
-        className={`fixed inset-0 bg-black z-[90] ${isFullscreen ? 'pointer-events-none' : 'pointer-events-auto'}`}
+        className={`fixed inset-0 bg-black z-[190] ${isFullscreen ? 'pointer-events-none' : 'pointer-events-auto'}`}
         onClick={minimizeCreation}
       />
 
@@ -54,7 +54,7 @@ export function CreationSheetTemplate() {
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', bounce: 0, duration: 0.5 }}
-        className={`fixed bottom-0 left-0 right-0 z-[100] flex flex-col overflow-hidden ${isFullscreen
+        className={`fixed bottom-0 left-0 right-0 z-[200] flex flex-col overflow-hidden ${isFullscreen
           ? 'top-0 w-full rounded-none bg-[var(--md-sys-color-surface)]'
           : 'h-[75dvh] w-full max-w-4xl mx-auto rounded-t-[32px] bg-[var(--md-sys-color-surface-container-low)] shadow-[0px_-2px_8px_rgba(0,0,0,0.1)]'
           }`}
