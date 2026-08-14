@@ -954,5 +954,74 @@ export const handlers = [
     }
 
     return HttpResponse.json({ success: true });
+  }),
+
+  http.post(api('/api/files/upload-intent'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json(), { status: 201 });
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not fetch real file upload intent, falling back to mock", e);
+      }
+    }
+    const body = await request.json() as any;
+    return HttpResponse.json({
+      fileId: Date.now(),
+      presignedUploadUrl: 'https://mock-storage.university.edu/upload',
+      storageKey: `mock/${body?.filename || 'file'}`,
+      expiresInSeconds: 300
+    }, { status: 201 });
+  }),
+
+  http.post(api('/api/files/:id/complete'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not fetch real file complete, falling back to mock", e);
+      }
+    }
+    return HttpResponse.json({
+      fileId: Number(params.id),
+      status: 'ACTIVE'
+    });
+  }),
+
+  http.get(api('/api/referrals/:referralId/attachments/:fileId/download-url'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not fetch real download url, falling back to mock", e);
+      }
+    }
+    return HttpResponse.json({
+      downloadUrl: `https://mock-storage.university.edu/download/${params.fileId}`,
+      expiresInSeconds: 60
+    });
   })
 ];

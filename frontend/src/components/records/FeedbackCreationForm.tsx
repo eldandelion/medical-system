@@ -9,6 +9,7 @@ import { AttachmentList } from '../common/AttachmentList';
 import { Referral } from '../../types';
 import { formatDateToChinese } from '../../utils/dateUtils';
 import { useQueryClient } from '@tanstack/react-query';
+import { uploadFileDirect } from '../../api/files';
 
 export function FeedbackCreationForm({ onClose, initialReferralId }: { onClose: () => void; initialReferralId?: string }) {
   const { viewState, setHeaderActions, setOnCloseInterceptor } = useCreationOverlay();
@@ -22,17 +23,44 @@ export function FeedbackCreationForm({ onClose, initialReferralId }: { onClose: 
   const [referrals, setReferrals] = React.useState<Referral[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = React.useState({
     referralId: initialReferralId || '',
     content: '',
-    attachments: [] as { name: string; size: string }[]
+    attachments: [] as { name: string; size: string; fileId?: number }[]
   });
 
   const [errors, setErrors] = React.useState({
     referralId: false,
     content: false
   });
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const uploaded = await uploadFileDirect(file, 'FEEDBACK_ATTACHMENT', session?.token);
+        setFormData(prev => ({
+          ...prev,
+          attachments: [...prev.attachments, uploaded]
+        }));
+      }
+      showSnackbar({ message: '附件上传成功', duration: 3000 });
+    } catch (err: any) {
+      showSnackbar({ message: err.message || '文件上传失败', duration: 4000 });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const handleSubmit = async () => {
     const newErrors = {
@@ -59,7 +87,11 @@ export function FeedbackCreationForm({ onClose, initialReferralId }: { onClose: 
         body: JSON.stringify({
           referralId: formData.referralId,
           content: formData.content,
-          attachments: [] // Send empty array since attachments are disabled
+          attachments: formData.attachments.map(att => ({
+            name: att.name,
+            sizeBytes: 1024,
+            fileId: att.fileId
+          }))
         })
       });
 
@@ -242,12 +274,20 @@ export function FeedbackCreationForm({ onClose, initialReferralId }: { onClose: 
 
               <div className="flex flex-col gap-4">
                 <div>
-                  
-                  <md-filled-tonal-button className="[&::part(button)]:px-0" disabled={true}>
-                    
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    multiple
+                    onChange={handleFileChange}
+                  />
+                  <md-filled-tonal-button
+                    className="[&::part(button)]:px-0"
+                    disabled={isSubmitting || isUploading}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
                     <md-icon slot="icon" className="ml-4">upload</md-icon>
-                    <span className="mr-4">上传病历或处方附件</span>
-                  
+                    <span className="mr-4">{isUploading ? '上传中...' : '上传病历或处方附件'}</span>
                   </md-filled-tonal-button>
                 </div>
                 <AttachmentList

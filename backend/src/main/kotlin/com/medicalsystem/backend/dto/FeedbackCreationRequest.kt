@@ -17,5 +17,7 @@ data class FeedbackAttachmentDto(
     @field:NotBlank(message = "Attachment name must not be blank")
     val name: String,
     
-    val sizeBytes: Long
+    val sizeBytes: Long,
+
+    val fileId: Long? = null
 )

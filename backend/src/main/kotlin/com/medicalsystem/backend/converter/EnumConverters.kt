@@ -85,3 +85,15 @@ class AppointmentStatusConverter : AttributeConverter<AppointmentStatus, Int> {
     override fun convertToDatabaseColumn(attribute: AppointmentStatus?) = getIdFromEnum(attribute)
     override fun convertToEntityAttribute(dbData: Int?) = getEnumFromId<AppointmentStatus>(dbData)
 }
+
+@Converter(autoApply = true)
+class FileStatusConverter : AttributeConverter<com.medicalsystem.backend.storage.domain.FileStatus, Int> {
+    override fun convertToDatabaseColumn(attribute: com.medicalsystem.backend.storage.domain.FileStatus?) = getIdFromEnum(attribute)
+    override fun convertToEntityAttribute(dbData: Int?) = getEnumFromId<com.medicalsystem.backend.storage.domain.FileStatus>(dbData)
+}
+
+@Converter(autoApply = true)
+class FileCategoryConverter : AttributeConverter<com.medicalsystem.backend.storage.domain.FileCategory, Int> {
+    override fun convertToDatabaseColumn(attribute: com.medicalsystem.backend.storage.domain.FileCategory?) = getIdFromEnum(attribute)
+    override fun convertToEntityAttribute(dbData: Int?) = getEnumFromId<com.medicalsystem.backend.storage.domain.FileCategory>(dbData)
+}

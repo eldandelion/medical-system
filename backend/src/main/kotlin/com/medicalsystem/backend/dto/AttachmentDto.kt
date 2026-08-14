@@ -7,5 +7,7 @@ data class AttachmentDto(
     val name: String,
     
     @field:NotBlank(message = "Size cannot be blank")
-    val size: String
+    val size: String,
+
+    val fileId: Long? = null
 )

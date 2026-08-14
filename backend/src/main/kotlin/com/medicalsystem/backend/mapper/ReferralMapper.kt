@@ -60,7 +60,8 @@ class ReferralMapper {
                         name = it.name,
                         sizeBytes = it.size.toLongOrNull() ?: 0L,
                         url = java.net.URI("http://mock-url.com")
-                    )
+                    ),
+                    fileId = it.fileId
                 )
             }.toMutableList(),
             steps = entity.steps.map {
@@ -84,7 +85,8 @@ class ReferralMapper {
                                 name = att.name,
                                 sizeBytes = att.sizeBytes,
                                 url = java.net.URI(att.fileUrl ?: "http://mock-url.com")
-                            )
+                            ),
+                            fileId = att.fileId
                         )
                     },
                     createdAt = it.createdAt
@@ -123,6 +125,7 @@ class ReferralMapper {
                 id = it.id,
                 name = it.file.name,
                 size = it.file.sizeBytes.toString(),
+                fileId = it.fileId,
                 referral = entity
             )
         }.toMutableSet()
@@ -147,7 +150,8 @@ class ReferralMapper {
                 attachments = it.attachments.map { att ->
                     com.medicalsystem.backend.entity.FeedbackAttachmentEntity(
                         name = att.file.name,
-                        sizeBytes = att.file.sizeBytes
+                        sizeBytes = att.file.sizeBytes,
+                        fileId = att.fileId
                     )
                 }.toMutableList(),
                 createdAt = it.createdAt
@@ -206,7 +210,8 @@ class ReferralMapper {
                 attachments = it.attachments.map { att ->
                     com.medicalsystem.backend.dto.AttachmentDto(
                         name = att.file.name,
-                        size = att.file.sizeBytes.toString()
+                        size = att.file.sizeBytes.toString(),
+                        fileId = att.fileId
                     )
                 }
             )

@@ -15,6 +15,9 @@ class AttachmentEntity(
     @Column(nullable = false)
     var size: String,
 
+    @Column(name = "file_id", nullable = true)
+    var fileId: Long? = null,
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "referral_id", nullable = false)
     var referral: ReferralEntity? = null

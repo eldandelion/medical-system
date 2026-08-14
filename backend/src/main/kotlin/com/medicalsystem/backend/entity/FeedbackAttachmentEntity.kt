@@ -18,5 +18,8 @@ class FeedbackAttachmentEntity(
     var sizeBytes: Long,
     
     @Column(name = "file_url", nullable = true)
-    var fileUrl: String? = null
+    var fileUrl: String? = null,
+
+    @Column(name = "file_id", nullable = true)
+    var fileId: Long? = null
 )

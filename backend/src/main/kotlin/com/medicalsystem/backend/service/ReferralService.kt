@@ -109,6 +109,17 @@ class ReferralService(
         val student = studentRepository.findById(dto.studentId)
             .orElseThrow { com.medicalsystem.backend.exception.StudentNotFoundException(dto.studentId) }
             
+        val attachmentModels = dto.attachments.map { att ->
+            com.medicalsystem.backend.model.ReferralAttachment(
+                file = com.medicalsystem.backend.model.FileReference(
+                    name = att.name,
+                    sizeBytes = att.size.toLongOrNull() ?: 1024L,
+                    url = java.net.URI("http://mock-storage.internal")
+                ),
+                fileId = att.fileId
+            )
+        }
+
         val model = com.medicalsystem.backend.model.ReferralFactory.createDraft(
             studentId = dto.studentId,
             title = dto.title,
@@ -116,7 +127,8 @@ class ReferralService(
             riskLevel = dto.riskLevel,
             referredById = user.id,
             clinicalStatus = dto.clinicalStatus,
-            severeRiskFactors = dto.severeRiskFactors
+            severeRiskFactors = dto.severeRiskFactors,
+            attachments = attachmentModels
         )
 
         if (dto.actionType != ACTION_DRAFT) {

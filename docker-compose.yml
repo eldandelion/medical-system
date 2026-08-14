@@ -22,11 +22,18 @@ services:
     restart: unless-stopped
     depends_on:
       - db
+      - minio
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/medical_db?useSSL=false&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=rootpassword
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - STORAGE_S3_ENDPOINT_INTERNAL=http://minio:9000
+      - STORAGE_S3_ENDPOINT_EXTERNAL=http://localhost:9000
+      - STORAGE_S3_ACCESS_KEY=minioadmin
+      - STORAGE_S3_SECRET_KEY=miniopassword
+      - STORAGE_S3_BUCKET=medical-attachments
+      - STORAGE_S3_REGION=us-east-1
     networks:
       - app-network
 
@@ -44,9 +51,48 @@ services:
     networks:
       - app-network
 
+  minio:
+    image: minio/minio:RELEASE.2024-05-10T01-41-38Z
+    container_name: medical-system-minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    restart: unless-stopped
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=miniopassword
+      - MINIO_SERVER_URL=http://localhost:9000
+      - MINIO_BROWSER_REDIRECT_URL=http://localhost:9001
+    volumes:
+      - minio-data:/data
+    networks:
+      - app-network
+
+  minio-init:
+    image: minio/mc:RELEASE.2024-05-09T17-04-24Z
+    container_name: medical-system-minio-init
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until /usr/bin/mc alias set myminio http://minio:9000 minioadmin miniopassword; do
+        echo 'Waiting for MinIO...'
+        sleep 2
+      done;
+      /usr/bin/mc mb --ignore-existing myminio/medical-attachments;
+      /usr/bin/mc mb --ignore-existing myminio/medical-avatars;
+      /usr/bin/mc anonymous set download myminio/medical-avatars;
+      echo 'MinIO buckets initialized successfully.';
+      exit 0;
+      "
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge
 
 volumes:
   db-data:
+  minio-data:

@@ -50,8 +50,9 @@ export interface Appointment {
 }
 
 export interface Attachment {
-  name: String;
-  size: String;
+  name: string;
+  size: string;
+  fileId?: number | string;
 }
 
 export interface ReferralDetails {

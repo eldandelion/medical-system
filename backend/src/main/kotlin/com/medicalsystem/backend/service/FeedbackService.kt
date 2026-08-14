@@ -47,7 +47,8 @@ class FeedbackService(
                     name = it.name,
                     sizeBytes = it.sizeBytes,
                     url = URI("http://mock-url.com")
-                )
+                ),
+                fileId = it.fileId
             )
         }
     }

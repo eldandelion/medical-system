@@ -10,6 +10,7 @@ import { CLINICAL_STATUS_OPTIONS, RISK_FACTOR_OPTIONS } from '../../config/refer
 import { RISK_LEVEL_STYLES } from '../../config/styleConstants';
 import { AttachmentList } from '../common/AttachmentList';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { uploadFileDirect } from '../../api/files';
 
 export function ReferralCreationForm({ onClose, initialData }: { onClose: () => void; initialData?: Partial<{
   studentId: string;
@@ -18,7 +19,7 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
   riskLevel: string;
   clinicalStatus: ClinicalStatusType[];
   severeRiskFactors: SevereRiskFactorType[];
-  attachments: { name: string; size: string }[];
+  attachments: { name: string; size: string; fileId?: number }[];
 }> }) {
   const { viewState, setHeaderActions, setOnCloseInterceptor } = useCreationOverlay();
   const { showSnackbar } = useSnackbar();
@@ -28,6 +29,8 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
 
   const [isCloseWarningOpen, setIsCloseWarningOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   // Safely grab the portal slot inside an effect to keep the render pure
   const [progressSlot, setProgressSlot] = React.useState<HTMLElement | null>(null);
@@ -42,11 +45,33 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
     riskLevel: initialData?.riskLevel || 'LOW',
     clinicalStatus: initialData?.clinicalStatus || (['MEDICATED', 'PRIOR_THERAPY'] as ClinicalStatusType[]),
     severeRiskFactors: initialData?.severeRiskFactors || ([] as SevereRiskFactorType[]),
-    attachments: initialData?.attachments || [
-      { name: 'Patient_Intake_Scan_v2.pdf', size: '2.4 MB' },
-      { name: 'Hospital_Release_Form.png', size: '1.1 MB' },
-    ]
+    attachments: initialData?.attachments || [] as { name: string; size: string; fileId?: number }[]
   });
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const uploaded = await uploadFileDirect(file, 'REFERRAL_ATTACHMENT', session?.token);
+        setFormData(prev => ({
+          ...prev,
+          attachments: [...prev.attachments, uploaded]
+        }));
+      }
+      showSnackbar({ message: '附件上传成功', duration: 3000 });
+    } catch (err: any) {
+      showSnackbar({ message: err.message || '文件上传失败', duration: 4000 });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   // Keep a mutable ref of formData to avoid re-registering the close interceptor on every keystroke
   const formDataRef = React.useRef(formData);
@@ -369,9 +394,20 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
 
             <div className="flex flex-col gap-4">
               <div>
-                <md-filled-tonal-button className="[&::part(button)]:px-0" disabled={isSubmitting}>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  multiple
+                  onChange={handleFileChange}
+                />
+                <md-filled-tonal-button
+                  className="[&::part(button)]:px-0"
+                  disabled={isSubmitting || isUploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
                   <md-icon slot="icon" className="ml-4">upload</md-icon>
-                  <span className="mr-4">上传附件</span>
+                  <span className="mr-4">{isUploading ? '上传中...' : '上传附件'}</span>
                 </md-filled-tonal-button>
               </div>
               <AttachmentList

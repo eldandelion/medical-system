@@ -65,7 +65,7 @@ describe('FeedbackCreationForm', () => {
     document.body.innerHTML = '';
   });
 
-  it('Given component is loaded, Then attachment upload button is visibly disabled', async () => {
+  it('Given component is loaded, Then attachment upload button is enabled and clickable', async () => {
     render(<FeedbackCreationForm onClose={mockOnClose} initialReferralId="ref-1" />);
     
     await waitFor(() => {
@@ -74,7 +74,7 @@ describe('FeedbackCreationForm', () => {
 
     const attachBtn = screen.getByText('上传病历或处方附件').closest('md-filled-tonal-button');
     expect(attachBtn).toBeDefined();
-    expect(attachBtn?.hasAttribute('disabled')).toBe(true);
+    expect(attachBtn?.hasAttribute('disabled')).toBe(false);
   });
 
   it('Given empty content, When submitted, Then shows validation error and does not call API', async () => {

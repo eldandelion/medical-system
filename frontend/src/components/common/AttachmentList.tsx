@@ -3,6 +3,7 @@ import * as React from 'react';
 export interface Attachment {
   name: string;
   size: string;
+  fileId?: number | string;
 }
 
 interface AttachmentListProps {
