@@ -139,7 +139,12 @@ class FileApplicationService(
     }
 
     @Transactional(readOnly = true)
-    fun getReferralAttachmentDownloadUrl(referralId: Long, fileId: Long, user: User): DownloadUrlResponse {
+    fun getReferralAttachmentDownloadUrl(
+        referralId: Long,
+        fileId: Long,
+        intent: com.medicalsystem.backend.storage.domain.DownloadIntent = com.medicalsystem.backend.storage.domain.DownloadIntent.DOWNLOAD,
+        user: User
+    ): DownloadUrlResponse {
         val referral = referralRepository.findById(referralId).orElseThrow {
             ResourceNotFoundException("Referral with ID $referralId not found")
         }
@@ -149,6 +154,8 @@ class FileApplicationService(
             throw ForbiddenException("Unauthorized to access attachments on referral $referralId")
         }
 
+        referral.assertCanAccessAttachment(fileId)
+
         val file = uploadedFileRepository.findById(fileId).orElseThrow {
             ResourceNotFoundException("File with ID $fileId not found")
         }
@@ -156,6 +163,8 @@ class FileApplicationService(
         val presignedUrl = fileStoragePort.generatePresignedDownloadUrl(
             storageKey = file.storageKey,
             originalFilename = file.originalName,
+            mimeType = file.mimeType,
+            intent = intent,
             duration = DOWNLOAD_PRESIGN_DURATION
         )
 

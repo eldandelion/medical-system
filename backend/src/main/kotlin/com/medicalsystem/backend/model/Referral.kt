@@ -207,4 +207,13 @@ class Referral(
             )
         }
     }
+
+    fun assertCanAccessAttachment(fileId: Long) {
+        val isReferralAttachment = attachments.any { it.fileId == fileId }
+        val isFeedbackAttachment = feedback?.attachments?.any { it.fileId == fileId } == true
+
+        if (!isReferralAttachment && !isFeedbackAttachment) {
+            throw com.medicalsystem.backend.exception.ResourceNotFoundException("Attachment with fileId $fileId does not belong to referral $id")
+        }
+    }
 }

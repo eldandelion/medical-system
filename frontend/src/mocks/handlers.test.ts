@@ -34,6 +34,10 @@ describe('MSW Handlers - Referrals', () => {
     // Validate demographics
     expect(data.studentDemographics).toBeDefined();
     expect(data.studentDemographics.school).toBe('计算机科学与技术学院');
+
+    // Validate attachments
+    expect(data.attachments).toBeDefined();
+    expect(Array.isArray(data.attachments)).toBe(true);
   });
 });
 

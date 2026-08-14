@@ -499,7 +499,8 @@ export const handlers = [
         selfHarm: referral.riskLevel === 'HIGH',
         notes: ''
       },
-      feedback: (referral as any).extendedData?.feedback || null
+      feedback: (referral as any).extendedData?.feedback || null,
+      attachments: referral.attachments || []
     });
   }),
 
@@ -1004,6 +1005,8 @@ export const handlers = [
   }),
 
   http.get(api('/api/referrals/:referralId/attachments/:fileId/download-url'), async ({ request, params }) => {
+    const url = new URL(request.url);
+    const intent = url.searchParams.get('intent') || 'DOWNLOAD';
     if (import.meta.env.MODE !== 'test') {
       try {
         const { bypass } = await import('msw');
@@ -1020,7 +1023,7 @@ export const handlers = [
       }
     }
     return HttpResponse.json({
-      downloadUrl: `https://mock-storage.university.edu/download/${params.fileId}`,
+      downloadUrl: `https://mock-storage.university.edu/download/${params.fileId}?intent=${intent}`,
       expiresInSeconds: 60
     });
   })

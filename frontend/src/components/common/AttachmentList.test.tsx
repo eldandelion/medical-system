@@ -9,8 +9,9 @@ afterEach(() => {
 
 describe('AttachmentList Component', () => {
   const mockAttachments: Attachment[] = [
-    { name: 'document1.pdf', size: '2 MB' },
-    { name: 'image.png', size: '500 KB' }
+    { name: 'document1.pdf', size: '2 MB', fileId: 101 },
+    { name: 'image.png', size: '500 KB', fileId: 102 },
+    { name: 'archive.zip', size: '10 MB', fileId: 103 },
   ];
 
   it('renders nothing when the attachments array is empty', () => {
@@ -20,51 +21,73 @@ describe('AttachmentList Component', () => {
 
   it('renders the correct title and attachment count', () => {
     render(<AttachmentList attachments={mockAttachments} title="Files" />);
-    // Verifies uppercase title string concatenation
-    expect(screen.getByText('Files (2)')).toBeDefined();
+    expect(screen.getByText('Files (3)')).toBeDefined();
   });
 
   it('renders all attachments with their names and sizes', () => {
     render(<AttachmentList attachments={mockAttachments} />);
     expect(screen.getByText('document1.pdf')).toBeDefined();
-    expect(screen.getByText('2 MB')).toBeDefined();
+    expect(screen.getByText(/2 MB/)).toBeDefined();
     expect(screen.getByText('image.png')).toBeDefined();
-    expect(screen.getByText('500 KB')).toBeDefined();
+    expect(screen.getByText(/500 KB/)).toBeDefined();
   });
 
-  it('triggers onDownload when an item is clicked and onDelete is NOT provided', () => {
-    const onDownloadMock = vi.fn();
-    render(<AttachmentList attachments={mockAttachments} onDownload={onDownloadMock} />);
-    
-    // Simulating a click on the parent card (triggering the fallback behavior)
-    fireEvent.click(screen.getByText('document1.pdf'));
-    expect(onDownloadMock).toHaveBeenCalledTimes(1);
-    expect(onDownloadMock).toHaveBeenCalledWith(mockAttachments[0]);
-    
-    // Simulating a click on the explicit download icon button
-    const buttons = document.querySelectorAll('md-icon-button');
-    fireEvent.click(buttons[1]);
-    expect(onDownloadMock).toHaveBeenCalledTimes(2);
-    expect(onDownloadMock).toHaveBeenCalledWith(mockAttachments[1]);
-  });
-
-  it('prioritizes triggering onDelete when both are provided', () => {
-    const onDeleteMock = vi.fn();
+  it('triggers onPreview for previewable files and onDownload for non-previewable files when card is clicked', () => {
+    const onPreviewMock = vi.fn();
     const onDownloadMock = vi.fn();
     render(
       <AttachmentList 
         attachments={mockAttachments} 
-        onDelete={onDeleteMock} 
+        onPreview={onPreviewMock}
         onDownload={onDownloadMock} 
       />
     );
     
-    // Click on the second attachment card
-    fireEvent.click(screen.getByText('image.png'));
+    // PDF card click should trigger onPreview
+    fireEvent.click(screen.getByText('document1.pdf'));
+    expect(onPreviewMock).toHaveBeenCalledTimes(1);
+    expect(onPreviewMock).toHaveBeenCalledWith(mockAttachments[0]);
+
+    // ZIP card click should trigger onDownload
+    fireEvent.click(screen.getByText('archive.zip'));
+    expect(onDownloadMock).toHaveBeenCalledTimes(1);
+    expect(onDownloadMock).toHaveBeenCalledWith(mockAttachments[2]);
     
+    // Explicit download icon button should always trigger onDownload
+    const buttons = document.querySelectorAll('md-icon-button');
+    fireEvent.click(buttons[0]);
+    expect(onDownloadMock).toHaveBeenCalledTimes(2);
+    expect(onDownloadMock).toHaveBeenCalledWith(mockAttachments[0]);
+  });
+
+  it('prioritizes triggering onDelete when onDelete is provided', () => {
+    const onDeleteMock = vi.fn();
+    const onDownloadMock = vi.fn();
+    const onPreviewMock = vi.fn();
+    render(
+      <AttachmentList 
+        attachments={mockAttachments} 
+        onDelete={onDeleteMock} 
+        onDownload={onDownloadMock}
+        onPreview={onPreviewMock}
+      />
+    );
+    
+    fireEvent.click(screen.getByText('image.png'));
     expect(onDeleteMock).toHaveBeenCalledTimes(1);
     expect(onDeleteMock).toHaveBeenCalledWith(mockAttachments[1]);
-    // Verifies download logic was skipped
     expect(onDownloadMock).not.toHaveBeenCalled();
+    expect(onPreviewMock).not.toHaveBeenCalled();
+  });
+
+  it('shows progress spinner when loadingFileId matches', () => {
+    render(
+      <AttachmentList 
+        attachments={mockAttachments} 
+        loadingFileId={101}
+      />
+    );
+    
+    expect(screen.getByText('progress_activity')).toBeDefined();
   });
 });

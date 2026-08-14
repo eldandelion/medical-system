@@ -1,11 +1,9 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { AttachmentList, Attachment } from '../common/AttachmentList';
+import { AttachmentList } from '../common/AttachmentList';
 import { ReferralDetails } from '../../types';
 import { useDetails } from '../../contexts/DetailsContext';
-import { useAuth } from '../../contexts/AuthContext';
-import { useSnackbar } from '../../contexts/SnackbarContext';
-import { getReferralAttachmentDownloadUrl } from '../../api/files';
+import { useAttachmentActions } from '../../hooks/useAttachmentActions';
 
 interface ReferralFeedbackTabProps {
   referralDetails: ReferralDetails;
@@ -13,21 +11,7 @@ interface ReferralFeedbackTabProps {
 
 export function ReferralFeedbackTab({ referralDetails }: ReferralFeedbackTabProps) {
   const { isFullScreen } = useDetails();
-  const { session } = useAuth();
-  const { showSnackbar } = useSnackbar();
-
-  const handleDownload = async (file: Attachment) => {
-    if (file.fileId && referralDetails.baseInfo?.id) {
-      try {
-        const url = await getReferralAttachmentDownloadUrl(referralDetails.baseInfo.id, file.fileId, session?.token);
-        window.open(url, '_blank');
-      } catch (err: any) {
-        showSnackbar({ message: err.message || '获取下载链接失败', duration: 3000 });
-      }
-    } else {
-      showSnackbar({ message: '暂无可用下载文件', duration: 2000 });
-    }
-  };
+  const { previewAttachment, downloadAttachment, loadingFileId } = useAttachmentActions();
 
   return (
     <motion.div
@@ -60,8 +44,27 @@ export function ReferralFeedbackTab({ referralDetails }: ReferralFeedbackTabProp
       <AttachmentList
         attachments={referralDetails.feedback?.attachments || [] as any[]}
         title="附件"
-        onDownload={handleDownload}
+        loadingFileId={loadingFileId}
+        onPreview={(file) => {
+          if (file.fileId && referralDetails.baseInfo?.id) {
+            previewAttachment({
+              referralId: referralDetails.baseInfo.id,
+              fileId: file.fileId,
+              name: file.name,
+            });
+          }
+        }}
+        onDownload={(file) => {
+          if (file.fileId && referralDetails.baseInfo?.id) {
+            downloadAttachment({
+              referralId: referralDetails.baseInfo.id,
+              fileId: file.fileId,
+              name: file.name,
+            });
+          }
+        }}
       />
     </motion.div>
   );
 }
+

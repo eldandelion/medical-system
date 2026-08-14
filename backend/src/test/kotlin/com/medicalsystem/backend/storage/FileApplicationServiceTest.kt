@@ -137,7 +137,7 @@ class FileApplicationServiceTest {
     }
 
     @Test
-    fun `getReferralAttachmentDownloadUrl should enforce visibility and return download URL`() {
+    fun `getReferralAttachmentDownloadUrl should enforce visibility, verify aggregate attachment ownership and return download URL`() {
         val referral = Referral(
             id = 50L,
             studentId = 200L,
@@ -147,7 +147,17 @@ class FileApplicationServiceTest {
             type = ReferralType.INITIAL,
             riskLevel = RiskStatus.LOW,
             status = ReferralStatus.AWAITING_APPROVAL,
-            date = LocalDateTime.now()
+            date = LocalDateTime.now(),
+            attachments = mutableListOf(
+                com.medicalsystem.backend.model.ReferralAttachment(
+                    file = com.medicalsystem.backend.model.FileReference(
+                        name = "report.pdf",
+                        sizeBytes = 1024L,
+                        url = java.net.URI("http://localhost")
+                    ),
+                    fileId = 10L
+                )
+            )
         )
         val fileEntity = UploadedFileEntity(
             id = 10L,
@@ -163,12 +173,35 @@ class FileApplicationServiceTest {
         whenever(referralRepository.findById(50L)).thenReturn(Optional.of(referral))
         whenever(referralRepository.findVisibleReferralsFor(testUser)).thenReturn(listOf(referral))
         whenever(uploadedFileRepository.findById(10L)).thenReturn(Optional.of(fileEntity))
-        whenever(fileStoragePort.generatePresignedDownloadUrl(eq("referrals/attachment.pdf"), eq("report.pdf"), any()))
+        whenever(fileStoragePort.generatePresignedDownloadUrl(eq("referrals/attachment.pdf"), eq("report.pdf"), eq("application/pdf"), eq(com.medicalsystem.backend.storage.domain.DownloadIntent.PREVIEW), any()))
             .thenReturn(URI.create("http://localhost:9000/download").toURL())
 
-        val res = service.getReferralAttachmentDownloadUrl(50L, 10L, testUser)
+        val res = service.getReferralAttachmentDownloadUrl(50L, 10L, com.medicalsystem.backend.storage.domain.DownloadIntent.PREVIEW, testUser)
 
         assertNotNull(res)
         assertTrue(res.downloadUrl.contains("download"))
+    }
+
+    @Test
+    fun `getReferralAttachmentDownloadUrl should throw ResourceNotFoundException when fileId not attached to referral`() {
+        val referral = Referral(
+            id = 50L,
+            studentId = 200L,
+            referredById = testUser.id,
+            title = "Test",
+            description = "Desc",
+            type = ReferralType.INITIAL,
+            riskLevel = RiskStatus.LOW,
+            status = ReferralStatus.AWAITING_APPROVAL,
+            date = LocalDateTime.now(),
+            attachments = mutableListOf() // No attachment with fileId 999
+        )
+
+        whenever(referralRepository.findById(50L)).thenReturn(Optional.of(referral))
+        whenever(referralRepository.findVisibleReferralsFor(testUser)).thenReturn(listOf(referral))
+
+        assertThrows(com.medicalsystem.backend.exception.ResourceNotFoundException::class.java) {
+            service.getReferralAttachmentDownloadUrl(50L, 999L, com.medicalsystem.backend.storage.domain.DownloadIntent.DOWNLOAD, testUser)
+        }
     }
 }

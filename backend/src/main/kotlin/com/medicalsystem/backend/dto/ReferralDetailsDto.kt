@@ -5,7 +5,8 @@ data class ReferralDetailsDto(
     val studentDemographics: StudentDemographicsDto,
     val triageInfo: TriageInfoDto,
     val riskAssessment: RiskAssessmentDto,
-    val feedback: FeedbackDto? = null
+    val feedback: FeedbackDto? = null,
+    val attachments: List<AttachmentDto> = emptyList()
 )
 
 data class StudentDemographicsDto(

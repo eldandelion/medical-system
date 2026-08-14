@@ -57,11 +57,11 @@ class FileControllerTest {
     @Test
     fun `getReferralAttachmentDownloadUrl should delegate to service and return url`() {
         val expected = DownloadUrlResponse("http://localhost:9000/download", 60L)
-        whenever(fileApplicationService.getReferralAttachmentDownloadUrl(5L, 1L, testUser)).thenReturn(expected)
+        whenever(fileApplicationService.getReferralAttachmentDownloadUrl(5L, 1L, com.medicalsystem.backend.storage.domain.DownloadIntent.DOWNLOAD, testUser)).thenReturn(expected)
 
-        val res = fileController.getReferralAttachmentDownloadUrl(5L, 1L, testUser)
+        val res = fileController.getReferralAttachmentDownloadUrl(5L, 1L, com.medicalsystem.backend.storage.domain.DownloadIntent.DOWNLOAD, testUser)
 
         assertEquals(expected, res)
-        verify(fileApplicationService).getReferralAttachmentDownloadUrl(5L, 1L, testUser)
+        verify(fileApplicationService).getReferralAttachmentDownloadUrl(5L, 1L, com.medicalsystem.backend.storage.domain.DownloadIntent.DOWNLOAD, testUser)
     }
 }

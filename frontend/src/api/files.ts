@@ -85,10 +85,11 @@ export async function uploadFileDirect(
 export async function getReferralAttachmentDownloadUrl(
   referralId: string | number,
   fileId: string | number,
+  intent: 'PREVIEW' | 'DOWNLOAD' = 'DOWNLOAD',
   token?: string
 ): Promise<string> {
   const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '');
-  const res = await fetch(`${baseUrl}/api/referrals/${referralId}/attachments/${fileId}/download-url`, {
+  const res = await fetch(`${baseUrl}/api/referrals/${referralId}/attachments/${fileId}/download-url?intent=${intent}`, {
     headers: {
       'Authorization': `Bearer ${token || ''}`
     }

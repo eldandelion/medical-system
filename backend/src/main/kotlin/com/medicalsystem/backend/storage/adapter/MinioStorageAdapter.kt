@@ -48,13 +48,20 @@ class MinioStorageAdapter(
     override fun generatePresignedDownloadUrl(
         storageKey: String,
         originalFilename: String,
+        mimeType: String,
+        intent: com.medicalsystem.backend.storage.domain.DownloadIntent,
         duration: Duration
     ): URL {
-        val sanitizedFilename = originalFilename.replace("\"", "").trim()
+        val isPreviewable = mimeType == "application/pdf" || mimeType.startsWith("image/")
+        val dispositionType = if (intent == com.medicalsystem.backend.storage.domain.DownloadIntent.PREVIEW && isPreviewable) "inline" else "attachment"
+        val encodedFilename = java.net.URLEncoder.encode(originalFilename, java.nio.charset.StandardCharsets.UTF_8.toString()).replace("+", "%20")
+        val sanitizedPlain = originalFilename.replace("\"", "").replace(";", "").trim()
+
         val getObjectRequest = GetObjectRequest.builder()
             .bucket(bucketName)
             .key(storageKey)
-            .responseContentDisposition("attachment; filename=\"$sanitizedFilename\"")
+            .responseContentDisposition("$dispositionType; filename=\"$sanitizedPlain\"; filename*=UTF-8''$encodedFilename")
+            .responseContentType(mimeType)
             .build()
 
         val presignRequest = GetObjectPresignRequest.builder()

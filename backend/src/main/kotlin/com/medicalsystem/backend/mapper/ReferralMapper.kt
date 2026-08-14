@@ -217,12 +217,21 @@ class ReferralMapper {
             )
         }
 
+        val referralAttachments = model.attachments.map { att ->
+            com.medicalsystem.backend.dto.AttachmentDto(
+                name = att.file.name,
+                size = att.file.sizeBytes.toString(),
+                fileId = att.fileId
+            )
+        }
+
         return com.medicalsystem.backend.dto.ReferralDetailsDto(
             baseInfo = baseInfo,
             studentDemographics = studentDemographics,
             triageInfo = triageInfo,
             riskAssessment = riskAssessment,
-            feedback = feedbackDto
+            feedback = feedbackDto,
+            attachments = referralAttachments
         )
     }
 

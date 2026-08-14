@@ -7,9 +7,7 @@ import { LAYOUT_CONSTANTS } from '../../config/layoutConstants';
 import { STATUS_STYLES, STATUS_LABELS } from '../../config/styleConstants';
 import { Referral, ReferralDetails } from '../../types';
 import { useDetails } from '../../contexts/DetailsContext';
-import { useAuth } from '../../contexts/AuthContext';
-import { useSnackbar } from '../../contexts/SnackbarContext';
-import { getReferralAttachmentDownloadUrl } from '../../api/files';
+import { useAttachmentActions } from '../../hooks/useAttachmentActions';
 import { ReferralStatusCard } from './ReferralStatusCard';
 
 interface ReferralOverviewTabProps {
@@ -20,21 +18,7 @@ interface ReferralOverviewTabProps {
 
 export function ReferralOverviewTab({ referral, referralDetails, onNavigateToTracker }: ReferralOverviewTabProps) {
   const { isFullScreen } = useDetails();
-  const { session } = useAuth();
-  const { showSnackbar } = useSnackbar();
-
-  const handleDownload = async (file: Attachment) => {
-    if (file.fileId && referral.id) {
-      try {
-        const url = await getReferralAttachmentDownloadUrl(referral.id, file.fileId, session?.token);
-        window.open(url, '_blank');
-      } catch (err: any) {
-        showSnackbar({ message: err.message || '获取下载链接失败', duration: 3000 });
-      }
-    } else {
-      showSnackbar({ message: '暂无可用下载文件', duration: 2000 });
-    }
-  };
+  const { previewAttachment, downloadAttachment, loadingFileId } = useAttachmentActions();
 
   const displayStatus = referral.displayStatus || referral.status;
   // Steps will be loaded in the tracker tab; overview tab no longer depends on it
@@ -184,9 +168,27 @@ export function ReferralOverviewTab({ referral, referralDetails, onNavigateToTra
 
           {/* Attachment List */}
           <AttachmentList
-            attachments={referralDetails.feedback?.attachments || [] as any[]}
+            attachments={referralDetails.attachments || referral.attachments || []}
             title="转诊附件"
-            onDownload={handleDownload}
+            loadingFileId={loadingFileId}
+            onPreview={(file) => {
+              if (file.fileId && referral.id) {
+                previewAttachment({
+                  referralId: referral.id,
+                  fileId: file.fileId,
+                  name: file.name,
+                });
+              }
+            }}
+            onDownload={(file) => {
+              if (file.fileId && referral.id) {
+                downloadAttachment({
+                  referralId: referral.id,
+                  fileId: file.fileId,
+                  name: file.name,
+                });
+              }
+            }}
           />
         </div>
       </DetailsSection>

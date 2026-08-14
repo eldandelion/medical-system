@@ -41,6 +41,7 @@ export interface Referral {
     avatar?: string;
   };
   appointment?: Appointment;
+  attachments?: Attachment[];
 }
 
 export interface Appointment {
@@ -83,6 +84,7 @@ export interface ReferralDetails {
     followUp: string;
     attachments: Attachment[];
   };
+  attachments?: Attachment[];
 }
 
 export interface ReferralTrackingData {

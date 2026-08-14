@@ -38,8 +38,9 @@ class FileController(
     fun getReferralAttachmentDownloadUrl(
         @PathVariable referralId: Long,
         @PathVariable fileId: Long,
+        @RequestParam(defaultValue = "DOWNLOAD") intent: com.medicalsystem.backend.storage.domain.DownloadIntent,
         @CurrentUser user: User
     ): DownloadUrlResponse {
-        return fileApplicationService.getReferralAttachmentDownloadUrl(referralId, fileId, user)
+        return fileApplicationService.getReferralAttachmentDownloadUrl(referralId, fileId, intent, user)
     }
 }
