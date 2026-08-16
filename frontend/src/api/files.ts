@@ -4,6 +4,7 @@ export interface UploadedAttachmentResult {
   fileId: number;
   name: string;
   size: string;
+  sizeBytes: number;
 }
 
 export function formatFileSize(bytes: number): string {
@@ -78,7 +79,8 @@ export async function uploadFileDirect(
   return {
     fileId,
     name: file.name,
-    size: formatFileSize(file.size)
+    size: formatFileSize(file.size),
+    sizeBytes: file.size
   };
 }
 

@@ -885,7 +885,7 @@ export const handlers = [
     await delay(MOCK_DELAY_MS);
     
     const data = await request.json() as any;
-    const { referralId, feedback, attachments } = data;
+    const { referralId, feedback, content, attachments } = data;
 
     const referral = mockReferralsDb.find((r) => r.id === referralId);
     if (!referral) {
@@ -894,27 +894,32 @@ export const handlers = [
 
     referral.status = 'AWAITING_FEEDBACK_APPROVAL';
 
-    if ((referral as any).extendedData) {
-      if (!(referral as any).extendedData.feedback) {
-        (referral as any).extendedData.feedback = { summary: '', followUp: '', attachments: [] };
+    if (!(referral as any).extendedData) {
+      (referral as any).extendedData = {};
+    }
+    if (!(referral as any).extendedData.feedback) {
+      (referral as any).extendedData.feedback = { summary: '', followUp: '', attachments: [] };
+    }
+    (referral as any).extendedData.feedback.summary = content || feedback || '诊疗反馈已提交';
+    (referral as any).extendedData.feedback.attachments = (attachments || []).map((att: any, idx: number) => ({
+      name: att.name,
+      size: att.size || '1.0 MB',
+      fileId: att.fileId || (300 + idx)
+    }));
+
+    if ((referral as any).extendedData.steps) {
+      const evaluationStep = (referral as any).extendedData.steps.find((s: any) => s.type === 'evaluation');
+      if (evaluationStep) {
+        evaluationStep.status = 'completed';
+        evaluationStep.subtitle = '医生已完成评估';
+        evaluationStep.time = new Date().toISOString();
       }
-      (referral as any).extendedData.feedback.summary = feedback;
-      (referral as any).extendedData.feedback.attachments = attachments || [];
 
-      if ((referral as any).extendedData.steps) {
-        const evaluationStep = (referral as any).extendedData.steps.find((s: any) => s.type === 'evaluation');
-        if (evaluationStep) {
-          evaluationStep.status = 'completed';
-          evaluationStep.subtitle = '医生已完成评估';
-          evaluationStep.time = new Date().toISOString();
-        }
-
-        const feedbackStep = (referral as any).extendedData.steps.find((s: any) => s.type === 'feedback');
-        if (feedbackStep) {
-          feedbackStep.status = 'active';
-          feedbackStep.subtitle = '等待辅导员确认反馈';
-          feedbackStep.time = new Date().toISOString();
-        }
+      const feedbackStep = (referral as any).extendedData.steps.find((s: any) => s.type === 'feedback');
+      if (feedbackStep) {
+        feedbackStep.status = 'active';
+        feedbackStep.subtitle = '等待辅导员确认反馈';
+        feedbackStep.time = new Date().toISOString();
       }
     }
 

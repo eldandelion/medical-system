@@ -42,7 +42,7 @@ export function ReferralFeedbackTab({ referralDetails }: ReferralFeedbackTabProp
       </div>
 
       <AttachmentList
-        attachments={referralDetails.feedback?.attachments || [] as any[]}
+        attachments={referralDetails.feedback?.attachments ?? []}
         title="附件"
         loadingFileId={loadingFileId}
         onPreview={(file) => {

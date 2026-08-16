@@ -184,7 +184,24 @@ export const generateTrackerSteps = (referral: Referral): ReferralStep[] => {
   return steps;
 };
 
-export const mockReferralsDb: Referral[] = baseReferrals.map(referral => ({
-  ...referral
-}));
+export const mockReferralsDb: Referral[] = baseReferrals.map(referral => {
+  if (referral.id === '1' || referral.id === '5') {
+    return {
+      ...referral,
+      extendedData: {
+        feedback: {
+          summary: '学生经过初步心理疏导与评估，焦虑情绪明显缓解，建议定期随访观察。',
+          followUp: '两周后门诊复查，持续进行认知行为治疗。',
+          attachments: [
+            { name: '诊疗评估报告.pdf', size: '1.2 MB', fileId: 201 },
+            { name: '处方与随访记录.docx', size: '450 KB', fileId: 202 }
+          ]
+        }
+      }
+    } as any;
+  }
+  return {
+    ...referral
+  };
+});
 

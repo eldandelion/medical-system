@@ -29,7 +29,7 @@ export function FeedbackCreationForm({ onClose, initialReferralId }: { onClose: 
   const [formData, setFormData] = React.useState({
     referralId: initialReferralId || '',
     content: '',
-    attachments: [] as { name: string; size: string; fileId?: number }[]
+    attachments: [] as { name: string; size: string; fileId?: number; sizeBytes?: number }[]
   });
 
   const [errors, setErrors] = React.useState({
@@ -89,7 +89,7 @@ export function FeedbackCreationForm({ onClose, initialReferralId }: { onClose: 
           content: formData.content,
           attachments: formData.attachments.map(att => ({
             name: att.name,
-            sizeBytes: 1024,
+            sizeBytes: att.sizeBytes || 1024,
             fileId: att.fileId
           }))
         })

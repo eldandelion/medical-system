@@ -37,7 +37,9 @@ class FeedbackServiceTest {
     @Mock
     private lateinit var eventPublisher: DomainEventPublisher
 
-    @InjectMocks
+    @Mock
+    private lateinit var fileApplicationService: com.medicalsystem.backend.storage.service.FileApplicationService
+
     private lateinit var feedbackService: FeedbackService
 
     private val doctorId = 2L
@@ -48,6 +50,7 @@ class FeedbackServiceTest {
 
     @BeforeEach
     fun setUp() {
+        feedbackService = FeedbackService(referralRepository, userRepository, fileApplicationService, eventPublisher)
         doctor = com.medicalsystem.backend.model.User(id = doctorId, name = "Dr. Right", email = com.medicalsystem.backend.model.EmailAddress("right@univ.edu"), role = com.medicalsystem.backend.model.UserRole.DOCTOR)
         
         validReferral = Referral(
@@ -67,7 +70,7 @@ class FeedbackServiceTest {
         validRequest = FeedbackCreationRequest(
             referralId = referralId,
             content = "Diagnosis: Stable",
-            attachments = listOf(FeedbackAttachmentDto(name = "scan.pdf", sizeBytes = 1024L))
+            attachments = listOf(FeedbackAttachmentDto(name = "scan.pdf", sizeBytes = 1024L, fileId = 101L))
         )
     }
 
@@ -123,11 +126,23 @@ class FeedbackServiceTest {
     }
 
     @Test
-    fun `Given valid payload, When submitFeedback is called, Then successfully saves referral with feedback`() {
+    fun `Given valid payload with attachments, When submitFeedback is called, Then claims files and saves referral`() {
+        val mockUploadedFile = com.medicalsystem.backend.storage.entity.UploadedFileEntity(
+            id = 101L,
+            storageKey = "feedback/test.pdf",
+            originalName = "verified_scan.pdf",
+            mimeType = "application/pdf",
+            sizeBytes = 2048L,
+            uploadedById = doctorId,
+            category = com.medicalsystem.backend.storage.domain.FileCategory.FEEDBACK_ATTACHMENT,
+            status = com.medicalsystem.backend.storage.domain.FileStatus.ACTIVE
+        )
+        `when`(fileApplicationService.claimFiles(listOf(101L), doctorId)).thenReturn(listOf(mockUploadedFile))
         `when`(referralRepository.findById(referralId)).thenReturn(Optional.of(validReferral))
         
         feedbackService.submitFeedback(validRequest, doctorId)
 
+        verify(fileApplicationService).claimFiles(listOf(101L), doctorId)
         val referralCaptor = argumentCaptor<Referral>()
         verify(referralRepository).save(referralCaptor.capture())
         val savedReferral = referralCaptor.firstValue
@@ -136,5 +151,31 @@ class FeedbackServiceTest {
         assertNotNull(savedReferral.feedback)
         assertEquals("Diagnosis: Stable", savedReferral.feedback?.content)
         assertEquals(1, savedReferral.feedback?.attachments?.size)
+        assertEquals("verified_scan.pdf", savedReferral.feedback?.attachments?.first()?.file?.name)
+        assertEquals(2048L, savedReferral.feedback?.attachments?.first()?.file?.sizeBytes)
+        assertEquals(101L, savedReferral.feedback?.attachments?.first()?.fileId)
+    }
+
+    @Test
+    fun `Given unowned file, When claimFiles throws ForbiddenException, Then referral is not saved`() {
+        `when`(referralRepository.findById(referralId)).thenReturn(Optional.of(validReferral))
+        `when`(fileApplicationService.claimFiles(listOf(101L), doctorId)).thenThrow(ForbiddenException("Cannot claim file not owned by caller"))
+
+        assertThrows<ForbiddenException> {
+            feedbackService.submitFeedback(validRequest, doctorId)
+        }
+
+        verify(referralRepository, never()).save(any())
+    }
+
+    @Test
+    fun `Given empty attachments, When submitFeedback is called, Then saves referral without claiming files`() {
+        val requestWithoutAttachments = validRequest.copy(attachments = emptyList())
+        `when`(referralRepository.findById(referralId)).thenReturn(Optional.of(validReferral))
+
+        feedbackService.submitFeedback(requestWithoutAttachments, doctorId)
+
+        verify(referralRepository).save(any())
+        verify(fileApplicationService, never()).claimFiles(any(), any())
     }
 }
