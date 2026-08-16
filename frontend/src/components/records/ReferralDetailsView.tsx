@@ -131,26 +131,6 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
     enabled: state.isApprovalDialogOpen,
   });
 
-  const [studentData, setStudentData] = React.useState<any>(null);
-
-  React.useEffect(() => {
-    let active = true;
-    fetch(`${import.meta.env.BASE_URL}/api/students?name=${encodeURIComponent(referral.studentName)}`.replace('//api', '/api'))
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch students');
-        return res.json();
-      })
-      .then((students: any[]) => {
-        if (active && students.length > 0) {
-          setStudentData(students[0]);
-        }
-      })
-      .catch((err) => console.error('Failed to load matching student for referral:', err));
-    return () => {
-      active = false;
-    };
-  }, [referral.studentName]);
-
   const setActiveTab = React.useCallback((tab: TabType) => {
     setInternalActiveTab(tab);
     onTabChange?.(tab);
@@ -264,9 +244,10 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
           >
             <PsychometricsTabContent
               student={{
-                ...studentData,
+                id: referral.studentId || referralDetails.baseInfo?.studentId,
                 name: referral.studentName,
-                scidDiagnosis: referralDetails.triageInfo?.scidDiagnosis || studentData?.scidDiagnosis
+                studentNumber: referral.studentNumber,
+                scidDiagnosis: referralDetails.triageInfo?.scidDiagnosis
               }}
             />
           </motion.div>

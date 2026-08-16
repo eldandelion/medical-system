@@ -7,6 +7,7 @@ import java.time.LocalDateTime
 
 data class ReferralDto(
     val id: String,
+    val studentId: Long,
     val studentName: String,
     val studentNumber: String,
     val type: ReferralType,

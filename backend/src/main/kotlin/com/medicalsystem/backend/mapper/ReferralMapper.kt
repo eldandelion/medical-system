@@ -164,6 +164,7 @@ class ReferralMapper {
     fun toDto(model: Referral, student: com.medicalsystem.backend.model.Student?, referredBy: com.medicalsystem.backend.model.User?, currentUser: com.medicalsystem.backend.model.User? = null): ReferralDto {
         return ReferralDto(
             id = model.id.toString(),
+            studentId = model.studentId,
             studentName = student?.name ?: "Unknown",
             studentNumber = student?.studentNumber ?: "Unknown",
             type = model.type,

@@ -52,18 +52,20 @@ class StudentVisibilityPolicyTest {
     }
 
     @Test
-    fun `doctor gets None criteria`() {
+    fun `doctor gets ByAssignedDoctor criteria`() {
         val user = createUser(500L, UserRole.DOCTOR)
         val criteria = StudentVisibilityPolicy.getVisibilityCriteria(user)
         
-        assertTrue(criteria is StudentVisibilityCriteria.None)
+        assertTrue(criteria is StudentVisibilityCriteria.ByAssignedDoctor)
+        assertEquals(500L, (criteria as StudentVisibilityCriteria.ByAssignedDoctor).doctorId)
     }
 
     @Test
-    fun `trial admin gets None criteria`() {
+    fun `trial admin gets ByTrialAdmin criteria`() {
         val user = createUser(600L, UserRole.TRIAL_ADMIN)
         val criteria = StudentVisibilityPolicy.getVisibilityCriteria(user)
         
-        assertTrue(criteria is StudentVisibilityCriteria.None)
+        assertTrue(criteria is StudentVisibilityCriteria.ByTrialAdmin)
+        assertEquals(600L, (criteria as StudentVisibilityCriteria.ByTrialAdmin).adminId)
     }
 }

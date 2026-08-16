@@ -87,4 +87,90 @@ class StudentRepositoryAdapterTest {
         val notFoundStudent = studentRepository.findByIdAndVisibleTo(studentEntity2.id, teacherUser)
         assertEquals(false, notFoundStudent.isPresent)
     }
+
+    @Test
+    fun `test findVisibleStudentsFor and findByIdAndVisibleTo for doctor and trial admin`() {
+        val college = CollegeEntity(name = "Engineering")
+        entityManager.persist(college)
+
+        val major = MajorEntity(name = "Computer Science", college = college)
+        entityManager.persist(major)
+
+        val docUser = UserEntity(name = "Dr. House", email = EmailAddress("doc@test.com"), role = UserRole.DOCTOR)
+        entityManager.persist(docUser)
+
+        val hospital = HospitalEntity(name = "General Hospital")
+        entityManager.persist(hospital)
+
+        val dept = HospitalDepartmentEntity(name = "Psychiatry", hospital = hospital)
+        entityManager.persist(dept)
+
+        val doctor = DoctorEntity(userId = docUser.id!!, employeeNumber = "DOC100", department = dept)
+        entityManager.persist(doctor)
+
+        val adminUser = UserEntity(name = "Admin Smith", email = EmailAddress("admin@test.com"), role = UserRole.TRIAL_ADMIN)
+        entityManager.persist(adminUser)
+
+        val student1 = StudentEntity(id = 2001L, studentNumber = "STU2001", name = "Charlie", major = major, enrollmentDate = LocalDate.now())
+        entityManager.persist(student1)
+
+        val student2 = StudentEntity(id = 2002L, studentNumber = "STU2002", name = "Diana", major = major, enrollmentDate = LocalDate.now())
+        entityManager.persist(student2)
+
+        val referral = ReferralEntity(
+            studentId = student1.id,
+            type = com.medicalsystem.backend.model.ReferralType.INITIAL,
+            title = "Severe anxiety",
+            description = "Requires psychiatric evaluation",
+            riskLevel = com.medicalsystem.backend.model.RiskStatus.HIGH,
+            status = com.medicalsystem.backend.model.ReferralStatus.WAITING_FOR_APPOINTMENT,
+            referredById = 1L
+        )
+        referral.destination = ReferralDestinationEntity(
+            hospital = hospital,
+            department = dept,
+            doctor = doctor
+        )
+        referral.steps.add(ReferralStepEntity(
+            referral = referral,
+            type = com.medicalsystem.backend.model.ReferralStepType.TRIAGE,
+            time = java.time.LocalDateTime.now(),
+            status = com.medicalsystem.backend.model.ReferralStepStatus.COMPLETED
+        ))
+        entityManager.persist(referral)
+
+        entityManager.flush()
+        entityManager.clear()
+
+        val doctorModel = com.medicalsystem.backend.model.User(
+            id = docUser.id!!,
+            name = docUser.name,
+            email = docUser.email,
+            role = docUser.role
+        )
+        val adminModel = com.medicalsystem.backend.model.User(
+            id = adminUser.id!!,
+            name = adminUser.name,
+            email = adminUser.email,
+            role = adminUser.role
+        )
+
+        // Doctor should see student1 (assigned to them via referral) but not student2
+        val docVisible = studentRepository.findVisibleStudentsFor(doctorModel)
+        org.junit.jupiter.api.Assertions.assertTrue(docVisible.any { it.id == student1.id })
+        org.junit.jupiter.api.Assertions.assertFalse(docVisible.any { it.id == student2.id })
+
+        val docFound = studentRepository.findByIdAndVisibleTo(student1.id, doctorModel)
+        assertEquals(true, docFound.isPresent)
+        assertEquals(false, studentRepository.findByIdAndVisibleTo(student2.id, doctorModel).isPresent)
+
+        // Trial Admin should see student1 (referral reached TRIAGE step) but not student2
+        val adminVisible = studentRepository.findVisibleStudentsFor(adminModel)
+        org.junit.jupiter.api.Assertions.assertTrue(adminVisible.any { it.id == student1.id })
+        org.junit.jupiter.api.Assertions.assertFalse(adminVisible.any { it.id == student2.id })
+
+        val adminFound = studentRepository.findByIdAndVisibleTo(student1.id, adminModel)
+        assertEquals(true, adminFound.isPresent)
+        assertEquals(false, studentRepository.findByIdAndVisibleTo(student2.id, adminModel).isPresent)
+    }
 }

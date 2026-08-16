@@ -26,6 +26,7 @@ export type ReferralAction =
 
 export interface Referral {
   id: string;
+  studentId?: number | string;
   studentName: string;
   studentNumber: string;
   type: 'INITIAL' | 'FOLLOW_UP' | 'EMERGENCY' | string;

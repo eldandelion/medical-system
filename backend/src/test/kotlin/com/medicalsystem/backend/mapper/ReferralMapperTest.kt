@@ -47,6 +47,7 @@ class ReferralMapperTest {
         val dto = mapper.toDto(referral, student, referredBy)
 
         assertEquals("1", dto.id)
+        assertEquals(100L, dto.studentId)
         assertEquals("John Doe", dto.studentName)
         assertEquals("12345", dto.studentNumber)
         assertEquals("Crisis", dto.title)

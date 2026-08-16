@@ -27,6 +27,7 @@ class ReferralControllerTest {
         val dto = com.medicalsystem.backend.dto.ApproveReferralDto(hospitalId = 1L)
         val referralDto = ReferralDto(
             id = "1",
+            studentId = 100L,
             studentName = "John Doe",
             studentNumber = "STU123",
             type = com.medicalsystem.backend.model.ReferralType.INITIAL,
@@ -52,6 +53,7 @@ class ReferralControllerTest {
         val dto = com.medicalsystem.backend.dto.ScheduleAppointmentDto(appointmentTime = java.time.LocalDateTime.now().plusDays(1))
         val referralDto = ReferralDto(
             id = "1",
+            studentId = 100L,
             studentName = "John Doe",
             studentNumber = "STU123",
             type = com.medicalsystem.backend.model.ReferralType.INITIAL,
@@ -77,6 +79,7 @@ class ReferralControllerTest {
     fun `recallReferral returns mapped dto`() {
         val referralDto = ReferralDto(
             id = "1",
+            studentId = 100L,
             studentName = "John Doe",
             studentNumber = "STU123",
             type = com.medicalsystem.backend.model.ReferralType.INITIAL,

@@ -3,6 +3,7 @@ import { Referral, ReferralStep } from '../../types';
 const baseReferrals: Referral[] = [
   {
     id: '1',
+    studentId: '1',
     studentName: '张伟',
     studentNumber: '2022001',
     type: 'INITIAL',
@@ -15,6 +16,7 @@ const baseReferrals: Referral[] = [
   },
   {
     id: '2',
+    studentId: '2',
     studentName: '李娜',
     studentNumber: '2023002',
     type: 'FOLLOW_UP',
@@ -27,6 +29,7 @@ const baseReferrals: Referral[] = [
   },
   {
     id: '3',
+    studentId: '3',
     studentName: '王强',
     studentNumber: '2021003',
     type: 'INITIAL',
@@ -39,6 +42,7 @@ const baseReferrals: Referral[] = [
   },
   {
     id: '4',
+    studentId: '4',
     studentName: '陈思宇',
     studentNumber: '2022004',
     type: 'CRISIS_INTERVENTION',
@@ -51,6 +55,7 @@ const baseReferrals: Referral[] = [
   },
   {
     id: '5',
+    studentId: '5',
     studentName: '赵明',
     studentNumber: '2023005',
     type: 'FOLLOW_UP',
@@ -63,6 +68,7 @@ const baseReferrals: Referral[] = [
   },
   {
     id: '6',
+    studentId: '6',
     studentName: '孙悦',
     studentNumber: '2021006',
     type: 'INITIAL',
@@ -75,6 +81,7 @@ const baseReferrals: Referral[] = [
   },
   {
     id: '7',
+    studentId: '7',
     studentName: '周杰',
     studentNumber: '2022007',
     type: 'OTHER',
@@ -87,6 +94,7 @@ const baseReferrals: Referral[] = [
   },
   {
     id: '8',
+    studentId: '8',
     studentName: '王小明',
     studentNumber: '2023008',
     type: 'INITIAL',
@@ -99,6 +107,7 @@ const baseReferrals: Referral[] = [
   },
   {
     id: '9',
+    studentId: '9',
     studentName: '赵云',
     studentNumber: '2021009',
     type: 'INITIAL',
