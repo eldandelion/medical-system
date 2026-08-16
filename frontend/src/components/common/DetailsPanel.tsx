@@ -17,7 +17,7 @@ interface DetailsPanelProps {
   activeTab?: string;
   onTabChange?: (tabId: string) => void;
   children: React.ReactNode;
-  width?: number;
+  width?: number | string;
 }
 
 export function DetailsPanel({
@@ -58,7 +58,7 @@ export function DetailsPanel({
             exit={{ x: '20%', opacity: 0 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
             className="h-full bg-[var(--md-sys-color-surface)] rounded-3xl overflow-hidden flex flex-col shrink-0 border-none ring-0 relative"
-            style={{ width: width }}
+            style={{ width: typeof width === 'number' ? `${width}px` : width }}
           >
             {/* Panel Header */}
             <div className="flex items-center justify-between px-4 py-3 shrink-0">

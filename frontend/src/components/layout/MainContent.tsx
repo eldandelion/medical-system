@@ -1,5 +1,6 @@
 import React from 'react';
 import { LAYOUT_CONSTANTS } from '../../config/layoutConstants';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 interface MainContentProps {
   children?: React.ReactNode;
@@ -8,6 +9,7 @@ interface MainContentProps {
 }
 
 export function MainContent({ children, sidePanel, isSidePanelOpen }: MainContentProps) {
+  const isOverlayMode = useMediaQuery(`(max-width: ${LAYOUT_CONSTANTS.RESPONSIVE_OVERLAY_BREAKPOINT - 1}px)`);
   const [sideWidth, setSideWidth] = React.useState<number>(LAYOUT_CONSTANTS.SIDE_PANEL_DEFAULT_WIDTH);
   const [isResizing, setIsResizing] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -61,9 +63,22 @@ export function MainContent({ children, sidePanel, isSidePanelOpen }: MainConten
         <div className="absolute inset-0 w-full h-full flex flex-col overflow-hidden outline-none border-none">
           {children}
         </div>
+
+        {/* In-Canvas Overlay for smaller screens */}
+        {showSide && isOverlayMode && (
+          <div
+            id={LAYOUT_CONSTANTS.SIDE_PANEL_WRAPPER_ID}
+            className="@container absolute inset-0 z-30 w-full h-full overflow-hidden flex flex-col"
+          >
+            {React.isValidElement(sidePanel)
+              ? React.cloneElement(sidePanel as React.ReactElement<any>, { width: '100%' })
+              : sidePanel}
+          </div>
+        )}
       </main>
 
-      {showSide && (
+      {/* Side-by-Side Split View for desktop screens */}
+      {showSide && !isOverlayMode && (
         <>
           {/* Resize Handle Area */}
           <div
@@ -85,3 +100,4 @@ export function MainContent({ children, sidePanel, isSidePanelOpen }: MainConten
     </div>
   );
 }
+
