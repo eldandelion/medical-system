@@ -3,7 +3,6 @@ import { motion } from 'motion/react';
 import { DetailsSection, MetricCard } from '../common/DetailsPanel';
 import { AttachmentList, Attachment } from '../common/AttachmentList';
 import { Quote } from 'lucide-react';
-import { LAYOUT_CONSTANTS } from '../../config/layoutConstants';
 import { STATUS_STYLES, STATUS_LABELS } from '../../config/styleConstants';
 import { Referral, ReferralDetails } from '../../types';
 import { useDetails } from '../../contexts/DetailsContext';
@@ -44,7 +43,7 @@ export function ReferralOverviewTab({ referral, referralDetails, onNavigateToTra
         <div className="flex flex-col gap-6">
           {/* 3-Column Metrics Grid */}
           {referralDetails.triageInfo && (
-            <div className={`grid grid-cols-3 gap-4 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: "40" }}>
+            <div className="grid grid-cols-2 @[440px]:grid-cols-3 gap-3">
               <MetricCard
                 label="是否初诊"
                 icon="person_add"
@@ -91,7 +90,7 @@ export function ReferralOverviewTab({ referral, referralDetails, onNavigateToTra
 
           {/* 3-Column Risk Grid */}
           {referralDetails.riskAssessment && (
-            <div className={`grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: "40" }}>
+            <div className="grid grid-cols-2 @[440px]:grid-cols-3 gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <MetricCard
                 label="自杀意念"
                 icon="psychology"

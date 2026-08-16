@@ -6,7 +6,6 @@ import { PrimaryButton, SecondaryButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
 import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS } from '../../config/styleConstants';
 import { useCreationOverlay } from '../../contexts/CreationContext';
-import { LAYOUT_CONSTANTS } from '../../config/layoutConstants';
 import { ACADEMIC_YEAR_LABELS } from '../../config/referralConstants';
 import { useDetails } from '../../contexts/DetailsContext';
 import { PrimaryTabs } from '../common/Tabs';
@@ -142,7 +141,7 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
               >
                 {/* 基本特征 */}
                 <DetailsSection title="基本特征" className="border-t-0">
-                  <div className={`grid grid-cols-4 gap-4 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: 48 }}>
+                  <div className="grid grid-cols-2 @[440px]:grid-cols-4 gap-3">
                     <MetricCard 
                       label="性别" 
                       value={
@@ -156,13 +155,13 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
                     />
                     <MetricCard label="年龄" value={student.demographics?.age?.toString() || 'N/A'} icon="cake" className="col-span-1" />
                     <MetricCard label="民族" value={student.demographics?.ethnicity || 'N/A'} icon="public" className="col-span-2" />
-                    <MetricCard label="身份证号" value={student.demographics?.idCardNumber || 'N/A'} icon="badge" className="col-span-4" copyable={true} />
+                    <MetricCard label="身份证号" value={student.demographics?.idCardNumber || 'N/A'} icon="badge" className="col-span-2 @[440px]:col-span-4" copyable={true} />
                   </div>
                 </DetailsSection>
 
                 {/* 学籍信息 */}
                 <DetailsSection title="学籍信息" className="border-t-0">
-                  <div className={`grid grid-cols-4 gap-4 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: 48 }}>
+                  <div className="grid grid-cols-2 @[440px]:grid-cols-4 gap-3">
                     <MetricCard label="学号" value={student.studentNumber || 'N/A'} icon="numbers" className="col-span-2" copyable={true} />
                     <MetricCard label="年级" value={student.year ? (ACADEMIC_YEAR_LABELS[student.year] || student.year) : 'N/A'} icon="school" className="col-span-2" />
                     <MetricCard label="学校" value={student.demographics?.school || 'N/A'} icon="account_balance" className="col-span-2" />
@@ -172,11 +171,11 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
 
                 {/* 联系方式 */}
                 <DetailsSection title="联系方式" className="border-t-0">
-                  <div className={`grid grid-cols-4 gap-4 ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: 48 }}>
+                  <div className="grid grid-cols-2 @[440px]:grid-cols-4 gap-3">
                     <MetricCard label="联系电话" value={student.demographics?.contactNumber || 'N/A'} icon="phone_iphone" className="col-span-2" copyable={true} />
                     <MetricCard label="电子邮箱" value={student.demographics?.email || 'N/A'} icon="mail" className="col-span-2" copyable={true} />
-                    <MetricCard label="家庭住址" value={student.demographics?.homeAddress || 'N/A'} icon="home_pin" className="col-span-4" copyable={true} />
-                    <MetricCard label="紧急联系人" value={`${student.demographics?.emergencyContactName || 'N/A'} (${student.demographics?.emergencyContactPhone || 'N/A'})`} icon="contact_emergency" className="col-span-4" copyable={true} copyValue={student.demographics?.emergencyContactPhone} />
+                    <MetricCard label="家庭住址" value={student.demographics?.homeAddress || 'N/A'} icon="home_pin" className="col-span-2 @[440px]:col-span-4" copyable={true} />
+                    <MetricCard label="紧急联系人" value={`${student.demographics?.emergencyContactName || 'N/A'} (${student.demographics?.emergencyContactPhone || 'N/A'})`} icon="contact_emergency" className="col-span-2 @[440px]:col-span-4" copyable={true} copyValue={student.demographics?.emergencyContactPhone} />
                   </div>
                 </DetailsSection>
 

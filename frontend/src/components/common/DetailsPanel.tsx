@@ -2,6 +2,7 @@ import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FullScreenView } from './FullScreenView';
 import { DetailsContext } from '../../contexts/DetailsContext';
+import { LAYOUT_CONSTANTS } from '../../config/layoutConstants';
 
 interface DetailsPanelProps {
   isOpen: boolean;
@@ -32,7 +33,7 @@ export function DetailsPanel({
   activeTab = '',
   onTabChange,
   children,
-  width = 720
+  width = LAYOUT_CONSTANTS.SIDE_PANEL_DEFAULT_WIDTH
 }: DetailsPanelProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [titleOverride, setTitleOverride] = React.useState<string | null>(null);
@@ -163,15 +164,15 @@ export function MetricCard({
   };
 
   return (
-    <div className={`py-4 px-5 rounded-[24px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-3 ${className}`}>
-      <div className={`flex items-center gap-2 ${labelClassName}`}>
-        <span className="material-symbols-outlined text-[20px]">{icon}</span>
-        <span className="text-[14px] font-bold whitespace-nowrap">{label}</span>
+    <div className={`py-3.5 px-4 rounded-[20px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-2.5 min-w-0 overflow-hidden ${className}`}>
+      <div className={`flex items-center gap-1.5 min-w-0 ${labelClassName}`}>
+        <span className="material-symbols-outlined text-[18px] shrink-0">{icon}</span>
+        <span className="text-[13px] font-bold truncate">{label}</span>
       </div>
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex flex-1 overflow-hidden">
+      <div className="flex items-center justify-between gap-1.5 min-w-0">
+        <div className="flex flex-1 min-w-0 overflow-hidden">
           {typeof value === 'string' ? (
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold whitespace-nowrap ${badgeClassName}`}>
+            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[12px] font-bold truncate ${badgeClassName}`}>
               {value}
             </span>
           ) : (

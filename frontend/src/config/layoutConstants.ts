@@ -1,7 +1,9 @@
 export const LAYOUT_CONSTANTS = {
   SIDE_PANEL_WRAPPER_ID: 'side-panel-wrapper',
+  SIDE_PANEL_MIN_WIDTH: 440,
+  SIDE_PANEL_DEFAULT_WIDTH: 480,
+  SIDE_PANEL_MAX_WIDTH: 800,
   ACTION_FOOTER_CLASS: 'action-footer-content-wrapper',
   TABS_LIST_CLASS: 'details-tabs-list',
-  DYNAMIC_MIN_WIDTH_ANCHOR_CLASS: 'dynamic-min-width-anchor',
-  DYNAMIC_MIN_WIDTH_OFFSET_ATTR: 'data-min-width-offset',
 } as const;
+

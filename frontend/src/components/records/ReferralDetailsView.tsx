@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { LAYOUT_CONSTANTS } from '../../config/layoutConstants';
 import { motion, AnimatePresence } from 'motion/react';
 import { ScrollableDetailsLayout } from '../common/DetailsPanel';
 import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
@@ -168,7 +167,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
     <ScrollableDetailsLayout
       title={referral.studentName}
       header={!hideHeader && !isFullScreen ? (
-        <div className={`flex items-center justify-between gap-4 flex-nowrap overflow-hidden ${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`} {...{ [LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR]: "48" }}>
+        <div className="flex items-center justify-between gap-4 flex-nowrap overflow-hidden">
           <div className="flex items-center gap-4 min-w-0">
             {/* Primary Anchor: First Letter Avatar */}
             <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium shrink-0 animate-in fade-in zoom-in duration-300">

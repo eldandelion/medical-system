@@ -8,54 +8,14 @@ interface MainContentProps {
 }
 
 export function MainContent({ children, sidePanel, isSidePanelOpen }: MainContentProps) {
-  const [sideWidth, setSideWidth] = React.useState(400);
+  const [sideWidth, setSideWidth] = React.useState<number>(LAYOUT_CONSTANTS.SIDE_PANEL_DEFAULT_WIDTH);
   const [isResizing, setIsResizing] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const dragMinWidthRef = React.useRef<number>(400);
-
-  const calculateMinWidth = React.useCallback(() => {
-    let minW = 400;
-    const sidePanelContainer = document.getElementById(LAYOUT_CONSTANTS.SIDE_PANEL_WRAPPER_ID);
-    if (!sidePanelContainer) return minW;
-
-    // 1. Check Action Footer buttons
-    const footerContent = sidePanelContainer.querySelector(`.${LAYOUT_CONSTANTS.ACTION_FOOTER_CLASS}`);
-    if (footerContent) {
-      const intrinsicWidth = footerContent.scrollWidth + 32;
-      minW = Math.max(minW, Math.ceil(intrinsicWidth));
-    }
-
-    // 2. Check Tabs row
-    const tabsContent = sidePanelContainer.querySelector(`.${LAYOUT_CONSTANTS.TABS_LIST_CLASS}`);
-    if (tabsContent) {
-      let intrinsicTabsWidth = 0;
-      Array.from(tabsContent.children).forEach(child => {
-        const style = window.getComputedStyle(child);
-        intrinsicTabsWidth += parseFloat(style.minWidth) || 0;
-      });
-      minW = Math.max(minW, Math.ceil(intrinsicTabsWidth + 16));
-    }
-
-    // 3. Check dynamic minimum width anchors
-    const dynamicAnchors = sidePanelContainer.querySelectorAll(`.${LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_ANCHOR_CLASS}`);
-    dynamicAnchors.forEach((el) => {
-      const htmlEl = el as HTMLElement;
-      const originalWidth = htmlEl.style.width;
-      htmlEl.style.width = 'max-content';
-      const offset = parseInt(htmlEl.getAttribute(LAYOUT_CONSTANTS.DYNAMIC_MIN_WIDTH_OFFSET_ATTR) || '0', 10);
-      const intrinsic = htmlEl.offsetWidth + offset;
-      htmlEl.style.width = originalWidth;
-      minW = Math.max(minW, intrinsic);
-    });
-
-    return minW;
-  }, []);
 
   const startResizing = React.useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    dragMinWidthRef.current = calculateMinWidth();
     setIsResizing(true);
-  }, [calculateMinWidth]);
+  }, []);
 
   const stopResizing = React.useCallback(() => {
     setIsResizing(false);
@@ -67,16 +27,10 @@ export function MainContent({ children, sidePanel, isSidePanelOpen }: MainConten
     const containerRect = containerRef.current.getBoundingClientRect();
     const newWidth = containerRect.right - e.clientX;
 
-    const minWidth = dragMinWidthRef.current;
-    const maxWidth = Math.min(800, containerRect.width * 0.6);
+    const minWidth = LAYOUT_CONSTANTS.SIDE_PANEL_MIN_WIDTH;
+    const maxWidth = Math.min(LAYOUT_CONSTANTS.SIDE_PANEL_MAX_WIDTH, containerRect.width * 0.6);
 
-    if (newWidth >= minWidth && newWidth <= maxWidth) {
-      setSideWidth(newWidth);
-    } else if (newWidth < minWidth) {
-      setSideWidth(minWidth);
-    } else if (newWidth > maxWidth) {
-      setSideWidth(maxWidth);
-    }
+    setSideWidth(Math.min(Math.max(newWidth, minWidth), maxWidth));
   }, [isResizing]);
 
   React.useEffect(() => {
@@ -100,23 +54,6 @@ export function MainContent({ children, sidePanel, isSidePanelOpen }: MainConten
 
   const showSide = sidePanel && isSidePanelOpen;
 
-  // Enforce initial minimum width when the side panel opens or content changes
-  React.useEffect(() => {
-    if (showSide) {
-      // Use requestAnimationFrame to let the DOM settle before measuring
-      requestAnimationFrame(() => {
-        const calculatedMinWidth = calculateMinWidth();
-        setSideWidth(prevWidth => {
-          // Only override if the current width is too small to fit the content
-          if (prevWidth < calculatedMinWidth) {
-            return calculatedMinWidth;
-          }
-          return prevWidth;
-        });
-      });
-    }
-  }, [showSide, sidePanel, calculateMinWidth]);
-
   return (
     <div ref={containerRef} className="flex-1 pr-2 pb-2 flex h-full overflow-hidden relative">
       {/* Main Container strict boundary */}
@@ -138,7 +75,7 @@ export function MainContent({ children, sidePanel, isSidePanelOpen }: MainConten
           </div>
 
           {/* Side Panel Container */}
-          <div id={LAYOUT_CONSTANTS.SIDE_PANEL_WRAPPER_ID} style={{ width: sideWidth }} className="h-full flex flex-col shrink-0">
+          <div id={LAYOUT_CONSTANTS.SIDE_PANEL_WRAPPER_ID} style={{ width: sideWidth }} className="@container h-full flex flex-col shrink-0 overflow-hidden">
             {React.isValidElement(sidePanel)
               ? React.cloneElement(sidePanel as React.ReactElement<any>, { width: sideWidth })
               : sidePanel}
