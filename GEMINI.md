@@ -156,6 +156,14 @@ The University Medical Screening System is a full-stack platform managing studen
    - MSW bypass handlers must only fall back to mock data on real network connection errors (backend server offline).
    - If the backend actively responds with a client error (`401 Unauthorized`, `403 Forbidden`, `400 Bad Request`), MSW must NOT silently return mock datasets—it must forward the response or log explicit warnings to prevent masking missing auth headers or parameter bugs.
 
+6. **React Query Detail Fetching & Partial Entity Hydration (`placeholderData` vs `initialData`)**:
+   - When a detail component (such as `StudentDetailsView` or `ReferralDetailsView`) receives a partial summary entity from a parent table/list and performs a full query (`/api/{resource}/{id}`), it MUST use `placeholderData: initialEntity`, NEVER `initialData`.
+   - Reason: `initialData` marks cache entries as fresh for the duration of `staleTime`, permanently suppressing background network queries and causing missing fields on partial entities.
+
+7. **Cross-Domain Mock Entity Parity & Deep Assertion Testing**:
+   - All domain mock files (`src/mocks/data/*`) must share identical primary key identifiers and complete backend DTO schemas across all modules (e.g., student users in `admin.ts` must reference matching records in `students.ts` with complete `DemographicsDto` fields).
+   - Component and view integration tests for detail panels must assert that deep/nested entity fields (e.g. demographics, contact info, clinical scores) are loaded and rendered, not just top-level tabs or headers.
+
 ---
 
 ## Domain Policies & Aggregate Invariant Synchronization

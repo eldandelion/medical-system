@@ -19,9 +19,17 @@ export const mockStudentsDb: Student[] = [
     ],
     demographics: {
       age: 21,
-      gender: '男',
-      studentId: 'CSU-987654',
-      emergencyContact: '+44 7700 900012'
+      gender: 'MALE',
+      ethnicity: '汉族',
+      idCardNumber: '110101200301011234',
+      contactNumber: '13800138001',
+      email: 'zhangwei@univ.edu.cn',
+      homeAddress: '北京市海淀区中关村南大街1号',
+      emergencyContactName: '张建军',
+      emergencyContactPhone: '13900139001',
+      school: '中南大学',
+      studentId: '2021001',
+      emergencyContact: '+86 139-0013-9001'
     },
     psychometrics: {
       scores: [
@@ -62,8 +70,16 @@ export const mockStudentsDb: Student[] = [
     ],
     demographics: {
       age: 22,
-      gender: '女',
-      studentId: 'CSU-110293',
+      gender: 'FEMALE',
+      ethnicity: '汉族',
+      idCardNumber: '110101200202022345',
+      contactNumber: '13800138002',
+      email: 'lina@univ.edu.cn',
+      homeAddress: '湖南省长沙市岳麓区麓山南路2号',
+      emergencyContactName: '李强',
+      emergencyContactPhone: '13900139002',
+      school: '中南大学',
+      studentId: '2021002',
       emergencyContact: '+86 138-0013-8000'
     },
     psychometrics: {
@@ -104,8 +120,16 @@ export const mockStudentsDb: Student[] = [
     ],
     demographics: {
       age: 19,
-      gender: '男',
-      studentId: 'CSU-209485',
+      gender: 'MALE',
+      ethnicity: '回族',
+      idCardNumber: '110101200503033456',
+      contactNumber: '13800138003',
+      email: 'wangqiang@univ.edu.cn',
+      homeAddress: '湖北省武汉市武昌区珞珈山路3号',
+      emergencyContactName: '王大伟',
+      emergencyContactPhone: '13900139003',
+      school: '中南大学',
+      studentId: '2022001',
       emergencyContact: '+86 139-1111-2222'
     },
     psychometrics: {
@@ -145,8 +169,16 @@ export const mockStudentsDb: Student[] = [
     ],
     demographics: {
       age: 20,
-      gender: '男',
-      studentId: 'CSU-440392',
+      gender: 'MALE',
+      ethnicity: '满族',
+      idCardNumber: '110101200404044567',
+      contactNumber: '13800138004',
+      email: 'liuyang@univ.edu.cn',
+      homeAddress: '广东省广州市天河区五山路4号',
+      emergencyContactName: '刘保国',
+      emergencyContactPhone: '13900139004',
+      school: '中南大学',
+      studentId: '2022002',
       emergencyContact: '+86 186-2222-3333'
     },
     psychometrics: {
@@ -184,7 +216,20 @@ export const mockStudentsDb: Student[] = [
       { label: '自杀尝试终身', value: false, severity: 'none' },
       { label: '自伤行为终身', value: false, severity: 'none' }
     ],
-    demographics: { age: 20, gender: '女', studentId: 'CSU-550111', emergencyContact: '+86 138-0000-1111' },
+    demographics: {
+      age: 20,
+      gender: 'FEMALE',
+      ethnicity: '汉族',
+      idCardNumber: '110101200405055678',
+      contactNumber: '13800138005',
+      email: 'chen_siyu@univ.edu.cn',
+      homeAddress: '四川省成都市武侯区一环路5号',
+      emergencyContactName: '陈建华',
+      emergencyContactPhone: '13900139005',
+      school: '中南大学',
+      studentId: '2023001',
+      emergencyContact: '+86 138-0000-1111'
+    },
     psychometrics: { scores: [], radarData: [] },
     history: []
   },
@@ -204,68 +249,115 @@ export const mockStudentsDb: Student[] = [
       { label: '自杀尝试终身', value: false, severity: 'none' },
       { label: '自伤行为终身', value: false, severity: 'none' }
     ],
-    demographics: { age: 22, gender: '男', studentId: 'CSU-660222', emergencyContact: '+86 138-0000-2222' },
+    demographics: {
+      age: 22,
+      gender: 'MALE',
+      ethnicity: '汉族',
+      idCardNumber: '110101200206066789',
+      contactNumber: '13800138006',
+      email: 'zhaoming@univ.edu.cn',
+      homeAddress: '浙江省杭州市西湖区浙大路6号',
+      emergencyContactName: '赵志刚',
+      emergencyContactPhone: '13900139006',
+      school: '中南大学',
+      studentId: '2023002',
+      emergencyContact: '+86 138-0000-2222'
+    },
     psychometrics: { scores: [], radarData: [] },
     history: []
   },
   {
     id: '7',
-    studentNumber: '2021003',
-    name: '孙悦',
-    major: '化学',
-    year: '大三',
+    studentNumber: 'S2023001',
+    name: '李明',
+    major: '计算机科学与技术学院 / 计算机科学',
+    year: '大二',
     status: 'Active',
-    riskLevel: 'MEDIUM',
-    riskReason: '持续疲劳，社交退缩',
-    referralReason: '疑似轻度抑郁',
-    scidDiagnosis: '待评估',
+    riskLevel: 'LOW',
+    riskReason: '基线状态良好，无显著心理危机。',
+    referralReason: '',
+    scidDiagnosis: '无临床诊断',
     riskFlags: [
       { label: '自杀意念终身', value: false, severity: 'none' },
       { label: '自杀尝试终身', value: false, severity: 'none' },
       { label: '自伤行为终身', value: false, severity: 'none' }
     ],
-    demographics: { age: 21, gender: '女', studentId: 'CSU-770333', emergencyContact: '+86 138-0000-3333' },
-    psychometrics: { scores: [], radarData: [] },
+    demographics: {
+      age: 21,
+      gender: 'MALE',
+      ethnicity: '汉族',
+      idCardNumber: '110101200305201234',
+      contactNumber: '13800138000',
+      email: 'liming@univ.edu.cn',
+      homeAddress: '北京市海淀区中关村南大街5号',
+      emergencyContactName: '李建国',
+      emergencyContactPhone: '13900139000',
+      school: '中南大学',
+      studentId: 'S2023001',
+      emergencyContact: '+86 139-0013-9000'
+    },
+    psychometrics: {
+      scores: [
+        { date: '1月', value: 20 },
+        { date: '2月', value: 22 },
+        { date: '3月', value: 25 },
+        { date: '4月', value: 24 }
+      ],
+      radarData: [
+        { subject: '焦虑', A: 40, fullMark: 150 },
+        { subject: '抑郁', A: 35, fullMark: 150 },
+        { subject: '压力', A: 50, fullMark: 150 },
+        { subject: '睡眠', A: 110, fullMark: 150 },
+        { subject: '专注度', A: 120, fullMark: 150 }
+      ]
+    },
     history: []
   },
   {
     id: '8',
-    studentNumber: '2022003',
-    name: '周杰',
-    major: '计算机科学',
-    year: '研究生',
+    studentNumber: 'S2023002',
+    name: '王芳',
+    major: '机械工程学院 / 机械工程',
+    year: '大三',
     status: 'Active',
-    riskLevel: 'HIGH',
-    riskReason: '压力过大伴随创伤后症状',
-    referralReason: '转诊',
-    scidDiagnosis: 'PTSD倾向',
+    riskLevel: 'LOW',
+    riskReason: '常态自评平稳。',
+    referralReason: '',
+    scidDiagnosis: '无临床诊断',
     riskFlags: [
       { label: '自杀意念终身', value: false, severity: 'none' },
       { label: '自杀尝试终身', value: false, severity: 'none' },
       { label: '自伤行为终身', value: false, severity: 'none' }
     ],
-    demographics: { age: 24, gender: '男', studentId: 'CSU-880444', emergencyContact: '+86 138-0000-4444' },
-    psychometrics: { scores: [], radarData: [] },
-    history: []
-  },
-  {
-    id: '9',
-    studentNumber: '2023003',
-    name: '王小明',
-    major: '工程学',
-    year: '大一',
-    status: 'Active',
-    riskLevel: 'MEDIUM',
-    riskReason: '学业压力，睡眠障碍',
-    referralReason: '初次申请干预',
-    scidDiagnosis: '待评估',
-    riskFlags: [
-      { label: '自杀意念终身', value: false, severity: 'none' },
-      { label: '自杀尝试终身', value: false, severity: 'none' },
-      { label: '自伤行为终身', value: false, severity: 'none' }
-    ],
-    demographics: { age: 19, gender: '男', studentId: 'CSU-990555', emergencyContact: '+86 138-0000-5555' },
-    psychometrics: { scores: [], radarData: [] },
+    demographics: {
+      age: 22,
+      gender: 'FEMALE',
+      ethnicity: '汉族',
+      idCardNumber: '110101200208155678',
+      contactNumber: '13700137000',
+      email: 'wangfang@univ.edu.cn',
+      homeAddress: '湖南省长沙市岳麓区麓山南路8号',
+      emergencyContactName: '王建华',
+      emergencyContactPhone: '13600136000',
+      school: '中南大学',
+      studentId: 'S2023002',
+      emergencyContact: '+86 136-0013-6000'
+    },
+    psychometrics: {
+      scores: [
+        { date: '1月', value: 18 },
+        { date: '2月', value: 19 },
+        { date: '3月', value: 20 },
+        { date: '4月', value: 18 }
+      ],
+      radarData: [
+        { subject: '焦虑', A: 30, fullMark: 150 },
+        { subject: '抑郁', A: 25, fullMark: 150 },
+        { subject: '压力', A: 45, fullMark: 150 },
+        { subject: '睡眠', A: 130, fullMark: 150 },
+        { subject: '专注度', A: 135, fullMark: 150 }
+      ]
+    },
     history: []
   }
 ];

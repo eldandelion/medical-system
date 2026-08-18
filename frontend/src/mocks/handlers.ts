@@ -383,7 +383,7 @@ export const handlers = [
       }
     }
 
-    const student = mockStudentsDb.find((s) => s.id === id);
+    const student = mockStudentsDb.find((s) => String(s.id) === String(id) || s.studentNumber === String(id));
     if (!student) {
       return new HttpResponse(null, { status: 404 });
     }

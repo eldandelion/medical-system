@@ -2,6 +2,8 @@ import React from 'react';
 import { AdminUserSummaryDto, AccountStatus } from '../../types/admin';
 import { roleTranslations } from '../../utils/roleTranslations';
 import { useAdminUsers } from '../../hooks/useAdminUsers';
+import { PrimaryTabs } from '../common/Tabs';
+import { useDetails } from '../../contexts/DetailsContext';
 
 export const USER_DETAILS_TABS = [
   { id: 'overview', label: '基本信息', icon: 'account_circle' },
@@ -11,10 +13,12 @@ export const USER_DETAILS_TABS = [
 interface UserDetailsViewProps {
   user: AdminUserSummaryDto;
   activeTab?: string;
+  onTabChange?: (tabId: string) => void;
 }
 
-export const UserDetailsView: React.FC<UserDetailsViewProps> = ({ user, activeTab = 'overview' }) => {
+export const UserDetailsView: React.FC<UserDetailsViewProps> = ({ user, activeTab = 'overview', onTabChange }) => {
   const { updateStatus, deleteUser, isUpdating } = useAdminUsers();
+  const { isFullScreen } = useDetails();
 
   const handleStatusChange = async (newStatus: AccountStatus) => {
     if (newStatus === 'DELETED') {
@@ -75,6 +79,15 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({ user, activeTa
           <div className="mt-2.5">{getStatusBadge(user.status)}</div>
         </div>
       </div>
+
+      {/* Primary Tabs */}
+      {!isFullScreen && onTabChange && (
+        <PrimaryTabs
+          tabs={USER_DETAILS_TABS}
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+        />
+      )}
 
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">

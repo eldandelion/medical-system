@@ -20,6 +20,7 @@ interface StudentDetailsViewProps {
   hideHeader?: boolean;
   activeTab?: string;
   onTabChange?: (tabId: string) => void;
+  footer?: React.ReactNode;
 }
 
 export const StudentDetailsTabs = {
@@ -38,7 +39,7 @@ export const STUDENT_DETAILS_TABS = [
 
 import { useAuth } from '../../contexts/AuthContext';
 
-export function StudentDetailsView({ student: initialStudent, hideHeader, activeTab: propsActiveTab, onTabChange }: StudentDetailsViewProps) {
+export function StudentDetailsView({ student: initialStudent, hideHeader, activeTab: propsActiveTab, onTabChange, footer }: StudentDetailsViewProps) {
   const { session } = useAuth();
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>(StudentDetailsTabs.OVERVIEW);
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
@@ -64,7 +65,7 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
       return res.json();
     },
     enabled: !!initialStudent?.id,
-    initialData: initialStudent
+    placeholderData: initialStudent
   });
 
   const student = studentData || initialStudent;
@@ -110,18 +111,22 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
         />
       ) : undefined}
       footer={
-        <ActionFooter>
-          <PrimaryButton
-            icon="send_time_extension"
-            label="发起转诊"
-            onClick={() => openCreation('拟稿：新转诊', <ReferralCreationForm onClose={closeCreation} />)}
-          />
-          <SecondaryButton
-            icon="assignment"
-            label="分配问卷"
-            onClick={() => setIsAssignDialogOpen(true)}
-          />
-        </ActionFooter>
+        footer !== undefined ? (
+          footer
+        ) : (
+          <ActionFooter>
+            <PrimaryButton
+              icon="send_time_extension"
+              label="发起转诊"
+              onClick={() => openCreation('拟稿：新转诊', <ReferralCreationForm onClose={closeCreation} />)}
+            />
+            <SecondaryButton
+              icon="assignment"
+              label="分配问卷"
+              onClick={() => setIsAssignDialogOpen(true)}
+            />
+          </ActionFooter>
+        )
       }
     >
       <AssignQuestionnaireDialog

@@ -15,6 +15,7 @@ import { StudentDetailsView, STUDENT_DETAILS_TABS } from '../components/students
 import { ReferralDetailsView, REFERRAL_DETAILS_TABS } from '../components/records/ReferralDetailsView';
 import { UserManagementView } from '../components/admin/UserManagementView';
 import { UserDetailsView, USER_DETAILS_TABS } from '../components/admin/UserDetailsView';
+import { UserGovernanceFooter } from '../components/admin/UserGovernanceFooter';
 import { AssessmentCatalogManagementView } from '../components/admin/AssessmentCatalogManagementView';
 import { REFERRAL_TYPE_LABELS } from '../config/styleConstants';
 import { useCreationOverlay } from '../contexts/CreationContext';
@@ -86,6 +87,9 @@ export function AdminPage() {
   const getTabsForPage = () => {
     switch (activePage) {
       case AdminTabs.USERS:
+        if (selectedItem?.role === 'STUDENT') {
+          return STUDENT_DETAILS_TABS;
+        }
         return USER_DETAILS_TABS;
       case AdminTabs.STUDENTS:
         return STUDENT_DETAILS_TABS;
@@ -283,14 +287,16 @@ export function AdminPage() {
               onClose={() => setSelectedItem(null)}
               title={
                 activePage === AdminTabs.USERS
-                  ? selectedItem?.name || '用户详情'
+                  ? selectedItem?.name || (selectedItem?.role === 'STUDENT' ? '学生详情' : '用户详情')
                   : activePage === AdminTabs.STUDENTS
                   ? selectedItem?.name || '学生详情'
                   : selectedItem?.title || (selectedItem?.type ? REFERRAL_TYPE_LABELS[selectedItem.type] : '转诊详情')
               }
               subtitle={
                 activePage === AdminTabs.USERS
-                  ? selectedItem?.email || selectedItem?.departmentOrCollege || ''
+                  ? selectedItem?.role === 'STUDENT'
+                    ? selectedItem?.departmentOrCollege || selectedItem?.email || ''
+                    : selectedItem?.email || selectedItem?.departmentOrCollege || ''
                   : activePage === AdminTabs.STUDENTS
                   ? selectedItem?.major || ''
                   : selectedItem?.studentName || ''
@@ -304,7 +310,9 @@ export function AdminPage() {
               }
               icon={
                 activePage === AdminTabs.USERS
-                  ? 'manage_accounts'
+                  ? selectedItem?.role === 'STUDENT'
+                    ? 'person'
+                    : 'manage_accounts'
                   : activePage === AdminTabs.STUDENTS
                   ? 'person'
                   : 'description'
@@ -316,7 +324,32 @@ export function AdminPage() {
               {selectedItem && (
                 <>
                   {activePage === AdminTabs.USERS && (
-                    <UserDetailsView user={selectedItem} activeTab={activeTab} />
+                    selectedItem?.role === 'STUDENT' ? (
+                      <StudentDetailsView
+                        student={{
+                          id: selectedItem.id,
+                          name: selectedItem.name,
+                          major: selectedItem.departmentOrCollege || '',
+                          riskLevel: 'LOW',
+                          demographics: {
+                            studentId: selectedItem.employeeOrStudentId || '',
+                            email: selectedItem.email || '',
+                          } as any
+                        } as any}
+                        activeTab={activeTab}
+                        onTabChange={setActiveTab}
+                        footer={
+                          <UserGovernanceFooter
+                            user={selectedItem}
+                            onStatusUpdated={(newStatus) => {
+                              setSelectedItem((prev: any) => prev ? { ...prev, status: newStatus } : prev);
+                            }}
+                          />
+                        }
+                      />
+                    ) : (
+                      <UserDetailsView user={selectedItem} activeTab={activeTab} onTabChange={setActiveTab} />
+                    )
                   )}
                   {activePage === AdminTabs.STUDENTS && (
                     <StudentDetailsView
