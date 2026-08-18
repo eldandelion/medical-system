@@ -171,7 +171,10 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
 
           {/* Search Box */}
           <div className="relative w-full lg:w-72 shrink-0">
-            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] text-[var(--md-sys-color-on-surface-variant)]">
+            <span
+              className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--md-sys-color-on-surface-variant)] pointer-events-none"
+              style={{ fontSize: '18px', width: '18px', height: '18px', lineHeight: '18px' }}
+            >
               search
             </span>
             <input
@@ -179,15 +182,20 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
               placeholder="搜索姓名、工号/学号、院系..."
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              className="w-full h-9 pl-9 pr-8 rounded-full text-xs bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] placeholder-[var(--md-sys-color-outline)] border border-transparent focus:border-[var(--md-sys-color-primary)] focus:bg-[var(--md-sys-color-surface)] focus:outline-none transition-all"
+              className="w-full h-9 pl-10 pr-8 rounded-full text-xs bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] placeholder-[var(--md-sys-color-outline)] border border-transparent focus:border-[var(--md-sys-color-primary)] focus:bg-[var(--md-sys-color-surface)] focus:outline-none transition-all"
             />
             {searchKeyword && (
               <button
                 type="button"
                 onClick={() => setSearchKeyword('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-on-surface)] p-0.5 rounded-full hover:bg-[var(--md-sys-color-surface-container-highest)] transition-colors"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-on-surface)] p-0.5 rounded-full hover:bg-[var(--md-sys-color-surface-container-highest)] transition-colors flex items-center justify-center"
               >
-                <span className="material-symbols-outlined text-[16px] block">close</span>
+                <span
+                  className="material-symbols-outlined block"
+                  style={{ fontSize: '16px', width: '16px', height: '16px', lineHeight: '16px' }}
+                >
+                  close
+                </span>
               </button>
             )}
           </div>
