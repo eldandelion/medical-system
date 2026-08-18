@@ -101,114 +101,72 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
     }
   };
 
+  const TABS: { id: TabType; label: string; icon: string; count?: number }[] = [
+    { id: 'ALL', label: '全部用户', icon: 'apps', count: users.length },
+    { id: 'PENDING', label: '待审核', icon: 'pending_actions', count: pendingCount },
+    { id: 'TEACHER', label: '教研教师', icon: 'school' },
+    { id: 'HEAD_COUNSELLOR', label: '主任辅导员', icon: 'psychology' },
+    { id: 'TRIAL_ADMIN', label: '医院初审', icon: 'admin_panel_settings' },
+    { id: 'DOCTOR', label: '专科医生', icon: 'medical_services' },
+    { id: 'STUDENT', label: '学生', icon: 'person' },
+  ];
+
   return (
-    <div className="flex flex-col gap-6 p-6">
-      {/* Top Filter and Search Bar */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[var(--md-sys-color-surface-container)] p-4 rounded-2xl border border-[var(--md-sys-color-outline-variant)]">
-        {/* Tab Buttons */}
-        <div className="flex flex-wrap items-center gap-1">
-          <button
-            onClick={() => setActiveTab('ALL')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-              activeTab === 'ALL'
-                ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-sm'
-                : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)]'
-            }`}
-          >
-            全部 ({users.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('PENDING')}
-            className={`relative px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-              activeTab === 'PENDING'
-                ? 'bg-[var(--md-sys-color-tertiary)] text-[var(--md-sys-color-on-tertiary)] shadow-sm'
-                : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)]'
-            }`}
-          >
-            待审核
-            {pendingCount > 0 && (
-              <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)]">
-                {pendingCount}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('TEACHER')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-              activeTab === 'TEACHER'
-                ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-sm'
-                : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)]'
-            }`}
-          >
-            教研教师
-          </button>
-          <button
-            onClick={() => setActiveTab('HEAD_COUNSELLOR')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-              activeTab === 'HEAD_COUNSELLOR'
-                ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-sm'
-                : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)]'
-            }`}
-          >
-            主任辅导员
-          </button>
-          <button
-            onClick={() => setActiveTab('TRIAL_ADMIN')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-              activeTab === 'TRIAL_ADMIN'
-                ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-sm'
-                : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)]'
-            }`}
-          >
-            医院初审
-          </button>
-          <button
-            onClick={() => setActiveTab('DOCTOR')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-              activeTab === 'DOCTOR'
-                ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-sm'
-                : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)]'
-            }`}
-          >
-            专科医生
-          </button>
-          <button
-            onClick={() => setActiveTab('STUDENT')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-              activeTab === 'STUDENT'
-                ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-sm'
-                : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)]'
-            }`}
-          >
-            学生
-          </button>
-        </div>
+    <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
+      {/* Top Filter Chips and Search Bar (Positioned directly under title) */}
+      <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4 px-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+        {/* Material Design 3 Filter Chips */}
+        <md-chip-set aria-label="用户角色与状态筛选">
+          {TABS.map((tab) => {
+            const isSelected = activeTab === tab.id;
+            const labelWithCount =
+              tab.id === 'PENDING' && pendingCount > 0
+                ? `${tab.label} (${pendingCount})`
+                : tab.id === 'ALL' && users.length > 0
+                ? `${tab.label} (${users.length})`
+                : tab.label;
+
+            return (
+              <md-filter-chip
+                key={tab.id}
+                label={labelWithCount}
+                selected={isSelected}
+                onClick={() => setActiveTab(tab.id)}
+                has-icon
+              >
+                <md-icon slot="icon">{tab.icon}</md-icon>
+              </md-filter-chip>
+            );
+          })}
+        </md-chip-set>
 
         {/* Search Box */}
-        <div className="relative w-full md:w-72">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--md-sys-color-on-surface-variant)]">
+        <div className="relative w-full lg:w-72 shrink-0">
+          <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] text-[var(--md-sys-color-on-surface-variant)]">
             search
           </span>
           <input
             type="text"
-            placeholder="搜索姓名、邮箱或编号..."
+            placeholder="搜索姓名、工号/学号、院系..."
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
-            className="w-full pl-9 pr-8 py-2 text-xs bg-[var(--md-sys-color-surface)] rounded-xl border border-[var(--md-sys-color-outline-variant)] text-[var(--md-sys-color-on-surface)] placeholder-[var(--md-sys-color-outline)] focus:outline-none focus:border-[var(--md-sys-color-primary)] transition-colors"
+            className="w-full h-9 pl-9 pr-8 rounded-full text-xs bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] placeholder-[var(--md-sys-color-outline)] border border-transparent focus:border-[var(--md-sys-color-primary)] focus:bg-[var(--md-sys-color-surface)] focus:outline-none transition-all"
           />
           {searchKeyword && (
             <button
+              type="button"
               onClick={() => setSearchKeyword('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-on-surface)]"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-on-surface)] p-0.5 rounded-full hover:bg-[var(--md-sys-color-surface-container-highest)] transition-colors"
             >
-              <span className="material-symbols-outlined text-xs">close</span>
+              <span className="material-symbols-outlined text-[16px] block">close</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* User Table Card */}
-      <div className="bg-[var(--md-sys-color-surface)] rounded-2xl border border-[var(--md-sys-color-outline-variant)] overflow-hidden shadow-xs">
+      {/* User Table Content */}
+      <div className="flex-1 min-h-0 flex flex-col px-6 pb-6 mt-2 relative overflow-y-auto">
+        <div className="bg-[var(--md-sys-color-surface)] rounded-2xl border border-[var(--md-sys-color-outline-variant)] overflow-hidden shadow-xs">
         {isLoading ? (
           <div className="p-12 text-center text-sm text-[var(--md-sys-color-on-surface-variant)]">
             正在加载用户列表...
@@ -339,6 +297,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
             </table>
           </div>
         )}
+        </div>
       </div>
 
       {/* Confirmation Modal */}

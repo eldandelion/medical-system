@@ -8,9 +8,14 @@ declare global {
         label?: string;
         selected?: boolean;
         removable?: boolean;
+        elevated?: boolean;
+        disabled?: boolean;
+        'has-icon'?: boolean;
       }, HTMLElement>;
       'md-assist-chip': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
         label?: string;
+        elevated?: boolean;
+        disabled?: boolean;
       }, HTMLElement>;
       'md-icon': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
       'md-icon-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
