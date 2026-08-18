@@ -176,31 +176,34 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
         {/* Top Filter Chips and Search Bar (Positioned directly under title) */}
         <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4 px-6 mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
-          {/* Material Design 3 Filter Chips */}
-          <md-chip-set ref={chipSetRef} aria-label="用户角色与状态筛选">
-            {TABS.map((tab) => {
-              const isSelected = activeTab === tab.id;
-              const labelWithCount =
-                tab.id === 'PENDING' && pendingCount > 0
-                  ? `${tab.label} (${pendingCount})`
-                  : tab.id === 'ALL' && users.length > 0
-                  ? `${tab.label} (${users.length})`
-                  : tab.label;
+          {/* Material Design 3 Filter Chips with Horizontal Scroll */}
+          <div className="w-full lg:flex-1 min-w-0 overflow-x-auto overflow-y-hidden no-scrollbar py-1 flex items-center">
+            <md-chip-set ref={chipSetRef} aria-label="用户角色与状态筛选" className="flex flex-nowrap shrink-0 items-center" style={{ display: 'inline-flex', flexWrap: 'nowrap', alignItems: 'center' }}>
+              {TABS.map((tab) => {
+                const isSelected = activeTab === tab.id;
+                const labelWithCount =
+                  tab.id === 'PENDING' && pendingCount > 0
+                    ? `${tab.label} (${pendingCount})`
+                    : tab.id === 'ALL' && users.length > 0
+                    ? `${tab.label} (${users.length})`
+                    : tab.label;
 
-              return (
-                <md-filter-chip
-                  key={tab.id}
-                  data-tab-id={tab.id}
-                  label={labelWithCount}
-                  selected={isSelected}
-                  onClick={(e: React.MouseEvent<HTMLElement>) => handleTabClick(tab.id, e)}
-                  has-icon
-                >
-                  <md-icon slot="icon">{tab.icon}</md-icon>
-                </md-filter-chip>
-              );
-            })}
-          </md-chip-set>
+                return (
+                  <md-filter-chip
+                    key={tab.id}
+                    data-tab-id={tab.id}
+                    label={labelWithCount}
+                    selected={isSelected}
+                    onClick={(e: React.MouseEvent<HTMLElement>) => handleTabClick(tab.id, e)}
+                    className="shrink-0"
+                    has-icon
+                  >
+                    <md-icon slot="icon">{tab.icon}</md-icon>
+                  </md-filter-chip>
+                );
+              })}
+            </md-chip-set>
+          </div>
 
           {/* Search Box */}
           <div className="relative w-full lg:w-72 shrink-0">
