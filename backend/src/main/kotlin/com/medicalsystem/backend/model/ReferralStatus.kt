@@ -29,7 +29,7 @@ enum class ReferralStatus(
             NEEDS_REASSIGNMENT -> previousStatus == WAITING_FOR_SCHEDULING
             REJECTED -> previousStatus != CLOSED && previousStatus != DRAFT
             RECALLED -> previousStatus == AWAITING_APPROVAL
-            CLOSED -> previousStatus == AWAITING_FEEDBACK_APPROVAL
+            CLOSED -> previousStatus != CLOSED && previousStatus != null
             ERROR -> true
         }
     }

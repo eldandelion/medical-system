@@ -43,6 +43,9 @@ class MockAuthenticationFilter(
         } else if (token.contains("trial_admin")) {
             userRepository.findAll().firstOrNull { it.role == UserRole.TRIAL_ADMIN }
                 ?: User(id = 998L, name = "Mock Trial Admin", email = EmailAddress("admin@univ.edu.cn"), role = UserRole.TRIAL_ADMIN)
+        } else if (token.contains("admin")) {
+            userRepository.findAll().firstOrNull { it.role == UserRole.SYSTEM_ADMIN }
+                ?: User(id = 990L, name = "系统管理员", email = EmailAddress("admin@univ.edu.cn"), role = UserRole.SYSTEM_ADMIN)
         } else if (token.contains("doctor")) {
             userRepository.findAll().firstOrNull { it.role == UserRole.DOCTOR }
                 ?: User(id = 997L, name = "Mock Doctor", email = EmailAddress("doctor@univ.edu.cn"), role = UserRole.DOCTOR)

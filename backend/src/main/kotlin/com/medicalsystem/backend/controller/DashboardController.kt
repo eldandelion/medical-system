@@ -34,6 +34,10 @@ class DashboardController(
     fun getDoctorProfile(@CurrentUser user: User): ResponseEntity<ProfileSummaryDto> =
         ResponseEntity.ok(dashboardService.getDoctorProfile(user))
 
+    @GetMapping("/admin/profile")
+    fun getAdminProfile(@CurrentUser user: User): ResponseEntity<ProfileSummaryDto> =
+        ResponseEntity.ok(dashboardService.getAdminProfile(user))
+
     @GetMapping("/student")
     fun getStudentDashboard(@CurrentUser user: User): ResponseEntity<DashboardResponseDto<StudentMetricsDto>> =
         ResponseEntity.ok(dashboardService.getStudentDashboard(user))
@@ -53,4 +57,8 @@ class DashboardController(
     @GetMapping("/doctor")
     fun getDoctorDashboard(@CurrentUser user: User): ResponseEntity<DashboardResponseDto<DoctorMetricsDto>> =
         ResponseEntity.ok(dashboardService.getDoctorDashboard(user))
+
+    @GetMapping("/admin")
+    fun getAdminDashboard(@CurrentUser user: User): ResponseEntity<DashboardResponseDto<AdminMetricsDto>> =
+        ResponseEntity.ok(dashboardService.getAdminDashboard(user))
 }

@@ -71,6 +71,18 @@ const fetchDoctorProfile = async (token?: string): Promise<ProfileSummaryDto> =>
   return response.json();
 };
 
+const fetchAdminProfile = async (token?: string): Promise<ProfileSummaryDto> => {
+  const response = await fetch(`${import.meta.env.BASE_URL}/api/dashboard/admin/profile`.replace('//api', '/api'), {
+    headers: {
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch admin profile');
+  }
+  return response.json();
+};
+
 export const useStudentProfileSummary = (token?: string) => {
   return useQuery({
     queryKey: ['dashboard', 'student', 'profile', token],
@@ -111,6 +123,15 @@ export const useDoctorProfileSummary = (token?: string) => {
   return useQuery({
     queryKey: ['dashboard', 'doctor', 'profile', token],
     queryFn: () => fetchDoctorProfile(token),
+    retry: 1,
+    enabled: !!token
+  });
+};
+
+export const useAdminProfileSummary = (token?: string) => {
+  return useQuery({
+    queryKey: ['dashboard', 'admin', 'profile', token],
+    queryFn: () => fetchAdminProfile(token),
     retry: 1,
     enabled: !!token
   });

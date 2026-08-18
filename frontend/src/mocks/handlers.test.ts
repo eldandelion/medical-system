@@ -98,3 +98,52 @@ describe('MSW Handlers - Assessments', () => {
     expect(result.totalQuestionsAnswered).toBe(2);
   });
 });
+
+describe('MSW Handlers - Admin Governance', () => {
+  it('should fetch admin users list with role and status filtering', async () => {
+    const response = await fetch('http://localhost:3000/api/admin/users?role=TEACHER');
+    expect(response.status).toBe(200);
+
+    const users = await response.json();
+    expect(Array.isArray(users)).toBe(true);
+    expect(users.every((u: any) => u.role === 'TEACHER')).toBe(true);
+  });
+
+  it('should update user account status and manage soft deletion', async () => {
+    const response = await fetch('http://localhost:3000/api/admin/users/2/status', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'DISABLED' })
+    });
+    expect(response.status).toBe(200);
+
+    const updated = await response.json();
+    expect(updated.status).toBe('DISABLED');
+  });
+
+  it('should toggle assessment catalog scale availability', async () => {
+    const response = await fetch('http://localhost:3000/api/assessments/catalog/PHQ_9/availability', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isAvailable: false })
+    });
+    expect(response.status).toBe(200);
+
+    const updated = await response.json();
+    expect(updated.isEnabled).toBe(false);
+  });
+
+  it('should cancel referral and transition to CLOSED', async () => {
+    const testId = mockReferralsDb[0].id;
+    const response = await fetch(`http://localhost:3000/api/referrals/${testId}/cancel`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: 'Admin cancelled' })
+    });
+    expect(response.status).toBe(200);
+
+    const cancelled = await response.json();
+    expect(cancelled.status).toBe('CLOSED');
+  });
+});
+

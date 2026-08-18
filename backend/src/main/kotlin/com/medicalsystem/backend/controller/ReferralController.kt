@@ -116,4 +116,14 @@ class ReferralController(
         if (user == null) throw ForbiddenException("Authorized user not found")
         return referralService.acknowledgeFeedback(id, user)
     }
+
+    @PostMapping("/{id}/cancel")
+    fun cancelReferral(
+        @PathVariable id: Long,
+        @RequestBody(required = false) dto: com.medicalsystem.backend.dto.RejectReferralDto?,
+        @CurrentUser user: User?
+    ): ReferralDto {
+        val currentUser = user ?: throw ForbiddenException("Authorized user not found")
+        return referralService.cancelReferralByAdmin(id, dto, currentUser)
+    }
 }

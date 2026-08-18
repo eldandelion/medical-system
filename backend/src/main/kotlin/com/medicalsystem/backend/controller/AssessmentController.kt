@@ -26,6 +26,16 @@ class AssessmentController(
         return assessmentService.getCatalog()
     }
 
+    @PutMapping("/catalog/{batteryCode}/availability")
+    fun toggleScaleAvailability(
+        @PathVariable batteryCode: String,
+        @Valid @RequestBody request: ToggleScaleAvailabilityRequest,
+        @CurrentUser user: User?
+    ): AssessmentCatalogItemDto {
+        val currentUser = user ?: throw ForbiddenException("Authorized user not found")
+        return assessmentService.toggleScaleAvailability(batteryCode, request.isAvailable, currentUser)
+    }
+
     @GetMapping("/{id}")
     fun fetchAssessmentDetails(
         @PathVariable id: Long,

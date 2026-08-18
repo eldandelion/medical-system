@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import { queryClient } from '../utils/queryClient';
 
-export type Role = 'student' | 'teacher' | 'head-councillor' | 'trial-admin' | 'doctor';
+export type Role = 'student' | 'teacher' | 'head-councillor' | 'trial-admin' | 'doctor' | 'admin';
 
 export interface UserSession {
   role: Role;
@@ -40,6 +40,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         break;
       case 'doctor':
         token = 'mock_doctor_token';
+        break;
+      case 'admin':
+        token = 'mock_admin_token';
         break;
       case 'student':
       default:

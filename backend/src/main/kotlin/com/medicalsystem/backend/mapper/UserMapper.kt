@@ -11,7 +11,9 @@ class UserMapper {
             id = entity.id,
             name = entity.name,
             email = entity.email,
-            role = entity.role
+            role = entity.role,
+            status = entity.status,
+            deletedAt = entity.deletedAt
         )
     }
 
@@ -20,7 +22,9 @@ class UserMapper {
             id = model.id,
             name = model.name,
             email = model.email,
-            role = model.role
+            role = model.role,
+            status = model.status,
+            deletedAt = model.deletedAt
         )
     }
 }

@@ -32,7 +32,8 @@ data class AssessmentCatalogItemDto(
     val description: String? = null,
     val duration: String,
     val questionCount: Int,
-    val sections: List<AssessmentSectionDto>
+    val sections: List<AssessmentSectionDto>,
+    val isEnabled: Boolean = true
 )
 
 data class AssignedByDto(

@@ -2,8 +2,9 @@ package com.medicalsystem.backend.entity
 
 import jakarta.persistence.*
 import com.medicalsystem.backend.model.UserRole
-
+import com.medicalsystem.backend.model.AccountStatus
 import com.medicalsystem.backend.model.EmailAddress
+import java.time.Instant
 
 @Entity
 @Table(name = "users")
@@ -18,5 +19,11 @@ class UserEntity(
     var role: UserRole,
 
     @Column(length = 100, nullable = false, unique = true)
-    var email: EmailAddress
+    var email: EmailAddress,
+
+    @Column(nullable = false)
+    var status: AccountStatus = AccountStatus.ACTIVE,
+
+    @Column(name = "deleted_at")
+    var deletedAt: Instant? = null
 )

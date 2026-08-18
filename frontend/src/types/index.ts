@@ -22,7 +22,8 @@ export type ReferralAction =
   | 'write_feedback'
   | 'report_problem'
   | 'acknowledge_feedback'
-  | 'reassign_doctor';
+  | 'reassign_doctor'
+  | 'cancel_referral';
 
 export interface Referral {
   id: string;
@@ -162,6 +163,13 @@ export interface DoctorMetricsDto {
   notificationsCount: number;
 }
 
+export interface AdminMetricsDto {
+  totalUsersCount: number;
+  pendingApprovalsCount: number;
+  activeReferralsCount: number;
+  completedAssessmentsCount: number;
+}
+
 export interface DashboardResponseDto<T> {
   metrics: T;
   activityTitle?: string;
@@ -222,6 +230,7 @@ export interface AssessmentCatalogItemDto {
   duration: string;
   questionCount: number;
   sections: AssessmentSectionDto[];
+  isEnabled?: boolean;
 }
 
 export interface AssignedByDto {

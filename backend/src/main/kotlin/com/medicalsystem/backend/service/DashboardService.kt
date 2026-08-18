@@ -23,7 +23,9 @@ class DashboardService(
     private val headCounsellorRepository: HeadCounsellorRepository,
     private val schoolDepartmentRepository: SchoolDepartmentRepository,
     private val notificationRepository: NotificationRepository,
-    private val referralRepository: ReferralRepository
+    private val referralRepository: ReferralRepository,
+    private val userJpaRepository: com.medicalsystem.backend.repository.UserJpaRepository,
+    private val assessmentAssignmentRepository: com.medicalsystem.backend.repository.AssessmentAssignmentJpaRepository
 ) {
 
     private fun validateRole(user: User, expectedRole: UserRole) {
@@ -146,5 +148,34 @@ class DashboardService(
         val referralsCount = referralRepository.countActionableReferralsFor(user)
         val unreadCount = notificationRepository.countUnreadByUserId(user.id)
         return DashboardResponseDto(DoctorMetricsDto(referralsCount = referralsCount, notificationsCount = unreadCount))
+    }
+
+    fun getAdminProfile(user: User): ProfileSummaryDto {
+        validateRole(user, UserRole.SYSTEM_ADMIN)
+        return ProfileSummaryDto(
+            avatarUrl = user.avatarUrl?.toString(),
+            name = user.name,
+            role = user.role,
+            employeeId = "SYS-ADMIN",
+            department = "系统管理部"
+        )
+    }
+
+    fun getAdminDashboard(user: User): DashboardResponseDto<AdminMetricsDto> {
+        validateRole(user, UserRole.SYSTEM_ADMIN)
+        val allUsers = userJpaRepository?.findAll() ?: emptyList()
+        val totalUsersCount = allUsers.count { it.status != com.medicalsystem.backend.model.AccountStatus.DELETED }.toLong()
+        val pendingApprovalsCount = allUsers.count { it.status == com.medicalsystem.backend.model.AccountStatus.PENDING_APPROVAL }.toLong()
+        val activeReferralsCount = referralRepository.countActionableReferralsFor(user)
+        val completedAssessmentsCount = assessmentAssignmentRepository?.countByStatus(com.medicalsystem.backend.model.AssessmentStatus.COMPLETED) ?: 0L
+
+        return DashboardResponseDto(
+            AdminMetricsDto(
+                totalUsersCount = totalUsersCount,
+                pendingApprovalsCount = pendingApprovalsCount,
+                activeReferralsCount = activeReferralsCount,
+                completedAssessmentsCount = completedAssessmentsCount
+            )
+        )
     }
 }

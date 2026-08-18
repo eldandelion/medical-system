@@ -14,6 +14,14 @@ object ReferralActionPolicy {
             ReferralStatus.WAITING_FOR_SCHEDULING,
             ReferralStatus.WAITING_FOR_APPOINTMENT
         )
+        UserRole.SYSTEM_ADMIN -> listOf(
+            ReferralStatus.AWAITING_APPROVAL,
+            ReferralStatus.AWAITING_TRIAGE,
+            ReferralStatus.WAITING_FOR_SCHEDULING,
+            ReferralStatus.WAITING_FOR_APPOINTMENT,
+            ReferralStatus.AWAITING_FEEDBACK_APPROVAL,
+            ReferralStatus.NEEDS_REASSIGNMENT
+        )
         else -> emptyList()
     }
 }

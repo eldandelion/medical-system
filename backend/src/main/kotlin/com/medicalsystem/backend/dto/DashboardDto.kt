@@ -40,6 +40,13 @@ data class DoctorMetricsDto(
     val notificationsCount: Long = 0
 ) : DashboardMetricsDto
 
+data class AdminMetricsDto(
+    val totalUsersCount: Long = 0,
+    val pendingApprovalsCount: Long = 0,
+    val activeReferralsCount: Long = 0,
+    val completedAssessmentsCount: Long = 0
+) : DashboardMetricsDto
+
 data class DashboardResponseDto<T : DashboardMetricsDto>(
     val metrics: T
 )

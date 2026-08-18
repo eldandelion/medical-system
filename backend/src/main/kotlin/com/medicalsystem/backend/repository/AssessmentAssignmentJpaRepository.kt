@@ -27,4 +27,6 @@ interface AssessmentAssignmentJpaRepository : JpaRepository<AssessmentAssignment
         batteryCode: String,
         status: AssessmentStatus
     ): List<AssessmentAssignmentEntity>
+
+    fun countByStatus(status: AssessmentStatus): Long
 }

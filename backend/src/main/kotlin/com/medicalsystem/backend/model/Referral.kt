@@ -131,9 +131,38 @@ class Referral(
                 if (status == ReferralStatus.WAITING_FOR_SCHEDULING) actions.addAll(listOf(ReferralAction.SCHEDULE_APPOINTMENT, ReferralAction.REQUEST_REASSIGNMENT))
                 if (status == ReferralStatus.WAITING_FOR_APPOINTMENT) actions.addAll(listOf(ReferralAction.WRITE_FEEDBACK, ReferralAction.REPORT_PROBLEM, ReferralAction.RESCHEDULE_APPOINTMENT))
             }
+            UserRole.SYSTEM_ADMIN -> {
+                if (status == ReferralStatus.DRAFT) {
+                    actions.addAll(listOf(ReferralAction.RECREATE, ReferralAction.DELETE_DRAFT))
+                } else if (status == ReferralStatus.AWAITING_APPROVAL) {
+                    actions.addAll(listOf(ReferralAction.APPROVE_REFERRAL, ReferralAction.REJECT_REFERRAL, ReferralAction.CANCEL_REFERRAL))
+                } else if (status == ReferralStatus.AWAITING_TRIAGE || status == ReferralStatus.NEEDS_REASSIGNMENT) {
+                    actions.addAll(listOf(ReferralAction.ASSIGN_DOCTOR, ReferralAction.REJECT_REFERRAL, ReferralAction.CANCEL_REFERRAL))
+                } else if (status == ReferralStatus.AWAITING_FEEDBACK_APPROVAL) {
+                    actions.addAll(listOf(ReferralAction.ACKNOWLEDGE_FEEDBACK, ReferralAction.REQUEST_FEEDBACK_REVISION, ReferralAction.CANCEL_REFERRAL))
+                } else if (status != ReferralStatus.CLOSED && status != ReferralStatus.REJECTED && status != ReferralStatus.RECALLED) {
+                    actions.add(ReferralAction.CANCEL_REFERRAL)
+                }
+            }
             else -> {}
         }
         return actions
+    }
+
+    fun adminCancel(actor: User, reason: String) {
+        if (this.status == ReferralStatus.CLOSED) {
+            throw com.medicalsystem.backend.exception.ValidationException("Referral is already closed")
+        }
+        val step = ReferralStep(
+            id = null,
+            type = ReferralStepType.TRIAGE,
+            time = LocalDateTime.now(),
+            status = ReferralStepStatus.ISSUE,
+            actorId = actor.id,
+            reason = "[ADMIN CANCEL] $reason"
+        )
+        this.steps.add(step)
+        this.transition(ReferralStatus.CLOSED, actorId = actor.id, reason = reason)
     }
 
     fun scheduleAppointment(doctorId: Long, time: LocalDateTime, actorId: Long) {

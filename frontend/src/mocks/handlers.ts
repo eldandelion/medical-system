@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from 'msw';
-import { mockAssessmentsDb, mockAssessmentCatalog, mockDashboardDb, mockStudentsDb, mockReferralsDb, generateTrackerSteps } from './db';
+import { mockAssessmentsDb, mockAssessmentCatalog, mockDashboardDb, mockStudentsDb, mockReferralsDb, mockAdminUsersDb, generateTrackerSteps } from './db';
 const MOCK_DELAY_MS = 1000;
 
 import { Referral, ReferralAction } from '../types';
@@ -21,6 +21,12 @@ const mockComputeAvailableActions = (referral: Referral, authHeader: string): Re
   } else if (authHeader.includes('doctor')) {
     if (status === 'WAITING_FOR_SCHEDULING') actions.push('schedule_appointment', 'reject_referral');
     else if (status === 'WAITING_FOR_APPOINTMENT') actions.push('write_feedback', 'report_problem');
+  } else if (authHeader.includes('admin')) {
+    if (status === 'DRAFT') actions.push('recreate', 'delete_draft');
+    else if (status === 'AWAITING_REVIEW') actions.push('approve_referral', 'reject_referral', 'cancel_referral');
+    else if (status === 'AWAITING_TRIAGE') actions.push('assign_doctor', 'reject_referral', 'cancel_referral');
+    else if (status === 'AWAITING_FEEDBACK_APPROVAL') actions.push('acknowledge_feedback', 'cancel_referral');
+    else if (status !== 'CLOSED' && status !== 'REJECTED' && status !== 'RECALLED') actions.push('cancel_referral');
   }
   
   return actions;
@@ -1031,5 +1037,132 @@ export const handlers = [
       downloadUrl: `https://mock-storage.university.edu/download/${params.fileId}?intent=${intent}`,
       expiresInSeconds: 60
     });
+  }),
+
+  // Admin User Management Handlers
+  http.get(api('/api/admin/users'), async ({ request }) => {
+    await delay(MOCK_DELAY_MS);
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not fetch real admin users, falling back to mock", e);
+      }
+    }
+    const url = new URL(request.url);
+    const role = url.searchParams.get('role');
+    const status = url.searchParams.get('status');
+    const keyword = url.searchParams.get('keyword')?.toLowerCase();
+
+    let users = [...mockAdminUsersDb];
+    if (role) users = users.filter((u) => u.role === role);
+    if (status) users = users.filter((u) => u.status === status);
+    if (keyword) {
+      users = users.filter(
+        (u) =>
+          u.name.toLowerCase().includes(keyword) ||
+          u.email.toLowerCase().includes(keyword) ||
+          u.employeeOrStudentId?.toLowerCase().includes(keyword)
+      );
+    }
+    return HttpResponse.json(users);
+  }),
+
+  http.put(api('/api/admin/users/:id/status'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not update real user status, falling back to mock", e);
+      }
+    }
+    const userId = Number(params.id);
+    const body = (await request.json()) as any;
+    const user = mockAdminUsersDb.find((u) => u.id === userId);
+    if (!user) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    user.status = body.status;
+    if (body.status === 'DELETED') {
+      user.deletedAt = new Date().toISOString();
+    } else if (body.status === 'ACTIVE' && user.deletedAt) {
+      delete user.deletedAt;
+    }
+    return HttpResponse.json(user);
+  }),
+
+  http.delete(api('/api/admin/users/:id'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not delete real user, falling back to mock", e);
+      }
+    }
+    const userId = Number(params.id);
+    const user = mockAdminUsersDb.find((u) => u.id === userId);
+    if (!user) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    user.status = 'DELETED';
+    user.deletedAt = new Date().toISOString();
+    return HttpResponse.json(user);
+  }),
+
+  // Admin Catalog Availability Toggle
+  http.put(api('/api/assessments/catalog/:batteryCode/availability'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not update real scale availability, falling back to mock", e);
+      }
+    }
+    const { batteryCode } = params;
+    const body = (await request.json()) as any;
+    const item = mockAssessmentCatalog.find((c) => c.batteryCode === batteryCode);
+    if (!item) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    item.isEnabled = body.isAvailable;
+    return HttpResponse.json(item);
+  }),
+
+  // Admin Referral Cancellation
+  http.post(api('/api/referrals/:id/cancel'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not cancel referral on real backend, falling back to mock", e);
+      }
+    }
+    const { id } = params;
+    const referral = mockReferralsDb.find((r) => r.id === id);
+    if (!referral) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    referral.status = 'CLOSED';
+    return HttpResponse.json(referral);
   })
 ];

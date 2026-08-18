@@ -41,6 +41,9 @@ class AssessmentServiceTest {
     @Mock
     private lateinit var scaleRepository: AssessmentScaleRepository
 
+    @Mock
+    private lateinit var scaleSettingRepository: com.medicalsystem.backend.repository.AssessmentScaleSettingJpaRepository
+
     private lateinit var clock: Clock
     
     private lateinit var assessmentService: AssessmentService
@@ -125,6 +128,7 @@ class AssessmentServiceTest {
             studentRepository,
             userRepository,
             scaleRepository,
+            scaleSettingRepository,
             clock
         )
     }

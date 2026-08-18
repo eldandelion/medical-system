@@ -23,6 +23,7 @@ class AssessmentService(
     private val studentRepository: StudentRepository,
     private val userRepository: UserRepository,
     private val scaleRepository: AssessmentScaleRepository,
+    private val scaleSettingRepository: com.medicalsystem.backend.repository.AssessmentScaleSettingJpaRepository,
     private val clock: Clock
 ) {
 
@@ -66,14 +67,39 @@ class AssessmentService(
 
     @Transactional(readOnly = true)
     fun getCatalog(): List<AssessmentCatalogItemDto> {
+        val settingsMap = scaleSettingRepository.findAll().associateBy { it.batteryCode }
         return scaleRepository.findAll().map { scale ->
-            scale.toCatalogItemDto()
+            val isEnabled = settingsMap[scale.batteryCode]?.isAvailable ?: true
+            scale.toCatalogItemDto().copy(isEnabled = isEnabled)
         }
+    }
+
+    fun toggleScaleAvailability(batteryCode: String, isAvailable: Boolean, adminUser: User): AssessmentCatalogItemDto {
+        if (adminUser.role != UserRole.SYSTEM_ADMIN) {
+            throw ForbiddenException("Only administrators can manage assessment scale availability")
+        }
+        val scale = scaleRepository.findByBatteryCode(batteryCode).orElseThrow {
+            NotFoundException("Assessment scale definition not found for $batteryCode")
+        }
+        val entity = scaleSettingRepository.findById(batteryCode).orElseGet {
+            com.medicalsystem.backend.entity.AssessmentScaleSettingEntity(batteryCode = batteryCode, isAvailable = true)
+        }
+        entity.isAvailable = isAvailable
+        entity.updatedAt = java.time.Instant.now()
+        scaleSettingRepository.save(entity)
+        return scale.toCatalogItemDto().copy(isEnabled = isAvailable)
     }
 
     fun assignToStudent(request: AssignAssessmentRequest, assigner: User): BatchAssignResultDto {
         if (assigner.role !in listOf(UserRole.TEACHER, UserRole.HEAD_COUNSELLOR, UserRole.SYSTEM_ADMIN)) {
             throw ForbiddenException("Only educators and administrators can assign assessments")
+        }
+
+        val settingsMap = scaleSettingRepository.findAll().associateBy { it.batteryCode }
+        request.batteryCodes.forEach { batteryCode ->
+            if (settingsMap[batteryCode]?.isAvailable == false) {
+                throw com.medicalsystem.backend.exception.ValidationException("Assessment scale $batteryCode is currently unavailable")
+            }
         }
 
         val student = studentRepository.findByIdAndVisibleTo(request.studentId, assigner).orElseThrow {
@@ -106,6 +132,13 @@ class AssessmentService(
     fun assignToCohort(request: AssignCohortAssessmentRequest, assigner: User): BatchAssignResultDto {
         if (assigner.role !in listOf(UserRole.TEACHER, UserRole.HEAD_COUNSELLOR, UserRole.SYSTEM_ADMIN)) {
             throw ForbiddenException("Only educators and administrators can assign assessments")
+        }
+
+        val settingsMap = scaleSettingRepository.findAll().associateBy { it.batteryCode }
+        request.batteryCodes.forEach { batteryCode ->
+            if (settingsMap[batteryCode]?.isAvailable == false) {
+                throw com.medicalsystem.backend.exception.ValidationException("Assessment scale $batteryCode is currently unavailable")
+            }
         }
 
         val spec = AssessmentCohortSpecification.buildSpecification(

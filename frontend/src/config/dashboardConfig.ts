@@ -91,6 +91,37 @@ export const DOCTOR_METRICS_CONFIG: MetricConfig[] = [
   }
 ];
 
+export const ADMIN_METRICS_CONFIG: MetricConfig[] = [
+  {
+    icon: "manage_accounts",
+    label: "平台用户总数",
+    containerColorClass: "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]",
+    targetPage: "User Management",
+    metricKey: "totalUsersCount"
+  },
+  {
+    icon: "pending_actions",
+    label: "待审核账号",
+    containerColorClass: "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]",
+    targetPage: "User Management",
+    metricKey: "pendingApprovalsCount"
+  },
+  {
+    icon: "assignment_late",
+    label: "活跃转诊单",
+    containerColorClass: "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]",
+    targetPage: "Referral Management",
+    metricKey: "activeReferralsCount"
+  },
+  {
+    icon: "fact_check",
+    label: "已完成测评",
+    containerColorClass: "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]",
+    targetPage: "Assessments",
+    metricKey: "completedAssessmentsCount"
+  }
+];
+
 export type ActivityStatusType = 'error' | 'warning' | 'info' | 'neutral' | 'success';
 
 export const STATUS_CHIP_COLORS: Record<ActivityStatusType, string> = {

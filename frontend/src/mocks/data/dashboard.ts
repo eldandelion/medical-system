@@ -181,5 +181,37 @@ export const mockDashboardDb: Record<string, DashboardData> = {
         statusType: 'info'
       }
     ]
+  },
+  admin: {
+    profileSummary: {
+      avatarUrl: null,
+      name: "系统管理员",
+      role: "SYSTEM_ADMIN",
+      employeeId: "SYS-ADMIN",
+      department: "系统管理部"
+    },
+    metrics: {
+      totalUsersCount: 248,
+      pendingApprovalsCount: 2,
+      activeReferralsCount: 14,
+      completedAssessmentsCount: 312
+    },
+    activityTitle: "全局系统活动",
+    activities: [
+      {
+        id: '1',
+        name: '新教师注册待审核：赵老师',
+        timestamp: '10分钟前',
+        statusText: '待审核',
+        statusType: 'warning'
+      },
+      {
+        id: '2',
+        name: '转诊自动预警：高危心理筛查',
+        timestamp: '1小时前',
+        statusText: '需跟进',
+        statusType: 'error'
+      }
+    ]
   }
 };

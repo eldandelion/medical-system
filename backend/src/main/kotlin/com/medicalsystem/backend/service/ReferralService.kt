@@ -278,6 +278,19 @@ class ReferralService(
         return mapToDto(saveAndPublishEvents(referral))
     }
 
+    @Transactional
+    fun cancelReferralByAdmin(id: Long, dto: com.medicalsystem.backend.dto.RejectReferralDto?, user: User): ReferralDto {
+        val referral = referralRepository.findByIdAndVisibleTo(id, user)
+            .orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
+
+        if (user.role != com.medicalsystem.backend.model.UserRole.SYSTEM_ADMIN) {
+            throw com.medicalsystem.backend.exception.ForbiddenException("Only administrators can cancel referrals")
+        }
+
+        referral.adminCancel(user, dto?.reason ?: "Cancelled by administrator")
+        return mapToDto(saveAndPublishEvents(referral))
+    }
+
     private fun saveAndPublishEvents(referral: Referral): Referral {
         val events = referral.getDomainEvents()
         val saved = referralRepository.save(referral)

@@ -57,8 +57,33 @@ class DashboardServiceTest {
     @Mock
     private lateinit var referralRepository: ReferralRepository
 
-    @InjectMocks
+    @Mock
+    private lateinit var userJpaRepository: com.medicalsystem.backend.repository.UserJpaRepository
+
+    @Mock
+    private lateinit var assessmentAssignmentRepository: com.medicalsystem.backend.repository.AssessmentAssignmentJpaRepository
+
     private lateinit var dashboardService: DashboardService
+
+    @org.junit.jupiter.api.BeforeEach
+    fun setup() {
+        dashboardService = DashboardService(
+            studentRepository,
+            userRepository,
+            collegeRepository,
+            hospitalRepository,
+            hospitalDepartmentRepository,
+            teacherRepository,
+            doctorRepository,
+            trialAdminRepository,
+            headCounsellorRepository,
+            schoolDepartmentRepository,
+            notificationRepository,
+            referralRepository,
+            userJpaRepository,
+            assessmentAssignmentRepository
+        )
+    }
 
     @Test
     fun `getStudentProfile maps domain model to dto correctly`() {
@@ -211,5 +236,35 @@ class DashboardServiceTest {
 
         assertEquals(8L, result.metrics.referralsCount)
         assertEquals(2L, result.metrics.notificationsCount)
+    }
+
+    @Test
+    fun `getAdminProfile returns admin profile correctly`() {
+        val mockUser = User(id = 99L, name = "System Administrator", email = EmailAddress("admin@univ.edu.cn"), role = UserRole.SYSTEM_ADMIN)
+        val result = dashboardService.getAdminProfile(mockUser)
+
+        assertEquals("System Administrator", result.name)
+        assertEquals(UserRole.SYSTEM_ADMIN, result.role)
+        assertEquals("SYS-ADMIN", result.employeeId)
+        assertEquals("系统管理部", result.department)
+    }
+
+    @Test
+    fun `getAdminDashboard returns admin metrics`() {
+        val mockUser = User(id = 99L, name = "System Administrator", email = EmailAddress("admin@univ.edu.cn"), role = UserRole.SYSTEM_ADMIN)
+        val u1 = com.medicalsystem.backend.entity.UserEntity(id = 1L, name = "U1", email = EmailAddress("u1@a.com"), role = UserRole.STUDENT, status = AccountStatus.ACTIVE)
+        val u2 = com.medicalsystem.backend.entity.UserEntity(id = 2L, name = "U2", email = EmailAddress("u2@a.com"), role = UserRole.TEACHER, status = AccountStatus.PENDING_APPROVAL)
+        val u3 = com.medicalsystem.backend.entity.UserEntity(id = 3L, name = "U3", email = EmailAddress("u3@a.com"), role = UserRole.DOCTOR, status = AccountStatus.DELETED)
+
+        `when`(userJpaRepository.findAll()).thenReturn(listOf(u1, u2, u3))
+        `when`(referralRepository.countActionableReferralsFor(mockUser)).thenReturn(4L)
+        `when`(assessmentAssignmentRepository.countByStatus(AssessmentStatus.COMPLETED)).thenReturn(25L)
+
+        val result = dashboardService.getAdminDashboard(mockUser)
+
+        assertEquals(2L, result.metrics.totalUsersCount)
+        assertEquals(1L, result.metrics.pendingApprovalsCount)
+        assertEquals(4L, result.metrics.activeReferralsCount)
+        assertEquals(25L, result.metrics.completedAssessmentsCount)
     }
 }

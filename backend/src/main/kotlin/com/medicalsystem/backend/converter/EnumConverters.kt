@@ -21,6 +21,12 @@ class UserRoleConverter : AttributeConverter<UserRole, Int> {
 }
 
 @Converter(autoApply = true)
+class AccountStatusConverter : AttributeConverter<AccountStatus, Int> {
+    override fun convertToDatabaseColumn(attribute: AccountStatus?) = getIdFromEnum(attribute)
+    override fun convertToEntityAttribute(dbData: Int?) = getEnumFromId<AccountStatus>(dbData)
+}
+
+@Converter(autoApply = true)
 class GenderConverter : AttributeConverter<Gender, Int> {
     override fun convertToDatabaseColumn(attribute: Gender?) = getIdFromEnum(attribute)
     override fun convertToEntityAttribute(dbData: Int?) = getEnumFromId<Gender>(dbData)

@@ -61,6 +61,20 @@ describe('AuthContext', () => {
     expect(result.current.session.token).toBe('mock_head_councillor_token_wang');
 
     act(() => {
+      result.current.setRole('doctor');
+    });
+
+    expect(result.current.session.role).toBe('doctor');
+    expect(result.current.session.token).toBe('mock_doctor_token');
+
+    act(() => {
+      result.current.setRole('admin');
+    });
+
+    expect(result.current.session.role).toBe('admin');
+    expect(result.current.session.token).toBe('mock_admin_token');
+
+    act(() => {
       result.current.setRole('student');
     });
 
