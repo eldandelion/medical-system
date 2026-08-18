@@ -128,6 +128,38 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
     }
   ];
 
+  const chipSetRef = React.useRef<HTMLElement>(null);
+
+  const handleTabClick = (tabId: TabType, e: React.MouseEvent<HTMLElement>) => {
+    if (tabId === 'ALL') {
+      if (activeTab === 'ALL') {
+        // Nothing should happen when clicking 全部用户 if already selected
+        e.preventDefault();
+        (e.currentTarget as any).selected = true;
+        return;
+      }
+      setActiveTab('ALL');
+    } else if (activeTab === tabId) {
+      // Deselecting a specific filter falls back to 全部用户
+      setActiveTab('ALL');
+    } else {
+      // Selecting another filter
+      setActiveTab(tabId);
+    }
+  };
+
+  React.useEffect(() => {
+    if (!chipSetRef.current) return;
+    const chips = chipSetRef.current.querySelectorAll('md-filter-chip');
+    chips.forEach((chip: any) => {
+      const tabId = chip.dataset.tabId as TabType;
+      const shouldBeSelected = activeTab === tabId;
+      if (chip.selected !== shouldBeSelected) {
+        chip.selected = shouldBeSelected;
+      }
+    });
+  }, [activeTab, users.length, pendingCount]);
+
   const TABS: { id: TabType; label: string; icon: string; count?: number }[] = [
     { id: 'ALL', label: '全部用户', icon: 'apps', count: users.length },
     { id: 'PENDING', label: '待审核', icon: 'pending_actions', count: pendingCount },
@@ -145,7 +177,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
         {/* Top Filter Chips and Search Bar (Positioned directly under title) */}
         <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4 px-6 mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
           {/* Material Design 3 Filter Chips */}
-          <md-chip-set aria-label="用户角色与状态筛选">
+          <md-chip-set ref={chipSetRef} aria-label="用户角色与状态筛选">
             {TABS.map((tab) => {
               const isSelected = activeTab === tab.id;
               const labelWithCount =
@@ -158,9 +190,10 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
               return (
                 <md-filter-chip
                   key={tab.id}
+                  data-tab-id={tab.id}
                   label={labelWithCount}
                   selected={isSelected}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={(e: React.MouseEvent<HTMLElement>) => handleTabClick(tab.id, e)}
                   has-icon
                 >
                   <md-icon slot="icon">{tab.icon}</md-icon>
