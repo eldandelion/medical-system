@@ -69,9 +69,9 @@ const AssessmentHistoryTab: React.FC<AssessmentHistoryTabProps> = ({ studentId }
     {
       key: 'assessment',
       label: '量表名称',
-      width: 'w-[40%]',
+      width: 'flex-1 min-w-[200px]',
       render: (item: AssessmentAssignmentHistoryDto) => (
-        <span className="font-medium text-[var(--md-sys-color-on-surface)]">
+        <span className="font-medium text-[var(--md-sys-color-on-surface)] truncate block">
           {getAssessmentDisplayName(item.batteryCode)}
         </span>
       )
@@ -79,7 +79,7 @@ const AssessmentHistoryTab: React.FC<AssessmentHistoryTabProps> = ({ studentId }
     {
       key: 'status',
       label: '状态',
-      width: 'w-[15%]',
+      width: 'w-[100px] min-w-[100px]',
       render: (item: AssessmentAssignmentHistoryDto) => {
         const statusInfo = getStatusDisplay(item.status);
         return (
@@ -92,9 +92,9 @@ const AssessmentHistoryTab: React.FC<AssessmentHistoryTabProps> = ({ studentId }
     {
       key: 'assignedBy',
       label: '分配人',
-      width: 'w-[15%]',
+      width: 'w-[110px] min-w-[110px]',
       render: (item: AssessmentAssignmentHistoryDto) => (
-        <span className="text-[var(--md-sys-color-on-surface-variant)] text-sm">
+        <span className="text-[var(--md-sys-color-on-surface-variant)] text-sm truncate block">
           {item.assignedByName}
         </span>
       )
@@ -102,9 +102,9 @@ const AssessmentHistoryTab: React.FC<AssessmentHistoryTabProps> = ({ studentId }
     {
       key: 'assignedAt',
       label: '分配时间',
-      width: 'w-[20%]',
+      width: 'w-[120px] min-w-[120px]',
       render: (item: AssessmentAssignmentHistoryDto) => (
-        <span className="text-[var(--md-sys-color-on-surface-variant)] text-sm">
+        <span className="text-[var(--md-sys-color-on-surface-variant)] text-sm whitespace-nowrap block">
           {new Date(item.assignedAt).toLocaleDateString()}
         </span>
       )
@@ -112,17 +112,19 @@ const AssessmentHistoryTab: React.FC<AssessmentHistoryTabProps> = ({ studentId }
     {
       key: 'actions',
       label: '操作',
-      width: 'w-[10%]',
+      width: 'w-[90px] min-w-[90px] text-right',
       render: (item: AssessmentAssignmentHistoryDto) => {
         if (item.status === 'PENDING' && session?.role !== 'student') {
           return (
-            <button
-              onClick={(e) => { e.stopPropagation(); handleRevoke(item.id); }}
-              disabled={revokeMutation.isPending}
-              className="text-[var(--md-sys-color-error)] hover:bg-[var(--md-sys-color-error-container)] hover:text-[var(--md-sys-color-on-error-container)] px-3 py-1.5 rounded-full text-sm font-medium transition-colors disabled:opacity-50"
-            >
-              {revokeMutation.isPending ? '撤销中...' : '撤销'}
-            </button>
+            <div className="flex justify-end w-full">
+              <button
+                onClick={(e) => { e.stopPropagation(); handleRevoke(item.id); }}
+                disabled={revokeMutation.isPending}
+                className="text-[var(--md-sys-color-error)] hover:bg-[var(--md-sys-color-error-container)] hover:text-[var(--md-sys-color-on-error-container)] px-3 py-1.5 rounded-full text-sm font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
+              >
+                {revokeMutation.isPending ? '撤销中...' : '撤销'}
+              </button>
+            </div>
           );
         }
         return null;
@@ -143,7 +145,7 @@ const AssessmentHistoryTab: React.FC<AssessmentHistoryTabProps> = ({ studentId }
           暂无档案记录。
         </div>
       ) : (
-        <DataTable columns={columns} data={history} />
+        <DataTable columns={columns} data={history} minWidth="620px" />
       )}
       
       {totalPages > 1 && (
