@@ -166,7 +166,7 @@ export function ReferralTracker({steps}: ReferralTrackerProps) {
 
                                 {/* Left Side: The Card */}
                                 <div
-                                    className={`flex-1 ${(step.status === 'ACTIVE' || step.status === 'ISSUE') ? 'rounded-[30px]' : 'rounded-[22px]'} p-5 pl-6 pr-5 flex items-start gap-4 transition-all duration-300 ${styles.bg}`}>
+                                    className={`flex-1 rounded-2xl p-5 pl-6 pr-5 flex items-start gap-4 transition-all duration-300 ${styles.bg}`}>
 
                                     {/* Card Icon */}
                                     {IconComponent && (
