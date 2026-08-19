@@ -85,23 +85,17 @@ export const AssessmentCatalogManagementView: React.FC = () => {
 
                 {/* Footer: combined meta pill + action button */}
                 <div className="flex items-center justify-between mt-auto">
-                  {/* Availability dot · duration · question count — single pill */}
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-3 rounded-full text-xs font-medium tabular-nums ${
-                      isAvailable
-                        ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-                        : 'bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-outline)]'
-                    }`}
-                  >
+                  {/* Availability dot · duration · question count */}
+                  <span className={`inline-flex items-center gap-1.5 text-xs font-medium tabular-nums ${isAvailable ? 'text-[var(--md-sys-color-on-surface-variant)]' : 'text-[var(--md-sys-color-outline)]'}`}>
                     <span
                       className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                         isAvailable ? 'bg-[var(--md-sys-color-primary)]' : 'bg-[var(--md-sys-color-outline)]'
                       }`}
                     />
                     {isAvailable ? '正常可用' : '已隐藏/下线'}
-                    <span className="opacity-50">·</span>
+                    <span className="opacity-40">·</span>
                     {item.duration}
-                    <span className="opacity-50">·</span>
+                    <span className="opacity-40">·</span>
                     {item.questionCount} 题
                   </span>
 
