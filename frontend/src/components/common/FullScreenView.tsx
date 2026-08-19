@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface FullScreenTab {
@@ -36,7 +37,7 @@ export function FullScreenView({
   actions,
   progress
 }: FullScreenViewProps) {
-  return (
+  const content = (
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -116,4 +117,7 @@ export function FullScreenView({
       )}
     </AnimatePresence>
   );
+
+  if (typeof document === 'undefined') return null;
+  return createPortal(content, document.body);
 }
