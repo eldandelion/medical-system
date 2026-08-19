@@ -103,4 +103,23 @@ describe('FilterChipSet Component', () => {
     
     expect(onFilterChangeMock).toHaveBeenCalledWith({});
   });
+
+  it('closes open menu when clicking outside', () => {
+    const chips = [{ label: 'Status', options: ['Active', 'Pending'] }];
+    render(
+      <div>
+        <div data-testid="outside-area">Outside</div>
+        <FilterChipSet chips={chips} />
+      </div>
+    );
+
+    // Open menu
+    fireEvent.click(screen.getByText('Status'));
+    const menu = document.querySelector('md-menu');
+    expect(menu?.hasAttribute('open')).toBe(true);
+
+    // Click outside
+    fireEvent.mouseDown(screen.getByTestId('outside-area'));
+    expect(menu?.hasAttribute('open')).toBe(false);
+  });
 });

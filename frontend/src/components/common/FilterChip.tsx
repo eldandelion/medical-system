@@ -11,11 +11,31 @@ interface FilterChipProps {
 
 export function FilterChip({ label, options = ['Option 1', 'Option 2'], selectedValue, onOptionSelect, isOpen, onToggle }: FilterChipProps) {
   const buttonId = React.useId().replace(/:/g, ''); // Material web IDs shouldn't have colons
+  const menuRef = React.useRef<HTMLElement>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   const displayLabel = selectedValue ? `${label}: ${selectedValue}` : label;
 
+  React.useEffect(() => {
+    const menuEl = menuRef.current;
+    if (!menuEl) return;
+
+    const handleClosed = () => {
+      if (isOpen) {
+        onToggle();
+      }
+    };
+
+    menuEl.addEventListener('closed', handleClosed);
+    menuEl.addEventListener('close', handleClosed);
+    return () => {
+      menuEl.removeEventListener('closed', handleClosed);
+      menuEl.removeEventListener('close', handleClosed);
+    };
+  }, [isOpen, onToggle]);
+
   return (
-    <div className="relative shrink-0">
+    <div ref={containerRef} className="relative shrink-0">
       <button 
         id={buttonId}
         onClick={(e) => {
@@ -30,12 +50,11 @@ export function FilterChip({ label, options = ['Option 1', 'Option 2'], selected
       
       {/* Dropdown Menu using @material/web */}
       <md-menu 
+        ref={menuRef}
         anchor={buttonId}
         open={isOpen}
         style={{ zIndex: 100 } as React.CSSProperties}
-        onClose={(e: any) => {
-          // Prevent closing when it's already being closed by onToggle logic 
-          // to avoid double toggle issues
+        onClosed={() => {
           if (isOpen) onToggle();
         }}
         quick
@@ -45,8 +64,7 @@ export function FilterChip({ label, options = ['Option 1', 'Option 2'], selected
             key={idx}
             onClick={() => {
               onOptionSelect?.(option);
-              // onToggle will be called by md-menu's onClose or explicitly here
-              onToggle();
+              if (isOpen) onToggle();
             }}
           >
             <div slot="headline">{option}</div>
@@ -69,11 +87,31 @@ interface FilterChipSetProps {
 export function FilterChipSet({ chips, initialFilters = {}, onFilterChange }: FilterChipSetProps) {
   const [openChip, setOpenChip] = React.useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = React.useState<Record<string, string>>(initialFilters);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!openChip) return;
+
+    const handleDocumentClick = (event: MouseEvent) => {
+      const target = event.target as Element | null;
+      if (target?.closest('md-menu') || target?.closest('md-menu-item')) {
+        return;
+      }
+      if (containerRef.current && !containerRef.current.contains(target as Node)) {
+        setOpenChip(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleDocumentClick);
+    return () => {
+      document.removeEventListener('mousedown', handleDocumentClick);
+    };
+  }, [openChip]);
 
   const handleOptionSelect = (chipLabel: string, option: string) => {
     const newFilters = { ...selectedFilters };
     if (newFilters[chipLabel] === option) {
-      // Deselect if already selected (except we might not want to allow deselection for default sorts, but we'll leave it flexible)
+      // Deselect if already selected
       delete newFilters[chipLabel];
     } else {
       newFilters[chipLabel] = option;
@@ -83,7 +121,7 @@ export function FilterChipSet({ chips, initialFilters = {}, onFilterChange }: Fi
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 mb-6 px-6 relative z-20">
+    <div ref={containerRef} className="flex flex-wrap items-center gap-2 mb-6 px-6 relative z-20">
       {chips.map((chip) => (
         <div key={chip.label}>
           <FilterChip 
