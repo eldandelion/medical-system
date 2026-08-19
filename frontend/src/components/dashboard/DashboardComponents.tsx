@@ -15,7 +15,7 @@ export function ProfileSummaryCard({ avatarUrl, name, role, metadata, onClick, i
   return (
     <div 
       onClick={onClick}
-      className={`bg-[var(--md-sys-color-surface-container-low)] h-full rounded-[16px] p-6 flex flex-col gap-4 relative overflow-hidden ${onClick && !isLoading ? 'cursor-pointer hover:bg-[var(--md-sys-color-surface-container)] transition-colors' : ''}`}
+      className={`bg-[var(--md-sys-color-surface-container-low)] h-full min-h-[188px] rounded-[16px] p-6 flex flex-col gap-4 relative overflow-hidden ${onClick && !isLoading ? 'cursor-pointer hover:bg-[var(--md-sys-color-surface-container)] transition-colors' : ''}`}
     >
       {isLoading && <div className="absolute inset-0 skeleton-wave" />}
       <div className="flex items-center gap-4 relative z-10">
@@ -66,7 +66,7 @@ export function ProfileSummaryCard({ avatarUrl, name, role, metadata, onClick, i
 // --- Profile Summary Error ---
 export function ProfileSummaryError({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="bg-[var(--md-sys-color-surface-container-low)] h-full rounded-[16px] p-6 flex flex-col items-center justify-center gap-4 text-center">
+    <div className="bg-[var(--md-sys-color-surface-container-low)] h-full min-h-[188px] rounded-[16px] p-6 flex flex-col items-center justify-center gap-4 text-center">
       <span className="material-symbols-outlined text-[48px] text-[var(--md-sys-color-error)] opacity-80">error_outline</span>
       <div className="flex flex-col items-center">
         <h3 className="m-0 mb-1 text-[16px] font-medium text-[var(--md-sys-color-on-surface)]">加载个人资料失败</h3>
@@ -103,7 +103,7 @@ export function ActionMetricWidget({ icon, numericValue, label, isAlert, contain
   return (
     <div 
       onClick={onClick}
-      className={`${bgClass} p-6 rounded-[24px] flex flex-col gap-4 cursor-pointer hover:opacity-90 transition-opacity h-full`}
+      className={`${bgClass} p-6 rounded-[24px] flex flex-col gap-4 cursor-pointer hover:opacity-90 transition-opacity h-full min-h-[188px]`}
     >
        <div className="flex items-center justify-between">
          <span className={`material-symbols-outlined text-[32px] ${colorClass}`}>{icon}</span>
