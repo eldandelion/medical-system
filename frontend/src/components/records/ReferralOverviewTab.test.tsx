@@ -132,4 +132,21 @@ describe('ReferralOverviewTab', () => {
       expect(downloadSpy).toHaveBeenCalledWith('ref-101', 202, 'DOWNLOAD', 'mock-token');
     });
   });
+
+  it('renders dynamic workflow stage title in ReferralStatusCard and navigates on click', () => {
+    const onNavigateMock = vi.fn();
+    render(
+      <ReferralOverviewTab
+        referral={mockReferral}
+        referralDetails={mockDetails}
+        onNavigateToTracker={onNavigateMock}
+      />
+    );
+
+    const statusBanner = screen.getByText('中心分诊中');
+    expect(statusBanner).toBeDefined();
+
+    fireEvent.click(statusBanner);
+    expect(onNavigateMock).toHaveBeenCalledTimes(1);
+  });
 });

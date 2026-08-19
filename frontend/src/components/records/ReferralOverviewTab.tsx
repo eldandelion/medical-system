@@ -34,7 +34,7 @@ export function ReferralOverviewTab({ referral, referralDetails, onNavigateToTra
     >
       {referral.status !== 'DRAFT' && (
         <ReferralStatusCard 
-          activeStep={activeStep} 
+          status={displayStatus || referral.status}
           onClick={onNavigateToTracker} 
         />
       )}
