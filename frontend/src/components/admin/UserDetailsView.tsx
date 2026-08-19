@@ -2,7 +2,7 @@ import React from 'react';
 import { AdminUserSummaryDto, AccountStatus } from '../../types/admin';
 import { roleTranslations } from '../../utils/roleTranslations';
 import { useAdminUsers } from '../../hooks/useAdminUsers';
-import { PrimaryTabs } from '../common/Tabs';
+import { SecondaryTabs } from '../common/Tabs';
 import { useDetails } from '../../contexts/DetailsContext';
 
 export const USER_DETAILS_TABS = [
@@ -80,9 +80,9 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({ user, activeTa
         </div>
       </div>
 
-      {/* Primary Tabs */}
+      {/* Secondary Tabs */}
       {!isFullScreen && onTabChange && (
-        <PrimaryTabs
+        <SecondaryTabs
           tabs={USER_DETAILS_TABS}
           activeTab={activeTab}
           onTabChange={onTabChange}

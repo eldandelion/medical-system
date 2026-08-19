@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ScrollableDetailsLayout } from '../common/DetailsPanel';
 import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
 import { DestructiveButton } from '../common/DestructiveButton';
-import { PrimaryTabs } from '../common/Tabs';
+import { SecondaryTabs } from '../common/Tabs';
 import { PsychometricsTabContent } from '../assessments/PsychometricsTabContent';
 import { ReferralOverviewTab } from './ReferralOverviewTab';
 import { ReferralTrackerTab } from './ReferralTrackerTab';
@@ -202,7 +202,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
         </div>
       ) : undefined}
       tabs={!isFullScreen ? (
-        <PrimaryTabs
+        <SecondaryTabs
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={(id) => setActiveTab(id as TabType)}

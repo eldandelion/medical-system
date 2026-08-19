@@ -4,7 +4,7 @@ import { DetailsSection, DetailItem } from '../common/DetailsPanel';
 import { PrimaryButton, SecondaryButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
 import { useCreationOverlay } from '../../contexts/CreationContext';
-import { PrimaryTabs } from '../common/Tabs';
+import { SecondaryTabs } from '../common/Tabs';
 
 import { useDetails } from '../../contexts/DetailsContext';
 
@@ -113,7 +113,7 @@ export function StaffDetailsView({ staff, hideHeader, activeTab: propsActiveTab,
 
       {/* Tabs Header */}
       {!isFullScreen && (
-        <PrimaryTabs 
+        <SecondaryTabs 
           tabs={tabs} 
           activeTab={activeTab} 
           onTabChange={(id) => setActiveTab(id as TabType)} 

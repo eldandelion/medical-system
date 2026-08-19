@@ -8,7 +8,7 @@ import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS } from '../../config/styleConstant
 import { useCreationOverlay } from '../../contexts/CreationContext';
 import { ACADEMIC_YEAR_LABELS } from '../../config/referralConstants';
 import { useDetails } from '../../contexts/DetailsContext';
-import { PrimaryTabs } from '../common/Tabs';
+import { SecondaryTabs } from '../common/Tabs';
 import { PsychometricsTabContent } from '../assessments/PsychometricsTabContent';
 import { AssignQuestionnaireDialog } from '../assessments/AssignQuestionnaireDialog';
 import { ReferralCreationForm } from '../records/ReferralCreationForm';
@@ -104,7 +104,7 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
         </div>
       ) : undefined}
       tabs={!isFullScreen ? (
-        <PrimaryTabs
+        <SecondaryTabs
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={(id) => setActiveTab(id as TabType)}

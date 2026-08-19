@@ -7,7 +7,7 @@ export interface TabItem {
   icon?: string;
 }
 
-interface PrimaryTabsProps {
+interface TabsProps {
   tabs: TabItem[];
   activeTab: string;
   onTabChange: (id: string) => void;
@@ -15,10 +15,13 @@ interface PrimaryTabsProps {
 }
 
 /**
- * Material Design 3 Primary Tabs component.
+ * Material Design 3 Secondary Tabs component.
+ * Used for sub-section navigation within a content area (e.g. details panels).
+ * Per M3 spec, secondary tabs are correct here — primary tabs are reserved for
+ * top-level page navigation.
  * Uses @material/web components for native MD3 behavior.
  */
-export function PrimaryTabs({ tabs, activeTab, onTabChange, className = "" }: PrimaryTabsProps) {
+export function SecondaryTabs({ tabs, activeTab, onTabChange, className = "" }: TabsProps) {
   const tabsRef = React.useRef<any>(null);
   const activeIndex = tabs.findIndex(tab => tab.id === activeTab);
 
@@ -31,7 +34,7 @@ export function PrimaryTabs({ tabs, activeTab, onTabChange, className = "" }: Pr
   return (
     <div className={`sticky top-0 z-20 bg-[var(--md-sys-color-surface)] border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 shrink-0 ${LAYOUT_CONSTANTS.TABS_LIST_CLASS} ${className}`}>
       {/* @ts-ignore */}
-      <md-tabs 
+      <md-tabs
         ref={tabsRef}
         onchange={(e: any) => {
           const index = e.target.activeTabIndex;
@@ -42,15 +45,18 @@ export function PrimaryTabs({ tabs, activeTab, onTabChange, className = "" }: Pr
       >
         {tabs.map((tab, idx) => (
           /* @ts-ignore */
-          <md-primary-tab key={tab.id} active={idx === activeIndex ? true : undefined}>
+          <md-secondary-tab key={tab.id} active={idx === activeIndex ? true : undefined}>
             {/* @ts-ignore */}
             {tab.icon && <md-icon slot="icon">{tab.icon}</md-icon>}
             {tab.label}
           {/* @ts-ignore */}
-          </md-primary-tab>
+          </md-secondary-tab>
         ))}
       {/* @ts-ignore */}
       </md-tabs>
     </div>
   );
 }
+
+/** @deprecated Use SecondaryTabs instead. */
+export const PrimaryTabs = SecondaryTabs;

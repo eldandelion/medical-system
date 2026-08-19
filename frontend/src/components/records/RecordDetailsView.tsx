@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ScrollableDetailsLayout } from '../common/DetailsPanel';
-import { PrimaryTabs } from '../common/Tabs';
+import { SecondaryTabs } from '../common/Tabs';
 import { ReferralOverviewTab } from './ReferralOverviewTab';
 import { ReferralTrackerTab } from './ReferralTrackerTab';
 import { useDetails } from '../../contexts/DetailsContext';
@@ -49,7 +49,7 @@ export function RecordDetailsView({ record }: RecordDetailsViewProps) {
       <ScrollableDetailsLayout
         title={record.title || record.type}
         tabs={!isFullScreen ? (
-          <PrimaryTabs
+          <SecondaryTabs
             tabs={tabs}
             activeTab={activeTab}
             onTabChange={(id) => setActiveTab(id)}
@@ -69,7 +69,7 @@ export function RecordDetailsView({ record }: RecordDetailsViewProps) {
     <ScrollableDetailsLayout
       title={record.title || record.type}
       tabs={!isFullScreen ? (
-        <PrimaryTabs
+        <SecondaryTabs
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={(id) => setActiveTab(id)}
