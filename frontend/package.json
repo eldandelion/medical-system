@@ -12,7 +12,10 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@fontsource/noto-sans": "^5.3.0",
+    "@fontsource/noto-sans-sc": "^5.3.0",
     "@fontsource/roboto": "^5.2.10",
+    "@fontsource/roboto-flex": "^5.3.0",
     "@google/genai": "^1.29.0",
     "@material/web": "^2.4.1",
     "@tailwindcss/vite": "^4.1.14",

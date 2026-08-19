@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
 /**
  * Prevent Tailwind's preflight (@layer base) from affecting @material/web
  * custom elements. 'all: revert-layer' reverts every property set by the
@@ -36,10 +40,30 @@
   }
 }
 
+body {
+  font-family: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
 
 /* Light Theme Variables */
 :root,
 .light {
+  --md-ref-typeface-brand: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, sans-serif;
+  --md-ref-typeface-plain: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, sans-serif;
+  --md-sys-typescale-body-large-font: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, sans-serif;
+  --md-sys-typescale-body-medium-font: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, sans-serif;
+  --md-sys-typescale-body-small-font: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, sans-serif;
+  --md-sys-typescale-label-large-font: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, sans-serif;
+  --md-sys-typescale-label-medium-font: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, sans-serif;
+  --md-sys-typescale-label-small-font: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, sans-serif;
+  --md-sys-typescale-title-large-font: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, sans-serif;
+  --md-sys-typescale-title-medium-font: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, sans-serif;
+  --md-sys-typescale-title-small-font: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, sans-serif;
+  --md-sys-typescale-headline-large-font: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, sans-serif;
+  --md-sys-typescale-headline-medium-font: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, sans-serif;
+  --md-sys-typescale-headline-small-font: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, sans-serif;
+  --md-sys-typescale-display-large-font: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, sans-serif;
+  --md-sys-typescale-display-medium-font: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, sans-serif;
+  --md-sys-typescale-display-small-font: 'Roboto Flex', 'Roboto', 'Noto Sans SC', 'Noto Sans', system-ui, sans-serif;
   --md-sys-color-primary: rgb(101 85 143);
   --md-sys-color-surface-tint: rgb(103 80 164);
   --md-sys-color-on-primary: rgb(255 255 255);
