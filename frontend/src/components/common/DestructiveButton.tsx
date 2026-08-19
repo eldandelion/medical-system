@@ -6,13 +6,15 @@ interface DestructiveButtonProps {
   label: string;
   onClick: () => void;
   className?: string;
+  disabled?: boolean;
 }
 
 export const DestructiveButton: React.FC<DestructiveButtonProps> = ({
   icon,
   label,
   onClick,
-  className
+  className,
+  disabled
 }) => {
   return (
     <SecondaryButton
@@ -20,6 +22,7 @@ export const DestructiveButton: React.FC<DestructiveButtonProps> = ({
       label={label}
       onClick={onClick}
       className={className}
+      disabled={disabled}
       style={{
         color: 'var(--md-sys-color-error)',
         '--md-outlined-button-label-text-color': 'var(--md-sys-color-error)',

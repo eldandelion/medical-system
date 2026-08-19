@@ -36,7 +36,7 @@ describe('UserGovernanceFooter', () => {
     cleanup();
   });
 
-  it('renders disabled/delete actions when user status is ACTIVE', async () => {
+  it('renders disabled/delete actions when user status is ACTIVE and handles confirmation dialogs with collapsible details', async () => {
     const onStatusUpdated = vi.fn();
     render(<UserGovernanceFooter user={baseUser} onStatusUpdated={onStatusUpdated} />);
 
@@ -45,17 +45,45 @@ describe('UserGovernanceFooter', () => {
     expect(disableBtn).toBeDefined();
     expect(deleteBtn).toBeDefined();
 
+    // 1. Test Disable Confirmation Dialog & Expandable Details
     fireEvent.click(disableBtn);
+    expect(screen.getByText('确认禁用用户账号？')).toBeDefined();
+    expect(screen.getAllByText('查看操作影响与合规说明')[0]).toBeDefined();
+
+    // Expand details
+    fireEvent.click(screen.getAllByText('查看操作影响与合规说明')[0]);
+    expect(screen.getByText(/权限暂停/)).toBeDefined();
+    expect(mockUpdateStatus).not.toHaveBeenCalled();
+
+    const cancelDisableBtn = screen.getAllByText('取消')[0];
+    fireEvent.click(cancelDisableBtn);
+    expect(mockUpdateStatus).not.toHaveBeenCalled();
+
+    // 2. Test Disable Confirmation Execution
+    fireEvent.click(disableBtn);
+    const confirmDisableBtn = screen.getByText('确认禁用');
+    fireEvent.click(confirmDisableBtn);
     expect(mockUpdateStatus).toHaveBeenCalledWith({
       userId: 101,
       request: { status: 'DISABLED' },
     });
 
+    // 3. Test Delete Confirmation Dialog & Execution
     fireEvent.click(deleteBtn);
+    expect(screen.getByText('确认注销用户账号？')).toBeDefined();
+
+    // Expand details
+    const deleteExpander = screen.getAllByText('查看操作影响与合规说明').at(-1)!;
+    fireEvent.click(deleteExpander);
+    expect(screen.getByText(/医疗合规保护/)).toBeDefined();
+    expect(mockDeleteUser).not.toHaveBeenCalled();
+
+    const confirmDeleteBtn = screen.getByText('确认注销');
+    fireEvent.click(confirmDeleteBtn);
     expect(mockDeleteUser).toHaveBeenCalledWith(101);
   });
 
-  it('renders approve/reject actions when user status is PENDING_APPROVAL', async () => {
+  it('renders approve/reject actions when user status is PENDING_APPROVAL and handles reject confirmation', async () => {
     const pendingUser: AdminUserSummaryDto = {
       ...baseUser,
       status: 'PENDING_APPROVAL',
@@ -73,7 +101,11 @@ describe('UserGovernanceFooter', () => {
       request: { status: 'ACTIVE' },
     });
 
+    // Reject opens confirmation dialog
     fireEvent.click(rejectBtn);
+    expect(screen.getByText('确认拒绝并注销申请？')).toBeDefined();
+    const confirmRejectBtn = screen.getByText('确认拒绝');
+    fireEvent.click(confirmRejectBtn);
     expect(mockDeleteUser).toHaveBeenCalledWith(101);
   });
 
@@ -94,6 +126,12 @@ describe('UserGovernanceFooter', () => {
       userId: 101,
       request: { status: 'ACTIVE' },
     });
+
+    fireEvent.click(deleteBtn);
+    expect(screen.getByText('确认注销用户账号？')).toBeDefined();
+    const confirmDeleteBtn = screen.getByText('确认注销');
+    fireEvent.click(confirmDeleteBtn);
+    expect(mockDeleteUser).toHaveBeenCalledWith(101);
   });
 
   it('renders restore action when user status is DELETED', async () => {
