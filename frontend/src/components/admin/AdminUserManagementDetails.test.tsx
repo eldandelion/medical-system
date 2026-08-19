@@ -248,5 +248,9 @@ describe('AdminPage - User Management Dynamic Details View Integration', () => {
     // Student clinical tabs should not be present
     expect(screen.queryByText('量表数据')).toBeNull();
     expect(screen.queryByText('档案记录')).toBeNull();
+
+    // Verify UserGovernanceFooter buttons are rendered in the footer
+    expect(screen.getByText('禁用账号')).toBeDefined();
+    expect(screen.getByText('注销账号')).toBeDefined();
   });
 });

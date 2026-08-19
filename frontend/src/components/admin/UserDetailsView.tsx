@@ -1,9 +1,10 @@
 import React from 'react';
 import { AdminUserSummaryDto, AccountStatus } from '../../types/admin';
 import { roleTranslations } from '../../utils/roleTranslations';
-import { useAdminUsers } from '../../hooks/useAdminUsers';
 import { SecondaryTabs } from '../common/Tabs';
 import { useDetails } from '../../contexts/DetailsContext';
+import { ScrollableDetailsLayout } from '../common/DetailsPanel';
+import { UserGovernanceFooter } from './UserGovernanceFooter';
 
 export const USER_DETAILS_TABS = [
   { id: 'overview', label: '基本信息', icon: 'account_circle' },
@@ -14,19 +15,18 @@ interface UserDetailsViewProps {
   user: AdminUserSummaryDto;
   activeTab?: string;
   onTabChange?: (tabId: string) => void;
+  footer?: React.ReactNode;
+  onStatusUpdated?: (status: AccountStatus) => void;
 }
 
-export const UserDetailsView: React.FC<UserDetailsViewProps> = ({ user, activeTab = 'overview', onTabChange }) => {
-  const { updateStatus, deleteUser, isUpdating } = useAdminUsers();
+export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
+  user,
+  activeTab = 'overview',
+  onTabChange,
+  footer,
+  onStatusUpdated
+}) => {
   const { isFullScreen } = useDetails();
-
-  const handleStatusChange = async (newStatus: AccountStatus) => {
-    if (newStatus === 'DELETED') {
-      await deleteUser(user.id);
-    } else {
-      await updateStatus({ userId: user.id, request: { status: newStatus } });
-    }
-  };
 
   const getStatusBadge = (status: AccountStatus) => {
     switch (status) {
@@ -62,35 +62,43 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({ user, activeTa
   };
 
   return (
-    <div className="flex flex-col h-full bg-[var(--md-sys-color-surface)]">
-      {/* Profile Header */}
-      <div className="p-6 border-b border-[var(--md-sys-color-outline-variant)] flex items-start gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] text-xl font-bold flex items-center justify-center shadow-xs">
-          {user.name.charAt(0)}
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-lg font-bold text-[var(--md-sys-color-on-surface)]">{user.name}</h2>
-            <span className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface)]">
-              {roleTranslations[user.role] || user.role}
-            </span>
+    <ScrollableDetailsLayout
+      title={user.name}
+      header={
+        <div className="flex items-start gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] text-xl font-bold flex items-center justify-center shadow-xs shrink-0">
+            {user.name.charAt(0)}
           </div>
-          <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] font-mono">{user.email}</p>
-          <div className="mt-2.5">{getStatusBadge(user.status)}</div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <h2 className="text-lg font-bold text-[var(--md-sys-color-on-surface)] truncate">{user.name}</h2>
+              <span className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface)] shrink-0">
+                {roleTranslations[user.role] || user.role}
+              </span>
+            </div>
+            <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] font-mono truncate">{user.email}</p>
+            <div className="mt-2.5">{getStatusBadge(user.status)}</div>
+          </div>
         </div>
-      </div>
-
-      {/* Secondary Tabs */}
-      {!isFullScreen && onTabChange && (
-        <SecondaryTabs
-          tabs={USER_DETAILS_TABS}
-          activeTab={activeTab}
-          onTabChange={onTabChange}
-        />
-      )}
-
-      {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      }
+      tabs={
+        !isFullScreen && onTabChange ? (
+          <SecondaryTabs
+            tabs={USER_DETAILS_TABS}
+            activeTab={activeTab}
+            onTabChange={onTabChange}
+          />
+        ) : undefined
+      }
+      footer={
+        footer !== undefined ? (
+          footer
+        ) : user.role !== 'SYSTEM_ADMIN' ? (
+          <UserGovernanceFooter user={user} onStatusUpdated={onStatusUpdated} />
+        ) : null
+      }
+    >
+      <div className="space-y-6">
         {activeTab === 'overview' && (
           <div className="space-y-4">
             <div className="bg-[var(--md-sys-color-surface-container)] p-4 rounded-2xl border border-[var(--md-sys-color-outline-variant)] space-y-3">
@@ -130,54 +138,35 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({ user, activeTa
           <div className="space-y-4">
             <div className="bg-[var(--md-sys-color-surface-container)] p-4 rounded-2xl border border-[var(--md-sys-color-outline-variant)] space-y-3">
               <h3 className="text-xs font-semibold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-wider">
-                账号状态生命周期管理
+                账号状态与权限治理
               </h3>
               <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
-                管理员可根据机构审核政策对用户账号进行状态变更。修改立即生效。
+                管理员可根据机构审核政策对用户账号进行状态变更与权限管理。相关治理操作可在底部操作栏直接执行并即时生效。
               </p>
 
-              <div className="flex flex-col gap-2 pt-2">
-                {user.status === 'PENDING_APPROVAL' && (
-                  <button
-                    onClick={() => handleStatusChange('ACTIVE')}
-                    disabled={isUpdating}
-                    className="w-full py-2 px-3 rounded-xl text-xs font-semibold bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] hover:opacity-90 transition-opacity"
-                  >
-                    通过注册审核并启用
-                  </button>
-                )}
-                {user.status === 'ACTIVE' && user.role !== 'SYSTEM_ADMIN' && (
-                  <button
-                    onClick={() => handleStatusChange('DISABLED')}
-                    disabled={isUpdating}
-                    className="w-full py-2 px-3 rounded-xl text-xs font-semibold border border-[var(--md-sys-color-outline)] text-[var(--md-sys-color-on-surface)] hover:bg-[var(--md-sys-color-surface-container-highest)] transition-colors"
-                  >
-                    禁用该账号（暂停系统权限）
-                  </button>
-                )}
-                {user.status === 'DISABLED' && (
-                  <button
-                    onClick={() => handleStatusChange('ACTIVE')}
-                    disabled={isUpdating}
-                    className="w-full py-2 px-3 rounded-xl text-xs font-semibold bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:opacity-90 transition-opacity"
-                  >
-                    解除禁用并恢复账号
-                  </button>
-                )}
-                {user.status !== 'DELETED' && user.role !== 'SYSTEM_ADMIN' && (
-                  <button
-                    onClick={() => handleStatusChange('DELETED')}
-                    disabled={isUpdating}
-                    className="w-full py-2 px-3 rounded-xl text-xs font-semibold bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] hover:opacity-90 transition-opacity"
-                  >
-                    注销账号（软删除）
-                  </button>
-                )}
+              <div className="grid grid-cols-2 gap-3 text-xs pt-1">
+                <div>
+                  <span className="text-[var(--md-sys-color-outline)] block mb-0.5">当前状态</span>
+                  <div>{getStatusBadge(user.status)}</div>
+                </div>
+                <div>
+                  <span className="text-[var(--md-sys-color-outline)] block mb-0.5">治理权限</span>
+                  <span className="text-[var(--md-sys-color-on-surface)] font-medium">
+                    {user.role === 'SYSTEM_ADMIN' ? '系统管理员（受保护）' : '可由管理员调度'}
+                  </span>
+                </div>
               </div>
             </div>
+
+            {user.deletedAt && (
+              <div className="bg-[var(--md-sys-color-error-container)]/50 p-4 rounded-2xl border border-[var(--md-sys-color-error)]/30 text-xs text-[var(--md-sys-color-on-error-container)]">
+                <span className="font-semibold block mb-1">账号已于以下时间注销软删除：</span>
+                <span className="font-mono">{new Date(user.deletedAt).toLocaleString('zh-CN')}</span>
+              </div>
+            )}
           </div>
         )}
       </div>
-    </div>
+    </ScrollableDetailsLayout>
   );
 };

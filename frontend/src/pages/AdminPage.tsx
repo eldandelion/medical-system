@@ -348,7 +348,19 @@ export function AdminPage() {
                         }
                       />
                     ) : (
-                      <UserDetailsView user={selectedItem} activeTab={activeTab} onTabChange={setActiveTab} />
+                      <UserDetailsView
+                        user={selectedItem}
+                        activeTab={activeTab}
+                        onTabChange={setActiveTab}
+                        footer={
+                          <UserGovernanceFooter
+                            user={selectedItem}
+                            onStatusUpdated={(newStatus) => {
+                              setSelectedItem((prev: any) => prev ? { ...prev, status: newStatus } : prev);
+                            }}
+                          />
+                        }
+                      />
                     )
                   )}
                   {activePage === AdminTabs.STUDENTS && (
