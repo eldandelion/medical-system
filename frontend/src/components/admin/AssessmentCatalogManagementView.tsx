@@ -18,26 +18,29 @@ export const AssessmentCatalogManagementView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      {/* Header Info Card */}
-      <div className="bg-[var(--md-sys-color-surface-container-high)] p-6 rounded-2xl">
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-[1.375rem] leading-7 font-semibold text-[var(--md-sys-color-on-surface)] mb-1.5">
-              心理测评量表目录与分发控制
-            </h2>
-            <p className="text-sm text-[var(--md-sys-color-on-surface-variant)] max-w-2xl leading-relaxed">
-              管理员可在此控制系统内各心理量表在自测目录及教师筛查分发中的可见性。已下线的量表将停止产生新的分发任务；学生端已领取的在途问卷可在有效宽限期内继续作答完成。
-            </p>
-          </div>
-          <div className="px-3.5 py-1.5 rounded-xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] text-xs font-bold tabular-nums">
-            共 {catalog.length} 门量表
+    <div className="flex flex-col h-full">
+      {/* Header Info Card — pinned */}
+      <div className="px-6 pt-6 pb-4 shrink-0">
+        <div className="bg-[var(--md-sys-color-surface-container-high)] p-6 rounded-2xl">
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="text-[1.375rem] leading-7 font-semibold text-[var(--md-sys-color-on-surface)] mb-1.5">
+                心理测评量表目录与分发控制
+              </h2>
+              <p className="text-sm text-[var(--md-sys-color-on-surface-variant)] max-w-2xl leading-relaxed">
+                管理员可在此控制系统内各心理量表在自测目录及教师筛查分发中的可见性。已下线的量表将停止产生新的分发任务；学生端已领取的在途问卷可在有效宽限期内继续作答完成。
+              </p>
+            </div>
+            <div className="px-3.5 py-1.5 rounded-xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] text-xs font-bold tabular-nums">
+              共 {catalog.length} 门量表
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Catalog Grid */}
-      {isLoading ? (
+      {/* Catalog Grid — scrollable */}
+      <div className="flex-1 overflow-y-auto px-6 pb-6 no-scrollbar">
+        {isLoading ? (
         <div className="p-12 text-center text-sm text-[var(--md-sys-color-on-surface-variant)]">
           正在加载量表目录...
         </div>
@@ -112,6 +115,7 @@ export const AssessmentCatalogManagementView: React.FC = () => {
           })}
         </div>
       )}
+      </div>
     </div>
   );
 };
