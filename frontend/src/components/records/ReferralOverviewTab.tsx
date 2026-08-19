@@ -40,7 +40,7 @@ export function ReferralOverviewTab({ referral, referralDetails, onNavigateToTra
       )}
 
       <DetailsSection title="分诊基本信息" className="border-t-0 pt-0 mt-0">
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-3">
           {/* 3-Column Metrics Grid */}
           {referralDetails.triageInfo && (
             <div className="grid grid-cols-2 @[440px]:grid-cols-3 gap-3">
@@ -145,7 +145,7 @@ export function ReferralOverviewTab({ referral, referralDetails, onNavigateToTra
           )}
 
           {/* Referral Full Description Card (Watermarked elegant quote) */}
-          <div className="relative p-6 rounded-[28px] bg-[var(--md-sys-color-surface-container-low)] border-opacity-10 overflow-hidden flex flex-col gap-3">
+          <div className="relative p-6 rounded-2xl bg-[var(--md-sys-color-surface-container-low)] border-opacity-10 overflow-hidden flex flex-col gap-3">
             {/* Referrer Pill */}
             <div className="flex items-center gap-1 pe-3  w-fit self-start rounded-full bg-transparent mt-1">
               <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-xs font-medium shrink-0 me-1">
