@@ -2,15 +2,21 @@ import * as React from 'react';
 
 export type ViewState = 'CLOSED' | 'MINIMIZED' | 'STANDARD' | 'FULLSCREEN';
 
+export interface OpenCreationOptions {
+  initialViewState?: 'STANDARD' | 'FULLSCREEN';
+  allowStandardView?: boolean;
+}
+
 interface CreationContextProps {
   viewState: ViewState;
   title: string | null;
   activePayload: React.ReactNode | null;
   headerActions: React.ReactNode | null;
+  allowStandardView: boolean;
   setHeaderActions: (actions: React.ReactNode | null) => void;
-  openCreation: (title: string, payload: React.ReactNode) => void;
+  openCreation: (title: string, payload: React.ReactNode, options?: OpenCreationOptions) => void;
   minimizeCreation: () => void;
-  maximizeCreation: () => void; // Restores to STANDARD
+  maximizeCreation: () => void; // Restores to STANDARD or FULLSCREEN if allowStandardView is false
   expandToFullscreen: () => void;
   collapseToStandard: () => void;
   closeCreation: () => void;
@@ -25,12 +31,16 @@ export function CreationOverlayProvider({ children }: { children: React.ReactNod
   const [title, setTitle] = React.useState<string | null>(null);
   const [activePayload, setActivePayload] = React.useState<React.ReactNode | null>(null);
   const [headerActions, setHeaderActions] = React.useState<React.ReactNode | null>(null);
+  const [allowStandardView, setAllowStandardView] = React.useState<boolean>(true);
   const [onCloseInterceptor, setOnCloseInterceptor] = React.useState<(() => boolean) | null>(null);
 
-  const openCreation = React.useCallback((newTitle: string, payload: React.ReactNode) => {
+  const openCreation = React.useCallback((newTitle: string, payload: React.ReactNode, options?: OpenCreationOptions) => {
+    const isFullscreenOnly = options?.allowStandardView === false;
+    const targetState = options?.initialViewState || (isFullscreenOnly ? 'FULLSCREEN' : 'STANDARD');
     setTitle(newTitle);
     setActivePayload(payload);
-    setViewState('STANDARD');
+    setAllowStandardView(!isFullscreenOnly);
+    setViewState(targetState);
   }, []);
 
   const minimizeCreation = React.useCallback(() => {
@@ -38,19 +48,22 @@ export function CreationOverlayProvider({ children }: { children: React.ReactNod
   }, [viewState]);
 
   const maximizeCreation = React.useCallback(() => {
-    if (viewState !== 'CLOSED') setViewState('STANDARD');
-  }, [viewState]);
+    if (viewState !== 'CLOSED') {
+      setViewState(allowStandardView ? 'STANDARD' : 'FULLSCREEN');
+    }
+  }, [viewState, allowStandardView]);
 
   const expandToFullscreen = React.useCallback(() => {
     if (viewState !== 'CLOSED') setViewState('FULLSCREEN');
   }, [viewState]);
 
   const collapseToStandard = React.useCallback(() => {
-    if (viewState !== 'CLOSED') setViewState('STANDARD');
-  }, [viewState]);
+    if (viewState !== 'CLOSED' && allowStandardView) setViewState('STANDARD');
+  }, [viewState, allowStandardView]);
 
   const closeCreation = React.useCallback(() => {
     setViewState('CLOSED');
+    setAllowStandardView(true);
     // We delay clearing the payload to allow exit animations to finish smoothly
     setTimeout(() => {
       setActivePayload(null);
@@ -75,6 +88,7 @@ export function CreationOverlayProvider({ children }: { children: React.ReactNod
         title,
         activePayload,
         headerActions,
+        allowStandardView,
         setHeaderActions,
         openCreation,
         minimizeCreation,

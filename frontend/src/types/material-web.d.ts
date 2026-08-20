@@ -47,7 +47,9 @@ declare global {
         type?: string;
         rows?: number;
         label?: string;
+        placeholder?: string;
         value?: string;
+        disabled?: boolean;
         'supporting-text'?: string;
         maxLength?: number;
         error?: boolean;
@@ -56,14 +58,43 @@ declare global {
       'md-outlined-select': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
         label?: string;
         value?: string;
+        disabled?: boolean;
         error?: boolean;
         'error-text'?: string;
       }, HTMLElement>;
       'md-select-option': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
         value?: string;
+        selected?: boolean;
+        disabled?: boolean;
       }, HTMLElement>;
       'md-filled-tonal-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
         disabled?: boolean;
+      }, HTMLElement>;
+      'md-menu': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        anchor?: string;
+        open?: boolean;
+        quick?: boolean;
+        'has-overflow'?: boolean;
+        positioning?: 'absolute' | 'fixed' | 'document' | 'popover';
+        'anchor-corner'?: string;
+        'menu-corner'?: string;
+        'x-offset'?: number;
+        'y-offset'?: number;
+        'stay-open-on-outside-click'?: boolean;
+        'stay-open-on-focusout'?: boolean;
+        onClosed?: () => void;
+        onClose?: () => void;
+        onOpened?: () => void;
+      }, HTMLElement>;
+      'md-menu-item': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        disabled?: boolean;
+        selected?: boolean;
+      }, HTMLElement>;
+      'md-list': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
+      'md-list-item': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        disabled?: boolean;
+        type?: string;
+        href?: string;
       }, HTMLElement>;
     }
   }

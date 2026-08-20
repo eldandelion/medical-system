@@ -2,14 +2,20 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAssessmentCatalogManagement } from '../../hooks/useAssessmentCatalogManagement';
 import { AssessmentCatalogItemDto } from '../../types';
-import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
+import { PrimaryButton, TertiaryButton } from '../common/Buttons';
 import { GenericDialog } from '../common/GenericDialog';
+import { useCreationOverlay } from '../../contexts/CreationContext';
+import { AssessmentAssignmentCreationForm } from '../assessments/AssessmentAssignmentCreationForm';
+import { AssessmentScaleDetailsFullScreen } from '../assessments/AssessmentScaleDetailsFullScreen';
 
 export const AssessmentCatalogManagementView: React.FC = () => {
   const { catalog, isLoading, isError, refetch, toggleAvailability, isToggling } = useAssessmentCatalogManagement();
+  const { openCreation, closeCreation } = useCreationOverlay();
   const [togglingCode, setTogglingCode] = useState<string | null>(null);
+  const [activeMenuCode, setActiveMenuCode] = useState<string | null>(null);
   const [pendingHideScale, setPendingHideScale] = useState<AssessmentCatalogItemDto | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [viewingScale, setViewingScale] = useState<AssessmentCatalogItemDto | null>(null);
 
   const handleToggle = async (item: AssessmentCatalogItemDto, explicitState?: boolean) => {
     const nextState = explicitState !== undefined ? explicitState : item.isEnabled === false;
@@ -21,8 +27,19 @@ export const AssessmentCatalogManagementView: React.FC = () => {
     }
   };
 
+  const handleOpenAssign = (item: AssessmentCatalogItemDto) => {
+    openCreation(
+      '指派心理测评',
+      <AssessmentAssignmentCreationForm
+        initialScale={item}
+        onClose={closeCreation}
+      />,
+      { initialViewState: 'FULLSCREEN', allowStandardView: false }
+    );
+  };
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
       {/* Header Info Banner — edge-to-edge, pinned */}
       <div className="bg-[var(--md-sys-color-surface)] px-6 py-5 shrink-0 flex items-start justify-between">
         <div>
@@ -39,7 +56,7 @@ export const AssessmentCatalogManagementView: React.FC = () => {
       </div>
 
       {/* Catalog Grid — scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 pt-6 pb-6 no-scrollbar">
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-6 pb-20 custom-scrollbar">
         {isLoading ? (
           <div className="p-12 text-center text-sm text-[var(--md-sys-color-on-surface-variant)]">
             正在加载量表目录...
@@ -58,6 +75,7 @@ export const AssessmentCatalogManagementView: React.FC = () => {
             {catalog.map((item) => {
               const isAvailable = item.isEnabled !== false;
               const isBusy = isToggling && togglingCode === item.batteryCode;
+              const anchorId = `scale-menu-${item.batteryCode.replace(/[^a-zA-Z0-9_-]/g, '')}`;
 
               return (
                 <div
@@ -69,11 +87,67 @@ export const AssessmentCatalogManagementView: React.FC = () => {
                   }`}
                 >
                   <div>
-                    {item.subtitle && (
-                      <p className={`text-xs font-semibold tracking-wide uppercase mb-1 ${isAvailable ? 'text-[var(--md-sys-color-primary)]' : 'text-[var(--md-sys-color-outline)]'}`}>
-                        {item.subtitle}
-                      </p>
-                    )}
+                    {/* Top row: Subtitle + 3-dots Menu Button */}
+                    <div className="flex items-start justify-between min-h-[28px] mb-1">
+                      {item.subtitle ? (
+                        <p className={`text-xs font-semibold tracking-wide uppercase pt-1 ${isAvailable ? 'text-[var(--md-sys-color-primary)]' : 'text-[var(--md-sys-color-outline)]'}`}>
+                          {item.subtitle}
+                        </p>
+                      ) : <div />}
+
+                      <div className="relative">
+                        <md-icon-button
+                          id={anchorId}
+                          className="scale-75 -mr-2 -mt-1 text-[var(--md-sys-color-on-surface-variant)]"
+                          title="更多选项"
+                          disabled={isBusy}
+                          onClick={(e: React.MouseEvent) => {
+                            e.stopPropagation();
+                            setActiveMenuCode(activeMenuCode === item.batteryCode ? null : item.batteryCode);
+                          }}
+                        >
+                          <md-icon>more_horiz</md-icon>
+                        </md-icon-button>
+
+                        <md-menu
+                          anchor={anchorId}
+                          open={activeMenuCode === item.batteryCode}
+                          onClosed={() => {
+                            if (activeMenuCode === item.batteryCode) setActiveMenuCode(null);
+                          }}
+                          quick
+                          style={{
+                            minWidth: '150px',
+                            '--md-menu-item-focus-outline-width': '0',
+                            '--md-menu-item-selected-outline-width': '0',
+                            zIndex: 100,
+                          } as React.CSSProperties}
+                        >
+                          {isAvailable ? (
+                            <md-menu-item
+                              onClick={() => {
+                                setActiveMenuCode(null);
+                                setPendingHideScale(item);
+                              }}
+                            >
+                              <md-icon slot="start">visibility_off</md-icon>
+                              <div slot="headline">隐藏量表</div>
+                            </md-menu-item>
+                          ) : (
+                            <md-menu-item
+                              onClick={() => {
+                                setActiveMenuCode(null);
+                                handleToggle(item, true);
+                              }}
+                            >
+                              <md-icon slot="start">visibility</md-icon>
+                              <div slot="headline">启用上线</div>
+                            </md-menu-item>
+                          )}
+                        </md-menu>
+                      </div>
+                    </div>
+
                     {/* Title */}
                     <div className="mb-2.5">
                       <h3 className={`text-base font-bold leading-6 ${isAvailable ? 'text-[var(--md-sys-color-on-surface)]' : 'text-[var(--md-sys-color-outline)]'}`}>
@@ -86,8 +160,8 @@ export const AssessmentCatalogManagementView: React.FC = () => {
                     </p>
                   </div>
 
-                  {/* Footer: combined meta pill + action button */}
-                  <div className="flex items-center justify-between mt-auto">
+                  {/* Footer: combined meta pill + 2 action buttons (no separation line) */}
+                  <div className="flex items-center justify-between mt-auto gap-2">
                     {/* Availability dot · duration · question count */}
                     <span className={`inline-flex items-center gap-1.5 text-xs font-medium tabular-nums ${isAvailable ? 'text-[var(--md-sys-color-on-surface-variant)]' : 'text-[var(--md-sys-color-outline)]'}`}>
                       <span
@@ -95,26 +169,27 @@ export const AssessmentCatalogManagementView: React.FC = () => {
                           isAvailable ? 'bg-[var(--md-sys-color-primary)]' : 'bg-[var(--md-sys-color-outline)]'
                         }`}
                       />
-                      {isAvailable ? '正常可用' : '已隐藏/下线'}
+                      {isAvailable ? '正常可用' : '已隐藏'}
                       <span className="opacity-40">·</span>
                       {item.duration}
                       <span className="opacity-40">·</span>
                       {item.questionCount} 题
                     </span>
 
-                    {/* Toggle Button */}
-                    <SecondaryButton
-                      label={isBusy ? '处理中...' : isAvailable ? '隐藏量表' : '启用上线'}
-                      onClick={() => {
-                        if (isAvailable) {
-                          setPendingHideScale(item);
-                        } else {
-                          handleToggle(item, true);
-                        }
-                      }}
-                      disabled={isBusy}
-                      className="h-8"
-                    />
+                    {/* Action buttons: View Details (Text) + Assign (Primary) */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <TertiaryButton
+                        label="查看详情"
+                        onClick={() => setViewingScale(item)}
+                        className="h-8 px-2 text-xs"
+                      />
+                      <PrimaryButton
+                        label="指派测评"
+                        onClick={() => handleOpenAssign(item)}
+                        disabled={!isAvailable}
+                        className="h-8 px-3 text-xs"
+                      />
+                    </div>
                   </div>
                 </div>
               );
@@ -122,6 +197,13 @@ export const AssessmentCatalogManagementView: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Full-Screen Scale View */}
+      <AssessmentScaleDetailsFullScreen
+        isOpen={!!viewingScale}
+        scale={viewingScale}
+        onClose={() => setViewingScale(null)}
+      />
 
       {/* Confirmation Dialog: 隐藏测评量表 (Hide Assessment Scale) */}
       <GenericDialog

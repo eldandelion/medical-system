@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useSidebar } from '../../contexts/SidebarContext';
 
 interface ButtonProps {
+  id?: string;
   icon?: string;
   label: string;
   className?: string;
@@ -13,11 +14,12 @@ interface ButtonProps {
   disabled?: boolean;
 }
 
-export function PrimaryButton({ icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
+export function PrimaryButton({ id, icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   return (
     <md-filled-button
+      id={id}
       className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       onClick={onClick}
       onPointerUp={(e) => e.currentTarget.blur()}
@@ -36,11 +38,12 @@ export function PrimaryButton({ icon, label, className = "h-10", onClick, style,
   );
 }
 
-export function SecondaryButton({ icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
+export function SecondaryButton({ id, icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   return (
     <md-outlined-button
+      id={id}
       className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       onClick={onClick}
       onPointerUp={(e) => e.currentTarget.blur()}
@@ -57,11 +60,12 @@ export function SecondaryButton({ icon, label, className = "h-10", onClick, styl
   );
 }
 
-export function TertiaryButton({ icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
+export function TertiaryButton({ id, icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   return (
     <md-text-button
+      id={id}
       className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       onClick={onClick}
       disabled={disabled}

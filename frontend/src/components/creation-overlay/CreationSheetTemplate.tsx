@@ -3,37 +3,9 @@ import { motion } from 'motion/react';
 import { useCreationOverlay } from '../../contexts/CreationContext';
 
 export function CreationSheetTemplate() {
-  const { viewState, title, activePayload, headerActions, minimizeCreation, expandToFullscreen, collapseToStandard, requestClose } = useCreationOverlay();
+  const { viewState, title, activePayload, headerActions, allowStandardView, minimizeCreation, expandToFullscreen, collapseToStandard, requestClose } = useCreationOverlay();
   const isFullscreen = viewState === 'FULLSCREEN';
   const sheetRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (!target || typeof target.closest !== 'function') return;
-      
-      // If the click originated from within a dialog, tooltip, or popover, ignore it.
-      if (
-        target.closest('[role="dialog"]') || 
-        target.closest('.generic-dialog-overlay') || 
-        target.closest('md-dialog') ||
-        target.closest('.cdk-overlay-container') // Common portal wrapper class for standard material components if used
-      ) {
-        return;
-      }
-
-      // If we clicked outside the sheet, minimize it
-      if (sheetRef.current && !sheetRef.current.contains(target as Node)) {
-        minimizeCreation();
-      }
-    };
-
-    // Use capture phase to ensure it evaluates before React synthetic events stop propagation
-    document.addEventListener('mousedown', handleClickOutside, true);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside, true);
-    };
-  }, [minimizeCreation]);
 
   return (
     <>
@@ -71,14 +43,16 @@ export function CreationSheetTemplate() {
 
             <div className="flex items-center gap-2">
               {headerActions}
-              {isFullscreen ? (
-                <md-icon-button onClick={collapseToStandard}>
-                  <md-icon>close_fullscreen</md-icon>
-                </md-icon-button>
-              ) : (
-                <md-icon-button onClick={expandToFullscreen}>
-                  <md-icon>open_in_full</md-icon>
-                </md-icon-button>
+              {allowStandardView && (
+                isFullscreen ? (
+                  <md-icon-button onClick={collapseToStandard}>
+                    <md-icon>close_fullscreen</md-icon>
+                  </md-icon-button>
+                ) : (
+                  <md-icon-button onClick={expandToFullscreen}>
+                    <md-icon>open_in_full</md-icon>
+                  </md-icon-button>
+                )
               )}
               <md-icon-button onClick={minimizeCreation}>
                 <md-icon>minimize</md-icon>

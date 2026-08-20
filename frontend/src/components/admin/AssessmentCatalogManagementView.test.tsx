@@ -22,6 +22,17 @@ vi.mock('../../hooks/useAssessmentCatalogManagement', () => ({
   }),
 }));
 
+const mockOpenCreation = vi.fn();
+const mockCloseCreation = vi.fn();
+
+vi.mock('../../contexts/CreationContext', () => ({
+  useCreationOverlay: () => ({
+    openCreation: mockOpenCreation,
+    closeCreation: mockCloseCreation,
+    viewState: 'CLOSED',
+  }),
+}));
+
 describe('AssessmentCatalogManagementView', () => {
   const sampleScaleAvailable: AssessmentCatalogItemDto = {
     batteryCode: 'PHQ-9' as any,
@@ -57,22 +68,60 @@ describe('AssessmentCatalogManagementView', () => {
     cleanup();
   });
 
-  it('renders scale catalog items and counts', () => {
+  it('renders scale catalog items and action buttons', () => {
     render(<AssessmentCatalogManagementView />);
 
     expect(screen.getByText('心理测评量表目录与分发控制')).toBeDefined();
     expect(screen.getByText('2')).toBeDefined(); // Catalog count
     expect(screen.getByText('抑郁症筛查量表 (PHQ-9)')).toBeDefined();
     expect(screen.getByText('广泛性焦虑量表 (GAD-7)')).toBeDefined();
-    expect(screen.getByText('隐藏量表')).toBeDefined();
-    expect(screen.getByText('启用上线')).toBeDefined();
+    expect(screen.getAllByText('查看详情').length).toBe(2);
+    expect(screen.getAllByText('指派测评').length).toBe(2);
   });
 
-  it('opens confirmation dialog when clicking 隐藏量表 on available scale, expands details, and handles cancellation', () => {
+  it('opens full-screen details view when clicking 查看详情', () => {
     render(<AssessmentCatalogManagementView />);
 
-    const hideBtn = screen.getByText('隐藏量表');
-    fireEvent.click(hideBtn);
+    const viewBtns = screen.getAllByText('查看详情');
+    fireEvent.click(viewBtns[0]);
+
+    // Full screen view is opened
+    expect(screen.getByText('量表题目明细与临床常模配置')).toBeDefined();
+    expect(screen.getByText('完成并返回')).toBeDefined();
+
+    // Close full screen
+    fireEvent.click(screen.getByText('完成并返回'));
+    expect(screen.queryByText('量表题目明细与临床常模配置')).toBeNull();
+  });
+
+  it('opens creation overlay when clicking 指派测评 on an available scale', () => {
+    render(<AssessmentCatalogManagementView />);
+
+    const assignBtns = screen.getAllByText('指派测评');
+    fireEvent.click(assignBtns[0]);
+
+    expect(mockOpenCreation).toHaveBeenCalledWith(
+      '指派心理测评',
+      expect.anything(),
+      expect.objectContaining({
+        initialViewState: 'FULLSCREEN',
+        allowStandardView: false,
+      })
+    );
+  });
+
+  it('opens md-menu and triggers confirmation dialog when clicking 隐藏量表 on available scale', () => {
+    render(<AssessmentCatalogManagementView />);
+
+    const moreButtons = document.querySelectorAll('md-icon-button');
+    // First more button belongs to PHQ-9 (available)
+    const phq9MoreBtn = moreButtons[0];
+    fireEvent.click(phq9MoreBtn);
+
+    // Menu item is displayed
+    const hideMenuItem = screen.getByText('隐藏量表');
+    expect(hideMenuItem).toBeDefined();
+    fireEvent.click(hideMenuItem);
 
     // Dialog is opened
     expect(screen.getByText('确认隐藏测评量表？')).toBeDefined();
@@ -96,8 +145,12 @@ describe('AssessmentCatalogManagementView', () => {
   it('executes hide scale action when confirmed in dialog', async () => {
     render(<AssessmentCatalogManagementView />);
 
-    const hideBtn = screen.getByText('隐藏量表');
-    fireEvent.click(hideBtn);
+    const moreButtons = document.querySelectorAll('md-icon-button');
+    const phq9MoreBtn = moreButtons[0];
+    fireEvent.click(phq9MoreBtn);
+
+    const hideMenuItem = screen.getByText('隐藏量表');
+    fireEvent.click(hideMenuItem);
 
     const confirmBtn = screen.getByText('确认隐藏');
     fireEvent.click(confirmBtn);
@@ -108,11 +161,17 @@ describe('AssessmentCatalogManagementView', () => {
     });
   });
 
-  it('directly enables scale without confirmation dialog when clicking 启用上线', () => {
+  it('opens md-menu and directly enables scale when clicking 启用上线 on hidden scale', () => {
     render(<AssessmentCatalogManagementView />);
 
-    const enableBtn = screen.getByText('启用上线');
-    fireEvent.click(enableBtn);
+    const moreButtons = document.querySelectorAll('md-icon-button');
+    // Second more button belongs to GAD-7 (hidden)
+    const gad7MoreBtn = moreButtons[1];
+    fireEvent.click(gad7MoreBtn);
+
+    const enableMenuItem = screen.getByText('启用上线');
+    expect(enableMenuItem).toBeDefined();
+    fireEvent.click(enableMenuItem);
 
     // Confirmation dialog should NOT be shown
     expect(screen.queryByText('确认隐藏测评量表？')).toBeNull();
