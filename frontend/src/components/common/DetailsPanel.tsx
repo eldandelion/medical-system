@@ -138,8 +138,10 @@ export function MetricCard({
   value,
   icon,
   className = "",
-  labelClassName = "text-[var(--md-sys-color-on-surface-variant)] opacity-85",
-  badgeClassName = "bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-container)]",
+  labelClassName = "text-[var(--md-sys-color-on-surface-variant)]",
+  iconClassName = "text-[var(--md-sys-color-on-surface-variant)]",
+  valueClassName = "text-sm leading-5 font-semibold text-[var(--md-sys-color-on-surface)] tabular-nums",
+  badgeClassName = "",
   copyable = false,
   copyValue,
 }: {
@@ -148,6 +150,9 @@ export function MetricCard({
   icon: string;
   className?: string;
   labelClassName?: string;
+  iconClassName?: string;
+  iconContainerClassName?: string;
+  valueClassName?: string;
   badgeClassName?: string;
   copyable?: boolean;
   copyValue?: string;
@@ -164,30 +169,34 @@ export function MetricCard({
   };
 
   return (
-    <div className={`py-3.5 px-4 rounded-[20px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col gap-2.5 min-w-0 overflow-hidden ${className}`}>
-      <div className={`flex items-center gap-1.5 min-w-0 ${labelClassName}`}>
-        <span className="material-symbols-outlined text-[18px] shrink-0">{icon}</span>
-        <span className="text-[13px] font-bold truncate">{label}</span>
-      </div>
-      <div className="flex items-center justify-between gap-1.5 min-w-0">
-        <div className="flex flex-1 min-w-0 overflow-hidden">
-          {typeof value === 'string' ? (
-            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[12px] font-bold truncate ${badgeClassName}`}>
-              {value}
-            </span>
-          ) : (
-            value
+    <div className={`p-3.5 rounded-[16px] bg-[var(--md-sys-color-surface-container-low)] flex items-center gap-3 min-w-0 overflow-hidden ${className}`}>
+      <span className={`material-symbols-outlined text-[24px] shrink-0 ${iconClassName}`}>
+        {icon}
+      </span>
+      <div className="flex flex-col justify-center min-w-0 flex-1 gap-0.5">
+        <span className={`text-xs leading-4 font-medium tracking-wide truncate ${labelClassName}`}>
+          {label}
+        </span>
+        <div className="flex items-center justify-between gap-1 min-w-0 h-5">
+          <div className="flex flex-1 min-w-0 overflow-hidden">
+            {typeof value === 'string' ? (
+              <span className={`truncate leading-5 tabular-nums ${badgeClassName || valueClassName}`}>
+                {value}
+              </span>
+            ) : (
+              value
+            )}
+          </div>
+          {showCopyButton && (
+            <button
+              onClick={handleCopy}
+              className="w-5 h-5 rounded-full hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)] transition-colors flex items-center justify-center shrink-0"
+              title="复制"
+            >
+              <span className="material-symbols-outlined text-[13px] leading-none">content_copy</span>
+            </button>
           )}
         </div>
-        {showCopyButton && (
-          <button
-            onClick={handleCopy}
-            className="p-1 rounded-full hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)] transition-colors flex items-center justify-center shrink-0"
-            title="复制"
-          >
-            <span className="material-symbols-outlined text-[14px]">content_copy</span>
-          </button>
-        )}
       </div>
       <Snackbar 
         open={snackbarOpen} 

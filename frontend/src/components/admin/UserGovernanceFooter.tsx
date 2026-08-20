@@ -4,7 +4,7 @@ import { AdminUserSummaryDto, AccountStatus } from '../../types/admin';
 import { roleTranslations } from '../../utils/roleTranslations';
 import { useAdminUsers } from '../../hooks/useAdminUsers';
 import { ActionFooter } from '../common/ActionFooter';
-import { PrimaryButton, TertiaryButton } from '../common/Buttons';
+import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
 import { GenericDialog } from '../common/GenericDialog';
 
 export interface UserGovernanceFooterProps {
@@ -73,7 +73,7 @@ export const UserGovernanceFooter: React.FC<UserGovernanceFooterProps> = ({
 
         {user.status === 'ACTIVE' && (
           <>
-            <TertiaryButton
+            <SecondaryButton
               icon="block"
               label="禁用账号"
               onClick={() => setIsDisableDialogOpen(true)}

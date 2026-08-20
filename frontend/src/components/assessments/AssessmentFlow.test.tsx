@@ -32,12 +32,17 @@ vi.mock('../../hooks/useRecordProgress', () => ({
   useRecordProgress: vi.fn()
 }));
 
+const mockGetPosition = vi.fn().mockReturnValue({ sectionIdx: 0, questionIdx: 0 });
+const mockHasSavedPosition = vi.fn().mockReturnValue(false);
+const mockSavePosition = vi.fn();
+const mockClearPosition = vi.fn();
+
 vi.mock('../../hooks/useAssessmentPosition', () => ({
   useAssessmentPosition: () => ({
-    getPosition: () => ({ sectionIdx: 0, questionIdx: 0 }),
-    hasSavedPosition: () => false,
-    savePosition: vi.fn(),
-    clearPosition: vi.fn()
+    getPosition: mockGetPosition,
+    hasSavedPosition: mockHasSavedPosition,
+    savePosition: mockSavePosition,
+    clearPosition: mockClearPosition
   })
 }));
 

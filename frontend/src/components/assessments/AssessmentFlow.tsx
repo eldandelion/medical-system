@@ -46,9 +46,11 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
   useRecordProgress(assessmentId, answers);
   const { getPosition, hasSavedPosition, savePosition, clearPosition } = useAssessmentPosition(session?.token, assessmentId);
 
+  const prevIsOpen = React.useRef(false);
+
   // Fetch sections from API dynamically if assessmentId is provided
   React.useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !prevIsOpen.current) {
       setCurrentSectionIdx(0);
       setCurrentQuestionIdx(0);
       setAnswers({});
@@ -98,7 +100,8 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
         setAppState('intro');
       }
     }
-  }, [isOpen, assessmentId, sections, session.token, getPosition]);
+    prevIsOpen.current = isOpen;
+  }, [isOpen, assessmentId, sections, session.token, getPosition, hasSavedPosition]);
 
   // Sync current question to localStorage position hook
   React.useEffect(() => {
@@ -214,6 +217,10 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
                 <button
                   key={qIdx}
                   onClick={() => {
+                    if (appState === 'intro') {
+                      setIsUIVisible(true);
+                      setAppState('assessment');
+                    }
                     setCurrentSectionIdx(sIdx);
                     setCurrentQuestionIdx(qIdx);
                   }}
@@ -310,14 +317,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
                 <span className="text-sm font-medium text-[var(--md-sys-color-on-surface-variant)]">加载测评中...</span>
               </div>
             ) : (
-              <AnimatePresence
-                mode="wait"
-                onExitComplete={() => {
-                  if (appState === 'assessment') {
-                    setIsUIVisible(true);
-                  }
-                }}
-              >
+              <AnimatePresence>
               {appState === 'intro' && (
                 <motion.div
                   key="intro"
