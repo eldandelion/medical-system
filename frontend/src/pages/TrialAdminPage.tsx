@@ -189,7 +189,7 @@ export function TrialAdminPage() {
         {/* Note: Student Management is removed for Trial Admin */}
         <NavItem icon="engineering" label="人员管理" active={activePage === TrialAdminTabs.STAFF} onClick={() => handlePageChange(TrialAdminTabs.STAFF)} />
         <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === TrialAdminTabs.REFERRAL_MANAGEMENT} onClick={() => handlePageChange(TrialAdminTabs.REFERRAL_MANAGEMENT)} />
-        <NavItem icon="security" label="隐私安全" active={activePage === TrialAdminTabs.SECURITY} onClick={() => handlePageChange(TrialAdminTabs.SECURITY)} />
+        {/* <NavItem icon="security" label="隐私安全" active={activePage === TrialAdminTabs.SECURITY} onClick={() => handlePageChange(TrialAdminTabs.SECURITY)} /> */}
       </Sidebar>
 
       <div className="flex-1 flex flex-col min-w-0 bg-transparent">

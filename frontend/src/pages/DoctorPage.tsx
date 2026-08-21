@@ -192,7 +192,7 @@ export function DoctorPage() {
         <NavItem icon="notifications" label="通知中心" active={activePage === DoctorTabs.NOTIFICATIONS} onClick={() => handlePageChange(DoctorTabs.NOTIFICATIONS)} badge={true} />
 
         <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === DoctorTabs.REFERRAL_MANAGEMENT} onClick={() => handlePageChange(DoctorTabs.REFERRAL_MANAGEMENT)} />
-        <NavItem icon="security" label="隐私安全" active={activePage === DoctorTabs.SECURITY} onClick={() => handlePageChange(DoctorTabs.SECURITY)} />
+        {/* <NavItem icon="security" label="隐私安全" active={activePage === DoctorTabs.SECURITY} onClick={() => handlePageChange(DoctorTabs.SECURITY)} /> */}
       </Sidebar>
 
       <div className="flex-1 flex flex-col min-w-0 bg-transparent">

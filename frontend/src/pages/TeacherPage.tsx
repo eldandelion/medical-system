@@ -232,7 +232,7 @@ export function TeacherPage() {
 
         <NavItem icon="group" label="学生管理" active={activePage === TeacherTabs.STUDENTS} onClick={() => handlePageChange(TeacherTabs.STUDENTS)} />
         <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === TeacherTabs.REFERRAL_MANAGEMENT} onClick={() => handlePageChange(TeacherTabs.REFERRAL_MANAGEMENT)} />
-        <NavItem icon="security" label="隐私安全" active={activePage === TeacherTabs.SECURITY} onClick={() => handlePageChange(TeacherTabs.SECURITY)} />
+        {/* <NavItem icon="security" label="隐私安全" active={activePage === TeacherTabs.SECURITY} onClick={() => handlePageChange(TeacherTabs.SECURITY)} /> */}
       </Sidebar>
 
       <div className="flex-1 flex flex-col min-w-0 bg-transparent">

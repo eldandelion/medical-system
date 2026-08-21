@@ -269,12 +269,12 @@ export function AdminPage() {
           active={activePage === AdminTabs.NOTIFICATIONS}
           onClick={() => handlePageChange(AdminTabs.NOTIFICATIONS)}
         />
-        <NavItem
+        {/* <NavItem
           icon="security"
           label="隐私安全"
           active={activePage === AdminTabs.SECURITY}
           onClick={() => handlePageChange(AdminTabs.SECURITY)}
-        />
+        /> */}
       </Sidebar>
 
       <div className="flex-1 flex flex-col min-w-0 bg-transparent">
