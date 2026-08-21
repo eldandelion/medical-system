@@ -12,7 +12,7 @@ import { SnackbarProvider } from './contexts/SnackbarContext';
 import { useAuth } from './contexts/AuthContext';
 
 export default function App() {
-  const { session, setRole } = useAuth();
+  const { session } = useAuth();
   const role = session.role;
 
   return (
@@ -34,45 +34,7 @@ export default function App() {
           <AdminPage />
         )}
         
-        {/* Role Switcher for Demo */}
-        <div className="fixed bottom-4 left-4 z-[9999] flex gap-2 bg-[var(--md-sys-color-surface-container-highest)] p-2 rounded-full shadow-lg border border-[var(--md-sys-color-outline-variant)]">
-          <button 
-            onClick={() => setRole('student')}
-            className={`px-4 py-2 rounded-full text-xs font-medium transition-colors ${role === 'student' ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]' : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]'}`}
-          >
-            Student
-          </button>
-          <button 
-            onClick={() => setRole('teacher')}
-            className={`px-4 py-2 rounded-full text-xs font-medium transition-colors ${role === 'teacher' ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]' : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]'}`}
-          >
-            Teacher
-          </button>
-          <button 
-            onClick={() => setRole('head-councillor')}
-            className={`px-4 py-2 rounded-full text-xs font-medium transition-colors ${role === 'head-councillor' ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]' : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]'}`}
-          >
-            Head Councillor
-          </button>
-          <button 
-            onClick={() => setRole('trial-admin')}
-            className={`px-4 py-2 rounded-full text-xs font-medium transition-colors ${role === 'trial-admin' ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]' : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]'}`}
-          >
-            Trial Admin
-          </button>
-          <button 
-            onClick={() => setRole('doctor')}
-            className={`px-4 py-2 rounded-full text-xs font-medium transition-colors ${role === 'doctor' ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]' : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]'}`}
-          >
-            Doctor
-          </button>
-          <button 
-            onClick={() => setRole('admin')}
-            className={`px-4 py-2 rounded-full text-xs font-medium transition-colors ${role === 'admin' ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]' : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]'}`}
-          >
-            Admin
-          </button>
-        </div>
+
 
         <CreationRoot />
       </div>
