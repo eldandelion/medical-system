@@ -46,4 +46,20 @@ describe('SecondaryTabs Component', () => {
       expect(onTabChangeMock).toHaveBeenCalledWith('tab2');
     }
   });
+
+  it('applies fitContent styling when fitContent is true', () => {
+    const { container } = render(
+      <SecondaryTabs tabs={mockTabs} activeTab="tab1" onTabChange={() => {}} fitContent />
+    );
+    const mdTabs = container.querySelector('md-tabs');
+    expect(mdTabs?.classList.contains('w-fit')).toBe(true);
+  });
+
+  it('omits border-b class when hideBorder is true', () => {
+    const { container } = render(
+      <SecondaryTabs tabs={mockTabs} activeTab="tab1" onTabChange={() => {}} hideBorder />
+    );
+    const wrapper = container.firstChild as HTMLElement;
+    expect(wrapper?.classList.contains('border-b')).toBe(false);
+  });
 });

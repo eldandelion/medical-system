@@ -193,4 +193,33 @@ describe('AssessmentCatalogManagementView', () => {
     fireEvent.click(retryBtn);
     expect(mockRefetch).toHaveBeenCalled();
   });
+
+  it('renders segmented button with text-only labels', () => {
+    render(<AssessmentCatalogManagementView />);
+
+    expect(screen.getByText('量表列表')).toBeDefined();
+    expect(screen.getByText('指派历史')).toBeDefined();
+  });
+
+  it('switches between catalog card grid and empty history placeholder view via segmented button', () => {
+    render(<AssessmentCatalogManagementView />);
+
+    // Initially on catalog view
+    expect(screen.getByText('抑郁症筛查量表 (PHQ-9)')).toBeDefined();
+    expect(screen.queryByText('暂无指派历史')).toBeNull();
+
+    // Click history segment
+    fireEvent.click(screen.getByText('指派历史'));
+
+    // History view is shown, catalog cards are hidden
+    expect(screen.getByText('暂无指派历史')).toBeDefined();
+    expect(screen.queryByText('抑郁症筛查量表 (PHQ-9)')).toBeNull();
+
+    // Click catalog segment
+    fireEvent.click(screen.getByText('量表列表'));
+
+    // Catalog cards are restored
+    expect(screen.getByText('抑郁症筛查量表 (PHQ-9)')).toBeDefined();
+    expect(screen.queryByText('暂无指派历史')).toBeNull();
+  });
 });
