@@ -283,7 +283,15 @@ export const handlers = [
     const department = url.searchParams.get('department') || 'ALL';
     const hasActiveReferral = url.searchParams.get('hasActiveReferral');
 
+    const authHeader = request.headers.get('Authorization') || '';
     let filtered = [...mockStudentsDb];
+
+    // For teacher accounts, only return students assigned to the teacher
+    if (authHeader.includes('teacher')) {
+      filtered = filtered.filter(
+        (s) => ['1', '2'].includes(s.id) || s.major === '计算机科学' || s.major === '心理学'
+      );
+    }
 
     if (search) {
       filtered = filtered.filter(

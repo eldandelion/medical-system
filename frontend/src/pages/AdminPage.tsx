@@ -45,7 +45,7 @@ const ADMIN_TAB_TITLES: Record<AdminPageName, string> = {
   [AdminTabs.DASHBOARD]: '系统总览',
   [AdminTabs.USERS]: '用户与账号治理',
   [AdminTabs.REFERRALS]: '全局转诊管理',
-  [AdminTabs.ASSESSMENTS]: '测评量表目录',
+  [AdminTabs.ASSESSMENTS]: '测评量表',
   [AdminTabs.STUDENTS]: '全校学生档案',
   [AdminTabs.NOTIFICATIONS]: '通知中心',
   [AdminTabs.SECURITY]: '隐私与安全审计',

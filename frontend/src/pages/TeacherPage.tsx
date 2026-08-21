@@ -11,6 +11,7 @@ import { ReferralManagementView } from '../components/records/ReferralManagement
 import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
 import { DashboardView } from '../components/dashboard/DashboardView';
+import { AssessmentCatalogManagementView } from '../components/admin/AssessmentCatalogManagementView';
 import { roleTranslations } from '../utils/roleTranslations';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { StudentDetailsView, STUDENT_DETAILS_TABS } from '../components/students/StudentDetailsView';
@@ -33,6 +34,7 @@ export const TeacherTabs = {
   DASHBOARD: 'Dashboard',
   NOTIFICATIONS: 'Notifications',
   STUDENTS: 'Students',
+  ASSESSMENTS: 'Assessments',
   REFERRAL_MANAGEMENT: 'Referral Management',
   SECURITY: 'Security & Consent',
 } as const;
@@ -43,6 +45,7 @@ const TEACHER_TAB_TITLES: Record<TeacherPageName, string> = {
   [TeacherTabs.DASHBOARD]: '控制面板',
   [TeacherTabs.NOTIFICATIONS]: '通知中心',
   [TeacherTabs.STUDENTS]: '学生管理',
+  [TeacherTabs.ASSESSMENTS]: '测评量表',
   [TeacherTabs.REFERRAL_MANAGEMENT]: '转诊管理',
   [TeacherTabs.SECURITY]: '隐私安全'
 };
@@ -159,6 +162,13 @@ export function TeacherPage() {
         );
       case TeacherTabs.STUDENTS:
         return <StudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} header={(loading) => <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} isLoading={loading} />} />;
+      case TeacherTabs.ASSESSMENTS:
+        return (
+          <>
+            <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} />
+            <AssessmentCatalogManagementView />
+          </>
+        );
       case TeacherTabs.REFERRAL_MANAGEMENT:
         return <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} header={(loading) => <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} isLoading={loading} />} />;
       case TeacherTabs.SECURITY:
@@ -231,6 +241,7 @@ export function TeacherPage() {
         <NavItem icon="notifications" label="通知中心" active={activePage === TeacherTabs.NOTIFICATIONS} onClick={() => handlePageChange(TeacherTabs.NOTIFICATIONS)} badge={unreadCount > 0} />
 
         <NavItem icon="group" label="学生管理" active={activePage === TeacherTabs.STUDENTS} onClick={() => handlePageChange(TeacherTabs.STUDENTS)} />
+        <NavItem icon="fact_check" label="测评量表" active={activePage === TeacherTabs.ASSESSMENTS} onClick={() => handlePageChange(TeacherTabs.ASSESSMENTS)} />
         <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === TeacherTabs.REFERRAL_MANAGEMENT} onClick={() => handlePageChange(TeacherTabs.REFERRAL_MANAGEMENT)} />
         {/* <NavItem icon="security" label="隐私安全" active={activePage === TeacherTabs.SECURITY} onClick={() => handlePageChange(TeacherTabs.SECURITY)} /> */}
       </Sidebar>

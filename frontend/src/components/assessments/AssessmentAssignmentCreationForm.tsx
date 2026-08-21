@@ -102,8 +102,27 @@ export function AssessmentAssignmentCreationForm({
     },
   });
 
-  // Available majors for current college
-  const availableMajors = MAJORS_BY_COLLEGE[selectedCollege] || ['全部专业'];
+  const isTeacher = session?.role === 'teacher';
+
+  // Available colleges (scoped for teachers)
+  const availableColleges = React.useMemo(() => {
+    if (!isTeacher) return COLLEGES;
+    const fromStudents = Array.from(
+      new Set(students.map((s) => s.demographics?.school || s.major).filter(Boolean))
+    );
+    return fromStudents.length > 0 ? ['全部学院', ...fromStudents] : COLLEGES;
+  }, [isTeacher, students]);
+
+  // Available majors (scoped for teachers or current college)
+  const availableMajors = React.useMemo(() => {
+    if (isTeacher) {
+      const fromStudents = Array.from(
+        new Set(students.map((s) => s.major).filter(Boolean))
+      );
+      return fromStudents.length > 0 ? ['全部专业', ...fromStudents] : ['全部专业'];
+    }
+    return MAJORS_BY_COLLEGE[selectedCollege] || ['全部专业'];
+  }, [isTeacher, students, selectedCollege]);
 
   // Handle college change
   const handleCollegeChange = (college: string) => {
@@ -334,51 +353,63 @@ export function AssessmentAssignmentCreationForm({
           <div className="max-w-2xl w-full mx-auto space-y-6">
             {/* Target Type Selector */}
             <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-[var(--md-sys-color-primary)]">
-                  groups
-                </span>
-                分发目标范围
-              </h3>
-            </div>
-
-            <SegmentedButton
-              items={[
-                { label: '群体批量分发', value: 'COHORT' },
-                { label: '指定单个学生', value: 'INDIVIDUAL' },
-              ]}
-              selectedValue={targetType}
-              onChange={(val) => setTargetType(val as TargetType)}
-            />
-          </section>
-
-          {/* Target Settings */}
-          {targetType === 'COHORT' ? (
-            <section className="space-y-4">
-              <div className="text-xs font-semibold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-wider">
-                群体范围条件筛选
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px] text-[var(--md-sys-color-primary)]">
+                    groups
+                  </span>
+                  分发目标范围
+                </h3>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* College Selector */}
-                <div>
-                  <md-outlined-select
-                    label="所属学院"
-                    className="w-full"
-                    value={selectedCollege}
-                    onChange={(e: React.SyntheticEvent) => {
-                      const target = e.target as HTMLSelectElement;
-                      handleCollegeChange(target.value);
-                    }}
-                    disabled={isSubmitting}
-                  >
-                    {COLLEGES.map((c) => (
-                      <md-select-option key={c} value={c}>
-                        <div slot="headline">{c}</div>
-                      </md-select-option>
-                    ))}
-                  </md-outlined-select>
+
+              {isTeacher && (
+                <div className="flex items-start gap-2.5 p-3.5 bg-[var(--md-sys-color-surface-container)] rounded-xl text-xs text-[var(--md-sys-color-on-surface-variant)] border border-[var(--md-sys-color-outline-variant)] border-opacity-40">
+                  <span className="material-symbols-outlined text-[18px] text-[var(--md-sys-color-primary)] shrink-0 mt-0.5">
+                    school
+                  </span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-medium text-[var(--md-sys-color-on-surface)]">指导教师权限限定</span>
+                    <span>您当前仅可向您负责指导的学生分发测评量表（已自动限定指导学生列表，共 {students.length} 人）。</span>
+                  </div>
                 </div>
+              )}
+
+              <SegmentedButton
+                items={[
+                  { label: '群体批量分发', value: 'COHORT' },
+                  { label: '指定单个学生', value: 'INDIVIDUAL' },
+                ]}
+                selectedValue={targetType}
+                onChange={(val) => setTargetType(val as TargetType)}
+              />
+            </section>
+
+            {/* Target Settings */}
+            {targetType === 'COHORT' ? (
+              <section className="space-y-4">
+                <div className="text-xs font-semibold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-wider">
+                  群体范围条件筛选
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* College Selector */}
+                  <div>
+                    <md-outlined-select
+                      label="所属学院"
+                      className="w-full"
+                      value={selectedCollege}
+                      onChange={(e: React.SyntheticEvent) => {
+                        const target = e.target as HTMLSelectElement;
+                        handleCollegeChange(target.value);
+                      }}
+                      disabled={isSubmitting}
+                    >
+                      {availableColleges.map((c) => (
+                        <md-select-option key={c} value={c}>
+                          <div slot="headline">{c}</div>
+                        </md-select-option>
+                      ))}
+                    </md-outlined-select>
+                  </div>
 
                 {/* Major Selector */}
                 <div>

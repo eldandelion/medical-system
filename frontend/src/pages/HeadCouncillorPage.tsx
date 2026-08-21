@@ -18,6 +18,7 @@ import { ReferralDetailsView, REFERRAL_DETAILS_TABS } from '../components/record
 import { REFERRAL_TYPE_LABELS } from '../config/styleConstants';
 import { StaffManagementView } from '../components/staff/StaffManagementView';
 import { StaffDetailsView, STAFF_DETAILS_TABS } from '../components/staff/StaffDetailsView';
+import { AssessmentCatalogManagementView } from '../components/admin/AssessmentCatalogManagementView';
 import { useCreationOverlay } from '../contexts/CreationContext';
 import { ReferralCreationForm } from '../components/records/ReferralCreationForm';
 import { TertiaryFab } from '../components/common/Buttons';
@@ -35,6 +36,7 @@ export const HeadCouncillorTabs = {
   NOTIFICATIONS: 'Notifications',
   STUDENTS: 'Students',
   STAFF: 'Staff',
+  ASSESSMENTS: 'Assessments',
   REFERRAL_MANAGEMENT: 'Referral Management',
   SECURITY: 'Security & Consent',
 } as const;
@@ -46,6 +48,7 @@ const HEAD_COUNCILLOR_TAB_TITLES: Record<HeadCouncillorPageName, string> = {
   [HeadCouncillorTabs.NOTIFICATIONS]: '通知中心',
   [HeadCouncillorTabs.STUDENTS]: '学生管理',
   [HeadCouncillorTabs.STAFF]: '人员管理',
+  [HeadCouncillorTabs.ASSESSMENTS]: '测评量表',
   [HeadCouncillorTabs.REFERRAL_MANAGEMENT]: '转诊管理',
   [HeadCouncillorTabs.SECURITY]: '隐私安全'
 };
@@ -147,6 +150,13 @@ export function HeadCouncillorPage() {
             <StaffManagementView onStaffSelect={setSelectedItem} selectedStaffId={selectedItem?.id} />
           </>
         );
+      case HeadCouncillorTabs.ASSESSMENTS:
+        return (
+          <>
+            <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage]} />
+            <AssessmentCatalogManagementView />
+          </>
+        );
       case HeadCouncillorTabs.REFERRAL_MANAGEMENT:
         return <ReferralManagementView key={`rmv-${refreshKey}`} onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} header={(loading) => <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage]} isLoading={loading} />} />;
       case HeadCouncillorTabs.SECURITY:
@@ -220,6 +230,7 @@ export function HeadCouncillorPage() {
 
         <NavItem icon="group" label="学生管理" active={activePage === HeadCouncillorTabs.STUDENTS} onClick={() => handlePageChange(HeadCouncillorTabs.STUDENTS)} />
         <NavItem icon="engineering" label="人员管理" active={activePage === HeadCouncillorTabs.STAFF} onClick={() => handlePageChange(HeadCouncillorTabs.STAFF)} />
+        <NavItem icon="fact_check" label="测评量表" active={activePage === HeadCouncillorTabs.ASSESSMENTS} onClick={() => handlePageChange(HeadCouncillorTabs.ASSESSMENTS)} />
         <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === HeadCouncillorTabs.REFERRAL_MANAGEMENT} onClick={() => handlePageChange(HeadCouncillorTabs.REFERRAL_MANAGEMENT)} />
         {/* <NavItem icon="security" label="隐私安全" active={activePage === HeadCouncillorTabs.SECURITY} onClick={() => handlePageChange(HeadCouncillorTabs.SECURITY)} /> */}
       </Sidebar>

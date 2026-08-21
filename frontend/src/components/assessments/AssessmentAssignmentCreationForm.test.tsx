@@ -10,8 +10,9 @@ vi.mock('../../contexts/SnackbarContext', () => ({
   useSnackbar: () => ({ showSnackbar: mockShowSnackbar }),
 }));
 
+let mockSession = { token: 'mock-token', role: 'admin' as any };
 vi.mock('../../contexts/AuthContext', () => ({
-  useAuth: () => ({ session: { token: 'mock-token' } }),
+  useAuth: () => ({ session: mockSession }),
 }));
 
 import { CreationOverlayProvider, useCreationOverlay } from '../../contexts/CreationContext';
@@ -231,5 +232,13 @@ describe('AssessmentAssignmentCreationForm', () => {
         message: '请选择需要指派的学生',
       })
     );
+  });
+
+  it('displays teacher limitation banner and restricts student assignment scope when role is teacher', async () => {
+    mockSession = { token: 'mock-teacher-token', role: 'teacher' };
+    renderComponent();
+
+    expect(await screen.findByText('指导教师权限限定')).toBeDefined();
+    expect(screen.getByText(/您当前仅可向您负责指导的学生分发测评量表/)).toBeDefined();
   });
 });
