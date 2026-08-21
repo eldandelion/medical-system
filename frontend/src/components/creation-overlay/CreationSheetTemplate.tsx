@@ -32,7 +32,7 @@ export function CreationSheetTemplate() {
           }`}
       >
         {/* Header Architecture */}
-        <div className="flex-none flex flex-col relative">
+        <div className="flex-none flex flex-col relative z-10">
           {/* Top App Bar Content */}
           <div className="flex items-center justify-between px-6 py-4 min-h-[64px]">
             <div className="flex-1 truncate">
@@ -67,7 +67,7 @@ export function CreationSheetTemplate() {
         </div>
 
         {/* Dynamic Content Payload */}
-        <div className="flex-1 flex flex-col overflow-hidden w-full max-w-[1200px] mx-auto relative">
+        <div className="flex-1 flex flex-col overflow-hidden w-full max-w-[1200px] mx-auto relative z-20">
           {activePayload}
         </div>
       </motion.div>

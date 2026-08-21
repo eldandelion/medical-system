@@ -148,27 +148,45 @@ describe('AssessmentAssignmentCreationForm', () => {
 
     expect(screen.getByText('选择指派学生')).toBeDefined();
 
+    const searchInput = screen.getByPlaceholderText('输入姓名、学号或专业搜索并添加学生...');
+    fireEvent.focus(searchInput);
+
     // Wait for students to load
     await waitFor(() => {
       expect(screen.getByText('张三')).toBeDefined();
       expect(screen.getByText('李四')).toBeDefined();
     });
 
-    // Select a student
+    // Select first student (张三)
     fireEvent.click(screen.getByText('张三'));
-    expect(screen.getByText(/已选中:/)).toBeDefined();
-    expect(screen.getByText('清除重选')).toBeDefined();
+    expect(screen.getByText('已选学生：')).toBeDefined();
+    expect(screen.getByText('1 人')).toBeDefined();
+
+    // The search input remains visible
+    expect(screen.getByPlaceholderText('输入姓名、学号或专业搜索并添加学生...')).toBeDefined();
+
+    // Select second student (李四)
+    fireEvent.focus(screen.getByPlaceholderText('输入姓名、学号或专业搜索并添加学生...'));
+    fireEvent.click(screen.getByText('李四'));
+    expect(screen.getByText('2 人')).toBeDefined();
+
+    // Remove first student
+    const removeBtns = screen.getAllByTitle('移除该学生');
+    if (removeBtns[0]) {
+      fireEvent.click(removeBtns[0]);
+      expect(screen.getByText('1 人')).toBeDefined();
+    }
   });
 
   it('allows adding and removing additional scales from catalog', async () => {
     renderComponent();
 
     await waitFor(() => {
-      expect(screen.getByText('添加其他量表')).toBeDefined();
+      expect(screen.getByText('添加')).toBeDefined();
     });
 
     // Open add scale menu
-    fireEvent.click(screen.getByText('添加其他量表'));
+    fireEvent.click(screen.getByText('添加'));
     expect(screen.getByText('广泛性焦虑量表 (GAD-7)')).toBeDefined();
 
     // Add GAD-7
