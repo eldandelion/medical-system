@@ -335,7 +335,7 @@ export function AssessmentAssignmentCreationForm({
             {/* Target Type Selector */}
             <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px] text-[var(--md-sys-color-primary)]">
                   groups
                 </span>
@@ -609,7 +609,7 @@ export function AssessmentAssignmentCreationForm({
                           <span className="text-xs font-semibold text-[var(--md-sys-color-on-surface)] truncate">
                             {student.name}
                           </span>
-                          <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] opacity-80 truncate">
+                          <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] opacity-80 truncate tabular-nums">
                             学号: {student.studentNumber} · {student.major}
                           </span>
                         </div>
@@ -630,7 +630,7 @@ export function AssessmentAssignmentCreationForm({
                   ))}
 
                   {/* Students Summary */}
-                  <div className="px-1 text-xs text-[var(--md-sys-color-on-surface-variant)]">
+                  <div className="px-1 text-xs text-[var(--md-sys-color-on-surface-variant)] tabular-nums">
                     已选学生：<strong className="text-[var(--md-sys-color-on-surface)]">{selectedStudents.length} 人</strong>
                   </div>
                 </div>
@@ -641,7 +641,7 @@ export function AssessmentAssignmentCreationForm({
           {/* Scale Battery Selection */}
           <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px] text-[var(--md-sys-color-primary)]">
                   checklist
                 </span>
@@ -723,7 +723,7 @@ export function AssessmentAssignmentCreationForm({
                       <span className="text-xs font-semibold text-[var(--md-sys-color-on-surface)] truncate">
                         {scale.title}
                       </span>
-                      <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] opacity-80">
+                      <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] opacity-80 tabular-nums">
                         {scale.questionCount} 题 · {scale.duration}
                       </span>
                     </div>
@@ -745,7 +745,7 @@ export function AssessmentAssignmentCreationForm({
             </div>
 
             {/* Battery Summary */}
-            <div className="flex items-center justify-between px-1 text-xs text-[var(--md-sys-color-on-surface-variant)]">
+            <div className="flex items-center justify-between px-1 text-xs text-[var(--md-sys-color-on-surface-variant)] tabular-nums">
               <span>已选量表：<strong className="text-[var(--md-sys-color-on-surface)]">{selectedScales.length} 套</strong></span>
               <span>累计题目：<strong className="text-[var(--md-sys-color-on-surface)]">{totalQuestions} 题</strong></span>
             </div>
@@ -753,7 +753,7 @@ export function AssessmentAssignmentCreationForm({
 
           {/* Additional Parameters */}
           <section className="space-y-4">
-            <h3 className="text-sm font-bold text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-[var(--md-sys-color-primary)]">
                 tune
               </span>
