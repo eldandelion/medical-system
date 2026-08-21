@@ -8,11 +8,15 @@ export interface ProfileListItemProps {
   rightElement?: React.ReactNode;
   isLast?: boolean;
   iconClassName?: string;
+  onClick?: () => void;
 }
 
-export function ProfileListItem({ icon, title, value, rightElement, isLast, iconClassName = "" }: ProfileListItemProps) {
+export function ProfileListItem({ icon, title, value, rightElement, isLast, iconClassName = "", onClick }: ProfileListItemProps) {
   return (
-    <div className={`flex items-center px-6 py-4 hover:bg-[var(--md-sys-color-surface-variant)] cursor-pointer transition-colors ${isLast ? '' : 'border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30'}`}>
+    <div
+      onClick={onClick}
+      className={`flex items-center px-6 py-4 hover:bg-[var(--md-sys-color-surface-variant)] cursor-pointer transition-colors ${isLast ? '' : 'border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30'}`}
+    >
       <div className="text-[var(--md-sys-color-on-surface-variant)] mr-6 w-6 h-6 flex items-center justify-center shrink-0">
         <span className={`material-symbols-outlined text-[24px] ${iconClassName}`}>{icon}</span>
       </div>
