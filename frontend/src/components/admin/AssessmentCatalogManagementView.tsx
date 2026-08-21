@@ -40,21 +40,6 @@ export const AssessmentCatalogManagementView: React.FC = () => {
 
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-      {/* Header Info Banner — edge-to-edge, pinned */}
-      <div className="bg-[var(--md-sys-color-surface)] px-6 py-5 shrink-0 flex items-start justify-between">
-        <div>
-          <h2 className="text-[1.375rem] leading-7 font-normal text-[var(--md-sys-color-on-surface)] mb-1.5">
-            心理测评量表目录与分发控制
-          </h2>
-          <p className="text-sm text-[var(--md-sys-color-on-surface-variant)] max-w-2xl leading-relaxed">
-            管理员可在此控制系统内各心理量表在自测目录及教师筛查分发中的可见性。已下线的量表将停止产生新的分发任务；学生端已领取的在途问卷可在有效宽限期内继续作答完成。
-          </p>
-        </div>
-        <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-4xl font-medium tabular-nums shrink-0">
-          {catalog.length}
-        </div>
-      </div>
-
       {/* Catalog Grid — scrollable */}
       <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-6 pb-20 custom-scrollbar">
         {isLoading ? (

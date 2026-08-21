@@ -64,7 +64,7 @@ describe('AssessmentScaleDetailsFullScreen Component', () => {
     }
 
     // Action button
-    const actionBtn = screen.getByText('完成并返回');
+    const actionBtn = screen.getByText('完成');
     fireEvent.click(actionBtn);
     expect(onCloseMock).toHaveBeenCalledTimes(2);
   });

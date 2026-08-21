@@ -34,7 +34,7 @@ export function AssessmentScaleDetailsFullScreen({
       }
       actions={
         <PrimaryButton
-          label="完成并返回"
+          label="完成"
           onClick={onClose}
           className="h-9 px-4"
         />

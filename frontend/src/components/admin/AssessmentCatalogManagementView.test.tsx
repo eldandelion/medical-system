@@ -71,8 +71,6 @@ describe('AssessmentCatalogManagementView', () => {
   it('renders scale catalog items and action buttons', () => {
     render(<AssessmentCatalogManagementView />);
 
-    expect(screen.getByText('心理测评量表目录与分发控制')).toBeDefined();
-    expect(screen.getByText('2')).toBeDefined(); // Catalog count
     expect(screen.getByText('抑郁症筛查量表 (PHQ-9)')).toBeDefined();
     expect(screen.getByText('广泛性焦虑量表 (GAD-7)')).toBeDefined();
     expect(screen.getAllByText('查看详情').length).toBe(2);
@@ -87,10 +85,10 @@ describe('AssessmentCatalogManagementView', () => {
 
     // Full screen view is opened
     expect(screen.getByText('量表题目明细与临床常模配置')).toBeDefined();
-    expect(screen.getByText('完成并返回')).toBeDefined();
+    expect(screen.getByText('完成')).toBeDefined();
 
     // Close full screen
-    fireEvent.click(screen.getByText('完成并返回'));
+    fireEvent.click(screen.getByText('完成'));
     expect(screen.queryByText('量表题目明细与临床常模配置')).toBeNull();
   });
 
