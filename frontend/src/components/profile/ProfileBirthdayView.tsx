@@ -1,52 +1,51 @@
 import * as React from 'react';
-import { SegmentedButton } from '../common/Buttons';
 
 export interface ProfileBirthdayViewProps {
   birthday: string;
-  visibility: 'private' | 'public';
-  avatarInitial?: string;
-  onSave: (birthday: string, visibility: 'private' | 'public') => void;
+  onSave: (birthday: string) => void;
 }
 
 export function ProfileBirthdayView({
   birthday,
-  visibility,
-  avatarInitial = 'D',
   onSave,
 }: ProfileBirthdayViewProps) {
   const [selectedBirthday, setSelectedBirthday] = React.useState(birthday);
-  const [selectedVisibility, setSelectedVisibility] = React.useState(visibility);
   const [isEditingDate, setIsEditingDate] = React.useState(false);
   const [tempBirthday, setTempBirthday] = React.useState(birthday);
-
-  const handleVisibilityChange = (vis: string) => {
-    const newVis = vis as 'private' | 'public';
-    setSelectedVisibility(newVis);
-    onSave(selectedBirthday, newVis);
-  };
 
   const handleSaveDate = () => {
     if (tempBirthday.trim()) {
       setSelectedBirthday(tempBirthday.trim());
       setIsEditingDate(false);
-      onSave(tempBirthday.trim(), selectedVisibility);
+      onSave(tempBirthday.trim());
     }
   };
 
   return (
     <div className="max-w-2xl w-full mx-auto p-6 md:p-10 space-y-6">
+      <p className="text-sm text-[var(--md-sys-color-on-surface-variant)] leading-relaxed px-1">
+        您的出生日期用于计算年龄、筛查量表基线分析以及临床健康档案。{' '}
+        <a href="#learn-more" onClick={(e) => e.preventDefault()} className="text-[var(--md-sys-color-primary)] hover:underline font-medium">
+          了解详情
+        </a>
+      </p>
+
       <div className="bg-[var(--md-sys-color-surface)] rounded-xl p-6 border border-[var(--md-sys-color-outline-variant)] space-y-6">
+        <h2 className="text-lg font-medium text-[var(--md-sys-color-on-surface)]">
+          生日
+        </h2>
+
         {/* Birthday Row */}
         {!isEditingDate ? (
           <div
             onClick={() => setIsEditingDate(true)}
-            className="flex items-center justify-between p-3 rounded-xl hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-40 cursor-pointer transition-colors"
+            className="flex items-center justify-between p-4 rounded-xl hover:bg-[var(--md-sys-color-surface-variant)] hover:bg-opacity-40 cursor-pointer transition-colors border border-[var(--md-sys-color-outline-variant)] border-opacity-40"
           >
             <div className="flex flex-col">
-              <span className="text-xs text-[var(--md-sys-color-on-surface-variant)]">生日</span>
+              <span className="text-xs text-[var(--md-sys-color-on-surface-variant)]">出生日期</span>
               <span className="text-base text-[var(--md-sys-color-on-surface)] font-medium mt-0.5">{selectedBirthday}</span>
             </div>
-            <span className="material-symbols-outlined text-[var(--md-sys-color-on-surface-variant)] text-[20px]">chevron_right</span>
+            <span className="material-symbols-outlined text-[var(--md-sys-color-on-surface-variant)] text-[20px]">edit</span>
           </div>
         ) : (
           <div className="p-4 bg-[var(--md-sys-color-surface-container)] rounded-xl space-y-3">
@@ -81,46 +80,6 @@ export function ProfileBirthdayView({
             </div>
           </div>
         )}
-
-        {/* Visibility Selector */}
-        <div className="border-t border-[var(--md-sys-color-outline-variant)] border-opacity-30 pt-4 space-y-4">
-          <h3 className="text-sm font-medium text-[var(--md-sys-color-on-surface)]">
-            选择谁可以看到您的生日
-          </h3>
-
-          <div className="w-full">
-            <SegmentedButton
-              items={[
-                { label: '仅限本人', value: 'private' },
-                { label: '任何人', value: 'public' },
-              ]}
-              selectedValue={selectedVisibility}
-              onChange={handleVisibilityChange}
-            />
-          </div>
-
-          <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
-            {selectedVisibility === 'private' ? '此信息属于隐私内容，仅限本人可见。' : '任何人均可查看您的生日。'}{' '}
-            <a href="#learn-more" onClick={(e) => e.preventDefault()} className="text-[var(--md-sys-color-primary)] hover:underline inline-flex items-center gap-0.5">
-              了解详情 <span className="material-symbols-outlined text-[14px]">help</span>
-            </a>
-          </p>
-        </div>
-
-        {/* Birthday Decoration Card Callout */}
-        <div className="border-t border-[var(--md-sys-color-outline-variant)] border-opacity-30 pt-4">
-          <h3 className="text-sm font-medium text-[var(--md-sys-color-on-surface)] mb-2">
-            让其他人知道您的生日
-          </h3>
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-sm text-[var(--md-sys-color-on-surface-variant)] leading-relaxed flex-1">
-              如果您公开生日信息，也可以选择在系统中突出显示（例如装扮您的个人资料头像）。
-            </p>
-            <div className="w-14 h-14 rounded-full bg-[#E47035] text-white flex items-center justify-center text-2xl font-medium shrink-0 shadow-sm ring-4 ring-[#E47035]/20">
-              {avatarInitial}
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

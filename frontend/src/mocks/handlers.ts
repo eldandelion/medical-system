@@ -2,7 +2,7 @@ import { http, HttpResponse, delay } from 'msw';
 import { mockAssessmentsDb, mockAssessmentCatalog, mockDashboardDb, mockStudentsDb, mockReferralsDb, mockAdminUsersDb, generateTrackerSteps } from './db';
 const MOCK_DELAY_MS = 1000;
 
-import { Referral, ReferralAction } from '../types';
+import { Referral, ReferralAction, UserProfileDto, UpdateUserProfileRequest } from '../types';
 
 const mockComputeAvailableActions = (referral: Referral, authHeader: string): ReferralAction[] => {
   const actions: ReferralAction[] = [];
@@ -1172,5 +1172,201 @@ export const handlers = [
     }
     referral.status = 'CLOSED';
     return HttpResponse.json(referral);
+  }),
+
+  // User Profile
+  http.get(api('/api/user/profile'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not fetch real user profile, falling back to mock", e);
+      }
+    }
+    const authHeader = request.headers.get('Authorization') || '';
+    let roleKey = 'student';
+    if (authHeader.includes('teacher')) roleKey = 'teacher';
+    else if (authHeader.includes('head_councillor')) roleKey = 'head_councillor';
+    else if (authHeader.includes('trial_admin')) roleKey = 'trial_admin';
+    else if (authHeader.includes('doctor')) roleKey = 'doctor';
+    else if (authHeader.includes('admin')) roleKey = 'admin';
+
+    const profile = mockProfilesDb[roleKey] || mockProfilesDb.student;
+    return HttpResponse.json(profile);
+  }),
+
+  http.put(api('/api/user/profile'), async ({ request }) => {
+    const rawCloned = request.clone();
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(rawCloned));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not update real user profile, falling back to mock", e);
+      }
+    }
+    const body = (await request.json()) as UpdateUserProfileRequest;
+
+    const authHeader = request.headers.get('Authorization') || '';
+    let roleKey = 'student';
+    if (authHeader.includes('teacher')) roleKey = 'teacher';
+    else if (authHeader.includes('head_councillor')) roleKey = 'head_councillor';
+    else if (authHeader.includes('trial_admin')) roleKey = 'trial_admin';
+    else if (authHeader.includes('doctor')) roleKey = 'doctor';
+    const profile = mockProfilesDb[roleKey] || mockProfilesDb.student;
+    if (body.name) {
+
+      profile.name = body.name;
+      if (!body.avatarInitial) {
+        profile.avatarInitial = body.name.charAt(0);
+      }
+    }
+    if (body.email) profile.email = body.email;
+    if (body.avatarInitial) profile.avatarInitial = body.avatarInitial;
+    if (body.avatarBg) profile.avatarBg = body.avatarBg;
+
+
+    if (profile.studentProfile) {
+      if (body.gender !== undefined) profile.studentProfile.gender = body.gender;
+      if (body.birthday !== undefined) profile.studentProfile.birthday = body.birthday;
+      if (body.ethnicity !== undefined) profile.studentProfile.ethnicity = body.ethnicity;
+      if (body.idCardNumber !== undefined) profile.studentProfile.idCardNumber = body.idCardNumber;
+      if (body.contactNumber !== undefined) profile.studentProfile.contactNumber = body.contactNumber;
+      if (body.homeAddress !== undefined) profile.studentProfile.homeAddress = body.homeAddress;
+      if (body.emergencyContactName !== undefined) profile.studentProfile.emergencyContactName = body.emergencyContactName;
+      if (body.emergencyContactPhone !== undefined) profile.studentProfile.emergencyContactPhone = body.emergencyContactPhone;
+      if (body.emergencyContactRelation !== undefined) profile.studentProfile.emergencyContactRelation = body.emergencyContactRelation;
+    }
+
+    return HttpResponse.json(profile);
   })
 ];
+
+export const mockProfilesDb: Record<string, UserProfileDto> = {
+  student: {
+    id: 10,
+    name: '张伟',
+    role: 'STUDENT',
+    email: 'zhangwei@univ.edu.cn',
+    avatarInitial: '张',
+    avatarBg: '#E47035',
+    passwordLastChanged: '已设置并受保护',
+    studentProfile: {
+      studentNumber: '2023001092',
+      school: '中南大学',
+      major: '计算机科学与技术',
+      academicYear: '2023级',
+      gender: 'MALE',
+      birthday: '2001年2月5日',
+      ethnicity: '汉族',
+      idCardNumber: '110101200102051234',
+      contactNumber: '13800138000',
+      homeAddress: '湖南省长沙市岳麓区中南大学本部',
+      emergencyContactName: '张建国',
+      emergencyContactPhone: '13900139000',
+      emergencyContactRelation: '父亲'
+    },
+    staffProfile: null
+  },
+  teacher: {
+    id: 2,
+    name: '艾米丽·沃森',
+    role: 'TEACHER',
+    email: 'emily@univ.edu.cn',
+    avatarInitial: '艾',
+    avatarBg: '#E47035',
+    passwordLastChanged: '已设置并受保护',
+    studentProfile: null,
+    staffProfile: {
+      employeeNumber: 'EMP-00001',
+      organization: '医学院',
+      department: '基础医学院',
+      title: '专任教师 / 班导师',
+      contactNumber: '13800138001'
+    }
+  },
+  head_counsellor: {
+    id: 3,
+    name: '王主任',
+    role: 'HEAD_COUNSELLOR',
+    email: 'wang_head@univ.edu.cn',
+    avatarInitial: '王',
+    avatarBg: '#E47035',
+    passwordLastChanged: '已设置并受保护',
+    studentProfile: null,
+    staffProfile: {
+      employeeNumber: 'HC-00001',
+      organization: '中南大学心理健康教育中心',
+      department: '学生心理危机干预中心',
+      title: '心理中心主管',
+      contactNumber: '13800138002'
+    }
+  },
+  doctor: {
+    id: 5,
+    name: '李医生',
+    role: 'DOCTOR',
+    email: 'li@univ.edu.cn',
+    avatarInitial: '李',
+    avatarBg: '#E47035',
+    passwordLastChanged: '已设置并受保护',
+    studentProfile: null,
+    staffProfile: {
+      employeeNumber: 'DOC-00001',
+      organization: '中南大学湘雅医院',
+      department: '精神心理科',
+      title: '主治医师',
+      contactNumber: '13800138003'
+    }
+  },
+  trial_admin: {
+    id: 4,
+    name: '张老师',
+    role: 'TRIAL_ADMIN',
+    email: 'zhang@univ.edu.cn',
+    avatarInitial: '张',
+    avatarBg: '#E47035',
+    passwordLastChanged: '已设置并受保护',
+    studentProfile: null,
+    staffProfile: {
+      employeeNumber: 'TA-00001',
+      organization: '临床科研与试验中心',
+      department: '科研管理办公室',
+      title: '试验项目管理员',
+      contactNumber: '13800138004'
+    }
+  },
+  admin: {
+    id: 1,
+    name: '系统管理员',
+    role: 'SYSTEM_ADMIN',
+    email: 'admin@univ.edu.cn',
+    avatarInitial: '管',
+    avatarBg: '#E47035',
+    passwordLastChanged: '已设置并受保护',
+    studentProfile: null,
+    staffProfile: {
+      employeeNumber: 'SYS-ADMIN',
+      organization: '信息化建设与管理处',
+      department: '系统治理与安全管理部',
+      title: '超级管理员',
+      contactNumber: '13800138005'
+    }
+  }
+};
+

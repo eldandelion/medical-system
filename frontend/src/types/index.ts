@@ -294,3 +294,58 @@ export interface AssessmentSubmissionResponseDto {
   totalQuestionsAnswered: number;
   completedAt: string;
 }
+
+export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
+
+export interface StudentProfileDetailsDto {
+  studentNumber: string;
+  school?: string | null;
+  major?: string | null;
+  academicYear?: string | null;
+  gender?: Gender | null;
+  birthday?: string | null;
+  ethnicity?: string | null;
+  idCardNumber?: string | null;
+  contactNumber?: string | null;
+  homeAddress?: string | null;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
+  emergencyContactRelation?: string | null;
+}
+
+export interface StaffProfileDetailsDto {
+  employeeNumber: string;
+  organization?: string | null;
+  department?: string | null;
+  title?: string | null;
+  contactNumber?: string | null;
+}
+
+export interface UserProfileDto {
+  id: number;
+  name: string;
+  role: string;
+  email: string;
+  avatarInitial?: string | null;
+  avatarBg?: string | null;
+  passwordLastChanged?: string | null;
+  studentProfile?: StudentProfileDetailsDto | null;
+  staffProfile?: StaffProfileDetailsDto | null;
+}
+
+export interface UpdateUserProfileRequest {
+  name?: string;
+  email?: string;
+  avatarInitial?: string;
+  avatarBg?: string;
+  gender?: Gender;
+  birthday?: string;
+  ethnicity?: string;
+  idCardNumber?: string;
+  contactNumber?: string;
+  homeAddress?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelation?: string;
+}
+

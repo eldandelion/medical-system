@@ -20,6 +20,13 @@ export function ProfileAddressView({
   const [work, setWork] = React.useState(workAddress === '未设置' ? '' : workAddress);
   const [other, setOther] = React.useState(otherAddress === '未设置' ? '' : otherAddress);
 
+  React.useEffect(() => {
+    setHome(homeAddress === '未设置' ? '' : homeAddress);
+    setWork(workAddress === '未设置' ? '' : workAddress);
+    setOther(otherAddress === '未设置' ? '' : otherAddress);
+  }, [homeAddress, workAddress, otherAddress]);
+
+
   const handleSave = () => {
     onSave({
       homeAddress: home.trim() || '未设置',
