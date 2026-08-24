@@ -349,3 +349,5 @@ export interface UpdateUserProfileRequest {
   emergencyContactRelation?: string;
 }
 
+export * from './studentImport';
+

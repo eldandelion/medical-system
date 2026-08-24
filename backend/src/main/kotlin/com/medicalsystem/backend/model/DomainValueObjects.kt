@@ -4,8 +4,17 @@ import java.time.LocalDate
 
 @JvmInline
 value class MobileNumber(val value: String) {
+    companion object {
+        val PATTERN = Regex("^1[3-9]\\d{9}$")
+
+        fun isValid(raw: String?): Boolean = raw != null && PATTERN.matches(raw)
+
+        fun fromOrNull(raw: String?): MobileNumber? =
+            raw?.takeIf { isValid(it) }?.let { MobileNumber(it) }
+    }
+
     init {
-        require(value.matches(Regex("^1[3-9]\\d{9}$"))) {
+        require(isValid(value)) {
             "Contact number must be a valid 11-digit mobile number."
         }
     }
@@ -13,8 +22,17 @@ value class MobileNumber(val value: String) {
 
 @JvmInline
 value class PhoneNumber(val value: String) {
+    companion object {
+        val PATTERN = Regex("^(1[3-9]\\d{9}|0\\d{2,3}-\\d{7,8}|[\\d+\\-\\s()]+)$")
+
+        fun isValid(raw: String?): Boolean = raw != null && PATTERN.matches(raw)
+
+        fun fromOrNull(raw: String?): PhoneNumber? =
+            raw?.takeIf { isValid(it) }?.let { PhoneNumber(it) }
+    }
+
     init {
-        require(value.matches(Regex("^(1[3-9]\\d{9}|0\\d{2,3}-\\d{7,8}|[\\d\\+\\-\\s()]+)$"))) {
+        require(isValid(value)) {
             "Invalid phone number format."
         }
     }
@@ -22,8 +40,17 @@ value class PhoneNumber(val value: String) {
 
 @JvmInline
 value class EmailAddress(val value: String) {
+    companion object {
+        val PATTERN = Regex("^[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,6}$")
+
+        fun isValid(raw: String?): Boolean = raw != null && PATTERN.matches(raw)
+
+        fun fromOrNull(raw: String?): EmailAddress? =
+            raw?.takeIf { isValid(it) }?.let { EmailAddress(it) }
+    }
+
     init {
-        require(value.matches(Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$"))) {
+        require(isValid(value)) {
             "Invalid email format."
         }
     }
@@ -31,8 +58,19 @@ value class EmailAddress(val value: String) {
 
 @JvmInline
 value class IdCardNumber(val value: String) {
+    companion object {
+        val PATTERN = Regex(
+            "^[1-9]\\d{5}(18|19|20)\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$"
+        )
+
+        fun isValid(raw: String?): Boolean = raw != null && PATTERN.matches(raw)
+
+        fun fromOrNull(raw: String?): IdCardNumber? =
+            raw?.takeIf { isValid(it) }?.let { IdCardNumber(it) }
+    }
+
     init {
-        require(value.matches(Regex("^[1-9]\\d{5}(18|19|20)\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$"))) {
+        require(isValid(value)) {
             "Invalid ID Card format."
         }
     }
@@ -40,8 +78,17 @@ value class IdCardNumber(val value: String) {
 
 @JvmInline
 value class SchoolEmployeeId(val value: String) {
+    companion object {
+        val PATTERN = Regex("^[A-Za-z0-9-]{5,20}$")
+
+        fun isValid(raw: String?): Boolean = raw != null && PATTERN.matches(raw)
+
+        fun fromOrNull(raw: String?): SchoolEmployeeId? =
+            raw?.takeIf { isValid(it) }?.let { SchoolEmployeeId(it) }
+    }
+
     init {
-        require(value.matches(Regex("^[A-Za-z0-9-]{5,20}$"))) {
+        require(isValid(value)) {
             "Invalid School Employee ID format."
         }
     }
@@ -49,8 +96,17 @@ value class SchoolEmployeeId(val value: String) {
 
 @JvmInline
 value class HospitalEmployeeId(val value: String) {
+    companion object {
+        val PATTERN = Regex("^[A-Za-z0-9-]{5,20}$")
+
+        fun isValid(raw: String?): Boolean = raw != null && PATTERN.matches(raw)
+
+        fun fromOrNull(raw: String?): HospitalEmployeeId? =
+            raw?.takeIf { isValid(it) }?.let { HospitalEmployeeId(it) }
+    }
+
     init {
-        require(value.matches(Regex("^[A-Za-z0-9-]{5,20}$"))) {
+        require(isValid(value)) {
             "Invalid Hospital Employee ID format."
         }
     }
@@ -59,4 +115,3 @@ value class HospitalEmployeeId(val value: String) {
 data class BatteryId(val value: String)
 
 data class Score(val points: Int, val max: Int)
-

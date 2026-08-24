@@ -22,9 +22,12 @@ interface StudentsViewProps {
 }
 
 import { useAuth } from '../../contexts/AuthContext';
+import { SecondaryButton } from '../common/Buttons';
+import { StudentBulkImportDialog } from './StudentBulkImportDialog';
 
 export function StudentsView({ onStudentSelect, selectedStudentId, header }: StudentsViewProps) {
   const { session } = useAuth();
+  const [isImportOpen, setIsImportOpen] = React.useState(false);
   
   const { data: studentsData, isLoading: loading } = useQuery<Student[]>({
     queryKey: ['/api/students', session.token],
@@ -93,7 +96,7 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
     <>
       {header && header(loading)}
       <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
-      <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4">
+      <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4 flex items-center justify-between gap-4 flex-wrap">
         <FilterChipSet
           chips={[
             { label: '专业', options: ['计算机科学', '心理学', '生物学', '艺术史'] },
@@ -102,6 +105,14 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
             { label: '导师', options: ['Dr. Watson', 'Dr. Smith', 'Prof. Miller'] }
           ]}
         />
+        {(session.role === 'admin' || session.role === 'head-councillor') && (
+          <SecondaryButton
+            icon="upload_file"
+            label="批量导入"
+            onClick={() => setIsImportOpen(true)}
+            noCollapse
+          />
+        )}
       </div>
       
       <div className="flex-1 min-h-0 flex flex-col mt-2 relative">
@@ -115,6 +126,11 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
         )}
       </div>
       </div>
+
+      <StudentBulkImportDialog
+        open={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+      />
     </>
   );
 }

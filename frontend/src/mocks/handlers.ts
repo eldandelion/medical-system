@@ -2,7 +2,7 @@ import { http, HttpResponse, delay } from 'msw';
 import { mockAssessmentsDb, mockAssessmentCatalog, mockDashboardDb, mockStudentsDb, mockReferralsDb, mockAdminUsersDb, generateTrackerSteps } from './db';
 const MOCK_DELAY_MS = 1000;
 
-import { Referral, ReferralAction, UserProfileDto, UpdateUserProfileRequest } from '../types';
+import { Referral, ReferralAction, UserProfileDto, UpdateUserProfileRequest, StudentImportPreview, StudentImportCommitRequest, StudentImportResult, StudentImportRow } from '../types';
 
 const mockComputeAvailableActions = (referral: Referral, authHeader: string): ReferralAction[] => {
   const actions: ReferralAction[] = [];
@@ -322,6 +322,214 @@ export const handlers = [
     }
 
     return HttpResponse.json(filtered);
+  }),
+
+  http.get(api('/api/students/import/template'), async ({ request }) => {
+    await delay(MOCK_DELAY_MS);
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return res;
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not fetch real template, falling back to mock", e);
+      }
+    }
+    const templateContent = '\uFEFF学号,姓名,专业,入学日期,身份证号,性别,民族,联系电话,电子邮箱,家庭住址,紧急联系人,紧急联系电话,班主任/辅导员工号\n';
+    return new HttpResponse(templateContent, {
+      headers: {
+        'Content-Type': 'text/csv; charset=UTF-8',
+        'Content-Disposition': 'attachment; filename="student_import_template.csv"'
+      }
+    });
+  }),
+
+  http.post(api('/api/students/import/preview'), async ({ request }) => {
+    await delay(MOCK_DELAY_MS);
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not fetch real preview, falling back to mock", e);
+      }
+    }
+
+    const mockPreview: StudentImportPreview = {
+      totalRows: 3,
+      readyCount: 1,
+      duplicateCount: 1,
+      invalidCount: 1,
+      rows: [
+        {
+          rowNumber: 2,
+          studentNumber: 'S2026001',
+          name: '陈志远',
+          major: '计算机科学',
+          enrollmentDate: '2026-09-01',
+          idCardNumber: '110101200801011234',
+          gender: 'MALE',
+          ethnicity: '汉族',
+          contactNumber: '13800138000',
+          email: 'chenzy@univ.edu.cn',
+          teacherEmployeeNumber: 'EMP-00001',
+          status: 'READY',
+          errors: []
+        },
+        {
+          rowNumber: 3,
+          studentNumber: '2021001',
+          name: '张伟',
+          major: '计算机科学',
+          enrollmentDate: '2021-09-01',
+          idCardNumber: '110101200301011234',
+          gender: 'MALE',
+          ethnicity: '汉族',
+          contactNumber: '13800138001',
+          email: 'zhangwei@univ.edu.cn',
+          teacherEmployeeNumber: 'EMP-00001',
+          status: 'DUPLICATE',
+          errors: [
+            {
+              field: 'studentNumber',
+              code: 'DUPLICATE_IN_DATABASE',
+              invalidValue: '2021001'
+            }
+          ]
+        },
+        {
+          rowNumber: 4,
+          studentNumber: 'S2026002',
+          name: '王某',
+          major: '不存在的专业',
+          enrollmentDate: '2026-09-01',
+          idCardNumber: '123',
+          gender: 'MALE',
+          ethnicity: '汉族',
+          contactNumber: '12345',
+          email: 'invalid-email',
+          teacherEmployeeNumber: null,
+          status: 'INVALID',
+          errors: [
+            {
+              field: 'major',
+              code: 'MAJOR_NOT_FOUND',
+              invalidValue: '不存在的专业'
+            },
+            {
+              field: 'idCardNumber',
+              code: 'INVALID_ID_CARD_FORMAT',
+              invalidValue: '123'
+            },
+            {
+              field: 'contactNumber',
+              code: 'INVALID_PHONE_FORMAT',
+              invalidValue: '12345'
+            }
+          ]
+        }
+      ]
+    };
+
+    return HttpResponse.json(mockPreview);
+  }),
+
+  http.post(api('/api/students/import/commit'), async ({ request }) => {
+    await delay(MOCK_DELAY_MS);
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not fetch real commit, falling back to mock", e);
+      }
+    }
+
+    const body = (await request.json()) as StudentImportCommitRequest;
+    let imported = 0;
+    let updated = 0;
+    let skipped = 0;
+    const failedRows: StudentImportRow[] = [];
+
+    body.rows.forEach(row => {
+      if (row.status === 'INVALID') {
+        failedRows.push(row);
+      } else if (row.status === 'READY') {
+        imported++;
+        mockStudentsDb.push({
+          id: String(mockStudentsDb.length + 1),
+          studentNumber: row.studentNumber,
+          name: row.name,
+          major: row.major,
+          year: '大一',
+          status: 'Active',
+          riskLevel: 'LOW',
+          demographics: {
+            gender: (row.gender as any) || 'MALE',
+            ethnicity: row.ethnicity || '汉族',
+            idCardNumber: row.idCardNumber || undefined,
+            contactNumber: row.contactNumber || undefined,
+            email: row.email || `${row.studentNumber}@univ.edu.cn`,
+            homeAddress: row.homeAddress || undefined,
+            emergencyContactName: row.emergencyContactName || undefined,
+            emergencyContactPhone: row.emergencyContactPhone || undefined,
+            studentId: row.studentNumber
+          }
+        });
+      } else if (row.status === 'DUPLICATE') {
+        if (body.overwriteDuplicates) {
+          updated++;
+          const idx = mockStudentsDb.findIndex(s => s.studentNumber === row.studentNumber);
+          if (idx !== -1) {
+            mockStudentsDb[idx] = {
+              ...mockStudentsDb[idx],
+              name: row.name,
+              major: row.major,
+              demographics: {
+                ...mockStudentsDb[idx].demographics,
+                gender: (row.gender as any) || mockStudentsDb[idx].demographics?.gender,
+                ethnicity: row.ethnicity || mockStudentsDb[idx].demographics?.ethnicity,
+                contactNumber: row.contactNumber || mockStudentsDb[idx].demographics?.contactNumber,
+                email: row.email || mockStudentsDb[idx].demographics?.email,
+                homeAddress: row.homeAddress || mockStudentsDb[idx].demographics?.homeAddress
+              }
+            };
+          }
+        } else {
+          skipped++;
+        }
+      }
+    });
+
+    const result: StudentImportResult = {
+      totalProcessed: body.rows.length,
+      importedCount: imported,
+      updatedCount: updated,
+      skippedCount: skipped,
+      failedRows
+    };
+
+    return HttpResponse.json(result);
   }),
 
 
