@@ -2,6 +2,7 @@ package com.medicalsystem.backend.util
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import java.nio.charset.Charset
 
 class CsvStreamReaderTest {
 
@@ -32,18 +33,21 @@ class CsvStreamReaderTest {
         // BOM should be stripped — header must be "学号", not "\uFEFF学号"
         assertTrue(rows[0].containsKey("学号"), "BOM should be stripped from first header")
         assertFalse(rows[0].keys.any { it.startsWith("\uFEFF") }, "No key should start with BOM character")
+        assertEquals("S001", rows[0]["学号"])
+        assertEquals("张三", rows[0]["姓名"])
     }
 
     @Test
     fun `parse GBK encoded CSV decodes Chinese characters correctly`() {
         val csv = "学号,姓名\nS001,张三\n"
-        val bytes = csv.toByteArray(java.nio.charset.Charset.forName("GBK"))
+        val bytes = csv.toByteArray(Charset.forName("GBK"))
 
         // GBK bytes are not valid UTF-8, so CsvStreamReader should fall back to GBK
         val rows = CsvStreamReader.parse(bytes)
 
         assertEquals(1, rows.size)
         assertEquals("S001", rows[0]["学号"])
+        assertEquals("张三", rows[0]["姓名"])
     }
 
     @Test
@@ -77,11 +81,10 @@ class CsvStreamReaderTest {
     }
 
     @Test
-    fun `parse throws on header-only file with no data rows`() {
+    fun `parse returns empty list on header-only file with no data rows`() {
         val csv = "学号,姓名,专业\n"
         val bytes = csv.toByteArray(Charsets.UTF_8)
 
-        // Header-only file is valid — parse should return empty list, not throw
         val rows = CsvStreamReader.parse(bytes)
         assertEquals(0, rows.size)
     }
@@ -110,5 +113,58 @@ class CsvStreamReaderTest {
         assertEquals(1, rows.size)
         assertTrue(rows[0].containsKey("学号"), "Header should be trimmed")
         assertEquals("S001", rows[0]["学号"])
+        assertEquals("张 三", rows[0]["姓名"])
+    }
+
+    @Test
+    fun `parse handles multiline quoted cell spanning multiple physical lines`() {
+        val csv = "学号,姓名,备注\nS001,张三,\"第一行备注\n第二行备注\"\nS002,李四,普通学生\n"
+        val bytes = csv.toByteArray(Charsets.UTF_8)
+
+        val rows = CsvStreamReader.parse(bytes)
+
+        assertEquals(2, rows.size)
+        assertEquals("S001", rows[0]["学号"])
+        assertEquals("第一行备注\n第二行备注", rows[0]["备注"])
+        assertEquals("S002", rows[1]["学号"])
+        assertEquals("李四", rows[1]["姓名"])
+        assertEquals("普通学生", rows[1]["备注"])
+    }
+
+    @Test
+    fun `parse handles CRLF line terminators seamlessly`() {
+        val csv = "学号,姓名,专业\r\nS001,张三,计算机\r\nS002,李四,心理学\r\n"
+        val bytes = csv.toByteArray(Charsets.UTF_8)
+
+        val rows = CsvStreamReader.parse(bytes)
+
+        assertEquals(2, rows.size)
+        assertEquals("S001", rows[0]["学号"])
+        assertEquals("张三", rows[0]["姓名"])
+        assertEquals("S002", rows[1]["学号"])
+        assertEquals("李四", rows[1]["姓名"])
+    }
+
+    @Test
+    fun `parseLine handles leading, trailing, and consecutive empty cells`() {
+        val line = ",value1,,value2,"
+        val cells = CsvStreamReader.parseLine(line)
+
+        assertEquals(5, cells.size)
+        assertEquals("", cells[0])
+        assertEquals("value1", cells[1])
+        assertEquals("", cells[2])
+        assertEquals("value2", cells[3])
+        assertEquals("", cells[4])
+    }
+
+    @Test
+    fun `parseLine handles multiple consecutive escaped quotes`() {
+        val line = "\"\"\"Hello\"\"\",World"
+        val cells = CsvStreamReader.parseLine(line)
+
+        assertEquals(2, cells.size)
+        assertEquals("\"Hello\"", cells[0])
+        assertEquals("World", cells[1])
     }
 }
