@@ -122,4 +122,12 @@ describe('FilterChipSet Component', () => {
     fireEvent.mouseDown(screen.getByTestId('outside-area'));
     expect(menu?.hasAttribute('open')).toBe(false);
   });
+
+  it('applies custom className when provided', () => {
+    const chips = [{ label: 'Major', options: ['CS'] }];
+    const { container } = render(
+      <FilterChipSet chips={chips} className="custom-test-class" />
+    );
+    expect((container.firstChild as HTMLElement).classList.contains('custom-test-class')).toBe(true);
+  });
 });

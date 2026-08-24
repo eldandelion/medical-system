@@ -82,9 +82,10 @@ interface FilterChipSetProps {
   chips: { label: string; options?: string[] }[];
   initialFilters?: Record<string, string>;
   onFilterChange?: (filters: Record<string, string>) => void;
+  className?: string;
 }
 
-export function FilterChipSet({ chips, initialFilters = {}, onFilterChange }: FilterChipSetProps) {
+export function FilterChipSet({ chips, initialFilters = {}, onFilterChange, className }: FilterChipSetProps) {
   const [openChip, setOpenChip] = React.useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = React.useState<Record<string, string>>(initialFilters);
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -121,7 +122,7 @@ export function FilterChipSet({ chips, initialFilters = {}, onFilterChange }: Fi
   };
 
   return (
-    <div ref={containerRef} className="flex flex-wrap items-center gap-2 mb-6 px-6 relative z-20">
+    <div ref={containerRef} className={className || "flex flex-wrap items-center gap-2 mb-6 px-6 relative z-20"}>
       {chips.map((chip) => (
         <div key={chip.label}>
           <FilterChip 

@@ -42,6 +42,30 @@ export function SecondaryButton({ id, icon, label, className = "h-10", onClick, 
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   return (
+    <md-filled-tonal-button
+      id={id}
+      className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
+      onClick={onClick}
+      onPointerUp={(e) => e.currentTarget.blur()}
+      disabled={disabled}
+      trailing-icon={trailingIcon ? "" : undefined}
+      style={{
+        '--md-filled-tonal-button-icon-size': iconSize,
+        ...style
+      } as React.CSSProperties}
+    >
+      {icon && <md-icon slot="icon" style={{ color: 'inherit', '--md-icon-size': iconSize } as React.CSSProperties}>{icon}</md-icon>}
+      {label}
+    </md-filled-tonal-button>
+  );
+}
+
+export const FilledTonalButton = SecondaryButton;
+
+export function OutlinedButton({ id, icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
+  const { isCollapsed } = useSidebar();
+  const effectiveCollapsed = noCollapse ? false : isCollapsed;
+  return (
     <md-outlined-button
       id={id}
       className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}

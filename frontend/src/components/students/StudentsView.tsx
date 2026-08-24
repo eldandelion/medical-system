@@ -96,26 +96,28 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
     <>
       {header && header(loading)}
       <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
-      <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4 flex items-center justify-between gap-4 flex-wrap">
-        <FilterChipSet
-          chips={[
-            { label: '专业', options: ['计算机科学', '心理学', '生物学', '艺术史'] },
-            { label: '年级', options: ['大一', '大二', '大三', '大四'] },
-            { label: '风险', options: ['高', '中', '低'] },
-            { label: '导师', options: ['Dr. Watson', 'Dr. Smith', 'Prof. Miller'] }
-          ]}
-        />
-        {(session.role === 'admin' || session.role === 'head-councillor') && (
-          <SecondaryButton
-            icon="upload_file"
-            label="批量导入"
-            onClick={() => setIsImportOpen(true)}
-            noCollapse
+        <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4 px-6 flex items-center justify-between gap-4 mb-6">
+          <FilterChipSet
+            className="flex flex-wrap items-center gap-2 relative z-20"
+            chips={[
+              { label: '专业', options: ['计算机科学', '心理学', '生物学', '艺术史'] },
+              { label: '年级', options: ['大一', '大二', '大三', '大四'] },
+              { label: '风险', options: ['高', '中', '低'] },
+              { label: '导师', options: ['Dr. Watson', 'Dr. Smith', 'Prof. Miller'] }
+            ]}
           />
-        )}
-      </div>
-      
-      <div className="flex-1 min-h-0 flex flex-col mt-2 relative">
+          {(session.role === 'admin' || session.role === 'head-councillor') && (
+            <SecondaryButton
+              icon="add"
+              trailingIcon
+              label="批量导入"
+              onClick={() => setIsImportOpen(true)}
+              noCollapse
+            />
+          )}
+        </div>
+        
+        <div className="flex-1 min-h-0 flex flex-col relative">
         {loading && students.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
             {/* @ts-ignore */}

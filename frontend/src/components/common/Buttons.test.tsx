@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { PrimaryButton, SecondaryButton, TertiaryButton, TertiaryFab, SegmentedButton } from './Buttons';
+import { PrimaryButton, SecondaryButton, TertiaryButton, TertiaryFab, SegmentedButton, OutlinedButton, FilledTonalButton } from './Buttons';
 
 // Clean up the DOM after each test to prevent multiple elements from piling up
 afterEach(() => {
@@ -57,9 +57,30 @@ describe('Buttons Component', () => {
       expect(onClickMock).toHaveBeenCalledTimes(1);
     });
     
-    it('renders with icon', () => {
-      render(<SecondaryButton label="Icon Btn" icon="settings" />);
+    it('renders with icon and trailing icon support', () => {
+      render(<SecondaryButton label="Icon Btn" icon="add" trailingIcon={true} />);
       expect(screen.getByText('Icon Btn')).toBeDefined();
+      const btn = screen.getByText('Icon Btn').closest('md-filled-tonal-button');
+      expect(btn).toBeDefined();
+      expect(btn?.hasAttribute('trailing-icon')).toBe(true);
+    });
+  });
+
+  describe('OutlinedButton', () => {
+    it('renders md-outlined-button correctly', () => {
+      render(<OutlinedButton label="Outlined Action" />);
+      expect(screen.getByText('Outlined Action')).toBeDefined();
+      const btn = screen.getByText('Outlined Action').closest('md-outlined-button');
+      expect(btn).toBeDefined();
+    });
+  });
+
+  describe('FilledTonalButton', () => {
+    it('renders filled tonal button correctly', () => {
+      render(<FilledTonalButton label="Tonal Action" />);
+      expect(screen.getByText('Tonal Action')).toBeDefined();
+      const btn = screen.getByText('Tonal Action').closest('md-filled-tonal-button');
+      expect(btn).toBeDefined();
     });
   });
 
