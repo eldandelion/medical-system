@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { ActionFooter } from '../common/ActionFooter';
-import { PrimaryButton, SecondaryButton } from '../common/Buttons';
-import { DestructiveButton } from '../common/DestructiveButton';
+import { OutlinedButton } from '../common/Buttons';
 import { useCreationOverlay } from '../../contexts/CreationContext';
 import { Referral } from '../../types';
 
@@ -67,27 +66,27 @@ export const ReferralActionFooter: React.FC<ReferralActionFooterProps> = ({
         {availableActions.map((action) => {
           switch (action) {
             case 'recreate':
-              return <PrimaryButton key={action} icon={referral.status === 'DRAFT' ? "edit" : "restart_alt"} label={referral.status === 'DRAFT' ? "继续编辑" : "基于此重新创建"} onClick={handleRecreate} />;
+              return <OutlinedButton key={action} icon={referral.status === 'DRAFT' ? "edit" : "restart_alt"} label={referral.status === 'DRAFT' ? "继续编辑" : "基于此重新创建"} onClick={handleRecreate} />;
             case 'delete_draft':
-              return <DestructiveButton key={action} icon="delete" label="删除草案" onClick={() => state.setIsDeleteDialogOpen(true)} />;
+              return <OutlinedButton key={action} icon="delete" label="删除草案" onClick={() => state.setIsDeleteDialogOpen(true)} />;
             case 'approve_referral':
-              return <PrimaryButton key={action} icon="check" label="批准转诊" onClick={() => state.setIsApprovalDialogOpen(true)} />;
+              return <OutlinedButton key={action} icon="check" label="批准转诊" onClick={() => state.setIsApprovalDialogOpen(true)} />;
             case 'reject_referral':
-              return <DestructiveButton key={action} icon="close" label="拒绝申请" onClick={() => state.setIsRejectionDialogOpen(true)} />;
+              return <OutlinedButton key={action} icon="close" label="拒绝申请" onClick={() => state.setIsRejectionDialogOpen(true)} />;
             case 'recall_referral':
-              return <SecondaryButton key={action} icon="undo" label="撤回申请" onClick={() => state.setIsRecallDialogOpen(true)} />;
+              return <OutlinedButton key={action} icon="undo" label="撤回申请" onClick={() => state.setIsRecallDialogOpen(true)} />;
             case 'assign_doctor':
-              return <PrimaryButton key={action} icon="assignment_ind" label="分配医生" onClick={() => state.setIsAssignDialogOpen(true)} />;
+              return <OutlinedButton key={action} icon="assignment_ind" label="分配医生" onClick={() => state.setIsAssignDialogOpen(true)} />;
             case 'reassign_doctor':
-              return <PrimaryButton key={action} icon="assignment_ind" label="重新分配医生" onClick={() => state.setIsAssignDialogOpen(true)} />;
+              return <OutlinedButton key={action} icon="assignment_ind" label="重新分配医生" onClick={() => state.setIsAssignDialogOpen(true)} />;
             case 'schedule_appointment':
-              return <PrimaryButton key={action} icon="calendar_month" label="安排就诊" onClick={() => state.setIsSchedulingDialogOpen(true)} />;
+              return <OutlinedButton key={action} icon="calendar_month" label="安排就诊" onClick={() => state.setIsSchedulingDialogOpen(true)} />;
             case 'write_feedback':
-              return <PrimaryButton key={action} icon="edit_note" label="写反馈" onClick={handleWriteFeedback} />;
+              return <OutlinedButton key={action} icon="edit_note" label="写反馈" onClick={handleWriteFeedback} />;
             case 'report_problem':
-              return <DestructiveButton key={action} icon="report_problem" label="报告问题" onClick={() => state.setIsReportProblemDialogOpen?.(true)} />;
+              return <OutlinedButton key={action} icon="report_problem" label="报告问题" onClick={() => state.setIsReportProblemDialogOpen?.(true)} />;
             case 'acknowledge_feedback':
-              return <PrimaryButton key={action} icon="check" label="确认反馈" onClick={() => state.setIsAcknowledgeDialogOpen?.(true)} />;
+              return <OutlinedButton key={action} icon="check" label="确认反馈" onClick={() => state.setIsAcknowledgeDialogOpen?.(true)} />;
             default:
               return null;
           }
