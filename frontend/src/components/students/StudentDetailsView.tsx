@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'motion/react';
 import { DetailsSection, DetailItem, MetricCard, ScrollableDetailsLayout } from '../common/DetailsPanel';
-import { PrimaryButton, SecondaryButton } from '../common/Buttons';
+import { OutlinedButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
 import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS } from '../../config/styleConstants';
 import { useCreationOverlay } from '../../contexts/CreationContext';
@@ -115,12 +115,12 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
           footer
         ) : (
           <ActionFooter>
-            <PrimaryButton
+            <OutlinedButton
               icon="send_time_extension"
               label="发起转诊"
               onClick={() => openCreation('拟稿：新转诊', <ReferralCreationForm onClose={closeCreation} />)}
             />
-            <SecondaryButton
+            <OutlinedButton
               icon="assignment"
               label="分配问卷"
               onClick={() => setIsAssignDialogOpen(true)}
