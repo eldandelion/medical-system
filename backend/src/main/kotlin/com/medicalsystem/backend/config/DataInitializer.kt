@@ -24,6 +24,7 @@ class DataInitializer {
         collegeRepository: com.medicalsystem.backend.repository.CollegeJpaRepository,
         majorRepository: com.medicalsystem.backend.repository.MajorJpaRepository,
         studentRepository: com.medicalsystem.backend.repository.StudentJpaRepository,
+        degreeLevelRepository: com.medicalsystem.backend.repository.DegreeLevelJpaRepository,
         ethnicityRepository: com.medicalsystem.backend.repository.EthnicityJpaRepository,
         schoolRepository: com.medicalsystem.backend.repository.SchoolJpaRepository,
         referralRepository: ReferralJpaRepository,
@@ -52,6 +53,7 @@ class DataInitializer {
         schoolDepartmentJpaRepository.deleteAll()
         majorRepository.deleteAll()
         collegeRepository.deleteAll()
+        degreeLevelRepository.deleteAll()
         ethnicityRepository.deleteAll()
         schoolRepository.deleteAll()
 
@@ -83,6 +85,11 @@ class DataInitializer {
         val hui = ethnicityRepository.save(EthnicityEntity(name = "回族"))
         val man = ethnicityRepository.save(EthnicityEntity(name = "满族"))
 
+        val bachelorDegree = degreeLevelRepository.save(DegreeLevelEntity(name = "BACHELOR"))
+        val masterDegree = degreeLevelRepository.save(DegreeLevelEntity(name = "MASTER"))
+        val phdDegree = degreeLevelRepository.save(DegreeLevelEntity(name = "PHD"))
+        val otherDegree = degreeLevelRepository.save(DegreeLevelEntity(name = "OTHER"))
+
         val mainSchool = schoolRepository.save(SchoolEntity(name = "某重点大学"))
 
         val s1Demo = StudentDemographicsEntity(gender = Gender.MALE, dateOfBirth = LocalDate.of(2004, 5, 12), ethnicity = han, idCardNumber = "110105200405123456", contactNumber = "13800138000", email = "liming@univ.edu.cn", homeAddress = "北京市朝阳区某街道", emergencyContactName = "李建国", emergencyContactPhone = "13900139000", school = mainSchool)
@@ -99,10 +106,10 @@ class DataInitializer {
         val u2 = userRepository.save(UserEntity(name = "王芳", email = EmailAddress("wangfang@univ.edu.cn"), role = UserRole.STUDENT))
         val u3 = userRepository.save(UserEntity(name = "张伟", email = EmailAddress("zhangwei@univ.edu.cn"), role = UserRole.STUDENT))
         val u4 = userRepository.save(UserEntity(name = "陈秀", email = EmailAddress("chenxiu@univ.edu.cn"), role = UserRole.STUDENT))
-        val s1 = studentRepository.save(StudentEntity(id = u1.id, studentNumber = "S2023001", name = "李明", major = csMajor, enrollmentDate = LocalDate.of(2024, 9, 1), demographics = s1Demo, assignedTeacher = referrer))
-        val s2 = studentRepository.save(StudentEntity(id = u2.id, studentNumber = "S2023002", name = "王芳", major = engMajor, enrollmentDate = LocalDate.of(2023, 9, 1), demographics = s2Demo, assignedTeacher = referrer))
-        val s3 = studentRepository.save(StudentEntity(id = u3.id, studentNumber = "2021001", name = "张伟", major = busMajor, enrollmentDate = LocalDate.of(2025, 9, 1), demographics = s3Demo))
-        val s4 = studentRepository.save(StudentEntity(id = u4.id, studentNumber = "S2023004", name = "陈秀", major = medMajor, enrollmentDate = LocalDate.of(2022, 9, 1), demographics = s4Demo))
+        val s1 = studentRepository.save(StudentEntity(id = u1.id, studentNumber = "S2023001", name = "李明", major = csMajor, enrollmentDate = LocalDate.of(2024, 9, 1), degreeLevel = bachelorDegree, demographics = s1Demo, assignedTeacher = referrer))
+        val s2 = studentRepository.save(StudentEntity(id = u2.id, studentNumber = "S2023002", name = "王芳", major = engMajor, enrollmentDate = LocalDate.of(2023, 9, 1), degreeLevel = masterDegree, demographics = s2Demo, assignedTeacher = referrer))
+        val s3 = studentRepository.save(StudentEntity(id = u3.id, studentNumber = "2021001", name = "张伟", major = busMajor, enrollmentDate = LocalDate.of(2025, 9, 1), degreeLevel = bachelorDegree, demographics = s3Demo))
+        val s4 = studentRepository.save(StudentEntity(id = u4.id, studentNumber = "S2023004", name = "陈秀", major = medMajor, enrollmentDate = LocalDate.of(2022, 9, 1), degreeLevel = phdDegree, demographics = s4Demo))
 
         val s5Demo = StudentDemographicsEntity(gender = Gender.FEMALE, dateOfBirth = LocalDate.of(2004, 1, 10), ethnicity = han, idCardNumber = "110101200401105555", contactNumber = "13911112222", email = "zhaomin@univ.edu.cn", homeAddress = "上海市徐汇区", emergencyContactName = "赵强", emergencyContactPhone = "13911113333", school = mainSchool)
         val s6Demo = StudentDemographicsEntity(gender = Gender.MALE, dateOfBirth = LocalDate.of(2003, 6, 22), ethnicity = han, idCardNumber = "110101200306226666", contactNumber = "13822223333", email = "liuhai@univ.edu.cn", homeAddress = "广州市越秀区", emergencyContactName = "刘军", emergencyContactPhone = "13822224444", school = mainSchool)
@@ -117,12 +124,12 @@ class DataInitializer {
         val u8 = userRepository.save(UserEntity(name = "吴东", email = EmailAddress("wudong@univ.edu.cn"), role = UserRole.STUDENT))
         val u9 = userRepository.save(UserEntity(name = "周梅", email = EmailAddress("zhoumei@univ.edu.cn"), role = UserRole.STUDENT))
         val u10 = userRepository.save(UserEntity(name = "郑奇", email = EmailAddress("zhengqi@univ.edu.cn"), role = UserRole.STUDENT))
-        val s5 = studentRepository.save(StudentEntity(id = u5.id, studentNumber = "S2023005", name = "赵敏", major = medMajor, enrollmentDate = LocalDate.of(2024, 9, 1), demographics = s5Demo, assignedTeacher = referrer))
-        val s6 = studentRepository.save(StudentEntity(id = u6.id, studentNumber = "S2023006", name = "刘海", major = csMajor, enrollmentDate = LocalDate.of(2023, 9, 1), demographics = s6Demo, assignedTeacher = referrer))
-        val s7 = studentRepository.save(StudentEntity(id = u7.id, studentNumber = "S2023007", name = "孙丽", major = engMajor, enrollmentDate = LocalDate.of(2025, 9, 1), demographics = s7Demo, assignedTeacher = referrer))
-        val s8 = studentRepository.save(StudentEntity(id = u8.id, studentNumber = "S2023008", name = "吴东", major = busMajor, enrollmentDate = LocalDate.of(2022, 9, 1), demographics = s8Demo))
-        val s9 = studentRepository.save(StudentEntity(id = u9.id, studentNumber = "S2023009", name = "周梅", major = medMajor, enrollmentDate = LocalDate.of(2024, 9, 1), demographics = s9Demo))
-        val s10 = studentRepository.save(StudentEntity(id = u10.id, studentNumber = "S2023010", name = "郑奇", major = csMajor, enrollmentDate = LocalDate.of(2023, 9, 1), demographics = s10Demo))
+        val s5 = studentRepository.save(StudentEntity(id = u5.id, studentNumber = "S2023005", name = "赵敏", major = medMajor, enrollmentDate = LocalDate.of(2024, 9, 1), degreeLevel = bachelorDegree, demographics = s5Demo, assignedTeacher = referrer))
+        val s6 = studentRepository.save(StudentEntity(id = u6.id, studentNumber = "S2023006", name = "刘海", major = csMajor, enrollmentDate = LocalDate.of(2023, 9, 1), degreeLevel = bachelorDegree, demographics = s6Demo, assignedTeacher = referrer))
+        val s7 = studentRepository.save(StudentEntity(id = u7.id, studentNumber = "S2023007", name = "孙丽", major = engMajor, enrollmentDate = LocalDate.of(2025, 9, 1), degreeLevel = masterDegree, demographics = s7Demo, assignedTeacher = referrer))
+        val s8 = studentRepository.save(StudentEntity(id = u8.id, studentNumber = "S2023008", name = "吴东", major = busMajor, enrollmentDate = LocalDate.of(2022, 9, 1), degreeLevel = bachelorDegree, demographics = s8Demo))
+        val s9 = studentRepository.save(StudentEntity(id = u9.id, studentNumber = "S2023009", name = "周梅", major = medMajor, enrollmentDate = LocalDate.of(2024, 9, 1), degreeLevel = otherDegree, demographics = s9Demo))
+        val s10 = studentRepository.save(StudentEntity(id = u10.id, studentNumber = "S2023010", name = "郑奇", major = csMajor, enrollmentDate = LocalDate.of(2023, 9, 1), degreeLevel = bachelorDegree, demographics = s10Demo))
 
         val hp1 = studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s1.id, scidDiagnosis = "重度抑郁症，伴随焦虑症状"))
         val hp2 = studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s2.id))

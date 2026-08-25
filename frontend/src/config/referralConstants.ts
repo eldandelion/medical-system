@@ -28,6 +28,24 @@ export const TEST_NAME_LABELS: Record<string, string> = {
   UPI: '大学生人格问卷'
 };
 
+export const DEGREE_LEVEL_OPTIONS = [
+  { label: '本科', value: 'BACHELOR' },
+  { label: '硕士', value: 'MASTER' },
+  { label: '博士', value: 'PHD' },
+  { label: '其他', value: 'OTHER' }
+];
+
+export const DEGREE_LEVEL_LABELS: Record<string, string> = {
+  BACHELOR: '本科',
+  MASTER: '硕士',
+  PHD: '博士',
+  OTHER: '其他',
+  本科: '本科',
+  硕士: '硕士',
+  博士: '博士',
+  其他: '其他'
+};
+
 export const ACADEMIC_YEAR_LABELS: Record<string, string> = {
   FRESHMAN: '大一',
   SOPHOMORE: '大二',

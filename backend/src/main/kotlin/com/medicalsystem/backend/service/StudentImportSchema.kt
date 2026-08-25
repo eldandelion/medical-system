@@ -25,6 +25,11 @@ object StudentImportSchema {
     const val DEFAULT_ETHNICITY_NAME = "汉族"
 
     /**
+     * Default degree level code applied when degree level column is omitted or blank.
+     */
+    const val DEFAULT_DEGREE_LEVEL_CODE = "BACHELOR"
+
+    /**
      * Default email domain suffix used to synthesize student email addresses from student numbers.
      */
     const val DEFAULT_EMAIL_DOMAIN = "@univ.edu.cn"
@@ -42,6 +47,7 @@ object StudentImportSchema {
         const val NAME = "name"
         const val MAJOR = "major"
         const val ENROLLMENT_DATE = "enrollmentDate"
+        const val DEGREE_LEVEL = "degreeLevel"
         const val ID_CARD_NUMBER = "idCardNumber"
         const val GENDER = "gender"
         const val ETHNICITY = "ethnicity"
@@ -62,6 +68,11 @@ object StudentImportSchema {
         "姓名" to Fields.NAME,
         "专业" to Fields.MAJOR,
         "入学日期" to Fields.ENROLLMENT_DATE,
+        "培养层次" to Fields.DEGREE_LEVEL,
+        "学历层次" to Fields.DEGREE_LEVEL,
+        "学历" to Fields.DEGREE_LEVEL,
+        "学位" to Fields.DEGREE_LEVEL,
+        "degreeLevel" to Fields.DEGREE_LEVEL,
         "身份证号" to Fields.ID_CARD_NUMBER,
         "性别" to Fields.GENDER,
         "民族" to Fields.ETHNICITY,
@@ -74,10 +85,30 @@ object StudentImportSchema {
     )
 
     /**
+     * Canonical template header columns in display order for template CSV generation.
+     */
+    val TEMPLATE_HEADERS: List<String> = listOf(
+        "学号",
+        "姓名",
+        "专业",
+        "入学日期",
+        "培养层次",
+        "身份证号",
+        "性别",
+        "民族",
+        "联系电话",
+        "电子邮箱",
+        "家庭住址",
+        "紧急联系人",
+        "紧急联系电话",
+        "班主任/辅导员工号"
+    )
+
+    /**
      * Generate the standard CSV header line for template download.
      */
     fun generateTemplateHeaderCsv(): String =
-        HEADER_MAPPINGS.keys.joinToString(separator = ",", postfix = "\n")
+        TEMPLATE_HEADERS.joinToString(separator = ",", postfix = "\n")
 
     /**
      * Translate various external string representations (Chinese and English abbreviations)

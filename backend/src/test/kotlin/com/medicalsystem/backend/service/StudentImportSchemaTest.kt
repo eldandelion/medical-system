@@ -10,20 +10,25 @@ import org.junit.jupiter.api.Test
 class StudentImportSchemaTest {
 
     @Test
-    fun `generateTemplateHeaderCsv produces exact 13 Chinese header columns`() {
+    fun `generateTemplateHeaderCsv produces exact 14 Chinese header columns`() {
         val headerCsv = StudentImportSchema.generateTemplateHeaderCsv()
-        val expected = "学号,姓名,专业,入学日期,身份证号,性别,民族,联系电话,电子邮箱,家庭住址,紧急联系人,紧急联系电话,班主任/辅导员工号\n"
+        val expected = "学号,姓名,专业,入学日期,培养层次,身份证号,性别,民族,联系电话,电子邮箱,家庭住址,紧急联系人,紧急联系电话,班主任/辅导员工号\n"
         assertEquals(expected, headerCsv)
     }
 
     @Test
-    fun `HEADER_MAPPINGS contains all 13 canonical fields in order`() {
+    fun `HEADER_MAPPINGS contains all canonical fields and degree level aliases`() {
         val mappings = StudentImportSchema.HEADER_MAPPINGS
-        assertEquals(13, mappings.size)
+        assertEquals(18, mappings.size)
         assertEquals("studentNumber", mappings["学号"])
         assertEquals("name", mappings["姓名"])
         assertEquals("major", mappings["专业"])
         assertEquals("enrollmentDate", mappings["入学日期"])
+        assertEquals("degreeLevel", mappings["培养层次"])
+        assertEquals("degreeLevel", mappings["学历层次"])
+        assertEquals("degreeLevel", mappings["学历"])
+        assertEquals("degreeLevel", mappings["学位"])
+        assertEquals("degreeLevel", mappings["degreeLevel"])
         assertEquals("idCardNumber", mappings["身份证号"])
         assertEquals("gender", mappings["性别"])
         assertEquals("ethnicity", mappings["民族"])

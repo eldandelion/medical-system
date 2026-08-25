@@ -39,6 +39,9 @@ class StudentImportIntegrationTest {
     @Autowired
     private lateinit var ethnicityJpaRepository: EthnicityJpaRepository
 
+    @Autowired
+    private lateinit var degreeLevelJpaRepository: com.medicalsystem.backend.repository.DegreeLevelJpaRepository
+
     private lateinit var major: MajorEntity
     private lateinit var ethnicity: EthnicityEntity
     private lateinit var teacher: TeacherEntity
@@ -61,6 +64,12 @@ class StudentImportIntegrationTest {
             val eth = EthnicityEntity(name = "汉族")
             entityManager.persist(eth)
             eth
+        }
+
+        degreeLevelJpaRepository.findByName("BACHELOR").orElseGet {
+            val deg = DegreeLevelEntity(name = "BACHELOR")
+            entityManager.persist(deg)
+            deg
         }
 
         val teacherUser = UserEntity(

@@ -2,7 +2,6 @@ package com.medicalsystem.backend.dto
 
 import java.time.LocalDate
 import com.medicalsystem.backend.model.RiskStatus
-import com.medicalsystem.backend.model.AcademicYear
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
@@ -24,7 +23,8 @@ data class StudentDto(
     @field:NotNull(message = "Enrollment date cannot be null")
     val enrollmentDate: LocalDate,
     
-    val year: AcademicYear?,
+    val degreeLevel: String? = null,
+    val degreeLevelId: Long? = null,
     val riskLevel: RiskStatus?,
     val status: String = "Active",
     

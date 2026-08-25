@@ -106,7 +106,9 @@ export interface Student {
   studentNumber: string;
   name: string;
   major: string;
-  year: string;
+  year?: string;
+  degreeLevel?: string;
+  degreeLevelId?: number;
   status: 'Active' | 'Inactive';
   riskLevel?: 'HIGH' | 'MEDIUM' | 'LOW';
   riskReason?: string;

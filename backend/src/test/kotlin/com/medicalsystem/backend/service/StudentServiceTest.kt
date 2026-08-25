@@ -50,7 +50,7 @@ class StudentServiceTest {
         val college = College(1L, "Engineering")
         val major = Major(1L, "CS", college)
         val model = Student(1L, "S123", "John Doe", major, LocalDate.of(2023, 9, 1), RiskStatus.LOW, null)
-        val dto = StudentDto("1", "S123", "John Doe", 1L, "CS", LocalDate.of(2023, 9, 1), null, RiskStatus.LOW)
+        val dto = StudentDto("1", "S123", "John Doe", 1L, "CS", LocalDate.of(2023, 9, 1), "BACHELOR", 1L, RiskStatus.LOW)
         
         `when`(studentRepository.findVisibleStudentsFor(user)).thenReturn(listOf(model))
         `when`(studentMapper.toDto(model)).thenReturn(dto)

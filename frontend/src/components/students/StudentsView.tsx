@@ -3,14 +3,18 @@ import { useQuery } from '@tanstack/react-query';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { FilterChipSet } from '../common/FilterChip';
 import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS } from '../../config/styleConstants';
-import { ACADEMIC_YEAR_LABELS } from '../../config/referralConstants';
+import { DEGREE_LEVEL_LABELS, ACADEMIC_YEAR_LABELS } from '../../config/referralConstants';
+import { useAuth } from '../../contexts/AuthContext';
+import { SecondaryButton } from '../common/Buttons';
+import { StudentBulkImportDialog } from './StudentBulkImportDialog';
 
 interface Student {
   id: string;
   studentNumber?: string;
   name: string;
   major: string;
-  year: string;
+  year?: string;
+  degreeLevel?: string;
   status: 'Active' | 'Inactive';
   riskLevel?: 'HIGH' | 'MEDIUM' | 'LOW';
 }
@@ -18,12 +22,8 @@ interface Student {
 interface StudentsViewProps {
   onStudentSelect?: (student: Student) => void;
   selectedStudentId?: string;
-  header?: (loading: boolean) => React.ReactNode;
+  header?: (loading?: boolean) => React.ReactNode;
 }
-
-import { useAuth } from '../../contexts/AuthContext';
-import { SecondaryButton } from '../common/Buttons';
-import { StudentBulkImportDialog } from './StudentBulkImportDialog';
 
 export function StudentsView({ onStudentSelect, selectedStudentId, header }: StudentsViewProps) {
   const { session } = useAuth();
@@ -32,8 +32,10 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
   const { data: studentsData, isLoading: loading } = useQuery<Student[]>({
     queryKey: ['/api/students', session.token],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/students`.replace('//api', '/api'), {
-        headers: { 'Authorization': `Bearer ${session.token}` }
+      const res = await fetch('/api/students', {
+        headers: {
+          'Authorization': `Bearer ${session.token}`
+        }
       });
       if (!res.ok) throw new Error('Failed to fetch students');
       return res.json();
@@ -67,12 +69,16 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
       )
     },
     {
-      key: 'year',
-      label: '年级',
+      key: 'degreeLevel',
+      label: '培养层次',
       width: 'w-[15%]',
-      render: (item, isSelected) => (
-        <span className={`text-[14px] ${isSelected ? 'opacity-90' : 'opacity-70'}`}>{ACADEMIC_YEAR_LABELS[item.year] || item.year}</span>
-      )
+      render: (item, isSelected) => {
+        const val = item.degreeLevel || item.year || '';
+        const display = DEGREE_LEVEL_LABELS[val] || ACADEMIC_YEAR_LABELS[val] || val || '本科';
+        return (
+          <span className={`text-[14px] ${isSelected ? 'opacity-90' : 'opacity-70'}`}>{display}</span>
+        );
+      }
     },
     {
       key: 'riskLevel',
@@ -101,7 +107,7 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
             className="flex flex-wrap items-center gap-2 relative z-20"
             chips={[
               { label: '专业', options: ['计算机科学', '心理学', '生物学', '艺术史'] },
-              { label: '年级', options: ['大一', '大二', '大三', '大四'] },
+              { label: '培养层次', options: ['本科', '硕士', '博士', '其他'] },
               { label: '风险', options: ['高', '中', '低'] },
               { label: '导师', options: ['Dr. Watson', 'Dr. Smith', 'Prof. Miller'] }
             ]}

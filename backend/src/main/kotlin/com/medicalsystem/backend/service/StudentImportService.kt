@@ -16,6 +16,7 @@ import com.medicalsystem.backend.model.EmailAddress
 import com.medicalsystem.backend.model.StudentHealthProfileFactory
 import com.medicalsystem.backend.model.User
 import com.medicalsystem.backend.model.UserRole
+import com.medicalsystem.backend.repository.DegreeLevelJpaRepository
 import com.medicalsystem.backend.repository.EthnicityJpaRepository
 import com.medicalsystem.backend.repository.MajorJpaRepository
 import com.medicalsystem.backend.repository.StudentHealthProfileRepository
@@ -45,6 +46,7 @@ import java.time.LocalDate
 @Transactional(readOnly = true)
 class StudentImportService(
     private val majorJpaRepository: MajorJpaRepository,
+    private val degreeLevelJpaRepository: DegreeLevelJpaRepository,
     private val ethnicityJpaRepository: EthnicityJpaRepository,
     private val teacherRepository: TeacherRepository,
     private val studentJpaRepository: StudentJpaRepository,
@@ -83,10 +85,11 @@ class StudentImportService(
         // Batch pre-fetch all dictionaries (zero queries inside the row loop)
         val majorsMap = majorJpaRepository.findAll().associateBy { it.name }
         val ethnicitiesMap = ethnicityJpaRepository.findAll().associateBy { it.name }
+        val degreeLevelsMap = degreeLevelJpaRepository.findAll().associateBy { it.name }
         val teachersMap = teacherRepository.findAll().associateBy { it.employeeNumber }
         val existingStudentNums = studentJpaRepository.findAllStudentNumbers()
 
-        val rows = validator.validateRows(rawRows, majorsMap, ethnicitiesMap, teachersMap, existingStudentNums)
+        val rows = validator.validateRows(rawRows, majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums)
 
         return StudentImportPreviewDto(
             totalRows = rows.size,
@@ -116,6 +119,7 @@ class StudentImportService(
         // Re-validate all rows to prevent client-side tampering
         val majorsMap = majorJpaRepository.findAll().associateBy { it.name }
         val ethnicitiesMap = ethnicityJpaRepository.findAll().associateBy { it.name }
+        val degreeLevelsMap = degreeLevelJpaRepository.findAll().associateBy { it.name }
         val teachersMap = teacherRepository.findAll().associateBy { it.employeeNumber }
         val existingStudentNums = studentJpaRepository.findAllStudentNumbers()
 
@@ -124,6 +128,7 @@ class StudentImportService(
             rawMaps,
             majorsMap,
             ethnicitiesMap,
+            degreeLevelsMap,
             teachersMap,
             existingStudentNums
         ).mapIndexed { index, validatedRow ->
@@ -204,6 +209,10 @@ class StudentImportService(
             ethnicityJpaRepository.findByName(it).orElse(null)
         }
 
+        val degreeLevelEntity = row.degreeLevel?.let {
+            degreeLevelJpaRepository.findByName(it).orElse(null)
+        }
+
         val demographics = StudentDemographicsEntity(
             gender = StudentImportSchema.parseGenderAlias(row.gender),
             idCardNumber = row.idCardNumber,
@@ -221,6 +230,7 @@ class StudentImportService(
             name = row.name,
             major = majorEntity,
             enrollmentDate = row.enrollmentDate ?: LocalDate.now(),
+            degreeLevel = degreeLevelEntity,
             demographics = demographics,
             assignedTeacher = teacherEntity
         )
@@ -249,11 +259,18 @@ class StudentImportService(
             ethnicityJpaRepository.findByName(it).orElse(null)
         }
 
+        val degreeLevelEntity = row.degreeLevel?.let {
+            degreeLevelJpaRepository.findByName(it).orElse(null)
+        }
+
         // Update demographic and academic fields only — clinical history is preserved
         existingStudent.name = row.name
         existingStudent.major = majorEntity
         if (row.enrollmentDate != null) {
             existingStudent.enrollmentDate = row.enrollmentDate
+        }
+        if (degreeLevelEntity != null) {
+            existingStudent.degreeLevel = degreeLevelEntity
         }
         existingStudent.assignedTeacher = teacherEntity
 
@@ -277,6 +294,7 @@ class StudentImportService(
         Fields.NAME to row.name,
         Fields.MAJOR to row.major,
         Fields.ENROLLMENT_DATE to (row.enrollmentDate?.toString() ?: ""),
+        Fields.DEGREE_LEVEL to (row.degreeLevel ?: ""),
         Fields.ID_CARD_NUMBER to (row.idCardNumber ?: ""),
         Fields.GENDER to (row.gender ?: ""),
         Fields.ETHNICITY to (row.ethnicity ?: ""),

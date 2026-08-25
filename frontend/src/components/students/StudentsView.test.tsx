@@ -74,7 +74,7 @@ describe('StudentsView Component', () => {
 
     // Verify filter chips exist
     expect(screen.getByText('专业')).toBeDefined();
-    expect(screen.getByText('年级')).toBeDefined();
+    expect(screen.getByText('培养层次')).toBeDefined();
     expect(screen.getByText('风险')).toBeDefined();
     expect(screen.getByText('导师')).toBeDefined();
 

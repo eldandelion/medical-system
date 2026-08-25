@@ -3,6 +3,7 @@ package com.medicalsystem.backend.service
 import com.medicalsystem.backend.dto.StudentImportErrorCode
 import com.medicalsystem.backend.dto.StudentImportStatus
 import com.medicalsystem.backend.entity.CollegeEntity
+import com.medicalsystem.backend.entity.DegreeLevelEntity
 import com.medicalsystem.backend.entity.EthnicityEntity
 import com.medicalsystem.backend.entity.MajorEntity
 import com.medicalsystem.backend.entity.TeacherEntity
@@ -17,6 +18,7 @@ class StudentImportValidatorTest {
     // Test fixture data
     private lateinit var majorsMap: Map<String, MajorEntity>
     private lateinit var ethnicitiesMap: Map<String, EthnicityEntity>
+    private lateinit var degreeLevelsMap: Map<String, DegreeLevelEntity>
     private lateinit var teachersMap: Map<String, TeacherEntity>
     private lateinit var existingStudentNums: Set<String>
 
@@ -30,6 +32,12 @@ class StudentImportValidatorTest {
         )
         ethnicitiesMap = mapOf(
             "汉族" to EthnicityEntity(name = "汉族")
+        )
+        degreeLevelsMap = mapOf(
+            "BACHELOR" to DegreeLevelEntity(name = "BACHELOR"),
+            "MASTER" to DegreeLevelEntity(name = "MASTER"),
+            "PHD" to DegreeLevelEntity(name = "PHD"),
+            "OTHER" to DegreeLevelEntity(name = "OTHER")
         )
         val teacher = TeacherEntity(userId = 1L, employeeNumber = "EMP-00001", college = college)
         teachersMap = mapOf("EMP-00001" to teacher)
@@ -64,7 +72,7 @@ class StudentImportValidatorTest {
     fun `valid row with all fields is classified as READY`() {
         val rows = validator.validateRows(
             listOf(validRow()),
-            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
         )
 
         assertEquals(1, rows.size)
@@ -76,7 +84,7 @@ class StudentImportValidatorTest {
     fun `existing student number is classified as DUPLICATE`() {
         val rows = validator.validateRows(
             listOf(validRow(studentNumber = "S2023001")),
-            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
         )
 
         assertEquals(StudentImportStatus.DUPLICATE, rows[0].status)
@@ -91,7 +99,7 @@ class StudentImportValidatorTest {
 
         val rows = validator.validateRows(
             listOf(row1, row2),
-            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
         )
 
         assertEquals(StudentImportStatus.READY, rows[0].status)
@@ -107,7 +115,7 @@ class StudentImportValidatorTest {
 
         val rows = validator.validateRows(
             listOf(row),
-            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
         )
 
         assertEquals(StudentImportStatus.INVALID, rows[0].status)
@@ -123,7 +131,7 @@ class StudentImportValidatorTest {
 
         val rows = validator.validateRows(
             listOf(row),
-            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
         )
 
         assertEquals(StudentImportStatus.INVALID, rows[0].status)
@@ -136,7 +144,7 @@ class StudentImportValidatorTest {
 
         val rows = validator.validateRows(
             listOf(row),
-            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
         )
 
         assertEquals(StudentImportStatus.INVALID, rows[0].status)
@@ -151,7 +159,7 @@ class StudentImportValidatorTest {
 
         val rows = validator.validateRows(
             listOf(row),
-            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
         )
 
         assertEquals(StudentImportStatus.INVALID, rows[0].status)
@@ -166,7 +174,7 @@ class StudentImportValidatorTest {
 
         val rows = validator.validateRows(
             listOf(row),
-            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
         )
 
         assertEquals(StudentImportStatus.INVALID, rows[0].status)
@@ -180,7 +188,7 @@ class StudentImportValidatorTest {
 
         val rows = validator.validateRows(
             listOf(row),
-            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
         )
 
         assertEquals(StudentImportStatus.INVALID, rows[0].status)
@@ -205,7 +213,7 @@ class StudentImportValidatorTest {
 
         val rows = validator.validateRows(
             listOf(rowMap),
-            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
         )
 
         assertEquals(StudentImportStatus.READY, rows[0].status)
@@ -218,7 +226,7 @@ class StudentImportValidatorTest {
 
         val rows = validator.validateRows(
             listOf(row),
-            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
         )
 
         assertEquals(StudentImportStatus.INVALID, rows[0].status)
@@ -233,7 +241,7 @@ class StudentImportValidatorTest {
 
         val rows = validator.validateRows(
             listOf(row),
-            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
         )
 
         assertEquals(StudentImportStatus.READY, rows[0].status)
@@ -246,7 +254,7 @@ class StudentImportValidatorTest {
     fun `row number is correctly set based on file line position`() {
         val rows = validator.validateRows(
             listOf(validRow(studentNumber = "S001"), validRow(studentNumber = "S002")),
-            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
         )
 
         assertEquals(2, rows[0].rowNumber) // header is row 1, first data row is row 2
@@ -270,7 +278,7 @@ class StudentImportValidatorTest {
 
         val rows = validator.validateRows(
             listOf(row),
-            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
         )
 
         assertEquals(StudentImportStatus.INVALID, rows[0].status)
@@ -288,7 +296,7 @@ class StudentImportValidatorTest {
         for (name in listOf("张三", "李雷", "诸葛孔明", "欧阳修远")) {
             val rows = validator.validateRows(
                 listOf(validRow(name = name)),
-                majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+                majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
             )
             assertEquals(StudentImportStatus.READY, rows[0].status, "Name '$name' should be valid")
             assertEquals(name, rows[0].name)
@@ -300,7 +308,7 @@ class StudentImportValidatorTest {
         for (name in listOf("买买提·吐尔逊", "阿依努尔•阿卜杜拉")) {
             val rows = validator.validateRows(
                 listOf(validRow(name = name)),
-                majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+                majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
             )
             assertEquals(StudentImportStatus.READY, rows[0].status, "Minority name '$name' should be valid")
             assertEquals(name, rows[0].name)
@@ -312,7 +320,7 @@ class StudentImportValidatorTest {
         for (name in listOf("John Doe", "Jean-Luc", "Mary-Jane", "O'Connor")) {
             val rows = validator.validateRows(
                 listOf(validRow(name = name)),
-                majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+                majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
             )
             assertEquals(StudentImportStatus.READY, rows[0].status, "Latin name '$name' should be valid")
             assertEquals(name, rows[0].name)
@@ -323,7 +331,7 @@ class StudentImportValidatorTest {
     fun `name with trailing or leading spaces is trimmed and accepted if valid`() {
         val rows = validator.validateRows(
             listOf(validRow(name = "  王小明  ")),
-            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
         )
         assertEquals(StudentImportStatus.READY, rows[0].status)
         assertEquals("王小明", rows[0].name, "Name should be trimmed")
@@ -333,7 +341,7 @@ class StudentImportValidatorTest {
     fun `name with internal double spaces is rejected`() {
         val rows = validator.validateRows(
             listOf(validRow(name = "张  三")),
-            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
         )
         assertEquals(StudentImportStatus.INVALID, rows[0].status)
         val error = rows[0].errors.find { it.code == StudentImportErrorCode.INVALID_NAME_FORMAT }
@@ -345,7 +353,7 @@ class StudentImportValidatorTest {
         for (name in listOf("张*三", "Alex#123", "李4", "王@五")) {
             val rows = validator.validateRows(
                 listOf(validRow(name = name)),
-                majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+                majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
             )
             assertEquals(StudentImportStatus.INVALID, rows[0].status, "Name '$name' should be invalid")
             val error = rows[0].errors.find { it.code == StudentImportErrorCode.INVALID_NAME_FORMAT }
@@ -358,11 +366,60 @@ class StudentImportValidatorTest {
         for (name in listOf("张", "A")) {
             val rows = validator.validateRows(
                 listOf(validRow(name = name)),
-                majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+                majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
             )
             assertEquals(StudentImportStatus.INVALID, rows[0].status, "Single-char name '$name' should be invalid")
             val error = rows[0].errors.find { it.code == StudentImportErrorCode.INVALID_NAME_FORMAT }
             assertNotNull(error, "Single-char name '$name' should produce INVALID_NAME_FORMAT")
         }
+    }
+
+    // --- Degree Level Validation Tests ---
+
+    @Test
+    fun `missing degree level defaults to BACHELOR and is READY`() {
+        val rows = validator.validateRows(
+            listOf(validRow()),
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
+        )
+        assertEquals(StudentImportStatus.READY, rows[0].status)
+        assertEquals("BACHELOR", rows[0].degreeLevel)
+    }
+
+    @Test
+    fun `valid degree level Chinese aliases map correctly`() {
+        val testCases = mapOf(
+            "本科" to "BACHELOR",
+            "本科生" to "BACHELOR",
+            "硕士" to "MASTER",
+            "硕士研究生" to "MASTER",
+            "博士" to "PHD",
+            "博士研究生" to "PHD",
+            "其他" to "OTHER"
+        )
+
+        for ((input, expected) in testCases) {
+            val raw = validRow().toMutableMap()
+            raw["培养层次"] = input
+            val rows = validator.validateRows(
+                listOf(raw),
+                majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
+            )
+            assertEquals(StudentImportStatus.READY, rows[0].status, "Degree '$input' should be valid")
+            assertEquals(expected, rows[0].degreeLevel, "Degree '$input' should map to $expected")
+        }
+    }
+
+    @Test
+    fun `unknown degree level produces DEGREE_LEVEL_NOT_FOUND error`() {
+        val raw = validRow().toMutableMap()
+        raw["培养层次"] = "未知学历"
+        val rows = validator.validateRows(
+            listOf(raw),
+            majorsMap, ethnicitiesMap, degreeLevelsMap, teachersMap, existingStudentNums
+        )
+        assertEquals(StudentImportStatus.INVALID, rows[0].status)
+        val error = rows[0].errors.find { it.code == StudentImportErrorCode.DEGREE_LEVEL_NOT_FOUND }
+        assertNotNull(error, "Unknown degree level should produce DEGREE_LEVEL_NOT_FOUND")
     }
 }

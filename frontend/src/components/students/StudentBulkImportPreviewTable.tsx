@@ -10,6 +10,7 @@ const FIELD_LABELS: Record<string, string> = {
   name: '姓名',
   major: '专业',
   enrollmentDate: '入学日期',
+  degreeLevel: '培养层次',
   idCardNumber: '身份证号',
   gender: '性别',
   ethnicity: '民族',
@@ -32,6 +33,8 @@ export function formatImportError(err: StudentImportFieldError): string {
       return `工号未找到对应导师: "${err.invalidValue ?? ''}"`;
     case 'ETHNICITY_NOT_FOUND':
       return `民族名称未匹配: "${err.invalidValue ?? ''}"`;
+    case 'DEGREE_LEVEL_NOT_FOUND':
+      return `培养层次在系统中未匹配: "${err.invalidValue ?? ''}"`;
     case 'DUPLICATE_IN_DATABASE':
       return '学号已在系统中存在';
     case 'INTRA_FILE_DUPLICATE':

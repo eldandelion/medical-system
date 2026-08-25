@@ -45,6 +45,7 @@ import org.mockito.junit.jupiter.MockitoSettings
 class StudentImportServiceTest {
 
     @Mock private lateinit var majorJpaRepository: MajorJpaRepository
+    @Mock private lateinit var degreeLevelJpaRepository: com.medicalsystem.backend.repository.DegreeLevelJpaRepository
     @Mock private lateinit var ethnicityJpaRepository: EthnicityJpaRepository
     @Mock private lateinit var teacherRepository: TeacherRepository
     @Mock private lateinit var studentJpaRepository: StudentJpaRepository
@@ -59,6 +60,7 @@ class StudentImportServiceTest {
     private val college = CollegeEntity(name = "工学院")
     private val majorEntity = MajorEntity(name = "计算机科学", college = college)
     private val ethnicityEntity = EthnicityEntity(name = "汉族")
+    private val degreeLevelEntity = com.medicalsystem.backend.entity.DegreeLevelEntity(name = "BACHELOR")
     private val teacherEntity = TeacherEntity(userId = 1L, employeeNumber = "EMP-00001", college = college)
 
     private val adminUser = User(
@@ -72,6 +74,7 @@ class StudentImportServiceTest {
     fun setUpCommonMocks() {
         whenever(majorJpaRepository.findAll()).thenReturn(listOf(majorEntity))
         whenever(ethnicityJpaRepository.findAll()).thenReturn(listOf(ethnicityEntity))
+        whenever(degreeLevelJpaRepository.findAll()).thenReturn(listOf(degreeLevelEntity))
         whenever(teacherRepository.findAll()).thenReturn(listOf(teacherEntity))
         whenever(studentJpaRepository.findAllStudentNumbers()).thenReturn(emptySet())
     }
@@ -138,7 +141,7 @@ class StudentImportServiceTest {
             errors = emptyList()
         )
 
-        whenever(validator.validateRows(any(), any(), any(), any(), any()))
+        whenever(validator.validateRows(any(), any(), any(), any(), any(), any()))
             .thenReturn(listOf(readyRow))
 
         val request = StudentImportCommitRequestDto(
@@ -177,7 +180,7 @@ class StudentImportServiceTest {
             errors = emptyList()
         )
 
-        whenever(validator.validateRows(any(), any(), any(), any(), any()))
+        whenever(validator.validateRows(any(), any(), any(), any(), any(), any()))
             .thenReturn(listOf(duplicateRow))
 
         val request = StudentImportCommitRequestDto(
@@ -218,7 +221,7 @@ class StudentImportServiceTest {
             )
         )
 
-        whenever(validator.validateRows(any(), any(), any(), any(), any()))
+        whenever(validator.validateRows(any(), any(), any(), any(), any(), any()))
             .thenReturn(listOf(invalidRow))
 
         val request = StudentImportCommitRequestDto(
@@ -242,7 +245,7 @@ class StudentImportServiceTest {
             email = EmailAddress("hc@test.com"),
             role = UserRole.HEAD_COUNSELLOR
         )
-        whenever(validator.validateRows(any(), any(), any(), any(), any()))
+        whenever(validator.validateRows(any(), any(), any(), any(), any(), any()))
             .thenReturn(emptyList())
 
         val request = StudentImportCommitRequestDto(rows = emptyList(), overwriteDuplicates = false)

@@ -12,7 +12,8 @@ export type StudentImportErrorCode =
   | 'INVALID_EMAIL_FORMAT'
   | 'INVALID_DATE_FORMAT'
   | 'FUTURE_DATE'
-  | 'INVALID_NAME_FORMAT';
+  | 'INVALID_NAME_FORMAT'
+  | 'DEGREE_LEVEL_NOT_FOUND';
 
 export interface StudentImportFieldError {
   field: string;
@@ -26,6 +27,7 @@ export interface StudentImportRow {
   name: string;
   major: string;
   enrollmentDate: string | null;
+  degreeLevel?: string | null;
   idCardNumber?: string | null;
   gender?: string | null;
   ethnicity?: string | null;

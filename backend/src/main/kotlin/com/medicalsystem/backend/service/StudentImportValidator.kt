@@ -4,6 +4,7 @@ import com.medicalsystem.backend.dto.StudentImportErrorCode
 import com.medicalsystem.backend.dto.StudentImportFieldErrorDto
 import com.medicalsystem.backend.dto.StudentImportRowDto
 import com.medicalsystem.backend.dto.StudentImportStatus
+import com.medicalsystem.backend.entity.DegreeLevelEntity
 import com.medicalsystem.backend.entity.EthnicityEntity
 import com.medicalsystem.backend.entity.MajorEntity
 import com.medicalsystem.backend.entity.TeacherEntity
@@ -36,6 +37,7 @@ class StudentImportValidator {
      * @param rawRows             Raw header→value maps from [CsvStreamReader].
      * @param majorsMap           Map of major name → [MajorEntity] (pre-fetched).
      * @param ethnicitiesMap      Map of ethnicity name → [EthnicityEntity] (pre-fetched).
+     * @param degreeLevelsMap     Map of degree level code → [DegreeLevelEntity] (pre-fetched).
      * @param teachersMap         Map of employee number → [TeacherEntity] (pre-fetched).
      * @param existingStudentNums Set of all student numbers already in the database (pre-fetched).
      * @return List of validated [StudentImportRowDto], each classified as READY / DUPLICATE / INVALID.
@@ -44,6 +46,7 @@ class StudentImportValidator {
         rawRows: List<Map<String, String>>,
         majorsMap: Map<String, MajorEntity>,
         ethnicitiesMap: Map<String, EthnicityEntity>,
+        degreeLevelsMap: Map<String, DegreeLevelEntity> = emptyMap(),
         teachersMap: Map<String, TeacherEntity>,
         existingStudentNums: Set<String>
     ): List<StudentImportRowDto> {
@@ -58,6 +61,7 @@ class StudentImportValidator {
                 row = row,
                 majorsMap = majorsMap,
                 ethnicitiesMap = ethnicitiesMap,
+                degreeLevelsMap = degreeLevelsMap,
                 teachersMap = teachersMap,
                 existingStudentNums = existingStudentNums,
                 seenStudentNumbers = seenStudentNumbers
@@ -79,6 +83,7 @@ class StudentImportValidator {
         row: Map<String, String>,
         majorsMap: Map<String, MajorEntity>,
         ethnicitiesMap: Map<String, EthnicityEntity>,
+        degreeLevelsMap: Map<String, DegreeLevelEntity>,
         teachersMap: Map<String, TeacherEntity>,
         existingStudentNums: Set<String>,
         seenStudentNumbers: MutableSet<String>
@@ -101,7 +106,10 @@ class StudentImportValidator {
         // 4. Validate ID card against Domain Value Object predicate
         val idCardNumber = validateIdCardNumber(idCardRaw, errors)
 
-        // 5. Validate optional demographics, contacts, and teacher
+        // 5. Validate degree level against pre-fetched dictionary
+        val degreeLevel = validateDegreeLevel(row[Fields.DEGREE_LEVEL], degreeLevelsMap, errors)
+
+        // 6. Validate optional demographics, contacts, and teacher
         val gender = StudentImportSchema.parseGenderAlias(row[Fields.GENDER])
         val ethnicityName = validateEthnicity(row[Fields.ETHNICITY], ethnicitiesMap, errors)
         val contactNumber = validateMobileNumber(row[Fields.CONTACT_NUMBER], errors)
@@ -112,7 +120,7 @@ class StudentImportValidator {
         val homeAddress = row[Fields.HOME_ADDRESS]?.takeIf { it.isNotBlank() }
         val emergencyContactName = row[Fields.EMERGENCY_CONTACT_NAME]?.takeIf { it.isNotBlank() }
 
-        // 6. Determine row status and intra-file / database duplicates
+        // 7. Determine row status and intra-file / database duplicates
         val status = determineStatus(
             studentNumber = studentNumber,
             errors = errors,
@@ -131,6 +139,7 @@ class StudentImportValidator {
             name = name ?: "",
             major = majorName ?: "",
             enrollmentDate = enrollmentDate,
+            degreeLevel = degreeLevel,
             idCardNumber = idCardNumber,
             gender = gender?.name,
             ethnicity = ethnicityName,
@@ -245,6 +254,32 @@ class StudentImportValidator {
             )
         }
         return ethnicityName
+    }
+
+    private fun validateDegreeLevel(
+        rawDegree: String?,
+        degreeLevelsMap: Map<String, DegreeLevelEntity>,
+        errors: MutableList<StudentImportFieldErrorDto>
+    ): String {
+        val trimmed = rawDegree?.trim()
+        val degreeCode = when (trimmed?.uppercase()) {
+            null, "" -> StudentImportSchema.DEFAULT_DEGREE_LEVEL_CODE
+            "BACHELOR", "本科", "本科生" -> "BACHELOR"
+            "MASTER", "硕士", "硕士研究生" -> "MASTER"
+            "PHD", "博士", "博士研究生" -> "PHD"
+            "OTHER", "其他", "专科", "进修" -> "OTHER"
+            else -> trimmed
+        }
+        if (degreeLevelsMap.isNotEmpty() && !degreeLevelsMap.containsKey(degreeCode)) {
+            errors.add(
+                StudentImportFieldErrorDto(
+                    Fields.DEGREE_LEVEL,
+                    StudentImportErrorCode.DEGREE_LEVEL_NOT_FOUND,
+                    trimmed
+                )
+            )
+        }
+        return degreeCode
     }
 
     private fun validateMobileNumber(

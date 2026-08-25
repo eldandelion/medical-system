@@ -9,6 +9,7 @@ data class Student(
     val major: Major,
     val enrollmentDate: LocalDate,
     val riskStatus: RiskStatus,
+    val degreeLevel: DegreeLevel? = null,
     val demographics: Demographics? = null,
     val assignedTeacherId: Long? = null
 ) : AggregateRoot() {

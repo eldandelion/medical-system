@@ -27,6 +27,10 @@ class StudentEntity(
     var demographics: StudentDemographicsEntity? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "degree_level_id")
+    var degreeLevel: DegreeLevelEntity? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_teacher_id")
     var assignedTeacher: TeacherEntity? = null
 )

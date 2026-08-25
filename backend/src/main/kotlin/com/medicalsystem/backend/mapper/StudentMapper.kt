@@ -6,7 +6,7 @@ import com.medicalsystem.backend.entity.StudentEntity
 import com.medicalsystem.backend.entity.StudentDemographicsEntity
 import com.medicalsystem.backend.model.Student
 import com.medicalsystem.backend.model.Demographics
-import com.medicalsystem.backend.util.AcademicYearCalculator
+import com.medicalsystem.backend.model.DegreeLevel
 import com.medicalsystem.backend.repository.EthnicityRepository
 import com.medicalsystem.backend.repository.SchoolRepository
 import com.medicalsystem.backend.model.Ethnicity
@@ -19,7 +19,7 @@ import com.medicalsystem.backend.repository.StudentHealthProfileRepository
 @Component
 class StudentMapper(
     private val majorMapper: MajorMapper,
-    private val academicYearCalculator: AcademicYearCalculator,
+    private val degreeLevelRepository: com.medicalsystem.backend.repository.DegreeLevelJpaRepository,
     private val ethnicityRepository: com.medicalsystem.backend.repository.EthnicityJpaRepository,
     private val schoolRepository: com.medicalsystem.backend.repository.SchoolJpaRepository,
     private val healthProfileRepository: StudentHealthProfileRepository,
@@ -35,6 +35,7 @@ class StudentMapper(
             major = majorMapper.toModel(entity.major),
             enrollmentDate = entity.enrollmentDate,
             riskStatus = profile?.evaluateRisk(riskEvaluator) ?: com.medicalsystem.backend.model.RiskStatus.LOW,
+            degreeLevel = entity.degreeLevel?.let { d -> DegreeLevel(d.id, d.name) },
             demographics = entity.demographics?.let {
                 Demographics(
                     gender = it.gender,
@@ -61,7 +62,8 @@ class StudentMapper(
             majorId = model.major.id,
             major = model.major.name,
             enrollmentDate = model.enrollmentDate,
-            year = academicYearCalculator.calculate(model.enrollmentDate),
+            degreeLevel = model.degreeLevel?.name,
+            degreeLevelId = model.degreeLevel?.id,
             riskLevel = model.riskStatus,
             status = "Active",
             demographics = model.demographics?.let {
@@ -88,6 +90,7 @@ class StudentMapper(
             name = model.name,
             major = majorMapper.toEntity(model.major),
             enrollmentDate = model.enrollmentDate,
+            degreeLevel = model.degreeLevel?.name?.let { name -> degreeLevelRepository.findByName(name).orElse(null) },
             demographics = model.demographics?.let {
                 StudentDemographicsEntity(
                     gender = it.gender,

@@ -30,7 +30,7 @@ class StudentControllerTest {
     @Test
     fun `fetchAllStudents returns list of students for valid user`() {
         val user = com.medicalsystem.backend.model.User(1L, "Teacher", com.medicalsystem.backend.model.EmailAddress("t@t.com"), null, com.medicalsystem.backend.model.UserRole.TEACHER)
-        val dto = StudentDto("1", "S123", "John Doe", 1L, "CS", java.time.LocalDate.now(), null, com.medicalsystem.backend.model.RiskStatus.LOW)
+        val dto = StudentDto("1", "S123", "John Doe", 1L, "CS", java.time.LocalDate.now(), "BACHELOR", 1L, com.medicalsystem.backend.model.RiskStatus.LOW)
         `when`(studentService.fetchAllStudents(user)).thenReturn(listOf(dto))
         val response = studentController.fetchAllStudents(user)
         assertNotNull(response)
