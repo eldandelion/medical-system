@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ScrollableDetailsLayout } from '../common/DetailsPanel';
-import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
+import { PrimaryButton, TertiaryButton } from '../common/Buttons';
 import { DestructiveButton } from '../common/DestructiveButton';
 import { SecondaryTabs } from '../common/Tabs';
 import { PsychometricsTabContent } from '../assessments/PsychometricsTabContent';
@@ -466,7 +466,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
         maxWidth="900px"
         actions={
           <>
-            <SecondaryButton label="取消" onClick={() => state.setIsSchedulingDialogOpen(false)} />
+            <TertiaryButton label="取消" onClick={() => state.setIsSchedulingDialogOpen(false)} />
             <PrimaryButton label="确认预约" onClick={actions.handleSchedule} disabled={!state.scheduleDateTime || !!state.actionError} />
           </>
         }

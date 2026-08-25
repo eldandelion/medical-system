@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { GenericDialog } from '../common/GenericDialog';
-import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
+import { PrimaryButton, OutlinedButton, TertiaryButton } from '../common/Buttons';
 import { useStudentBulkImport } from '../../hooks/useStudentBulkImport';
 import { StudentBulkImportPreviewTable } from './StudentBulkImportPreviewTable';
 import { StudentImportStatus } from '../../types/studentImport';
@@ -261,7 +261,7 @@ export function StudentBulkImportDialog({ open, onClose }: StudentBulkImportDial
                     </span>
                   </div>
                 </div>
-                <SecondaryButton
+                <OutlinedButton
                   icon="download"
                   label="下载 CSV 模板"
                   onClick={downloadTemplate}
@@ -351,7 +351,7 @@ export function StudentBulkImportDialog({ open, onClose }: StudentBulkImportDial
 
               {/* Action Buttons */}
               <div className="flex items-center justify-between pt-2">
-                <SecondaryButton
+                <OutlinedButton
                   icon="arrow_back"
                   label="重新上传"
                   onClick={() => {

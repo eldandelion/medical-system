@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { SecondaryButton, PrimaryButton } from '../common/Buttons';
+import { PrimaryButton, OutlinedButton, TertiaryButton } from '../common/Buttons';
 import { useCreationOverlay } from '../../contexts/CreationContext';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -169,7 +169,7 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
     if (isFullscreen) {
       setHeaderActions(
         <div className="flex items-center gap-3 mr-4">
-          <SecondaryButton label="保存草稿" onClick={() => handleSubmit('draft')} disabled={isSubmitting} />
+          <OutlinedButton label="保存草稿" onClick={() => handleSubmit('draft')} disabled={isSubmitting} />
           <PrimaryButton label={isSubmitting ? "提交中" : "提交"} onClick={() => handleSubmit('submit')} disabled={isSubmitting} />
         </div>
       );
@@ -424,13 +424,13 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
       </div>
 
       {!isFullscreen && (
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] z-10 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-          <div className="flex items-center justify-end gap-4 w-full">
-            <SecondaryButton label="保存草稿" onClick={() => handleSubmit('draft')} disabled={isSubmitting} />
-            <PrimaryButton label={isSubmitting ? "提交中..." : "提交"} onClick={() => handleSubmit('submit')} disabled={isSubmitting} />
+          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] z-10 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+            <div className="flex items-center justify-end gap-4 w-full">
+              <OutlinedButton label="保存草稿" onClick={() => handleSubmit('draft')} disabled={isSubmitting} />
+              <PrimaryButton label={isSubmitting ? "提交中..." : "提交"} onClick={() => handleSubmit('submit')} disabled={isSubmitting} />
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
     
     <GenericDialog
@@ -439,7 +439,7 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
       title="确认关闭？"
       actions={
         <>
-          <SecondaryButton label="取消" onClick={() => setIsCloseWarningOpen(false)} />
+          <TertiaryButton label="取消" onClick={() => setIsCloseWarningOpen(false)} />
           <PrimaryButton label="确认关闭" onClick={() => {
             setIsCloseWarningOpen(false);
             onClose();

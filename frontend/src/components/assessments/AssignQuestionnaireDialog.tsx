@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { GenericDialog } from '../common/GenericDialog';
-import { PrimaryButton, SecondaryButton } from '../common/Buttons';
+import { PrimaryButton, TertiaryButton } from '../common/Buttons';
 import { AssessmentCatalogItemDto, AssessmentScaleType } from '../../types';
 import { getAssessmentName } from '../../constants/assessmentDictionary';
 import { useSnackbar } from '../../contexts/SnackbarContext';
@@ -138,7 +138,7 @@ export function AssignQuestionnaireDialog({ isOpen, onClose, studentId, onAssign
       isLoading={loading || isSubmitting}
       actions={
         <>
-          <SecondaryButton label="取消" onClick={onClose} disabled={isSubmitting} noCollapse />
+          <TertiaryButton label="取消" onClick={onClose} disabled={isSubmitting} noCollapse />
           <PrimaryButton 
             label={isSubmitting ? '分配中...' : `分配 ${selectedScaleTypes.size > 0 ? `(${selectedScaleTypes.size})` : ''}`}
             onClick={handleAssign} 

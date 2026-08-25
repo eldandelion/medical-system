@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { PrimaryButton, SecondaryButton, TertiaryButton, SegmentedButton } from '../common/Buttons';
+import { PrimaryButton, TertiaryButton, OutlinedButton, SegmentedButton } from '../common/Buttons';
 import { useCreationOverlay } from '../../contexts/CreationContext';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -322,7 +322,7 @@ export function AssessmentAssignmentCreationForm({
     if (setHeaderActions) {
       setHeaderActions(
         <div className="flex items-center gap-2">
-          <SecondaryButton
+          <TertiaryButton
             label="取消"
             onClick={() => {
               if (isDirtyRef.current) setIsCloseWarningOpen(true);
@@ -816,7 +816,7 @@ export function AssessmentAssignmentCreationForm({
         title="确认放弃当前分发？"
         actions={
           <>
-            <SecondaryButton label="继续编辑" onClick={() => setIsCloseWarningOpen(false)} />
+            <OutlinedButton label="继续编辑" onClick={() => setIsCloseWarningOpen(false)} />
             <PrimaryButton
               label="确认退出"
               onClick={() => {
