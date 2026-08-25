@@ -4,9 +4,10 @@ interface AccountMenuProps {
     isOpen: boolean;
     onClose: () => void;
     onProfileClick?: () => void;
+    onAddAccountClick?: () => void;
 }
 
-export function AccountMenu({ isOpen, onClose, onProfileClick }: AccountMenuProps) {
+export function AccountMenu({ isOpen, onClose, onProfileClick, onAddAccountClick }: AccountMenuProps) {
     if (!isOpen) return null;
 
     return (
@@ -72,7 +73,13 @@ export function AccountMenu({ isOpen, onClose, onProfileClick }: AccountMenuProp
                                 <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)]">warfacealpine10@gmail.com</span>
                             </div>
                         </div>
-                        <div className="px-5 py-[14px] flex items-center gap-4 hover:bg-[var(--md-sys-color-surface-variant)] cursor-pointer transition-colors border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30">
+                        <div
+                            className="px-5 py-[14px] flex items-center gap-4 hover:bg-[var(--md-sys-color-surface-variant)] cursor-pointer transition-colors border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30"
+                            onClick={() => {
+                                onClose();
+                                onAddAccountClick?.();
+                            }}
+                        >
                             <div className="w-5 h-5 flex items-center justify-center text-[var(--md-sys-color-on-surface)] ml-1">
                                 <span className="material-symbols-outlined text-[20px]">add</span>
                             </div>

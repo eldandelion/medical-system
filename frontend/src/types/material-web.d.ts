@@ -90,6 +90,13 @@ declare global {
         disabled?: boolean;
         selected?: boolean;
       }, HTMLElement>;
+      'md-checkbox': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        checked?: boolean;
+        disabled?: boolean;
+        indeterminate?: boolean;
+        'aria-label'?: string;
+        'touch-target'?: 'wrapper' | 'none';
+      }, HTMLElement>;
       'md-list': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
       'md-list-item': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
         disabled?: boolean;

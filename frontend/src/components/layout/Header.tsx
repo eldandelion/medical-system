@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { AccountMenu } from './AccountMenu';
+import { LoginOverlay } from '../auth/LoginOverlay';
 import { useTheme } from '../../contexts/ThemeContext';
 import { GlobalSearch } from './GlobalSearch';
 import { useAuth, type Role } from '../../contexts/AuthContext';
@@ -23,6 +24,7 @@ export function Header({ searchPlaceholder, onProfileClick }: HeaderProps) {
   const [isAccountMenuOpen, setIsAccountMenuOpen] = React.useState(false);
   const [isThemeMenuOpen, setIsThemeMenuOpen] = React.useState(false);
   const [isRoleMenuOpen, setIsRoleMenuOpen] = React.useState(false);
+  const [isLoginOpen, setIsLoginOpen] = React.useState(false);
   const { theme, setTheme } = useTheme();
 
   const currentRoleOption = ROLE_OPTIONS.find(o => o.role === session.role) ?? ROLE_OPTIONS[0];
@@ -150,9 +152,21 @@ export function Header({ searchPlaceholder, onProfileClick }: HeaderProps) {
             isOpen={isAccountMenuOpen}
             onClose={() => setIsAccountMenuOpen(false)}
             onProfileClick={onProfileClick}
+            onAddAccountClick={() => {
+              setIsAccountMenuOpen(false);
+              setIsLoginOpen(true);
+            }}
           />
         </div>
       </div>
+
+      <LoginOverlay
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
+        onSuccess={() => {
+          setIsLoginOpen(false);
+        }}
+      />
     </header>
   );
 }
