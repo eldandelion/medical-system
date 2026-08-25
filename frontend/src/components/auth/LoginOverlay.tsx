@@ -58,7 +58,7 @@ export function LoginOverlay({
     e?.preventDefault();
     e?.stopPropagation();
     if (!identifier.trim()) {
-      setIdentifierError('请输入电子邮件地址或手机号码');
+      setIdentifierError('请输入电子邮件地址或学工号');
       return;
     }
     setIdentifierError('');
@@ -152,7 +152,7 @@ export function LoginOverlay({
                       <div className="space-y-2">
                         <div>
                           <md-outlined-text-field
-                            label="电子邮件或手机号码"
+                            label="电子邮件或学工号"
                             value={identifier}
                             className="w-full"
                             error={!!identifierError}

@@ -28,7 +28,7 @@ describe('LoginOverlay Component', () => {
     expect(screen.getByText('使用您的CSU账号')).toBeDefined();
 
     // Right Column
-    const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或手机号码"]');
+    const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]');
     expect(emailField).toBeDefined();
     expect(screen.getByText('忘记了电子邮件地址？')).toBeDefined();
 
@@ -52,7 +52,7 @@ describe('LoginOverlay Component', () => {
     const nextButton = screen.getByText('下一步');
     fireEvent.click(nextButton);
 
-    expect(screen.getByText('请输入电子邮件地址或手机号码')).toBeDefined();
+    expect(screen.getByText('请输入电子邮件地址或学工号')).toBeDefined();
     // Still in Step 1
     expect(screen.getByText('登录')).toBeDefined();
     expect(screen.queryByText('欢迎')).toBeNull();
@@ -61,7 +61,7 @@ describe('LoginOverlay Component', () => {
   it('transitions to Step 2 when Step 1 is submitted with valid identifier', () => {
     render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
 
-    const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或手机号码"]') as HTMLElement;
+    const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]') as HTMLElement;
     setMdInputValue(emailField, 'testuser@example.com');
 
     const nextButton = screen.getByText('下一步');
