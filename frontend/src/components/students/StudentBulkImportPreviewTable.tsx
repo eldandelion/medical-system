@@ -106,21 +106,11 @@ export function StudentBulkImportPreviewTable({ rows }: StudentBulkImportPreview
           </tr>
         </thead>
         <tbody className="divide-y divide-[var(--md-sys-color-outline-variant)] divide-opacity-30">
-          {visibleRows.map((row) => {
-            const isInvalid = row.status === 'INVALID';
-            const isDuplicate = row.status === 'DUPLICATE';
-
-            return (
-              <tr
-                key={`${row.rowNumber}-${row.studentNumber}`}
-                className={`transition-colors hover:bg-[var(--md-sys-color-surface-container-high)] ${
-                  isInvalid
-                    ? 'bg-[var(--md-sys-color-error-container)] bg-opacity-20'
-                    : isDuplicate
-                    ? 'bg-[var(--md-sys-color-tertiary-container)] bg-opacity-15'
-                    : ''
-                }`}
-              >
+          {visibleRows.map((row) => (
+            <tr
+              key={`${row.rowNumber}-${row.studentNumber}`}
+              className="transition-colors hover:bg-[var(--md-sys-color-surface-container-high)]"
+            >
                 <td className="py-2.5 px-3 text-center text-[12px] text-[var(--md-sys-color-on-surface-variant)]">
                   {row.rowNumber}
                 </td>
@@ -144,26 +134,23 @@ export function StudentBulkImportPreviewTable({ rows }: StudentBulkImportPreview
                 </td>
                 <td className="py-2.5 px-3">
                   {row.status === 'READY' && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#dcfce7] text-[#15803d] dark:bg-[#14532d] dark:text-[#86efac]">
-                      {/* @ts-ignore */}
-                      <md-icon className="text-[14px]">check_circle</md-icon>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium bg-[#dcfce7] text-[#15803d] dark:bg-[#14532d] dark:text-[#86efac]">
+                      <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check</span>
                       待导入
                     </span>
                   )}
                   {row.status === 'DUPLICATE' && (
-                    <div className="flex flex-col gap-0.5">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#fef3c7] text-[#b45309] dark:bg-[#78350f] dark:text-[#fde68a] w-fit">
-                        {/* @ts-ignore */}
-                        <md-icon className="text-[14px]">info</md-icon>
+                    <div className="flex flex-col gap-1">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium bg-[#fef3c7] text-[#b45309] dark:bg-[#78350f] dark:text-[#fde68a] w-fit">
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>warning</span>
                         已存在 (重复)
                       </span>
                     </div>
                   )}
                   {row.status === 'INVALID' && (
                     <div className="flex flex-col gap-1 py-0.5">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#fee2e2] text-[#b91c1c] dark:bg-[#7f1d1d] dark:text-[#fca5a5] w-fit">
-                        {/* @ts-ignore */}
-                        <md-icon className="text-[14px]">error</md-icon>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium bg-[#fee2e2] text-[#b91c1c] dark:bg-[#7f1d1d] dark:text-[#fca5a5] w-fit">
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
                         格式异常 ({row.errors.length})
                       </span>
                       <div className="text-[11px] text-[var(--md-sys-color-error)] space-y-0.5">
@@ -178,8 +165,7 @@ export function StudentBulkImportPreviewTable({ rows }: StudentBulkImportPreview
                   )}
                 </td>
               </tr>
-            );
-          })}
+            ))}
         </tbody>
       </table>
 

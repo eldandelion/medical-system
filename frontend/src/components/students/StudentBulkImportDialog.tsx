@@ -141,32 +141,8 @@ export function StudentBulkImportDialog({ open, onClose }: StudentBulkImportDial
               animate="center"
               exit="exit"
               transition={{ duration: 0.22, ease: 'easeInOut' }}
-              className="flex flex-col gap-6 py-2"
+              className="flex flex-col gap-6 pt-2 pb-0"
             >
-              {/* Template download banner */}
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center shrink-0">
-                    {/* @ts-ignore */}
-                    <md-icon className="text-[20px]">description</md-icon>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">
-                      尚未准备好数据？下载官方标准 CSV 模板
-                    </span>
-                    <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)]">
-                      包含标准中文字段表头及示例数据，开箱即用，支持 Excel / WPS 编辑
-                    </span>
-                  </div>
-                </div>
-                <SecondaryButton
-                  icon="download"
-                  label="下载 CSV 模板"
-                  onClick={downloadTemplate}
-                  noCollapse
-                />
-              </div>
-
               {/* Upload Dropzone */}
               <div
                 onDragOver={(e) => {
@@ -193,9 +169,8 @@ export function StudentBulkImportDialog({ open, onClose }: StudentBulkImportDial
                     }
                   }}
                 />
-                <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-primary)] flex items-center justify-center mb-3">
-                  {/* @ts-ignore */}
-                  <md-icon className="text-[32px]">cloud_upload</md-icon>
+                <div className="w-12 h-12 rounded-full bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-primary)] flex items-center justify-center mb-3">
+                  <span className="material-symbols-outlined text-[24px]">cloud_upload</span>
                 </div>
                 <span className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)] mb-1">
                   点击选择或将 CSV 文件拖拽至此处
@@ -206,18 +181,92 @@ export function StudentBulkImportDialog({ open, onClose }: StudentBulkImportDial
               </div>
 
               {/* Import Notes & Format Rules */}
-              <div className="flex flex-col gap-2 p-4 rounded-2xl bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)] border-opacity-50 text-[12px] text-[var(--md-sys-color-on-surface-variant)]">
-                <span className="font-medium text-[var(--md-sys-color-on-surface)] flex items-center gap-1.5">
-                  {/* @ts-ignore */}
-                  <md-icon className="text-[16px] text-[var(--md-sys-color-primary)]">info</md-icon>
-                  导入规范与注意事项
-                </span>
-                <ul className="list-disc list-inside space-y-1 ml-1 leading-relaxed">
-                  <li><strong className="text-[var(--md-sys-color-on-surface)]">必填字段</strong>：学号、姓名、专业、入学日期、身份证号（须为18位标准中国居民身份证号）。</li>
-                  <li><strong className="text-[var(--md-sys-color-on-surface)]">专业映射</strong>：专业名称必须与系统中的现有专业名称完全一致（如：计算机科学、心理学等）。</li>
-                  <li><strong className="text-[var(--md-sys-color-on-surface)]">导师工号</strong>：若填写班主任/辅导员工号，须与系统中的教师工号匹配。</li>
-                  <li><strong className="text-[var(--md-sys-color-on-surface)]">账号与权限</strong>：新导入的学生将自动创建系统账号并初始化健康档案，无需手动分配。</li>
-                </ul>
+              <div className="flex flex-col gap-2.5">
+                <div className="text-xs font-semibold text-[var(--md-sys-color-on-surface)] flex items-center gap-1.5 px-0.5">
+                  <span className="material-symbols-outlined text-[18px] text-[var(--md-sys-color-primary)]">info</span>
+                  <span>导入规范与注意事项</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                  <div className="bg-[var(--md-sys-color-surface-container)] p-3 rounded-2xl flex items-start gap-3">
+                    <span className="material-symbols-outlined text-[20px] text-[var(--md-sys-color-primary)] shrink-0 mt-0.5">
+                      badge
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-semibold text-[var(--md-sys-color-on-surface)] leading-4">
+                        必填字段与实名核验
+                      </div>
+                      <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed mt-1">
+                        学号、姓名、专业、入学日期及身份证号为必填项（身份证号须符合 18 位国家规范）。
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-[var(--md-sys-color-surface-container)] p-3 rounded-2xl flex items-start gap-3">
+                    <span className="material-symbols-outlined text-[20px] text-[var(--md-sys-color-primary)] shrink-0 mt-0.5">
+                      domain
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-semibold text-[var(--md-sys-color-on-surface)] leading-4">
+                        标准专业院系映射
+                      </div>
+                      <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed mt-1">
+                        专业名称必须与系统现有院系专业完全一致（如：计算机科学、心理学等）。
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-[var(--md-sys-color-surface-container)] p-3 rounded-2xl flex items-start gap-3">
+                    <span className="material-symbols-outlined text-[20px] text-[var(--md-sys-color-primary)] shrink-0 mt-0.5">
+                      supervisor_account
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-semibold text-[var(--md-sys-color-on-surface)] leading-4">
+                        班主任/导师工号关联
+                      </div>
+                      <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed mt-1">
+                        若填写班主任或辅导员工号，须与系统中已录入的教师工号精确匹配。
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-[var(--md-sys-color-surface-container)] p-3 rounded-2xl flex items-start gap-3">
+                    <span className="material-symbols-outlined text-[20px] text-[var(--md-sys-color-primary)] shrink-0 mt-0.5">
+                      verified_user
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-semibold text-[var(--md-sys-color-on-surface)] leading-4">
+                        账号创建与档案就绪
+                      </div>
+                      <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed mt-1">
+                        新导入学生将自动创建系统账号并初始化全周期心理健康档案，无需手动分配。
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Template download banner */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-[var(--md-sys-color-surface-container)]">
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-[22px] text-[var(--md-sys-color-primary)] shrink-0">
+                    description
+                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">
+                      尚未准备好数据？下载官方标准 CSV 模板
+                    </span>
+                    <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)]">
+                      包含标准中文字段表头及示例数据，开箱即用，支持 Excel / WPS 编辑
+                    </span>
+                  </div>
+                </div>
+                <SecondaryButton
+                  icon="download"
+                  label="下载 CSV 模板"
+                  onClick={downloadTemplate}
+                  noCollapse
+                />
               </div>
             </motion.div>
           )}
@@ -235,19 +284,19 @@ export function StudentBulkImportDialog({ open, onClose }: StudentBulkImportDial
             >
               {/* KPI Summary Stat Cards */}
               <div className="grid grid-cols-4 gap-3">
-                <div className="flex flex-col p-3 rounded-2xl bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)]">
+                <div className="flex flex-col p-3 rounded-2xl bg-[var(--md-sys-color-surface-container)]">
                   <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)] font-medium">总读取记录</span>
                   <span className="text-[22px] font-bold text-[var(--md-sys-color-on-surface)] mt-0.5">{previewData.totalRows}</span>
                 </div>
-                <div className="flex flex-col p-3 rounded-2xl bg-[#dcfce7] dark:bg-[#14532d] border border-[#86efac] dark:border-[#166534]">
+                <div className="flex flex-col p-3 rounded-2xl bg-[#dcfce7] dark:bg-[#14532d]">
                   <span className="text-[12px] text-[#15803d] dark:text-[#86efac] font-medium">待导入 (就绪)</span>
                   <span className="text-[22px] font-bold text-[#15803d] dark:text-[#86efac] mt-0.5">{previewData.readyCount}</span>
                 </div>
-                <div className="flex flex-col p-3 rounded-2xl bg-[#fef3c7] dark:bg-[#78350f] border border-[#fde68a] dark:border-[#92400e]">
+                <div className="flex flex-col p-3 rounded-2xl bg-[#fef3c7] dark:bg-[#78350f]">
                   <span className="text-[12px] text-[#b45309] dark:text-[#fde68a] font-medium">已存在 (重复)</span>
                   <span className="text-[22px] font-bold text-[#b45309] dark:text-[#fde68a] mt-0.5">{previewData.duplicateCount}</span>
                 </div>
-                <div className="flex flex-col p-3 rounded-2xl bg-[#fee2e2] dark:bg-[#7f1d1d] border border-[#fca5a5] dark:border-[#991b1b]">
+                <div className="flex flex-col p-3 rounded-2xl bg-[#fee2e2] dark:bg-[#7f1d1d]">
                   <span className="text-[12px] text-[#b91c1c] dark:text-[#fca5a5] font-medium">格式异常 (不可导入)</span>
                   <span className="text-[22px] font-bold text-[#b91c1c] dark:text-[#fca5a5] mt-0.5">{previewData.invalidCount}</span>
                 </div>
@@ -255,9 +304,8 @@ export function StudentBulkImportDialog({ open, onClose }: StudentBulkImportDial
 
               {/* Filter Row & Checkbox */}
               <div className="flex items-center justify-between gap-4 flex-wrap">
-                {/* Filter chips */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)] font-medium">查看过滤:</span>
+                {/* Material Filter chips */}
+                <md-chip-set>
                   {(
                     [
                       { key: 'ALL', label: `全部 (${previewData.totalRows})` },
@@ -265,38 +313,35 @@ export function StudentBulkImportDialog({ open, onClose }: StudentBulkImportDial
                       { key: 'DUPLICATE', label: `已存在 (${previewData.duplicateCount})` },
                       { key: 'INVALID', label: `异常 (${previewData.invalidCount})` }
                     ] as const
-                  ).map((tab) => {
-                    const isSelected = filterStatus === tab.key;
-                    return (
-                      <button
-                        key={tab.key}
-                        onClick={() => setFilterStatus(tab.key)}
-                        className={`px-3 py-1 rounded-full text-[12px] font-medium transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-sm'
-                            : 'bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-high)]'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    );
-                  })}
-                </div>
+                  ).map((tab) => (
+                    <md-filter-chip
+                      key={tab.key}
+                      label={tab.label}
+                      selected={filterStatus === tab.key || undefined}
+                      onClick={() => setFilterStatus(tab.key)}
+                    >
+                      {tab.label}
+                    </md-filter-chip>
+                  ))}
+                </md-chip-set>
 
                 {/* Overwrite Duplicate Checkbox */}
                 {previewData.duplicateCount > 0 && (
-                  <label className="flex items-center gap-2 cursor-pointer select-none bg-[var(--md-sys-color-surface-container)] px-3 py-1.5 rounded-xl border border-[var(--md-sys-color-outline-variant)]">
-                    <input
-                      type="checkbox"
-                      checked={overwriteDuplicates}
-                      onChange={(e) => setOverwriteDuplicates(e.target.checked)}
-                      className="w-4 h-4 rounded text-[var(--md-sys-color-primary)] focus:ring-0 cursor-pointer"
+                  <label
+                    className="flex items-center gap-2 cursor-pointer select-none px-2 py-1 rounded-xl transition-colors hover:bg-[var(--md-sys-color-surface-container-high)]"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setOverwriteDuplicates(!overwriteDuplicates);
+                    }}
+                  >
+                    <span className="text-[13px] font-medium text-[var(--md-sys-color-on-surface)]">
+                      更新已存在学生档案
+                    </span>
+                    {/* @ts-ignore */}
+                    <md-checkbox
+                      aria-label="更新已存在学生档案"
+                      checked={overwriteDuplicates || undefined}
                     />
-                    <div className="flex flex-col">
-                      <span className="text-[12px] font-medium text-[var(--md-sys-color-on-surface)]">
-                        更新已存在学生档案
-                      </span>
-                    </div>
                   </label>
                 )}
               </div>
@@ -305,7 +350,7 @@ export function StudentBulkImportDialog({ open, onClose }: StudentBulkImportDial
               <StudentBulkImportPreviewTable rows={filteredRows} />
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-2 border-t border-[var(--md-sys-color-outline-variant)] border-opacity-40">
+              <div className="flex items-center justify-between pt-2">
                 <SecondaryButton
                   icon="arrow_back"
                   label="重新上传"
@@ -318,7 +363,6 @@ export function StudentBulkImportDialog({ open, onClose }: StudentBulkImportDial
                 <div className="flex items-center gap-3">
                   <TertiaryButton label="取消" onClick={onClose} noCollapse />
                   <PrimaryButton
-                    icon="file_download_done"
                     label={
                       isCommitLoading
                         ? '导入中...'

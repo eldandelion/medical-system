@@ -172,13 +172,13 @@ describe('StudentBulkImportDialog Component', () => {
     expect(screen.getByText('陈志远')).toBeDefined();
 
     // Check Overwrite Checkbox
-    const checkbox = screen.getByLabelText('更新已存在学生档案') as HTMLInputElement;
+    const checkbox = screen.getByLabelText('更新已存在学生档案');
     expect(checkbox).toBeDefined();
-    expect(checkbox.checked).toBe(false);
+    expect(checkbox.hasAttribute('checked')).toBe(false);
 
     // Toggle Checkbox
     fireEvent.click(checkbox);
-    expect(checkbox.checked).toBe(true);
+    expect(checkbox.hasAttribute('checked')).toBe(true);
 
     // Commit import
     mockCommitImport.mockResolvedValueOnce({

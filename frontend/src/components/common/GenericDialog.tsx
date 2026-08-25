@@ -60,7 +60,7 @@ export function GenericDialog({
             </div>
 
             {/* Content */}
-            <div className="px-8 pb-4 flex flex-col gap-3 overflow-y-auto custom-scrollbar max-h-[70vh]">
+            <div className={`px-8 flex flex-col gap-3 overflow-y-auto custom-scrollbar max-h-[70vh] ${actions ? 'pb-4' : 'pb-8'}`}>
               {children}
             </div>
 
