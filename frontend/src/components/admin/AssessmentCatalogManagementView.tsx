@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAssessmentCatalogManagement } from '../../hooks/useAssessmentCatalogManagement';
 import { AssessmentCatalogItemDto } from '../../types';
-import { PrimaryButton, TertiaryButton, SegmentedButton } from '../common/Buttons';
+import { PrimaryButton, TertiaryButton, OutlinedButton, SegmentedButton } from '../common/Buttons';
 import { GenericDialog } from '../common/GenericDialog';
 import { useCreationOverlay } from '../../contexts/CreationContext';
 import { AssessmentAssignmentCreationForm } from '../assessments/AssessmentAssignmentCreationForm';
@@ -184,7 +184,8 @@ export const AssessmentCatalogManagementView: React.FC = () => {
                           onClick={() => setViewingScale(item)}
                           className="h-8 px-2 text-xs"
                         />
-                        <PrimaryButton
+                        <OutlinedButton
+                          icon="assignment_add"
                           label="指派测评"
                           onClick={() => handleOpenAssign(item)}
                           disabled={!isAvailable}

@@ -4,7 +4,7 @@ import { AdminUserSummaryDto, AccountStatus } from '../../types/admin';
 import { roleTranslations } from '../../utils/roleTranslations';
 import { useAdminUsers } from '../../hooks/useAdminUsers';
 import { ActionFooter } from '../common/ActionFooter';
-import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
+import { OutlinedButton, TertiaryButton } from '../common/Buttons';
 import { GenericDialog } from '../common/GenericDialog';
 
 export interface UserGovernanceFooterProps {
@@ -48,24 +48,15 @@ export const UserGovernanceFooter: React.FC<UserGovernanceFooterProps> = ({
       <ActionFooter>
         {user.status === 'PENDING_APPROVAL' && (
           <>
-            <PrimaryButton
+            <OutlinedButton
               icon="check_circle"
               label="通过审核并启用"
               onClick={() => handleStatusChange('ACTIVE')}
               disabled={isUpdating}
             />
-            <TertiaryButton
+            <OutlinedButton
               icon="cancel"
               label="拒绝 / 注销"
-              style={{
-                color: 'var(--md-sys-color-error)',
-                '--md-text-button-label-text-color': 'var(--md-sys-color-error)',
-                '--md-text-button-hover-label-text-color': 'var(--md-sys-color-error)',
-                '--md-text-button-hover-state-layer-color': 'var(--md-sys-color-error)',
-                '--md-text-button-pressed-label-text-color': 'var(--md-sys-color-error)',
-                '--md-text-button-pressed-state-layer-color': 'var(--md-sys-color-error)',
-                '--md-text-button-focus-label-text-color': 'var(--md-sys-color-error)',
-              } as React.CSSProperties}
               onClick={() => setIsDeleteDialogOpen(true)}
             />
           </>
@@ -73,24 +64,15 @@ export const UserGovernanceFooter: React.FC<UserGovernanceFooterProps> = ({
 
         {user.status === 'ACTIVE' && (
           <>
-            <SecondaryButton
+            <OutlinedButton
               icon="block"
               label="禁用账号"
               onClick={() => setIsDisableDialogOpen(true)}
               disabled={isUpdating}
             />
-            <TertiaryButton
+            <OutlinedButton
               icon="person_remove"
               label="注销账号"
-              style={{
-                color: 'var(--md-sys-color-error)',
-                '--md-text-button-label-text-color': 'var(--md-sys-color-error)',
-                '--md-text-button-hover-label-text-color': 'var(--md-sys-color-error)',
-                '--md-text-button-hover-state-layer-color': 'var(--md-sys-color-error)',
-                '--md-text-button-pressed-label-text-color': 'var(--md-sys-color-error)',
-                '--md-text-button-pressed-state-layer-color': 'var(--md-sys-color-error)',
-                '--md-text-button-focus-label-text-color': 'var(--md-sys-color-error)',
-              } as React.CSSProperties}
               onClick={() => setIsDeleteDialogOpen(true)}
             />
           </>
@@ -98,31 +80,22 @@ export const UserGovernanceFooter: React.FC<UserGovernanceFooterProps> = ({
 
         {user.status === 'DISABLED' && (
           <>
-            <PrimaryButton
+            <OutlinedButton
               icon="lock_open"
               label="恢复账号并启用"
               onClick={() => handleStatusChange('ACTIVE')}
               disabled={isUpdating}
             />
-            <TertiaryButton
+            <OutlinedButton
               icon="person_remove"
               label="注销账号"
-              style={{
-                color: 'var(--md-sys-color-error)',
-                '--md-text-button-label-text-color': 'var(--md-sys-color-error)',
-                '--md-text-button-hover-label-text-color': 'var(--md-sys-color-error)',
-                '--md-text-button-hover-state-layer-color': 'var(--md-sys-color-error)',
-                '--md-text-button-pressed-label-text-color': 'var(--md-sys-color-error)',
-                '--md-text-button-pressed-state-layer-color': 'var(--md-sys-color-error)',
-                '--md-text-button-focus-label-text-color': 'var(--md-sys-color-error)',
-              } as React.CSSProperties}
               onClick={() => setIsDeleteDialogOpen(true)}
             />
           </>
         )}
 
         {user.status === 'DELETED' && (
-          <PrimaryButton
+          <OutlinedButton
             icon="restore"
             label="恢复账号并启用"
             onClick={() => handleStatusChange('ACTIVE')}
