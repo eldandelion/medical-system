@@ -13,10 +13,16 @@ interface UserJpaRepository : JpaRepository<UserEntity, Long> {
 }
 
 @Repository
-interface TeacherJpaRepository : JpaRepository<TeacherEntity, Long>
+interface TeacherJpaRepository : JpaRepository<TeacherEntity, Long> {
+    fun findByEmployeeNumber(employeeNumber: String): TeacherEntity?
+}
 
 @Repository
-interface HeadCounsellorJpaRepository : JpaRepository<HeadCounsellorEntity, Long>
+interface HeadCounsellorJpaRepository : JpaRepository<HeadCounsellorEntity, Long> {
+    fun findByEmployeeNumber(employeeNumber: String): HeadCounsellorEntity?
+}
 
 @Repository
-interface TrialAdminJpaRepository : JpaRepository<TrialAdminEntity, Long>
+interface TrialAdminJpaRepository : JpaRepository<TrialAdminEntity, Long> {
+    fun findByEmployeeNumber(employeeNumber: String): TrialAdminEntity?
+}

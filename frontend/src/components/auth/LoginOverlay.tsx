@@ -30,6 +30,8 @@ export function LoginOverlay({
   const [showPassword, setShowPassword] = React.useState(false);
   const [identifierError, setIdentifierError] = React.useState('');
   const [passwordError, setPasswordError] = React.useState('');
+  const [isVerifying, setIsVerifying] = React.useState(false);
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
   // Reset state when opening
   React.useEffect(() => {
@@ -40,6 +42,9 @@ export function LoginOverlay({
       setShowPassword(false);
       setIdentifierError('');
       setPasswordError('');
+      setIsVerifying(false);
+    } else {
+      abortControllerRef.current?.abort();
     }
   }, [isOpen, initialIdentifier]);
 
@@ -54,17 +59,65 @@ export function LoginOverlay({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  const handleStep1Submit = (e?: React.SyntheticEvent) => {
+  const handleStep1Submit = async (e?: React.SyntheticEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
-    if (!identifier.trim()) {
+    const trimmed = identifier.trim();
+    if (!trimmed) {
       setIdentifierError('请输入电子邮件地址或学工号');
       return;
     }
+
+    abortControllerRef.current?.abort();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
+    setIsVerifying(true);
     setIdentifierError('');
-    setPasswordError('');
-    setPassword('');
-    setStep(2);
+
+    try {
+      const url = `${import.meta.env.BASE_URL || '/'}api/auth/verify-identifier`.replace('//api', '/api');
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ identifier: trimmed }),
+        signal: abortController.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error('VERIFICATION_FAILED');
+      }
+
+      const data = (await response.json()) as {
+        exists: boolean;
+        isAccountActive?: boolean;
+        maskedIdentifier?: string;
+      };
+
+      if (!data.exists) {
+        setIdentifierError('找不到您的账号，请检查输入或联系管理员');
+        return;
+      }
+
+      if (data.isAccountActive === false) {
+        setIdentifierError('该账号已被停用或注销，请联系管理员');
+        return;
+      }
+
+      setIdentifierError('');
+      setPasswordError('');
+      setPassword('');
+      setStep(2);
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return;
+      }
+      setIdentifierError('网络异常，无法连接到验证服务，请重试');
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const handleStep2Submit = (e?: React.SyntheticEvent) => {
@@ -189,8 +242,9 @@ export function LoginOverlay({
                           noCollapse
                         />
                         <PrimaryButton
-                          label="下一步"
+                          label={isVerifying ? "验证中..." : "下一步"}
                           onClick={() => handleStep1Submit()}
+                          disabled={isVerifying}
                           noCollapse
                           className="px-6 rounded-full"
                         />

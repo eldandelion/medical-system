@@ -1,10 +1,59 @@
 import React from 'react';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { LoginOverlay } from './LoginOverlay';
 import { AccountMenu } from '../layout/AccountMenu';
 
+let originalFetch: typeof global.fetch;
+
+beforeEach(() => {
+  originalFetch = global.fetch;
+  global.fetch = vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
+    if (url.includes('/api/auth/verify-identifier')) {
+      const body = JSON.parse((init?.body as string) || '{}');
+      const raw = (body.identifier || '').trim().toLowerCase();
+      if (!raw) {
+        return {
+          ok: true,
+          json: async () => ({ exists: false, isAccountActive: false }),
+        };
+      }
+      if (raw === 'disabled_user@univ.edu.cn') {
+        return {
+          ok: true,
+          json: async () => ({ exists: true, isAccountActive: false, maskedIdentifier: raw }),
+        };
+      }
+      if (
+        raw === 'testuser@example.com' ||
+        raw === '2021001' ||
+        raw === 'emp-00001' ||
+        raw === 'doc-00001' ||
+        raw === 'alice@university.edu' ||
+        raw === 'user@example.com' ||
+        raw === 'liming@univ.edu.cn' ||
+        raw === 's2023001' ||
+        raw === 'warfacealpine10@gmail.com'
+      ) {
+        return {
+          ok: true,
+          json: async () => ({ exists: true, isAccountActive: true, maskedIdentifier: raw }),
+        };
+      }
+      return {
+        ok: true,
+        json: async () => ({ exists: false, isAccountActive: false }),
+      };
+    }
+    return {
+      ok: true,
+      json: async () => ({}),
+    };
+  });
+});
+
 afterEach(() => {
+  global.fetch = originalFetch;
   cleanup();
 });
 
@@ -46,7 +95,7 @@ describe('LoginOverlay Component', () => {
     expect(screen.queryByText('English (United States)')).toBeNull();
   });
 
-  it('shows validation error on Step 1 if identifier is cleared and submitted', () => {
+  it('shows validation error on Step 1 if identifier is cleared and submitted', async () => {
     render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
 
     const nextButton = screen.getByText('下一步');
@@ -58,7 +107,7 @@ describe('LoginOverlay Component', () => {
     expect(screen.queryByText('欢迎')).toBeNull();
   });
 
-  it('transitions to Step 2 when Step 1 is submitted with valid identifier', () => {
+  it('transitions to Step 2 when Step 1 is submitted with valid email', async () => {
     render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
 
     const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]') as HTMLElement;
@@ -68,7 +117,7 @@ describe('LoginOverlay Component', () => {
     fireEvent.click(nextButton);
 
     // Step 2 elements
-    expect(screen.getByText('欢迎')).toBeDefined();
+    expect(await screen.findByText('欢迎')).toBeDefined();
     expect(screen.getByText('testuser@example.com')).toBeDefined();
     expect(screen.getByText('如要继续，请先验证您的身份')).toBeDefined();
 
@@ -78,12 +127,79 @@ describe('LoginOverlay Component', () => {
     expect(screen.getByText('使用其他账号')).toBeDefined();
   });
 
-  it('displays static account indicator chip in Step 2 and allows returning to Step 1 via 使用其他账号 button', () => {
+  it('transitions to Step 2 when Step 1 is submitted with valid student number', async () => {
+    render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+
+    const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]') as HTMLElement;
+    setMdInputValue(emailField, '2021001');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(await screen.findByText('欢迎')).toBeDefined();
+    expect(screen.getByText('2021001')).toBeDefined();
+  });
+
+  it('transitions to Step 2 when Step 1 is submitted with valid teacher worker ID', async () => {
+    render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+
+    const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]') as HTMLElement;
+    setMdInputValue(emailField, 'EMP-00001');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(await screen.findByText('欢迎')).toBeDefined();
+    expect(screen.getByText('EMP-00001')).toBeDefined();
+  });
+
+  it('transitions to Step 2 when Step 1 is submitted with valid doctor worker ID', async () => {
+    render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+
+    const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]') as HTMLElement;
+    setMdInputValue(emailField, 'DOC-00001');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(await screen.findByText('欢迎')).toBeDefined();
+    expect(screen.getByText('DOC-00001')).toBeDefined();
+  });
+
+  it('displays error and stays on Step 1 when non-existent identifier is submitted', async () => {
+    render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+
+    const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]') as HTMLElement;
+    setMdInputValue(emailField, 'nonexistent_account_9999');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(await screen.findByText('找不到您的账号，请检查输入或联系管理员')).toBeDefined();
+    expect(screen.getByText('登录')).toBeDefined();
+    expect(screen.queryByText('欢迎')).toBeNull();
+  });
+
+  it('displays error and stays on Step 1 when a deactivated or disabled account is submitted', async () => {
+    render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+
+    const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]') as HTMLElement;
+    setMdInputValue(emailField, 'disabled_user@univ.edu.cn');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(await screen.findByText('该账号已被停用或注销，请联系管理员')).toBeDefined();
+    expect(screen.getByText('登录')).toBeDefined();
+    expect(screen.queryByText('欢迎')).toBeNull();
+  });
+
+  it('displays static account indicator chip in Step 2 and allows returning to Step 1 via 使用其他账号 button', async () => {
     render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="alice@university.edu" />);
 
     // Advance to Step 2
     fireEvent.click(screen.getByText('下一步'));
-    expect(screen.getByText('欢迎')).toBeDefined();
+    expect(await screen.findByText('欢迎')).toBeDefined();
 
     // The account email is displayed
     expect(screen.getByText('alice@university.edu')).toBeDefined();
@@ -100,11 +216,12 @@ describe('LoginOverlay Component', () => {
     expect(screen.queryByText('欢迎')).toBeNull();
   });
 
-  it('toggles password visibility with "显示密码" checkbox in Step 2', () => {
+  it('toggles password visibility with "显示密码" checkbox in Step 2', async () => {
     render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="user@example.com" />);
 
     // Advance to Step 2
     fireEvent.click(screen.getByText('下一步'));
+    expect(await screen.findByText('欢迎')).toBeDefined();
 
     const checkboxLabel = screen.getByText('显示密码');
     const passwordField = document.querySelector('md-outlined-text-field[label="输入您的密码"]') as HTMLElement;
@@ -118,7 +235,7 @@ describe('LoginOverlay Component', () => {
     expect(passwordField.getAttribute('type')).toBe('password');
   });
 
-  it('shows error if password is empty and calls onSuccess/onClose on valid password submit', () => {
+  it('shows error if password is empty and calls onSuccess/onClose on valid password submit', async () => {
     const onCloseMock = vi.fn();
     const onSuccessMock = vi.fn();
 
@@ -133,6 +250,7 @@ describe('LoginOverlay Component', () => {
 
     // Advance to Step 2
     fireEvent.click(screen.getByText('下一步'));
+    expect(await screen.findByText('欢迎')).toBeDefined();
 
     // Submit empty password
     fireEvent.click(screen.getByText('下一步'));

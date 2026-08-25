@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface DoctorRepository : JpaRepository<DoctorEntity, Long> {
     fun countByDepartmentHospitalId(hospitalId: Long): Long
+    fun findByEmployeeNumber(employeeNumber: String): DoctorEntity?
 }
+

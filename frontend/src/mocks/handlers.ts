@@ -35,6 +35,85 @@ const mockComputeAvailableActions = (referral: Referral, authHeader: string): Re
 const api = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`;
 
 export const handlers = [
+  http.post(api('/api/auth/verify-identifier'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          console.warn(`[MSW Bypass] Backend rejected /api/auth/verify-identifier with status ${res.status}`);
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn('Could not verify identifier against real backend, falling back to mock', e);
+      }
+    }
+
+    const body = (await request.json().catch(() => ({}))) as { identifier?: string };
+    const rawInput = (body.identifier || '').trim();
+
+    if (!rawInput) {
+      return HttpResponse.json({ exists: false, isAccountActive: false });
+    }
+
+    // 1. Try matching student number or student demographics email
+    const student = mockStudentsDb.find(
+      (s) =>
+        s.studentNumber.toLowerCase() === rawInput.toLowerCase() ||
+        (s.demographics?.email && s.demographics.email.toLowerCase() === rawInput.toLowerCase())
+    );
+
+    if (student) {
+      const isActive = student.status?.toLowerCase() !== 'disabled' && student.status?.toLowerCase() !== 'deleted';
+      return HttpResponse.json({
+        exists: true,
+        isAccountActive: isActive,
+        maskedIdentifier: rawInput.includes('@')
+          ? `${rawInput.slice(0, 2)}***${rawInput.slice(rawInput.indexOf('@') - 1)}`
+          : `${rawInput.slice(0, 2)}****${rawInput.slice(-2)}`,
+        role: 'STUDENT',
+      });
+    }
+
+    // 2. Try matching admin / staff users (email or employeeOrStudentId)
+    const adminUser = mockAdminUsersDb.find(
+      (u) =>
+        u.email.toLowerCase() === rawInput.toLowerCase() ||
+        (u.employeeOrStudentId && u.employeeOrStudentId.toLowerCase() === rawInput.toLowerCase())
+    );
+
+    if (adminUser) {
+      const isActive = adminUser.status === 'ACTIVE';
+      return HttpResponse.json({
+        exists: true,
+        isAccountActive: isActive,
+        maskedIdentifier: rawInput.includes('@')
+          ? `${rawInput.slice(0, 2)}***${rawInput.slice(rawInput.indexOf('@') - 1)}`
+          : `${rawInput.slice(0, 2)}****${rawInput.slice(-2)}`,
+        role: adminUser.role,
+      });
+    }
+
+    // 3. Fallback check for common test mock accounts
+    if (rawInput.toLowerCase().includes('warfacealpine10@gmail.com') || rawInput.toLowerCase().includes('alice@university.edu') || rawInput.toLowerCase().includes('testuser@example.com') || rawInput.toLowerCase().includes('user@example.com')) {
+      return HttpResponse.json({
+        exists: true,
+        isAccountActive: true,
+        maskedIdentifier: rawInput,
+        role: 'STUDENT',
+      });
+    }
+
+    return HttpResponse.json({
+      exists: false,
+      isAccountActive: false,
+    });
+  }),
+
   http.get(api('/api/assessments'), async ({ request }) => {
     await delay(MOCK_DELAY_MS);
     if (import.meta.env.MODE !== 'test') {
