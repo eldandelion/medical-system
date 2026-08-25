@@ -35,6 +35,7 @@ export function StudentBulkImportDialog({ open, onClose }: StudentBulkImportDial
   const [filterStatus, setFilterStatus] = React.useState<FilterStatus>('ALL');
   const [overwriteDuplicates, setOverwriteDuplicates] = React.useState<boolean>(false);
   const [isDragOver, setIsDragOver] = React.useState<boolean>(false);
+  const [isDiscardWarningOpen, setIsDiscardWarningOpen] = React.useState<boolean>(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const {
@@ -56,10 +57,19 @@ export function StudentBulkImportDialog({ open, onClose }: StudentBulkImportDial
       setDirection(1);
       setFilterStatus('ALL');
       setOverwriteDuplicates(false);
+      setIsDiscardWarningOpen(false);
       resetPreview();
       resetCommit();
     }
   }, [open, resetPreview, resetCommit]);
+
+  const handleCloseAttempt = () => {
+    if (step === 'PREVIEW') {
+      setIsDiscardWarningOpen(true);
+    } else {
+      onClose();
+    }
+  };
 
   const handleFileChange = async (file: File) => {
     if (!file.name.endsWith('.csv')) {
@@ -123,13 +133,23 @@ export function StudentBulkImportDialog({ open, onClose }: StudentBulkImportDial
   };
 
   return (
-    <GenericDialog
-      open={open}
-      onClose={onClose}
-      title={getTitle()}
-      maxWidth="880px"
-      isLoading={isPreviewLoading || isCommitLoading}
-    >
+    <>
+      <GenericDialog
+        open={open}
+        onClose={handleCloseAttempt}
+        title={getTitle()}
+        headerRight={
+          step === 'UPLOAD' ? (
+            /* @ts-ignore */
+            <md-icon-button aria-label="关闭" onClick={onClose}>
+              {/* @ts-ignore */}
+              <md-icon>close</md-icon>
+            </md-icon-button>
+          ) : undefined
+        }
+        maxWidth="880px"
+        isLoading={isPreviewLoading || isCommitLoading}
+      >
       <div className="w-full relative min-h-[420px] flex flex-col overflow-hidden">
         <AnimatePresence mode="popLayout" custom={direction} initial={false}>
           {step === 'UPLOAD' && (
@@ -182,9 +202,8 @@ export function StudentBulkImportDialog({ open, onClose }: StudentBulkImportDial
 
               {/* Import Notes & Format Rules */}
               <div className="flex flex-col gap-2.5">
-                <div className="text-xs font-semibold text-[var(--md-sys-color-on-surface)] flex items-center gap-1.5 px-0.5">
-                  <span className="material-symbols-outlined text-[18px] text-[var(--md-sys-color-primary)]">info</span>
-                  <span>导入规范与注意事项</span>
+                <div className="text-xs font-semibold text-[var(--md-sys-color-on-surface)] px-0.5">
+                  导入规范与注意事项
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
@@ -247,7 +266,7 @@ export function StudentBulkImportDialog({ open, onClose }: StudentBulkImportDial
               </div>
 
               {/* Template download banner */}
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-[var(--md-sys-color-surface-container)]">
+              <div className="flex items-center justify-between gap-4 pt-1">
                 <div className="flex items-center gap-3">
                   <span className="material-symbols-outlined text-[22px] text-[var(--md-sys-color-primary)] shrink-0">
                     description
@@ -361,7 +380,7 @@ export function StudentBulkImportDialog({ open, onClose }: StudentBulkImportDial
                   noCollapse
                 />
                 <div className="flex items-center gap-3">
-                  <TertiaryButton label="取消" onClick={onClose} noCollapse />
+                  <TertiaryButton label="取消" onClick={handleCloseAttempt} noCollapse />
                   <PrimaryButton
                     label={
                       isCommitLoading
@@ -437,5 +456,30 @@ export function StudentBulkImportDialog({ open, onClose }: StudentBulkImportDial
         </AnimatePresence>
       </div>
     </GenericDialog>
+
+    {/* Discard Warning Confirmation Dialog for Preview Step */}
+    <GenericDialog
+      open={isDiscardWarningOpen}
+      onClose={() => setIsDiscardWarningOpen(false)}
+      title="确认放弃当前导入？"
+      maxWidth="460px"
+      actions={
+        <>
+          <OutlinedButton label="继续导入" onClick={() => setIsDiscardWarningOpen(false)} />
+          <PrimaryButton
+            label="确认放弃"
+            onClick={() => {
+              setIsDiscardWarningOpen(false);
+              onClose();
+            }}
+          />
+        </>
+      }
+    >
+      <p className="text-sm text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
+        您当前已有解析就绪的导入数据，退出后将放弃本次导入流程。是否确认退出？
+      </p>
+    </GenericDialog>
+  </>
   );
 }

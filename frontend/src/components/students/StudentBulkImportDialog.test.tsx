@@ -246,4 +246,80 @@ describe('StudentBulkImportDialog Component', () => {
     fireEvent.click(finishBtn);
     expect(onClose).toHaveBeenCalled();
   });
+
+  it('renders close cross button on upload step and closes directly', () => {
+    const onClose = vi.fn();
+    render(<StudentBulkImportDialog open={true} onClose={onClose} />);
+
+    const closeBtn = screen.getByLabelText('关闭');
+    expect(closeBtn).toBeDefined();
+
+    fireEvent.click(closeBtn);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not render close cross button on preview step and prompts confirmation on cancel/clicking away', async () => {
+    mockPreviewData = {
+      totalRows: 1,
+      readyCount: 1,
+      duplicateCount: 0,
+      invalidCount: 0,
+      rows: [
+        {
+          rowNumber: 2,
+          studentNumber: 'S2026001',
+          name: '陈志远',
+          major: '计算机科学',
+          enrollmentDate: '2026-09-01',
+          idCardNumber: '110101200801011234',
+          gender: 'MALE',
+          ethnicity: '汉族',
+          contactNumber: '13800138000',
+          email: 'chenzy@univ.edu.cn',
+          teacherEmployeeNumber: null,
+          status: 'READY',
+          errors: []
+        }
+      ]
+    };
+
+    const onClose = vi.fn();
+    render(<StudentBulkImportDialog open={true} onClose={onClose} />);
+
+    // Upload CSV to advance to Preview
+    const file = new File(['csv'], 'test.csv', { type: 'text/csv' });
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    mockPreviewCsv.mockResolvedValueOnce(mockPreviewData);
+    fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(screen.getByText('导入数据预览与核验')).toBeDefined();
+    });
+
+    // Close button should not be present in header on preview step
+    expect(screen.queryByLabelText('关闭')).toBeNull();
+
+    // Click cancel in preview step footer
+    const cancelBtn = screen.getByText('取消');
+    fireEvent.click(cancelBtn);
+
+    // Confirmation dialog should appear
+    expect(screen.getByText('确认放弃当前导入？')).toBeDefined();
+    expect(screen.getByText(/您当前已有解析就绪的导入数据/)).toBeDefined();
+
+    // Click "继续导入" to dismiss warning
+    const keepBtn = screen.getByText('继续导入');
+    fireEvent.click(keepBtn);
+    await waitFor(() => {
+      expect(screen.queryByText('确认放弃当前导入？')).toBeNull();
+    });
+    expect(onClose).not.toHaveBeenCalled();
+
+    // Click cancel again and confirm discard
+    fireEvent.click(screen.getByText('取消'));
+    const confirmDiscardBtn = screen.getByText('确认放弃');
+    fireEvent.click(confirmDiscardBtn);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
 });
+

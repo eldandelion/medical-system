@@ -10,6 +10,7 @@ interface GenericDialogProps {
   actions?: React.ReactNode;
   maxWidth?: string;
   isLoading?: boolean;
+  headerRight?: React.ReactNode;
 }
 
 export function GenericDialog({
@@ -19,7 +20,8 @@ export function GenericDialog({
   children,
   actions,
   maxWidth = '560px',
-  isLoading
+  isLoading,
+  headerRight
 }: GenericDialogProps) {
   const dialogContent = (
     <AnimatePresence>
@@ -47,10 +49,15 @@ export function GenericDialog({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Headline */}
-            <div className="px-8 pt-8 pb-4 relative">
-              <h2 className="text-[var(--md-sys-color-on-surface)] text-[24px] leading-[32px] font-normal">
+            <div className="px-8 pt-8 pb-4 relative flex items-center justify-between gap-4">
+              <h2 className="text-[var(--md-sys-color-on-surface)] text-[24px] leading-[32px] font-normal flex-1">
                 {title}
               </h2>
+              {headerRight && (
+                <div className="shrink-0 -mr-2 -my-2 flex items-center">
+                  {headerRight}
+                </div>
+              )}
               {isLoading && (
                 <div className="absolute bottom-0 left-0 right-0 h-1">
                   {/* @ts-ignore */}
