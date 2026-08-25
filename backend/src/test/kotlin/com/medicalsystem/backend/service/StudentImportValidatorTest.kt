@@ -280,4 +280,89 @@ class StudentImportValidatorTest {
         assertTrue(codes.contains(StudentImportErrorCode.INVALID_ID_CARD_FORMAT))
         assertTrue(codes.contains(StudentImportErrorCode.INVALID_PHONE_FORMAT))
     }
+
+    // --- Name Validation Tests ---
+
+    @Test
+    fun `valid standard Chinese names are classified as READY`() {
+        for (name in listOf("张三", "李雷", "诸葛孔明", "欧阳修远")) {
+            val rows = validator.validateRows(
+                listOf(validRow(name = name)),
+                majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            )
+            assertEquals(StudentImportStatus.READY, rows[0].status, "Name '$name' should be valid")
+            assertEquals(name, rows[0].name)
+        }
+    }
+
+    @Test
+    fun `valid minority names with middle dot are accepted`() {
+        for (name in listOf("买买提·吐尔逊", "阿依努尔•阿卜杜拉")) {
+            val rows = validator.validateRows(
+                listOf(validRow(name = name)),
+                majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            )
+            assertEquals(StudentImportStatus.READY, rows[0].status, "Minority name '$name' should be valid")
+            assertEquals(name, rows[0].name)
+        }
+    }
+
+    @Test
+    fun `valid Latin names with spaces and hyphens are accepted`() {
+        for (name in listOf("John Doe", "Jean-Luc", "Mary-Jane", "O'Connor")) {
+            val rows = validator.validateRows(
+                listOf(validRow(name = name)),
+                majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            )
+            assertEquals(StudentImportStatus.READY, rows[0].status, "Latin name '$name' should be valid")
+            assertEquals(name, rows[0].name)
+        }
+    }
+
+    @Test
+    fun `name with trailing or leading spaces is trimmed and accepted if valid`() {
+        val rows = validator.validateRows(
+            listOf(validRow(name = "  王小明  ")),
+            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+        )
+        assertEquals(StudentImportStatus.READY, rows[0].status)
+        assertEquals("王小明", rows[0].name, "Name should be trimmed")
+    }
+
+    @Test
+    fun `name with internal double spaces is rejected`() {
+        val rows = validator.validateRows(
+            listOf(validRow(name = "张  三")),
+            majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+        )
+        assertEquals(StudentImportStatus.INVALID, rows[0].status)
+        val error = rows[0].errors.find { it.code == StudentImportErrorCode.INVALID_NAME_FORMAT }
+        assertNotNull(error, "Double-spaced name should produce INVALID_NAME_FORMAT")
+    }
+
+    @Test
+    fun `name with symbols or numbers produces INVALID_NAME_FORMAT error`() {
+        for (name in listOf("张*三", "Alex#123", "李4", "王@五")) {
+            val rows = validator.validateRows(
+                listOf(validRow(name = name)),
+                majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            )
+            assertEquals(StudentImportStatus.INVALID, rows[0].status, "Name '$name' should be invalid")
+            val error = rows[0].errors.find { it.code == StudentImportErrorCode.INVALID_NAME_FORMAT }
+            assertNotNull(error, "Name '$name' should produce INVALID_NAME_FORMAT")
+        }
+    }
+
+    @Test
+    fun `single character name produces INVALID_NAME_FORMAT error`() {
+        for (name in listOf("张", "A")) {
+            val rows = validator.validateRows(
+                listOf(validRow(name = name)),
+                majorsMap, ethnicitiesMap, teachersMap, existingStudentNums
+            )
+            assertEquals(StudentImportStatus.INVALID, rows[0].status, "Single-char name '$name' should be invalid")
+            val error = rows[0].errors.find { it.code == StudentImportErrorCode.INVALID_NAME_FORMAT }
+            assertNotNull(error, "Single-char name '$name' should produce INVALID_NAME_FORMAT")
+        }
+    }
 }

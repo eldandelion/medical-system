@@ -134,7 +134,7 @@ class StudentImportIntegrationTest {
         // 4. Test duplicate detection and update
         val updatedCsvContent = """
             学号,姓名,专业,入学日期,身份证号,性别,民族,联系电话,电子邮箱,家庭住址,紧急联系人,紧急联系电话,班主任/辅导员工号
-            TEST-S01,张三 (已更新),计算机科学与技术 (Test),2026-09-01,110101200801011234,男,汉族,13800138999,zhangsan.new@test.com,北京市朝阳区,张父,13900139001,EMP-TEST-001
+            TEST-S01,张三丰,计算机科学与技术 (Test),2026-09-01,110101200801011234,男,汉族,13800138999,zhangsan.new@test.com,北京市朝阳区,张父,13900139001,EMP-TEST-001
         """.trimIndent()
 
         val updatedMultipartFile = MockMultipartFile(
@@ -165,7 +165,7 @@ class StudentImportIntegrationTest {
         // Verify updated entity
         val s1Updated = studentJpaRepository.findByStudentNumber("TEST-S01")
         assertNotNull(s1Updated)
-        assertEquals("张三 (已更新)", s1Updated?.name)
+        assertEquals("张三丰", s1Updated?.name)
         assertEquals("13800138999", s1Updated?.demographics?.contactNumber)
         assertEquals("zhangsan.new@test.com", s1Updated?.demographics?.email)
         assertEquals("北京市朝阳区", s1Updated?.demographics?.homeAddress)

@@ -112,6 +112,32 @@ value class HospitalEmployeeId(val value: String) {
     }
 }
 
+@JvmInline
+value class PersonName(val value: String) {
+    companion object {
+        // 2-20 Chinese characters with optional single middle dot (· / •) for ethnic minority names
+        val CHINESE_NAME_PATTERN = Regex("^[\\u4e00-\\u9fa5]{2,20}(?:[·•][\\u4e00-\\u9fa5]{1,20})*$")
+        // 2-50 Latin characters with optional single space, hyphen, or apostrophe between word groups
+        val LATIN_NAME_PATTERN = Regex("^[A-Za-z]+(?:[ '\\-][A-Za-z]+)*$")
+
+        fun isValid(raw: String?): Boolean {
+            if (raw.isNullOrBlank()) return false
+            val trimmed = raw.trim()
+            if (trimmed.length < 2 || trimmed.length > 50) return false
+            return CHINESE_NAME_PATTERN.matches(trimmed) || LATIN_NAME_PATTERN.matches(trimmed)
+        }
+
+        fun fromOrNull(raw: String?): PersonName? =
+            raw?.trim()?.takeIf { isValid(it) }?.let { PersonName(it) }
+    }
+
+    init {
+        require(isValid(value)) {
+            "Invalid person name format."
+        }
+    }
+}
+
 data class BatteryId(val value: String)
 
 data class Score(val points: Int, val max: Int)

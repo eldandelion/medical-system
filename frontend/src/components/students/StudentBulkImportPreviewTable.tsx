@@ -46,6 +46,8 @@ export function formatImportError(err: StudentImportFieldError): string {
       return `日期格式无效 (支持 yyyy-MM-dd / yyyy-MM)`;
     case 'FUTURE_DATE':
       return `日期格式异常`;
+    case 'INVALID_NAME_FORMAT':
+      return `姓名格式无效 (需2-20位中文及少数民族分隔点，或标准英文姓名，不可包含数字或特殊符号)`;
     default:
       return `${fieldName}校验未通过`;
   }

@@ -10,6 +10,7 @@ import com.medicalsystem.backend.entity.TeacherEntity
 import com.medicalsystem.backend.model.EmailAddress
 import com.medicalsystem.backend.model.IdCardNumber
 import com.medicalsystem.backend.model.MobileNumber
+import com.medicalsystem.backend.model.PersonName
 import com.medicalsystem.backend.model.PhoneNumber
 import com.medicalsystem.backend.service.StudentImportSchema.Fields
 import org.springframework.stereotype.Component
@@ -86,7 +87,7 @@ class StudentImportValidator {
 
         // 1. Validate required fields presence
         val studentNumber = validateRequiredField(Fields.STUDENT_NUMBER, row, errors)
-        val name = validateRequiredField(Fields.NAME, row, errors)
+        val name = validateName(row[Fields.NAME], errors)
         val majorName = validateRequiredField(Fields.MAJOR, row, errors)
         val enrollmentDateRaw = validateRequiredField(Fields.ENROLLMENT_DATE, row, errors)
         val idCardRaw = validateRequiredField(Fields.ID_CARD_NUMBER, row, errors)
@@ -156,6 +157,29 @@ class StudentImportValidator {
             errors.add(StudentImportFieldErrorDto(fieldKey, StudentImportErrorCode.REQUIRED_FIELD_MISSING))
         }
         return value
+    }
+
+    private fun validateName(
+        rawName: String?,
+        errors: MutableList<StudentImportFieldErrorDto>
+    ): String? {
+        if (rawName.isNullOrBlank()) {
+            errors.add(StudentImportFieldErrorDto(Fields.NAME, StudentImportErrorCode.REQUIRED_FIELD_MISSING))
+            return null
+        }
+        val personName = PersonName.fromOrNull(rawName)
+        return if (personName != null) {
+            personName.value
+        } else {
+            errors.add(
+                StudentImportFieldErrorDto(
+                    Fields.NAME,
+                    StudentImportErrorCode.INVALID_NAME_FORMAT,
+                    rawName.trim()
+                )
+            )
+            null
+        }
     }
 
     private fun validateMajor(

@@ -11,7 +11,8 @@ export type StudentImportErrorCode =
   | 'INVALID_PHONE_FORMAT'
   | 'INVALID_EMAIL_FORMAT'
   | 'INVALID_DATE_FORMAT'
-  | 'FUTURE_DATE';
+  | 'FUTURE_DATE'
+  | 'INVALID_NAME_FORMAT';
 
 export interface StudentImportFieldError {
   field: string;
