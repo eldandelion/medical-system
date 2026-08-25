@@ -8,9 +8,7 @@ data class DemographicsDto(
     val ethnicity: String?,
     val idCardNumber: String?,
     val contactNumber: String?,
-    
-    val email: com.medicalsystem.backend.model.EmailAddress?,
-    
+    val email: String?,
     val homeAddress: String?,
     val emergencyContactName: String?,
     val emergencyContactPhone: String?,

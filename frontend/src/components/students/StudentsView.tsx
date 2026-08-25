@@ -7,17 +7,9 @@ import { DEGREE_LEVEL_LABELS, ACADEMIC_YEAR_LABELS } from '../../config/referral
 import { useAuth } from '../../contexts/AuthContext';
 import { SecondaryButton } from '../common/Buttons';
 import { StudentBulkImportDialog } from './StudentBulkImportDialog';
+import { fetchStudents, StudentDto } from '../../api/students';
 
-interface Student {
-  id: string;
-  studentNumber?: string;
-  name: string;
-  major: string;
-  year?: string;
-  degreeLevel?: string;
-  status: 'Active' | 'Inactive';
-  riskLevel?: 'HIGH' | 'MEDIUM' | 'LOW';
-}
+export type Student = StudentDto;
 
 interface StudentsViewProps {
   onStudentSelect?: (student: Student) => void;
@@ -29,17 +21,9 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
   const { session } = useAuth();
   const [isImportOpen, setIsImportOpen] = React.useState(false);
   
-  const { data: studentsData, isLoading: loading } = useQuery<Student[]>({
+  const { data: studentsData, isLoading: loading } = useQuery<StudentDto[]>({
     queryKey: ['/api/students', session.token],
-    queryFn: async () => {
-      const res = await fetch('/api/students', {
-        headers: {
-          'Authorization': `Bearer ${session.token}`
-        }
-      });
-      if (!res.ok) throw new Error('Failed to fetch students');
-      return res.json();
-    }
+    queryFn: () => fetchStudents(session.token),
   });
   const students = studentsData || [];
 

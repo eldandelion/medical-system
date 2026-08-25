@@ -73,7 +73,7 @@ class StudentMapper(
                     ethnicity = it.ethnicity?.name,
                     idCardNumber = it.idCardNumber?.value,
                     contactNumber = it.contactNumber?.value,
-                    email = it.email,
+                    email = it.email?.value,
                     homeAddress = it.homeAddress,
                     emergencyContactName = it.emergencyContactName,
                     emergencyContactPhone = it.emergencyContactPhone?.value,
