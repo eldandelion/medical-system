@@ -97,6 +97,14 @@ declare global {
         'aria-label'?: string;
         'touch-target'?: 'wrapper' | 'none';
       }, HTMLElement>;
+      'md-radio': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        checked?: boolean;
+        disabled?: boolean;
+        name?: string;
+        value?: string;
+        'aria-label'?: string;
+        'touch-target'?: 'wrapper' | 'none';
+      }, HTMLElement>;
       'md-list': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
       'md-list-item': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
         disabled?: boolean;

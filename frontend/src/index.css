@@ -285,3 +285,13 @@ md-outlined-segmented-button-set,
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Material Web component container shrinking fixes */
+md-outlined-select,
+md-filled-select,
+md-outlined-text-field,
+md-filled-text-field {
+  min-width: 0 !important;
+  --md-outlined-select-text-field-min-width: 0px;
+  --md-filled-select-text-field-min-width: 0px;
+}

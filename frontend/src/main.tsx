@@ -34,6 +34,7 @@ import '@material/web/labs/segmentedbutton/outlined-segmented-button.js';
 import '@material/web/fab/fab.js';
 import '@material/web/dialog/dialog.js';
 import '@material/web/checkbox/checkbox.js';
+import '@material/web/radio/radio.js';
 import '@material/web/list/list.js';
 import '@material/web/list/list-item.js';
 import '@material/web/select/outlined-select.js';
