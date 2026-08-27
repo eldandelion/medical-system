@@ -4,6 +4,8 @@ import path from 'path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig(() => {
+    const backendPort = process.env.BACKEND_PORT || '8080';
+
     return {
         base: '/medical-system/',
         plugins: [react(), tailwindcss()],
@@ -18,12 +20,12 @@ export default defineConfig(() => {
             hmr: process.env.DISABLE_HMR !== 'true',
             proxy: {
                 '/medical-system/api': {
-                    target: 'http://localhost:8080',
+                    target: `http://localhost:${backendPort}`,
                     changeOrigin: true,
                     rewrite: (path) => path.replace(/^\/medical-system\/api/, '/api'),
                 },
                 '^/api': {
-                    target: 'http://localhost:8080',
+                    target: `http://localhost:${backendPort}`,
                     changeOrigin: true,
                 },
             },
