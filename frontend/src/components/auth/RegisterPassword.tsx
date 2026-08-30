@@ -2,6 +2,7 @@ import * as React from 'react';
 import { motion } from 'motion/react';
 import { PrimaryButton, TertiaryButton } from '../common/Buttons';
 import { CsuLogo } from './LoginOverlay';
+import { validatePassword } from './validationUtils';
 
 export interface RegisterPasswordData {
   password: string;
@@ -27,8 +28,9 @@ export function RegisterPassword({
     e?.preventDefault();
     e?.stopPropagation();
 
-    if (password.length < 8) {
-      setErrorMessage('密码长度至少需要 8 个字符');
+    const pwdValidation = validatePassword(password);
+    if (!pwdValidation.isValid) {
+      setErrorMessage(pwdValidation.error || '请输入密码');
       return;
     }
 
@@ -81,6 +83,7 @@ export function RegisterPassword({
                 <md-outlined-text-field
                   label="密码"
                   type={showPassword ? 'text' : 'password'}
+                  maxLength={64}
                   value={password}
                   className="w-full"
                   error={!!errorMessage}
@@ -97,6 +100,7 @@ export function RegisterPassword({
                 <md-outlined-text-field
                   label="确认密码"
                   type={showPassword ? 'text' : 'password'}
+                  maxLength={64}
                   value={confirmPassword}
                   className="w-full"
                   error={!!errorMessage}

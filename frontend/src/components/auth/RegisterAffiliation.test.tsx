@@ -106,4 +106,75 @@ describe('RegisterAffiliation Component', () => {
 
     expect(onBackMock).toHaveBeenCalledTimes(1);
   });
+
+  it('renders hospital and hospital department selectors when role is doctor or trial-admin', () => {
+    const onProceedMock = vi.fn();
+    render(
+      <RegisterAffiliation
+        role="doctor"
+        onBack={() => {}}
+        onProceed={onProceedMock}
+      />
+    );
+
+    expect(screen.getByText('基本信息')).toBeDefined();
+    expect(screen.getByText('选择您的所属医院与科室，并输入工号')).toBeDefined();
+
+    const hospitalSelect = document.querySelector('md-outlined-select[label="医院"]');
+    expect(hospitalSelect).toBeDefined();
+
+    const deptSelect = document.querySelector('md-outlined-select[label="科室"]') as HTMLElement;
+    expect(deptSelect).toBeDefined();
+    setMdSelectValue(deptSelect, '精神科');
+
+    const workerField = document.querySelector('md-outlined-text-field[label="工号"]') as HTMLElement;
+    setMdInputValue(workerField, 'DOC-8888');
+
+    fireEvent.click(screen.getByText('下一步'));
+
+    expect(onProceedMock).toHaveBeenCalledWith({
+      hospital: '中南大学湘雅医院',
+      hospitalDepartment: '精神科',
+      department: '精神科',
+      workerNumber: 'DOC-8888',
+    });
+  });
+
+  it('validates worker number minimum length (at least 2 characters)', () => {
+    const onProceedMock = vi.fn();
+    render(
+      <RegisterAffiliation
+        onBack={() => {}}
+        onProceed={onProceedMock}
+      />
+    );
+
+    const workerField = document.querySelector('md-outlined-text-field[label="工号"]') as HTMLElement;
+    setMdInputValue(workerField, 'A');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(screen.getByText('工号长度至少需要 2 个字符')).toBeDefined();
+    expect(onProceedMock).not.toHaveBeenCalled();
+  });
+
+  it('validates worker number character format (rejects spaces and special characters)', () => {
+    const onProceedMock = vi.fn();
+    render(
+      <RegisterAffiliation
+        onBack={() => {}}
+        onProceed={onProceedMock}
+      />
+    );
+
+    const workerField = document.querySelector('md-outlined-text-field[label="工号"]') as HTMLElement;
+    setMdInputValue(workerField, 'EMP 001');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(screen.getByText('工号只能包含字母、数字、连字符和下划线')).toBeDefined();
+    expect(onProceedMock).not.toHaveBeenCalled();
+  });
 });

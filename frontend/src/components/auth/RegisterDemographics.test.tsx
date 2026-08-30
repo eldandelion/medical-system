@@ -80,10 +80,10 @@ describe('RegisterDemographics Component', () => {
     const yearField = document.querySelector('md-outlined-text-field[label="年"]') as HTMLElement;
     const ethnicitySelect = document.querySelector('md-outlined-select[label="民族"]') as HTMLElement;
 
-    // Test invalid day for February in non-leap year (2023-02-30)
+    // Test invalid day for February in non-leap year (1999-02-30)
     setMdSelectValue(monthSelect, '2');
     setMdInputValue(dayField, '30');
-    setMdInputValue(yearField, '2023');
+    setMdInputValue(yearField, '1999');
     setMdSelectValue(ethnicitySelect, '汉族');
 
     const nextButton = screen.getByText('下一步');
@@ -120,6 +120,66 @@ describe('RegisterDemographics Component', () => {
       month: '5',
       day: '12',
       dateOfBirth: '2004-05-12',
+      ethnicity: '汉族',
+    });
+  });
+
+  it('validates working age bounds (<18 or >100 years old)', () => {
+    const onProceedMock = vi.fn();
+    render(
+      <RegisterDemographics
+        onBack={() => {}}
+        onProceed={onProceedMock}
+      />
+    );
+
+    const monthSelect = document.querySelector('md-outlined-select[label="月"]') as HTMLElement;
+    const dayField = document.querySelector('md-outlined-text-field[label="日"]') as HTMLElement;
+    const yearField = document.querySelector('md-outlined-text-field[label="年"]') as HTMLElement;
+    const ethnicitySelect = document.querySelector('md-outlined-select[label="民族"]') as HTMLElement;
+
+    const currentYear = new Date().getFullYear();
+
+    // Test underage (e.g. 10 years old)
+    setMdSelectValue(monthSelect, '5');
+    setMdInputValue(dayField, '12');
+    setMdInputValue(yearField, String(currentYear - 10));
+    setMdSelectValue(ethnicitySelect, '汉族');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(screen.getByText(`请输入有效的年份 (${currentYear - 100}-${currentYear - 18})`)).toBeDefined();
+    expect(onProceedMock).not.toHaveBeenCalled();
+  });
+
+  it('accepts Feb 29 on leap year (2000)', () => {
+    const onProceedMock = vi.fn();
+    render(
+      <RegisterDemographics
+        onBack={() => {}}
+        onProceed={onProceedMock}
+      />
+    );
+
+    const monthSelect = document.querySelector('md-outlined-select[label="月"]') as HTMLElement;
+    const dayField = document.querySelector('md-outlined-text-field[label="日"]') as HTMLElement;
+    const yearField = document.querySelector('md-outlined-text-field[label="年"]') as HTMLElement;
+    const ethnicitySelect = document.querySelector('md-outlined-select[label="民族"]') as HTMLElement;
+
+    setMdSelectValue(monthSelect, '2');
+    setMdInputValue(dayField, '29');
+    setMdInputValue(yearField, '2000');
+    setMdSelectValue(ethnicitySelect, '汉族');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(onProceedMock).toHaveBeenCalledWith({
+      year: '2000',
+      month: '2',
+      day: '29',
+      dateOfBirth: '2000-02-29',
       ethnicity: '汉族',
     });
   });

@@ -85,7 +85,7 @@ describe('RegisterIdentity Component', () => {
     );
 
     const idCardField = document.querySelector('md-outlined-text-field[label="身份证号"]') as HTMLElement;
-    setMdInputValue(idCardField, '110101199001011234');
+    setMdInputValue(idCardField, '110101199001011237');
 
     const emailField = document.querySelector('md-outlined-text-field[label="电子邮箱"]') as HTMLElement;
     setMdInputValue(emailField, 'user@csu.edu.cn');
@@ -94,9 +94,80 @@ describe('RegisterIdentity Component', () => {
     fireEvent.click(nextButton);
 
     expect(onProceedMock).toHaveBeenCalledWith({
-      idCardNumber: '110101199001011234',
+      idCardNumber: '110101199001011237',
       email: 'user@csu.edu.cn',
     });
+  });
+
+  it('validates ID card checksum and rejects invalid check digit', () => {
+    const onProceedMock = vi.fn();
+    render(
+      <RegisterIdentity
+        onBack={() => {}}
+        onProceed={onProceedMock}
+      />
+    );
+
+    const idCardField = document.querySelector('md-outlined-text-field[label="身份证号"]') as HTMLElement;
+    setMdInputValue(idCardField, '110101199001011234'); // Check digit is 7, not 4
+
+    const emailField = document.querySelector('md-outlined-text-field[label="电子邮箱"]') as HTMLElement;
+    setMdInputValue(emailField, 'user@csu.edu.cn');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(screen.getByText('身份证号校验码不正确')).toBeDefined();
+    expect(onProceedMock).not.toHaveBeenCalled();
+  });
+
+  it('validates cross-step birth date consistency with expectedBirthDate prop', () => {
+    const onProceedMock = vi.fn();
+    render(
+      <RegisterIdentity
+        expectedBirthDate="2000-01-01"
+        onBack={() => {}}
+        onProceed={onProceedMock}
+      />
+    );
+
+    const idCardField = document.querySelector('md-outlined-text-field[label="身份证号"]') as HTMLElement;
+    // ID card has birth date 1990-01-01, but expected is 2000-01-01
+    setMdInputValue(idCardField, '110101199001011237');
+
+    const emailField = document.querySelector('md-outlined-text-field[label="电子邮箱"]') as HTMLElement;
+    setMdInputValue(emailField, 'user@csu.edu.cn');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(screen.getByText('身份证号中的出生日期与之前填写的出生日期不一致')).toBeDefined();
+    expect(onProceedMock).not.toHaveBeenCalled();
+  });
+
+  it('validates cross-step gender consistency with expectedGender prop', () => {
+    const onProceedMock = vi.fn();
+    render(
+      <RegisterIdentity
+        expectedBirthDate="1990-01-01"
+        expectedGender="女"
+        onBack={() => {}}
+        onProceed={onProceedMock}
+      />
+    );
+
+    const idCardField = document.querySelector('md-outlined-text-field[label="身份证号"]') as HTMLElement;
+    // 110101199001011237 has digit 17 = 3 (odd => male), but expected is 女
+    setMdInputValue(idCardField, '110101199001011237');
+
+    const emailField = document.querySelector('md-outlined-text-field[label="电子邮箱"]') as HTMLElement;
+    setMdInputValue(emailField, 'user@csu.edu.cn');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(screen.getByText('身份证号中的性别信息与之前选择的性别不一致')).toBeDefined();
+    expect(onProceedMock).not.toHaveBeenCalled();
   });
 
   it('calls onBack when clicking "返回"', () => {

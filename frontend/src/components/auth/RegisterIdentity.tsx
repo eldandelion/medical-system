@@ -2,6 +2,7 @@ import * as React from 'react';
 import { motion } from 'motion/react';
 import { PrimaryButton, TertiaryButton } from '../common/Buttons';
 import { CsuLogo } from './LoginOverlay';
+import { validateChineseIdCard, validateEmail } from './validationUtils';
 
 export interface RegisterIdentityData {
   idCardNumber: string;
@@ -10,6 +11,8 @@ export interface RegisterIdentityData {
 
 export interface RegisterIdentityProps {
   initialData?: Partial<RegisterIdentityData>;
+  expectedBirthDate?: string;
+  expectedGender?: string;
   onBack: () => void;
   onProceed: (data: RegisterIdentityData) => void;
   isLoading?: boolean;
@@ -17,6 +20,8 @@ export interface RegisterIdentityProps {
 
 export function RegisterIdentity({
   initialData,
+  expectedBirthDate,
+  expectedGender,
   onBack,
   onProceed,
   isLoading = false,
@@ -27,45 +32,29 @@ export function RegisterIdentity({
   const [idCardError, setIdCardError] = React.useState('');
   const [emailError, setEmailError] = React.useState('');
 
-  const validateIdCard = (val: string): boolean => {
-    const trimmed = val.trim();
-    if (!trimmed) {
-      setIdCardError('请输入身份证号');
-      return false;
-    }
-    // Standard Chinese 18-digit ID Card validation pattern (17 digits + digit or X/x)
-    const idCardRegex = /^[1-9]\d{5}(18|19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dXx]$/;
-    if (!idCardRegex.test(trimmed)) {
-      setIdCardError('请输入有效的18位居民身份证号码');
-      return false;
-    }
-    setIdCardError('');
-    return true;
-  };
-
-  const validateEmail = (val: string): boolean => {
-    const trimmed = val.trim();
-    if (!trimmed) {
-      setEmailError('请输入电子邮箱');
-      return false;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(trimmed)) {
-      setEmailError('请输入有效的电子邮箱地址');
-      return false;
-    }
-    setEmailError('');
-    return true;
-  };
-
   const handleSubmit = (e?: React.SyntheticEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
 
-    const isIdCardValid = validateIdCard(idCardNumber);
-    const isEmailValid = validateEmail(email);
+    let hasError = false;
 
-    if (!isIdCardValid || !isEmailValid) {
+    const idCardValidation = validateChineseIdCard(idCardNumber, expectedBirthDate, expectedGender);
+    if (!idCardValidation.isValid) {
+      setIdCardError(idCardValidation.error || '请输入有效的身份证号');
+      hasError = true;
+    } else {
+      setIdCardError('');
+    }
+
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      setEmailError(emailValidation.error || '请输入有效的电子邮箱');
+      hasError = true;
+    } else {
+      setEmailError('');
+    }
+
+    if (hasError) {
       return;
     }
 
@@ -137,6 +126,7 @@ export function RegisterIdentity({
                 <md-outlined-text-field
                   label="电子邮箱"
                   type="email"
+                  maxLength={64}
                   value={email}
                   className="w-full"
                   error={!!emailError}

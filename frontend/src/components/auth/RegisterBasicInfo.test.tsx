@@ -92,6 +92,77 @@ describe('RegisterBasicInfo Component', () => {
     });
   });
 
+  it('shows validation error when name is only one character', () => {
+    const onProceedMock = vi.fn();
+    render(
+      <RegisterBasicInfo
+        role="teacher"
+        onBack={() => {}}
+        onProceed={onProceedMock}
+      />
+    );
+
+    const nameField = document.querySelector('md-outlined-text-field[label="姓名"]') as HTMLElement;
+    setMdInputValue(nameField, '张');
+
+    const genderSelect = document.querySelector('md-outlined-select[label="性别"]') as HTMLElement;
+    setMdSelectValue(genderSelect, '男');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(screen.getByText('姓名长度至少需要 2 个字符')).toBeDefined();
+    expect(onProceedMock).not.toHaveBeenCalled();
+  });
+
+  it('shows validation error when name contains invalid characters like numbers or symbols', () => {
+    const onProceedMock = vi.fn();
+    render(
+      <RegisterBasicInfo
+        role="teacher"
+        onBack={() => {}}
+        onProceed={onProceedMock}
+      />
+    );
+
+    const nameField = document.querySelector('md-outlined-text-field[label="姓名"]') as HTMLElement;
+    setMdInputValue(nameField, '张三123');
+
+    const genderSelect = document.querySelector('md-outlined-select[label="性别"]') as HTMLElement;
+    setMdSelectValue(genderSelect, '男');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(screen.getByText('姓名只能包含中文、英文字母、中间点（·）和空格')).toBeDefined();
+    expect(onProceedMock).not.toHaveBeenCalled();
+  });
+
+  it('accepts minority name with middle dot and submits correctly', () => {
+    const onProceedMock = vi.fn();
+    render(
+      <RegisterBasicInfo
+        role="doctor"
+        onBack={() => {}}
+        onProceed={onProceedMock}
+      />
+    );
+
+    const nameField = document.querySelector('md-outlined-text-field[label="姓名"]') as HTMLElement;
+    setMdInputValue(nameField, '买买提·吐尔逊');
+
+    const genderSelect = document.querySelector('md-outlined-select[label="性别"]') as HTMLElement;
+    setMdSelectValue(genderSelect, '男');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(onProceedMock).toHaveBeenCalledWith({
+      name: '买买提·吐尔逊',
+      gender: '男',
+    });
+  });
+
   it('calls onBack when clicking "返回"', () => {
     const onBackMock = vi.fn();
     render(
@@ -108,3 +179,4 @@ describe('RegisterBasicInfo Component', () => {
     expect(onBackMock).toHaveBeenCalledTimes(1);
   });
 });
+

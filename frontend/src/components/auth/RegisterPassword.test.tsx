@@ -121,6 +121,36 @@ describe('RegisterPassword Component', () => {
     expect(pwdField.getAttribute('type')).toBe('text');
   });
 
+  it('validates password complexity (rejects all digits or all letters)', () => {
+    const onProceedMock = vi.fn();
+    render(
+      <RegisterPassword
+        onBack={() => {}}
+        onProceed={onProceedMock}
+      />
+    );
+
+    const pwdField = document.querySelector('md-outlined-text-field[label="密码"]') as HTMLElement;
+    const confirmField = document.querySelector('md-outlined-text-field[label="确认密码"]') as HTMLElement;
+    const submitButton = screen.getByText('创建账号');
+
+    // Test all-digit password (e.g. 12345678)
+    setMdInputValue(pwdField, '12345678');
+    setMdInputValue(confirmField, '12345678');
+    fireEvent.click(submitButton);
+
+    expect(screen.getByText('密码必须同时包含字母和数字')).toBeDefined();
+    expect(onProceedMock).not.toHaveBeenCalled();
+
+    // Test all-letter password (e.g. abcdefgh)
+    setMdInputValue(pwdField, 'abcdefgh');
+    setMdInputValue(confirmField, 'abcdefgh');
+    fireEvent.click(submitButton);
+
+    expect(screen.getByText('密码必须同时包含字母和数字')).toBeDefined();
+    expect(onProceedMock).not.toHaveBeenCalled();
+  });
+
   it('calls onBack when clicking "返回"', () => {
     const onBackMock = vi.fn();
     render(

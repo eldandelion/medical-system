@@ -4,6 +4,8 @@ import { PrimaryButton, TertiaryButton } from '../common/Buttons';
 import { CsuLogo } from './LoginOverlay';
 import { type RegisterRole } from './RegisterRoleSelect';
 
+import { validateName } from './validationUtils';
+
 export interface RegisterBasicInfoProps {
   role?: RegisterRole | null;
   initialName?: string;
@@ -31,10 +33,10 @@ export function RegisterBasicInfo({
     e?.stopPropagation();
 
     let hasError = false;
-    const trimmedName = name.trim();
+    const nameValidation = validateName(name);
 
-    if (!trimmedName) {
-      setNameError('请输入姓名');
+    if (!nameValidation.isValid) {
+      setNameError(nameValidation.error || '请输入姓名');
       hasError = true;
     } else {
       setNameError('');
@@ -50,7 +52,7 @@ export function RegisterBasicInfo({
     if (hasError) return;
 
     onProceed({
-      name: trimmedName,
+      name: name.trim(),
       gender,
     });
   };
@@ -94,6 +96,7 @@ export function RegisterBasicInfo({
               <div>
                 <md-outlined-text-field
                   label="姓名"
+                  maxLength={30}
                   value={name}
                   className="w-full"
                   error={!!nameError}

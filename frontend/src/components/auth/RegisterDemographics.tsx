@@ -2,6 +2,7 @@ import * as React from 'react';
 import { motion } from 'motion/react';
 import { PrimaryButton, TertiaryButton } from '../common/Buttons';
 import { CsuLogo } from './LoginOverlay';
+import { validateBirthDate, getDaysInMonth } from './validationUtils';
 
 export const ETHNICITY_OPTIONS = [
   '汉族', '蒙古族', '回族', '藏族', '维吾尔族', '苗族', '彝族', '壮族', '布依族', '朝鲜族',
@@ -46,43 +47,20 @@ export function RegisterDemographics({
   const [dobError, setDobError] = React.useState('');
   const [ethnicityError, setEthnicityError] = React.useState('');
 
-  const validateDob = (yStr: string, mStr: string, dStr: string): boolean => {
-    if (!mStr || !dStr || !yStr) {
-      setDobError('请完整输入出生日期的年、月、日');
-      return false;
-    }
-
-    const y = parseInt(yStr, 10);
-    const m = parseInt(mStr, 10);
-    const d = parseInt(dStr, 10);
-    const currentYear = new Date().getFullYear();
-
-    if (isNaN(y) || y < 1900 || y > currentYear) {
-      setDobError(`请输入有效的年份 (1900-${currentYear})`);
-      return false;
-    }
-
-    if (isNaN(m) || m < 1 || m > 12) {
-      setDobError('请输入有效的月份 (1-12)');
-      return false;
-    }
-
-    // Days in month validation
-    const maxDays = new Date(y, m, 0).getDate();
-    if (isNaN(d) || d < 1 || d > maxDays) {
-      setDobError(`请输入有效的日期 (该月最大天数为 ${maxDays} 日)`);
-      return false;
-    }
-
-    setDobError('');
-    return true;
-  };
-
   const handleSubmit = (e?: React.SyntheticEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
 
-    const isDobValid = validateDob(year.trim(), month.trim(), day.trim());
+    const dobValidation = validateBirthDate(year.trim(), month.trim(), day.trim());
+    let isDobValid = false;
+
+    if (!dobValidation.isValid) {
+      setDobError(dobValidation.error || '请输入有效的出生日期');
+    } else {
+      setDobError('');
+      isDobValid = true;
+    }
+
     let isEthnicityValid = true;
 
     if (!ethnicity.trim()) {
@@ -174,7 +152,7 @@ export function RegisterDemographics({
                       label="日"
                       type="number"
                       min="1"
-                      max="31"
+                      max={year && month ? String(getDaysInMonth(parseInt(year, 10), parseInt(month, 10))) : "31"}
                       className="w-full min-w-0"
                       style={{ minWidth: 0, width: '100%' } as React.CSSProperties}
                       value={day}
@@ -192,8 +170,8 @@ export function RegisterDemographics({
                     <md-outlined-text-field
                       label="年"
                       type="number"
-                      min="1900"
-                      max="2099"
+                      min={String(new Date().getFullYear() - 100)}
+                      max={String(new Date().getFullYear() - 18)}
                       className="w-full min-w-0"
                       style={{ minWidth: 0, width: '100%' } as React.CSSProperties}
                       value={year}

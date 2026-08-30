@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { PrimaryButton, TertiaryButton } from '../common/Buttons';
 import { RegisterRoleSelect, type RegisterRole } from './RegisterRoleSelect';
+import { RegisterStudentNotice } from './RegisterStudentNotice';
 import { RegisterBasicInfo } from './RegisterBasicInfo';
 import { RegisterDemographics, type RegisterDemographicsData } from './RegisterDemographics';
 import { RegisterAffiliation, type RegisterAffiliationData } from './RegisterAffiliation';
@@ -12,6 +13,7 @@ import { RegisterPassword, type RegisterPasswordData } from './RegisterPassword'
 export type AuthView =
   | 'login'
   | 'register-role-select'
+  | 'register-student-notice'
   | 'register-basic-info'
   | 'register-demographics'
   | 'register-affiliation'
@@ -45,8 +47,10 @@ export interface LoginOverlayProps {
     day?: string;
     dateOfBirth?: string;
     ethnicity?: string;
-    school: string;
-    department: string;
+    school?: string;
+    department?: string;
+    hospital?: string;
+    hospitalDepartment?: string;
     workerNumber: string;
   }) => void;
   onIdentitySubmit?: (data: {
@@ -67,6 +71,8 @@ export interface LoginOverlayProps {
     ethnicity?: string;
     school?: string;
     department?: string;
+    hospital?: string;
+    hospitalDepartment?: string;
     workerNumber?: string;
     idCardNumber: string;
     email: string;
@@ -241,8 +247,17 @@ export function LoginOverlay({
                 onProceed={(role) => {
                   setSelectedRole(role);
                   onRoleSelect?.(role);
-                  setView('register-basic-info');
+                  if (role === 'student') {
+                    setView('register-student-notice');
+                  } else {
+                    setView('register-basic-info');
+                  }
                 }}
+              />
+            ) : view === 'register-student-notice' ? (
+              <RegisterStudentNotice
+                onBack={() => setView('register-role-select')}
+                onGoToLogin={() => setView('login')}
               />
             ) : view === 'register-basic-info' ? (
               <RegisterBasicInfo
@@ -278,6 +293,7 @@ export function LoginOverlay({
               />
             ) : view === 'register-affiliation' ? (
               <RegisterAffiliation
+                role={selectedRole}
                 initialData={registerAffiliation || undefined}
                 onBack={() => setView('register-demographics')}
                 onProceed={(data) => {
@@ -295,6 +311,8 @@ export function LoginOverlay({
             ) : view === 'register-identity' ? (
               <RegisterIdentity
                 initialData={registerIdentity || undefined}
+                expectedBirthDate={registerDemographics?.dateOfBirth}
+                expectedGender={registerGender}
                 onBack={() => setView('register-affiliation')}
                 onProceed={(data) => {
                   setRegisterIdentity(data);
@@ -320,6 +338,8 @@ export function LoginOverlay({
                     ...registerAffiliation,
                     school: registerAffiliation?.school || '',
                     department: registerAffiliation?.department || '',
+                    hospital: registerAffiliation?.hospital || '',
+                    hospitalDepartment: registerAffiliation?.hospitalDepartment || '',
                     workerNumber: registerAffiliation?.workerNumber || '',
                     idCardNumber: registerIdentity?.idCardNumber || '',
                     email: registerIdentity?.email || '',

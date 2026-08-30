@@ -354,7 +354,35 @@ describe('LoginOverlay Component', () => {
     expect(screen.queryByText('选择您的身份类型以继续注册')).toBeNull();
   });
 
-  it('navigates from Role Selection to Name & Gender step and submits basic info', () => {
+  it('navigates student role to student notice screen explaining pre-created account and default credentials', () => {
+    render(
+      <LoginOverlay
+        isOpen={true}
+        onClose={() => {}}
+        initialView="register-role-select"
+      />
+    );
+
+    // 1. Select '学生'
+    const studentItem = screen.getByText('学生').closest('[role="option"]') as HTMLElement;
+    fireEvent.click(studentItem);
+
+    // 2. Click 下一步 -> Navigates to Student Notice step (students cannot register)
+    fireEvent.click(screen.getByText('下一步'));
+
+    expect(screen.getByText('学生无需注册')).toBeDefined();
+    expect(screen.getByText('学生账号已由学校统一预先创建')).toBeDefined();
+    expect(screen.getByText('学号')).toBeDefined();
+    expect(screen.getByText(/身份证号后 6 位/)).toBeDefined();
+
+    // 3. Click 前往登录 -> Returns to Login Step 1
+    fireEvent.click(screen.getByText('前往登录'));
+
+    expect(screen.getByText('登录')).toBeDefined();
+    expect(screen.getByText('使用您的CSU账号')).toBeDefined();
+  });
+
+  it('navigates from Role Selection to Name & Gender step for non-student roles and submits basic info', () => {
     const onBasicInfoSubmitMock = vi.fn();
     render(
       <LoginOverlay
@@ -365,9 +393,9 @@ describe('LoginOverlay Component', () => {
       />
     );
 
-    // 1. Select '学生'
-    const studentItem = screen.getByText('学生').closest('[role="option"]') as HTMLElement;
-    fireEvent.click(studentItem);
+    // 1. Select '教师'
+    const teacherItem = screen.getByText('教师').closest('[role="option"]') as HTMLElement;
+    fireEvent.click(teacherItem);
 
     // 2. Click 下一步 -> Navigates to Basic Info step
     fireEvent.click(screen.getByText('下一步'));
@@ -377,7 +405,7 @@ describe('LoginOverlay Component', () => {
 
     // 3. Fill in name and gender
     const nameField = document.querySelector('md-outlined-text-field[label="姓名"]') as HTMLElement;
-    setMdInputValue(nameField, '林同学');
+    setMdInputValue(nameField, '林老师');
 
     const genderSelect = document.querySelector('md-outlined-select[label="性别"]') as HTMLElement;
     (genderSelect as any).value = '女';
@@ -387,8 +415,8 @@ describe('LoginOverlay Component', () => {
     fireEvent.click(screen.getByText('下一步'));
 
     expect(onBasicInfoSubmitMock).toHaveBeenCalledWith({
-      role: 'student',
-      name: '林同学',
+      role: 'teacher',
+      name: '林老师',
       gender: '女',
     });
   });
@@ -586,13 +614,13 @@ describe('LoginOverlay Component', () => {
     fireEvent(ethnicitySelect, new Event('change', { bubbles: true, cancelable: true }));
     fireEvent.click(screen.getByText('下一步'));
 
-    // Step 4: School & Department & Worker Number
-    expect(screen.getByText('选择您的所属学校与部门，并输入工号')).toBeDefined();
-    const schoolSelect = document.querySelector('md-outlined-select[label="学校"]') as HTMLElement;
-    (schoolSelect as any).value = '中南大学';
-    fireEvent(schoolSelect, new Event('change', { bubbles: true, cancelable: true }));
-    const deptSelect = document.querySelector('md-outlined-select[label="部门"]') as HTMLElement;
-    (deptSelect as any).value = '湘雅医学院';
+    // Step 4: Hospital & Department & Worker Number
+    expect(screen.getByText('选择您的所属医院与科室，并输入工号')).toBeDefined();
+    const hospitalSelect = document.querySelector('md-outlined-select[label="医院"]') as HTMLElement;
+    (hospitalSelect as any).value = '中南大学湘雅医院';
+    fireEvent(hospitalSelect, new Event('change', { bubbles: true, cancelable: true }));
+    const deptSelect = document.querySelector('md-outlined-select[label="科室"]') as HTMLElement;
+    (deptSelect as any).value = '精神科';
     fireEvent(deptSelect, new Event('change', { bubbles: true, cancelable: true }));
     const workerField = document.querySelector('md-outlined-text-field[label="工号"]') as HTMLElement;
     setMdInputValue(workerField, 'DOC-00001');
@@ -601,7 +629,7 @@ describe('LoginOverlay Component', () => {
     // Step 5: ID Card Number & Email
     expect(screen.getByText('输入您的身份证号和电子邮箱')).toBeDefined();
     const idCardField = document.querySelector('md-outlined-text-field[label="身份证号"]') as HTMLElement;
-    setMdInputValue(idCardField, '110101199010251234');
+    setMdInputValue(idCardField, '110101199010251232');
     const emailField = document.querySelector('md-outlined-text-field[label="电子邮箱"]') as HTMLElement;
     setMdInputValue(emailField, 'zhangdoctor@csu.edu.cn');
     fireEvent.click(screen.getByText('下一步'));
@@ -623,12 +651,69 @@ describe('LoginOverlay Component', () => {
       day: '25',
       dateOfBirth: '1990-10-25',
       ethnicity: '汉族',
-      school: '中南大学',
-      department: '湘雅医学院',
+      hospital: '中南大学湘雅医院',
+      hospitalDepartment: '精神科',
+      school: '',
+      department: '精神科',
       workerNumber: 'DOC-00001',
-      idCardNumber: '110101199010251234',
+      idCardNumber: '110101199010251232',
       email: 'zhangdoctor@csu.edu.cn',
       password: 'DoctorPassword123',
     });
+  });
+
+  it('prevents proceeding on Step 5 when ID card birth date mismatches Step 3 birth date', () => {
+    render(
+      <LoginOverlay
+        isOpen={true}
+        onClose={() => {}}
+        initialView="register-role-select"
+      />
+    );
+
+    // Step 1: Role Selection
+    const doctorItem = screen.getByText('精神科医生').closest('[role="option"]') as HTMLElement;
+    fireEvent.click(doctorItem);
+    fireEvent.click(screen.getByText('下一步'));
+
+    // Step 2: Name & Gender (Male)
+    const nameField = document.querySelector('md-outlined-text-field[label="姓名"]') as HTMLElement;
+    setMdInputValue(nameField, '张医生');
+    const genderSelect = document.querySelector('md-outlined-select[label="性别"]') as HTMLElement;
+    (genderSelect as any).value = '男';
+    fireEvent(genderSelect, new Event('change', { bubbles: true, cancelable: true }));
+    fireEvent.click(screen.getByText('下一步'));
+
+    // Step 3: Date of Birth = 1990-10-25
+    const monthSelect = document.querySelector('md-outlined-select[label="月"]') as HTMLElement;
+    (monthSelect as any).value = '10';
+    fireEvent(monthSelect, new Event('change', { bubbles: true, cancelable: true }));
+    const dayField = document.querySelector('md-outlined-text-field[label="日"]') as HTMLElement;
+    setMdInputValue(dayField, '25');
+    const yearField = document.querySelector('md-outlined-text-field[label="年"]') as HTMLElement;
+    setMdInputValue(yearField, '1990');
+    const ethnicitySelect = document.querySelector('md-outlined-select[label="民族"]') as HTMLElement;
+    (ethnicitySelect as any).value = '汉族';
+    fireEvent(ethnicitySelect, new Event('change', { bubbles: true, cancelable: true }));
+    fireEvent.click(screen.getByText('下一步'));
+
+    // Step 4: Affiliation
+    const deptSelect = document.querySelector('md-outlined-select[label="科室"]') as HTMLElement;
+    (deptSelect as any).value = '精神科';
+    fireEvent(deptSelect, new Event('change', { bubbles: true, cancelable: true }));
+    const workerField = document.querySelector('md-outlined-text-field[label="工号"]') as HTMLElement;
+    setMdInputValue(workerField, 'DOC-00001');
+    fireEvent.click(screen.getByText('下一步'));
+
+    // Step 5: ID Card has birth date 1990-01-01 (110101199001011237), which does not match 1990-10-25
+    const idCardField = document.querySelector('md-outlined-text-field[label="身份证号"]') as HTMLElement;
+    setMdInputValue(idCardField, '110101199001011237');
+    const emailField = document.querySelector('md-outlined-text-field[label="电子邮箱"]') as HTMLElement;
+    setMdInputValue(emailField, 'zhangdoctor@csu.edu.cn');
+    fireEvent.click(screen.getByText('下一步'));
+
+    // Should display cross-step error and remain on Step 5
+    expect(screen.getByText('身份证号中的出生日期与之前填写的出生日期不一致')).toBeDefined();
+    expect(screen.queryByText('为您的账号设置一个强密码')).toBeNull();
   });
 });
