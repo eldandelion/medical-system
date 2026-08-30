@@ -1,5 +1,30 @@
 import { http, HttpResponse, delay } from 'msw';
-import { mockAssessmentsDb, mockAssessmentCatalog, mockDashboardDb, mockStudentsDb, mockReferralsDb, mockAdminUsersDb, generateTrackerSteps } from './db';
+import {
+  mockAssessmentsDb,
+  mockAssessmentCatalog,
+  mockDashboardDb,
+  mockStudentsDb,
+  mockReferralsDb,
+  mockAdminUsersDb,
+  generateTrackerSteps,
+  mockCollegesDb,
+  mockMajorsDb,
+  mockSchoolDepartmentsDb,
+  mockAdminHospitalsDb,
+  mockHospitalDepartmentsDb,
+  mockEthnicitiesDb,
+  mockDegreeLevelsDb,
+} from './db';
+import {
+  CollegeDto,
+  MajorDto,
+  SchoolDepartmentDto,
+  AdminHospitalDto,
+  HospitalDepartmentDto,
+  EthnicityDto,
+  DegreeLevelDto,
+  ReferenceCategory,
+} from '../types/references';
 const MOCK_DELAY_MS = 1000;
 
 import { Referral, ReferralAction, UserProfileDto, UpdateUserProfileRequest, StudentImportPreview, StudentImportCommitRequest, StudentImportResult, StudentImportRow } from '../types';
@@ -1541,7 +1566,163 @@ export const handlers = [
     }
 
     return HttpResponse.json(profile);
-  })
+  }),
+
+  // === Admin References Management Endpoints ===
+
+  http.get(api('/api/admin/references/colleges'), async ({ request }) => {
+    const url = new URL(request.url);
+    const query = url.searchParams.get('query')?.toLowerCase();
+    const includeDeprecated = url.searchParams.get('includeDeprecated') !== 'false';
+    let res = mockCollegesDb;
+    if (!includeDeprecated) res = res.filter((c) => c.status === 'ACTIVE');
+    if (query) res = res.filter((c) => c.name.toLowerCase().includes(query));
+    return HttpResponse.json(res);
+  }),
+
+  http.get(api('/api/admin/references/majors'), async ({ request }) => {
+    const url = new URL(request.url);
+    const query = url.searchParams.get('query')?.toLowerCase();
+    const collegeId = url.searchParams.get('collegeId');
+    const includeDeprecated = url.searchParams.get('includeDeprecated') !== 'false';
+    let res = mockMajorsDb;
+    if (collegeId) res = res.filter((m) => m.collegeId === Number(collegeId));
+    if (!includeDeprecated) res = res.filter((m) => m.status === 'ACTIVE');
+    if (query) res = res.filter((m) => m.name.toLowerCase().includes(query) || m.collegeName.toLowerCase().includes(query));
+    return HttpResponse.json(res);
+  }),
+
+  http.get(api('/api/admin/references/school-departments'), async ({ request }) => {
+    const url = new URL(request.url);
+    const query = url.searchParams.get('query')?.toLowerCase();
+    const includeDeprecated = url.searchParams.get('includeDeprecated') !== 'false';
+    let res = mockSchoolDepartmentsDb;
+    if (!includeDeprecated) res = res.filter((d) => d.status === 'ACTIVE');
+    if (query) res = res.filter((d) => d.name.toLowerCase().includes(query));
+    return HttpResponse.json(res);
+  }),
+
+  http.get(api('/api/admin/references/hospitals'), async ({ request }) => {
+    const url = new URL(request.url);
+    const query = url.searchParams.get('query')?.toLowerCase();
+    const includeDeprecated = url.searchParams.get('includeDeprecated') !== 'false';
+    let res = mockAdminHospitalsDb;
+    if (!includeDeprecated) res = res.filter((h) => h.status === 'ACTIVE');
+    if (query) res = res.filter((h) => h.name.toLowerCase().includes(query) || (h.address?.toLowerCase().includes(query) ?? false));
+    return HttpResponse.json(res);
+  }),
+
+  http.get(api('/api/admin/references/hospital-departments'), async ({ request }) => {
+    const url = new URL(request.url);
+    const query = url.searchParams.get('query')?.toLowerCase();
+    const hospitalId = url.searchParams.get('hospitalId');
+    const includeDeprecated = url.searchParams.get('includeDeprecated') !== 'false';
+    let res = mockHospitalDepartmentsDb;
+    if (hospitalId) res = res.filter((d) => d.hospitalId === Number(hospitalId));
+    if (!includeDeprecated) res = res.filter((d) => d.status === 'ACTIVE');
+    if (query) res = res.filter((d) => d.name.toLowerCase().includes(query) || d.hospitalName.toLowerCase().includes(query));
+    return HttpResponse.json(res);
+  }),
+
+  http.get(api('/api/admin/references/ethnicities'), async ({ request }) => {
+    const url = new URL(request.url);
+    const query = url.searchParams.get('query')?.toLowerCase();
+    const includeDeprecated = url.searchParams.get('includeDeprecated') !== 'false';
+    let res = mockEthnicitiesDb;
+    if (!includeDeprecated) res = res.filter((e) => e.status === 'ACTIVE');
+    if (query) res = res.filter((e) => e.name.toLowerCase().includes(query));
+    return HttpResponse.json(res);
+  }),
+
+  http.get(api('/api/admin/references/degree-levels'), async ({ request }) => {
+    const url = new URL(request.url);
+    const query = url.searchParams.get('query')?.toLowerCase();
+    const includeDeprecated = url.searchParams.get('includeDeprecated') !== 'false';
+    let res = mockDegreeLevelsDb;
+    if (!includeDeprecated) res = res.filter((d) => d.status === 'ACTIVE');
+    if (query) res = res.filter((d) => d.name.toLowerCase().includes(query));
+    return HttpResponse.json(res);
+  }),
+
+  http.post(api('/api/admin/references/colleges'), async ({ request }) => {
+    const body = (await request.json()) as { name: string };
+    const newItem: CollegeDto = {
+      id: Date.now(),
+      name: body.name,
+      status: 'ACTIVE',
+      majorCount: 0,
+      teacherCount: 0,
+    };
+    mockCollegesDb.push(newItem);
+    return HttpResponse.json(newItem, { status: 201 });
+  }),
+
+  http.post(api('/api/admin/references/majors'), async ({ request }) => {
+    const body = (await request.json()) as { name: string; collegeId: number };
+    const college = mockCollegesDb.find((c) => c.id === body.collegeId);
+    const newItem: MajorDto = {
+      id: Date.now(),
+      name: body.name,
+      collegeId: body.collegeId,
+      collegeName: college?.name || '所属学院',
+      status: 'ACTIVE',
+      studentCount: 0,
+    };
+    mockMajorsDb.push(newItem);
+    return HttpResponse.json(newItem, { status: 201 });
+  }),
+
+  http.get(api('/api/admin/references/:category/:id/dependency-check'), async ({ params }) => {
+    const id = Number(params.id);
+    const category = params.category as ReferenceCategory;
+    
+    // Simulate realistic dependency check
+    if (id === 1) {
+      return HttpResponse.json({
+        targetId: id,
+        category,
+        canHardDelete: false,
+        totalReferences: 22,
+        dependencies: [
+          { subjectType: 'STUDENT', count: 18 },
+          { subjectType: 'MAJOR', count: 4 },
+        ],
+      });
+    }
+    return HttpResponse.json({
+      targetId: id,
+      category,
+      canHardDelete: true,
+      totalReferences: 0,
+      dependencies: [],
+    });
+  }),
+
+  http.patch(api('/api/admin/references/:category/:id/deprecate'), async ({ params }) => {
+    const id = Number(params.id);
+    const category = params.category as ReferenceCategory;
+    if (category === 'COLLEGE') {
+      const c = mockCollegesDb.find((item) => item.id === id);
+      if (c) c.status = 'DEPRECATED';
+      return HttpResponse.json(c);
+    }
+    return HttpResponse.json({ id, status: 'DEPRECATED' });
+  }),
+
+  http.patch(api('/api/admin/references/:category/:id/reactivate'), async ({ params }) => {
+    const id = Number(params.id);
+    const category = params.category as ReferenceCategory;
+    if (category === 'COLLEGE') {
+      const c = mockCollegesDb.find((item) => item.id === id);
+      if (c) c.status = 'ACTIVE';
+      return HttpResponse.json(c);
+    }
+    return HttpResponse.json({ id, status: 'ACTIVE' });
+  }),
+
+  http.delete(api('/api/admin/references/:category/:id'), async ({ params }) => {
+    return new HttpResponse(null, { status: 204 });
+  }),
 ];
 
 export const mockProfilesDb: Record<string, UserProfileDto> = {

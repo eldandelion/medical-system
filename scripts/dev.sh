@@ -104,7 +104,7 @@ fi
 
 echo -e "${YELLOW}[1/4] Checking shared infrastructure (MySQL & MinIO)...${NC}"
 cd "$ROOT_DIR"
-if ! docker compose ps db minio 2>/dev/null | grep -q "Up"; then
+if ! docker ps 2>/dev/null | grep -q "medical-system-db"; then
   echo -e "${YELLOW}Starting db, minio, and minio-init containers...${NC}"
   docker compose up -d db minio minio-init
 fi

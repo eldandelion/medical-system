@@ -17,6 +17,7 @@ import { UserManagementView } from '../components/admin/UserManagementView';
 import { UserDetailsView, USER_DETAILS_TABS } from '../components/admin/UserDetailsView';
 import { UserGovernanceFooter } from '../components/admin/UserGovernanceFooter';
 import { AssessmentCatalogManagementView } from '../components/admin/AssessmentCatalogManagementView';
+import { EssentialsManagementView } from '../components/admin/EssentialsManagementView';
 import { REFERRAL_TYPE_LABELS } from '../config/styleConstants';
 import { useCreationOverlay } from '../contexts/CreationContext';
 import { ReferralCreationForm } from '../components/records/ReferralCreationForm';
@@ -35,6 +36,7 @@ export const AdminTabs = {
   REFERRALS: 'Referral Management',
   ASSESSMENTS: 'Assessments',
   STUDENTS: 'Students',
+  ESSENTIALS: 'Essentials',
   NOTIFICATIONS: 'Notifications',
   SECURITY: 'Security & Consent',
 } as const;
@@ -47,6 +49,7 @@ const ADMIN_TAB_TITLES: Record<AdminPageName, string> = {
   [AdminTabs.REFERRALS]: '全局转诊管理',
   [AdminTabs.ASSESSMENTS]: '测评量表',
   [AdminTabs.STUDENTS]: '全校学生档案',
+  [AdminTabs.ESSENTIALS]: '基础数据管理',
   [AdminTabs.NOTIFICATIONS]: '通知中心',
   [AdminTabs.SECURITY]: '隐私与安全审计',
 };
@@ -197,6 +200,14 @@ export function AdminPage() {
           </>
         );
 
+      case AdminTabs.ESSENTIALS:
+        return (
+          <>
+            <CanvasHeader title={ADMIN_TAB_TITLES[activePage]} />
+            <EssentialsManagementView />
+          </>
+        );
+
       case AdminTabs.NOTIFICATIONS:
         return (
           <>
@@ -261,6 +272,12 @@ export function AdminPage() {
           label="全校学生"
           active={activePage === AdminTabs.STUDENTS}
           onClick={() => handlePageChange(AdminTabs.STUDENTS)}
+        />
+        <NavItem
+          icon="category"
+          label="基础数据"
+          active={activePage === AdminTabs.ESSENTIALS}
+          onClick={() => handlePageChange(AdminTabs.ESSENTIALS)}
         />
         <NavItem
           icon="notifications"

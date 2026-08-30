@@ -11,6 +11,9 @@ interface StudentJpaRepository : JpaRepository<StudentEntity, Long>, JpaSpecific
     fun existsByStudentNumber(studentNumber: String): Boolean
     fun findByStudentNumber(studentNumber: String): StudentEntity?
     fun findByMajorCollegeId(collegeId: Long): List<StudentEntity>
+    fun countByMajorId(majorId: Long): Long
+    fun countByDemographicsEthnicityId(ethnicityId: Long): Long
+    fun countByDegreeLevelId(degreeLevelId: Long): Long
 
     @Query("SELECT s.studentNumber FROM StudentEntity s")
     fun findAllStudentNumbers(): Set<String>
