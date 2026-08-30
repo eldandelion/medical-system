@@ -10,7 +10,7 @@ import {
   useReferencesList,
   useReactivateReference,
 } from '../../hooks/useReferenceData';
-import { PrimaryButton, OutlinedButton } from '../common/Buttons';
+import { SecondaryButton, OutlinedButton } from '../common/Buttons';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { EssentialEditDialog } from './EssentialEditDialog';
 import { EssentialDeleteConfirmDialog } from './EssentialDeleteConfirmDialog';
@@ -333,7 +333,7 @@ export function EssentialsManagementView() {
             onClick={() => setIsImportOpen(true)}
             noCollapse
           />
-          <PrimaryButton
+          <SecondaryButton
             icon="add"
             label={`新增${currentMeta.singularTitle}`}
             onClick={handleOpenCreate}
