@@ -17,8 +17,10 @@ export const UserGovernanceFooter: React.FC<UserGovernanceFooterProps> = ({
   onStatusUpdated
 }) => {
   const { updateStatus, deleteUser, isUpdating } = useAdminUsers();
+  const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
   const [isDisableDialogOpen, setIsDisableDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isApproveDetailsOpen, setIsApproveDetailsOpen] = useState(false);
   const [isDisableDetailsOpen, setIsDisableDetailsOpen] = useState(false);
   const [isDeleteDetailsOpen, setIsDeleteDetailsOpen] = useState(false);
 
@@ -51,7 +53,7 @@ export const UserGovernanceFooter: React.FC<UserGovernanceFooterProps> = ({
             <OutlinedButton
               icon="check_circle"
               label="通过审核并启用"
-              onClick={() => handleStatusChange('ACTIVE')}
+              onClick={() => setIsApproveDialogOpen(true)}
               disabled={isUpdating}
             />
             <OutlinedButton
@@ -103,6 +105,141 @@ export const UserGovernanceFooter: React.FC<UserGovernanceFooterProps> = ({
           />
         )}
       </ActionFooter>
+
+      {/* Confirmation Dialog: 通过审核并启用 (Approve & Enable Account) */}
+      <GenericDialog
+        open={isApproveDialogOpen}
+        onClose={() => {
+          setIsApproveDialogOpen(false);
+          setIsApproveDetailsOpen(false);
+        }}
+        maxWidth="500px"
+        title={
+          <span className="text-[20px] font-semibold text-[var(--md-sys-color-on-surface)]">
+            确认通过用户审核并启用？
+          </span>
+        }
+        actions={
+          <>
+            <TertiaryButton
+              label="取消"
+              onClick={() => {
+                setIsApproveDialogOpen(false);
+                setIsApproveDetailsOpen(false);
+              }}
+              disabled={isUpdating}
+            />
+            <TertiaryButton
+              label="确认通过"
+              onClick={async () => {
+                setIsApproveDialogOpen(false);
+                setIsApproveDetailsOpen(false);
+                await handleStatusChange('ACTIVE');
+              }}
+              disabled={isUpdating}
+            />
+          </>
+        }
+      >
+        <div className="space-y-3.5 text-sm text-[var(--md-sys-color-on-surface)]">
+          {/* User Info Card */}
+          <div className="bg-[var(--md-sys-color-surface-container)] p-4 rounded-2xl space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-[15px]">{user.name}</span>
+              <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface)]">
+                {roleName}
+              </span>
+            </div>
+            <div className="text-xs text-[var(--md-sys-color-on-surface-variant)] space-y-1">
+              <div>工号 / 学号：<span className="font-mono text-[var(--md-sys-color-on-surface)]">{idNumber}</span></div>
+              <div>归属单位：<span className="text-[var(--md-sys-color-on-surface)]">{affiliation}</span></div>
+            </div>
+          </div>
+
+          {/* Collapsible Action Consequences */}
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => setIsApproveDetailsOpen(!isApproveDetailsOpen)}
+              className="w-full flex items-center justify-between py-2.5 px-3.5 rounded-2xl bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-surface-container-high)] text-xs font-medium text-[var(--md-sys-color-on-surface)] transition-colors cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-[var(--md-sys-color-on-surface-variant)]">
+                  info
+                </span>
+                <span>查看操作影响与合规说明</span>
+              </span>
+              <span
+                className={`material-symbols-outlined text-[18px] text-[var(--md-sys-color-on-surface-variant)] transition-transform duration-200 ${
+                  isApproveDetailsOpen ? 'rotate-180' : ''
+                }`}
+              >
+                expand_more
+              </span>
+            </button>
+
+            <AnimatePresence>
+              {isApproveDetailsOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  className="space-y-1.5 overflow-hidden"
+                >
+                  <div className="bg-[var(--md-sys-color-surface-container)] p-3 rounded-2xl flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-surface-container-highest)] flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[18px] text-[var(--md-sys-color-on-surface-variant)]">
+                        verified_user
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0 pt-0.5">
+                      <div className="text-xs font-semibold text-[var(--md-sys-color-on-surface)] leading-4">
+                        账号激活
+                      </div>
+                      <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed mt-1">
+                        该用户将获得系统正式使用权限，可立即登录并根据角色权限开展转诊协同与日常工作。
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-[var(--md-sys-color-surface-container)] p-3 rounded-2xl flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-surface-container-highest)] flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[18px] text-[var(--md-sys-color-on-surface-variant)]">
+                        badge
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0 pt-0.5">
+                      <div className="text-xs font-semibold text-[var(--md-sys-color-on-surface)] leading-4">
+                        权限开通
+                      </div>
+                      <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed mt-1">
+                        系统将根据其分配的角色与归属单位初始化相应的数据可见性与业务办理权限。
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-[var(--md-sys-color-surface-container)] p-3 rounded-2xl flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-surface-container-highest)] flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[18px] text-[var(--md-sys-color-on-surface-variant)]">
+                        mark_email_read
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0 pt-0.5">
+                      <div className="text-xs font-semibold text-[var(--md-sys-color-on-surface)] leading-4">
+                        状态生效
+                      </div>
+                      <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed mt-1">
+                        审核生效后，用户账号状态将立即流转为「正常启用」，并自动记录审核人与操作时间戳。
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </GenericDialog>
 
       {/* Confirmation Dialog: 禁用账号 (Disable Account) */}
       <GenericDialog

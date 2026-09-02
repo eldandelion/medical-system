@@ -83,7 +83,7 @@ describe('UserGovernanceFooter', () => {
     expect(mockDeleteUser).toHaveBeenCalledWith(101);
   });
 
-  it('renders approve/reject actions when user status is PENDING_APPROVAL and handles reject confirmation', async () => {
+  it('renders approve/reject actions when user status is PENDING_APPROVAL and handles approval and reject confirmation dialogs', async () => {
     const pendingUser: AdminUserSummaryDto = {
       ...baseUser,
       status: 'PENDING_APPROVAL',
@@ -95,13 +95,33 @@ describe('UserGovernanceFooter', () => {
     expect(approveBtn).toBeDefined();
     expect(rejectBtn).toBeDefined();
 
+    // 1. Test Approve Confirmation Dialog & Expandable Details
     fireEvent.click(approveBtn);
+    expect(screen.getByText('确认通过用户审核并启用？')).toBeDefined();
+    expect(screen.getAllByText('查看操作影响与合规说明')[0]).toBeDefined();
+
+    // Expand details
+    fireEvent.click(screen.getAllByText('查看操作影响与合规说明')[0]);
+    expect(screen.getByText(/账号激活/)).toBeDefined();
+    expect(screen.getByText(/权限开通/)).toBeDefined();
+    expect(screen.getByText(/状态生效/)).toBeDefined();
+    expect(mockUpdateStatus).not.toHaveBeenCalled();
+
+    // Cancel approval
+    const cancelApproveBtn = screen.getAllByText('取消')[0];
+    fireEvent.click(cancelApproveBtn);
+    expect(mockUpdateStatus).not.toHaveBeenCalled();
+
+    // 2. Test Approve Confirmation Execution
+    fireEvent.click(approveBtn);
+    const confirmApproveBtn = screen.getByText('确认通过');
+    fireEvent.click(confirmApproveBtn);
     expect(mockUpdateStatus).toHaveBeenCalledWith({
       userId: 101,
       request: { status: 'ACTIVE' },
     });
 
-    // Reject opens confirmation dialog
+    // 3. Reject opens confirmation dialog
     fireEvent.click(rejectBtn);
     expect(screen.getByText('确认拒绝并注销申请？')).toBeDefined();
     const confirmRejectBtn = screen.getByText('确认拒绝');
