@@ -1,11 +1,30 @@
 import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RegisterDemographics, ETHNICITY_OPTIONS } from './RegisterDemographics';
 
 afterEach(() => {
   cleanup();
 });
+
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
+const renderWithProviders = (ui: React.ReactElement) => {
+  const queryClient = createTestQueryClient();
+  return render(
+    <QueryClientProvider client={queryClient}>
+      {ui}
+    </QueryClientProvider>
+  );
+};
 
 function setMdInputValue(field: HTMLElement, value: string) {
   (field as any).value = value;
@@ -19,7 +38,7 @@ function setMdSelectValue(select: HTMLElement, value: string) {
 
 describe('RegisterDemographics Component', () => {
   it('renders CSU branding, title, subtitle, date of birth inputs, and ethnicity select', () => {
-    render(
+    renderWithProviders(
       <RegisterDemographics
         onBack={() => {}}
         onProceed={() => {}}
@@ -51,7 +70,7 @@ describe('RegisterDemographics Component', () => {
 
   it('shows error when submitting with incomplete date of birth or ethnicity', () => {
     const onProceedMock = vi.fn();
-    render(
+    renderWithProviders(
       <RegisterDemographics
         onBack={() => {}}
         onProceed={onProceedMock}
@@ -68,7 +87,7 @@ describe('RegisterDemographics Component', () => {
 
   it('validates date of birth ranges and leap years / month bounds', () => {
     const onProceedMock = vi.fn();
-    render(
+    renderWithProviders(
       <RegisterDemographics
         onBack={() => {}}
         onProceed={onProceedMock}
@@ -95,7 +114,7 @@ describe('RegisterDemographics Component', () => {
 
   it('submits correctly when valid date of birth and ethnicity are entered', () => {
     const onProceedMock = vi.fn();
-    render(
+    renderWithProviders(
       <RegisterDemographics
         onBack={() => {}}
         onProceed={onProceedMock}
@@ -126,7 +145,7 @@ describe('RegisterDemographics Component', () => {
 
   it('validates working age bounds (<18 or >100 years old)', () => {
     const onProceedMock = vi.fn();
-    render(
+    renderWithProviders(
       <RegisterDemographics
         onBack={() => {}}
         onProceed={onProceedMock}
@@ -155,7 +174,7 @@ describe('RegisterDemographics Component', () => {
 
   it('accepts Feb 29 on leap year (2000)', () => {
     const onProceedMock = vi.fn();
-    render(
+    renderWithProviders(
       <RegisterDemographics
         onBack={() => {}}
         onProceed={onProceedMock}
@@ -186,7 +205,7 @@ describe('RegisterDemographics Component', () => {
 
   it('calls onBack when clicking "返回"', () => {
     const onBackMock = vi.fn();
-    render(
+    renderWithProviders(
       <RegisterDemographics
         onBack={onBackMock}
         onProceed={() => {}}

@@ -167,7 +167,7 @@ if [ "$RUN_FRONTEND" = true ]; then
     echo -e "${YELLOW}Installing frontend node_modules...${NC}"
     npm install
   fi
-  BACKEND_PORT="$BACKEND_PORT" npm run dev -- --port "$FRONTEND_PORT" &
+  BACKEND_PORT="$BACKEND_PORT" ./node_modules/.bin/vite --port "$FRONTEND_PORT" --host 0.0.0.0 &
   FE_PID=$!
 fi
 

@@ -35,6 +35,23 @@ const mockComputeAvailableActions = (referral: Referral, authHeader: string): Re
 const api = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`;
 
 export const handlers = [
+  http.get(api('/api/dictionaries/ethnicities'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn('Could not fetch ethnicities from real backend, falling back to mock', e);
+      }
+    }
+
+    const { FALLBACK_ETHNICITIES } = await import('../hooks/useEthnicities');
+    return HttpResponse.json(FALLBACK_ETHNICITIES);
+  }),
+
   http.post(api('/api/auth/verify-identifier'), async ({ request }) => {
     if (import.meta.env.MODE !== 'test') {
       try {

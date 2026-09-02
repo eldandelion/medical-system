@@ -45,8 +45,8 @@ data class RegisterStaffRequest(
     @field:NotBlank(message = "DOB_REQUIRED")
     val dateOfBirth: String,
 
-    @field:NotBlank(message = "ETHNICITY_REQUIRED")
-    val ethnicity: String,
+    val ethnicity: String? = null,
+    val ethnicityId: Long? = null,
 
     val school: String? = null,
     val department: String? = null,

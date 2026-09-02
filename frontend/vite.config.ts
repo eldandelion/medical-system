@@ -1,10 +1,12 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
 
-export default defineConfig(() => {
-    const backendPort = process.env.BACKEND_PORT || '8080';
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode || 'development', process.cwd(), '');
+    const backendPort = process.env.BACKEND_PORT || env.BACKEND_PORT || '8080';
 
     return {
         base: '/medical-system/',

@@ -43,6 +43,12 @@ declare global {
         label?: string;
         lowered?: boolean;
       }, HTMLElement>;
+      'md-linear-progress': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        indeterminate?: boolean;
+        value?: number;
+        max?: number;
+        buffer?: number;
+      }, HTMLElement>;
       'md-outlined-text-field': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
         type?: string;
         rows?: number;

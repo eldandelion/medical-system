@@ -1,14 +1,44 @@
 import React from 'react';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LoginOverlay } from './LoginOverlay';
 import { AccountMenu } from '../layout/AccountMenu';
 
 let originalFetch: typeof global.fetch;
 
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
+const renderWithProviders = (ui: React.ReactElement) => {
+  const queryClient = createTestQueryClient();
+  return render(
+    <QueryClientProvider client={queryClient}>
+      {ui}
+    </QueryClientProvider>
+  );
+};
+
 beforeEach(() => {
   originalFetch = global.fetch;
   global.fetch = vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
+    if (url.includes('/api/dictionaries/ethnicities')) {
+      return {
+        ok: true,
+        json: async () => [
+          { id: 1, name: '汉族' },
+          { id: 2, name: '蒙古族' },
+          { id: 3, name: '回族' },
+          { id: 57, name: '其他' }
+        ],
+      };
+    }
     if (url.includes('/api/auth/verify-identifier')) {
       const body = JSON.parse((init?.body as string) || '{}');
       const raw = (body.identifier || '').trim().toLowerCase();
@@ -88,12 +118,12 @@ function setMdInputValue(field: HTMLElement, value: string) {
 
 describe('LoginOverlay Component', () => {
   it('renders nothing when isOpen is false', () => {
-    render(<LoginOverlay isOpen={false} onClose={() => {}} />);
+    renderWithProviders(<LoginOverlay isOpen={false} onClose={() => {}} />);
     expect(screen.queryByText('登录')).toBeNull();
   });
 
   it('renders Step 1 with CSU branding, M3 UI in Chinese, and without outline / top-right close button', () => {
-    render(<LoginOverlay isOpen={true} onClose={() => {}} />);
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} />);
 
     // Left Column
     expect(screen.getByText('CSU')).toBeDefined();
@@ -120,7 +150,7 @@ describe('LoginOverlay Component', () => {
   });
 
   it('shows validation error on Step 1 if identifier is cleared and submitted', async () => {
-    render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
 
     const nextButton = screen.getByText('下一步');
     fireEvent.click(nextButton);
@@ -132,7 +162,7 @@ describe('LoginOverlay Component', () => {
   });
 
   it('transitions to Step 2 when Step 1 is submitted with valid email', async () => {
-    render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
 
     const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]') as HTMLElement;
     setMdInputValue(emailField, 'testuser@example.com');
@@ -152,7 +182,7 @@ describe('LoginOverlay Component', () => {
   });
 
   it('transitions to Step 2 when Step 1 is submitted with valid student number', async () => {
-    render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
 
     const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]') as HTMLElement;
     setMdInputValue(emailField, '2021001');
@@ -165,7 +195,7 @@ describe('LoginOverlay Component', () => {
   });
 
   it('transitions to Step 2 when Step 1 is submitted with valid teacher worker ID', async () => {
-    render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
 
     const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]') as HTMLElement;
     setMdInputValue(emailField, 'EMP-00001');
@@ -178,7 +208,7 @@ describe('LoginOverlay Component', () => {
   });
 
   it('transitions to Step 2 when Step 1 is submitted with valid doctor worker ID', async () => {
-    render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
 
     const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]') as HTMLElement;
     setMdInputValue(emailField, 'DOC-00001');
@@ -191,7 +221,7 @@ describe('LoginOverlay Component', () => {
   });
 
   it('displays error and stays on Step 1 when non-existent identifier is submitted', async () => {
-    render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
 
     const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]') as HTMLElement;
     setMdInputValue(emailField, 'nonexistent_account_9999');
@@ -205,7 +235,7 @@ describe('LoginOverlay Component', () => {
   });
 
   it('displays error and stays on Step 1 when a deactivated or disabled account is submitted', async () => {
-    render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
 
     const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]') as HTMLElement;
     setMdInputValue(emailField, 'disabled_user@univ.edu.cn');
@@ -219,7 +249,7 @@ describe('LoginOverlay Component', () => {
   });
 
   it('displays error and stays on Step 1 when an account awaiting approval is submitted', async () => {
-    render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
 
     const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]') as HTMLElement;
     setMdInputValue(emailField, 'pending_user@univ.edu.cn');
@@ -233,7 +263,7 @@ describe('LoginOverlay Component', () => {
   });
 
   it('displays static account indicator chip in Step 2 and allows returning to Step 1 via 使用其他账号 button', async () => {
-    render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="alice@university.edu" />);
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="alice@university.edu" />);
 
     // Advance to Step 2
     fireEvent.click(screen.getByText('下一步'));
@@ -255,7 +285,7 @@ describe('LoginOverlay Component', () => {
   });
 
   it('toggles password visibility with "显示密码" checkbox in Step 2', async () => {
-    render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="user@example.com" />);
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="user@example.com" />);
 
     // Advance to Step 2
     fireEvent.click(screen.getByText('下一步'));
@@ -277,7 +307,7 @@ describe('LoginOverlay Component', () => {
     const onCloseMock = vi.fn();
     const onSuccessMock = vi.fn();
 
-    render(
+    renderWithProviders(
       <LoginOverlay
         isOpen={true}
         onClose={onCloseMock}
@@ -307,7 +337,7 @@ describe('LoginOverlay Component', () => {
 
   it('calls onClose when Escape key is pressed', () => {
     const onCloseMock = vi.fn();
-    render(<LoginOverlay isOpen={true} onClose={onCloseMock} />);
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={onCloseMock} />);
 
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(onCloseMock).toHaveBeenCalledTimes(1);
@@ -333,7 +363,7 @@ describe('LoginOverlay Component', () => {
   });
 
   it('navigates from Login Step 1 to Register Role Selection screen when clicking 创建账号', () => {
-    render(<LoginOverlay isOpen={true} onClose={() => {}} />);
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} />);
 
     // Initially in Login Step 1
     expect(screen.getByText('登录')).toBeDefined();
@@ -356,7 +386,7 @@ describe('LoginOverlay Component', () => {
 
   it('allows selecting a user role and proceeding on registration screen', () => {
     const onRoleSelectMock = vi.fn();
-    render(
+    renderWithProviders(
       <LoginOverlay
         isOpen={true}
         onClose={() => {}}
@@ -377,7 +407,7 @@ describe('LoginOverlay Component', () => {
   });
 
   it('navigates back to Login Step 1 when clicking 返回登录 on registration screen', () => {
-    render(<LoginOverlay isOpen={true} onClose={() => {}} />);
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} />);
 
     // Go to registration
     fireEvent.click(screen.getByText('创建账号'));
@@ -393,7 +423,7 @@ describe('LoginOverlay Component', () => {
   });
 
   it('navigates student role to student notice screen explaining pre-created account and default credentials', () => {
-    render(
+    renderWithProviders(
       <LoginOverlay
         isOpen={true}
         onClose={() => {}}
@@ -422,7 +452,7 @@ describe('LoginOverlay Component', () => {
 
   it('navigates from Role Selection to Name & Gender step for non-student roles and submits basic info', () => {
     const onBasicInfoSubmitMock = vi.fn();
-    render(
+    renderWithProviders(
       <LoginOverlay
         isOpen={true}
         onClose={() => {}}
@@ -459,7 +489,7 @@ describe('LoginOverlay Component', () => {
   });
 
   it('navigates back from Name & Gender step to Role Selection when clicking 返回', () => {
-    render(
+    renderWithProviders(
       <LoginOverlay
         isOpen={true}
         onClose={() => {}}
@@ -479,7 +509,7 @@ describe('LoginOverlay Component', () => {
 
   it('navigates through full 3-step registration flow: Role -> Name & Gender -> Date of Birth & Ethnicity', () => {
     const onDemographicsSubmitMock = vi.fn();
-    render(
+    renderWithProviders(
       <LoginOverlay
         isOpen={true}
         onClose={() => {}}
@@ -538,7 +568,7 @@ describe('LoginOverlay Component', () => {
 
   it('navigates through full 4-step registration flow: Role -> Name & Gender -> Date of Birth & Ethnicity -> School & Department & Worker Number', () => {
     const onAffiliationSubmitMock = vi.fn();
-    render(
+    renderWithProviders(
       <LoginOverlay
         isOpen={true}
         onClose={() => {}}
@@ -612,7 +642,7 @@ describe('LoginOverlay Component', () => {
 
   it('navigates through complete 6-step registration: Role -> Name & Gender -> DOB -> Affiliation -> ID & Email -> Password', async () => {
     const onRegisterCompleteMock = vi.fn();
-    render(
+    renderWithProviders(
       <LoginOverlay
         isOpen={true}
         onClose={() => {}}
@@ -704,7 +734,7 @@ describe('LoginOverlay Component', () => {
   });
 
   it('prevents proceeding on Step 5 when ID card birth date mismatches Step 3 birth date', () => {
-    render(
+    renderWithProviders(
       <LoginOverlay
         isOpen={true}
         onClose={() => {}}
@@ -758,5 +788,19 @@ describe('LoginOverlay Component', () => {
     // Should display cross-step error and remain on Step 5
     expect(screen.getByText('身份证号中的出生日期与之前填写的出生日期不一致')).toBeDefined();
     expect(screen.queryByText('设置密码')).toBeNull();
+  });
+
+  it('renders top horizontal progress bar container in registration views', () => {
+    renderWithProviders(
+      <LoginOverlay
+        isOpen={true}
+        onClose={() => {}}
+        initialView="register-demographics"
+      />
+    );
+
+    const card = document.querySelector('.max-w-\\[1040px\\]');
+    expect(card).toBeDefined();
+    expect(screen.getByText('输入您的出生日期和民族')).toBeDefined();
   });
 });

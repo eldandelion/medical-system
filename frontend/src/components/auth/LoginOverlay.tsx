@@ -11,6 +11,7 @@ import { RegisterIdentity, type RegisterIdentityData } from './RegisterIdentity'
 import { RegisterPassword, type RegisterPasswordData } from './RegisterPassword';
 import { RegisterSuccessView } from './RegisterSuccessView';
 import { useRegistrationDraft } from './useRegistrationDraft';
+import { useEthnicities } from '../../hooks/useEthnicities';
 import { authApi } from '../../api/auth';
 import { UserRole } from '../../types';
 
@@ -129,7 +130,12 @@ export function LoginOverlay({
   const [passwordError, setPasswordError] = React.useState('');
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [isSubmittingRegistration, setIsSubmittingRegistration] = React.useState(false);
+  const { isLoading: isEthnicitiesLoading, isFetching: isEthnicitiesFetching } = useEthnicities();
   const abortControllerRef = React.useRef<AbortController | null>(null);
+
+  const showContainerProgress =
+    view !== 'login' &&
+    (isSubmittingRegistration || (view === 'register-demographics' && (isEthnicitiesLoading || isEthnicitiesFetching)));
 
   const prevIsOpenRef = React.useRef(isOpen);
 
@@ -319,8 +325,18 @@ export function LoginOverlay({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.96, opacity: 0 }}
             transition={{ duration: 0.25, ease: [0.2, 0, 0, 1] }}
-            className="relative w-full max-w-[1040px] min-h-[460px] bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-on-surface)] rounded-[28px] p-8 sm:p-10 md:p-12 shadow-sm flex flex-col justify-between"
+            className="relative w-full max-w-[1040px] min-h-[460px] bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-on-surface)] rounded-[28px] p-8 sm:p-10 md:p-12 shadow-sm flex flex-col justify-between overflow-hidden"
           >
+            {/* Top Horizontal Progress Bar */}
+            {showContainerProgress && (
+              <div
+                className="absolute top-0 left-0 right-0 h-1 overflow-hidden z-20"
+                data-testid="registration-progress-bar"
+              >
+                <md-linear-progress indeterminate class="w-full h-full block" />
+              </div>
+            )}
+
             {view === 'register-role-select' ? (
               <RegisterRoleSelect
                 selectedRole={selectedRole || (formData.role as RegisterRole)}

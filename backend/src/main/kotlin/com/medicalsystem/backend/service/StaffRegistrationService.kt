@@ -27,7 +27,8 @@ class StaffRegistrationService(
     private val schoolJpaRepository: SchoolJpaRepository,
     private val schoolDepartmentJpaRepository: SchoolDepartmentJpaRepository,
     private val emailOtpService: EmailOtpService,
-    private val domainEventPublisher: DomainEventPublisher
+    private val domainEventPublisher: DomainEventPublisher,
+    private val ethnicityJpaRepository: EthnicityJpaRepository? = null
 ) {
     private val logger = LoggerFactory.getLogger(StaffRegistrationService::class.java)
 
@@ -41,6 +42,16 @@ class StaffRegistrationService(
         // 1. Role validation
         if (request.role == UserRole.STUDENT) {
             throw ValidationException("STUDENT_REGISTRATION_NOT_ALLOWED")
+        }
+
+        // 1.5. Ethnicity validation
+        if (request.ethnicityId != null && ethnicityJpaRepository != null) {
+            val exists = ethnicityJpaRepository.existsById(request.ethnicityId)
+            if (!exists) {
+                throw ValidationException("ETHNICITY_NOT_FOUND")
+            }
+        } else if (request.ethnicity.isNullOrBlank()) {
+            throw ValidationException("ETHNICITY_REQUIRED")
         }
 
         // 2. Offline ID card validation
