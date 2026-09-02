@@ -94,10 +94,15 @@ describe('EssentialsManagementView', () => {
     expect(screen.getAllByText(/学院名称/).length).toBeGreaterThan(0);
   });
 
-  it('opens bulk import modal when clicking 批量导入 button', () => {
+  it('opens bulk import modal when clicking 批量导入 in split button menu', () => {
     render(<EssentialsManagementView />);
 
-    fireEvent.click(screen.getByText('批量导入'));
+    const menuTrigger = screen.getByLabelText('更多操作');
+    fireEvent.click(menuTrigger);
+
+    const importOption = screen.getByText('批量导入');
+    fireEvent.click(importOption);
+
     expect(screen.getByText(/基础数据批量导入/)).toBeDefined();
   });
 });

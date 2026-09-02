@@ -10,7 +10,7 @@ import {
   useReferencesList,
   useReactivateReference,
 } from '../../hooks/useReferenceData';
-import { SecondaryButton, OutlinedButton } from '../common/Buttons';
+import { SplitButton } from '../common/Buttons';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { EssentialEditDialog } from './EssentialEditDialog';
 import { EssentialDeleteConfirmDialog } from './EssentialDeleteConfirmDialog';
@@ -325,18 +325,20 @@ export function EssentialsManagementView() {
           </md-chip-set>
         </div>
 
-        {/* Header Actions */}
-        <div className="flex items-center gap-3 shrink-0">
-          <OutlinedButton
-            icon="upload_file"
-            label="批量导入"
-            onClick={() => setIsImportOpen(true)}
-            noCollapse
-          />
-          <SecondaryButton
+        {/* Header Actions: Consolidated Split Button */}
+        <div className="flex items-center shrink-0">
+          <SplitButton
             icon="add"
             label={`新增${currentMeta.singularTitle}`}
             onClick={handleOpenCreate}
+            variant="secondary"
+            options={[
+              {
+                label: '批量导入',
+                icon: 'upload_file',
+                onClick: () => setIsImportOpen(true),
+              },
+            ]}
             noCollapse
           />
         </div>
