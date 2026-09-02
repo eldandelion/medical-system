@@ -191,12 +191,12 @@ export function EssentialsManagementView() {
       },
       {
         key: 'actions',
-        label: '操作',
-        width: 'w-36',
+        label: '',
+        width: 'flex-1 min-w-[120px]',
         overflowVisible: true,
         render: (item) => (
           <div
-            className="flex items-center justify-start -ml-2"
+            className="flex items-center justify-end -mr-2"
             onClick={(e) => e.stopPropagation()}
           >
             <md-icon-button
