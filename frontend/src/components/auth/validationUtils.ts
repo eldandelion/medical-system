@@ -46,16 +46,14 @@ const ID_CARD_CHECK_CHARS = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '
 // ─── Name Validation ───────────────────────────────────────────────────────
 
 /**
- * Validates a person's name.
+ * Validates a Chinese legal or minority name.
  *
- * Accepted characters:
- * - Chinese characters (CJK Unified Ideographs U+4E00–U+9FFF)
- * - Latin letters (A-Z, a-z)
- * - Middle dots (· U+00B7, • U+2022) for ethnic minority names
- * - Single spaces between name parts
- *
- * Length: 2–30 characters (after trimming).
- * Leading/trailing/consecutive whitespace is rejected.
+ * Rules:
+ * - Disallows English/Latin letters (A-Z, a-z) completely.
+ * - Completely excludes spaces (no spaces at all).
+ * - Accepted characters: Chinese characters (CJK Unified Ideographs U+4E00–U+9FFF) and middle dots (· U+00B7, • U+2022) for ethnic minority names.
+ * - Length: 2–30 characters (after trimming).
+ * - Middle dots must be between Chinese characters (not at the start or end).
  */
 export function validateName(name: string): ValidationResult {
   const trimmed = name.trim();
@@ -72,10 +70,10 @@ export function validateName(name: string): ValidationResult {
     return { isValid: false, error: '姓名长度不能超过 30 个字符' };
   }
 
-  // Only allow: Chinese characters, Latin letters, middle dots (· •), single spaces
-  const namePattern = /^[\u4e00-\u9fff\u00b7\u2022A-Za-z]+( [\u4e00-\u9fff\u00b7\u2022A-Za-z]+)*$/;
+  // Only allow Chinese characters and middle dots (· •). No Latin letters, no spaces, no digits or symbols.
+  const namePattern = /^[\u4e00-\u9fff]+(?:[\u00b7\u2022][\u4e00-\u9fff]+)*$/;
   if (!namePattern.test(trimmed)) {
-    return { isValid: false, error: '姓名只能包含中文、英文字母、中间点（·）和空格' };
+    return { isValid: false, error: '姓名只能包含中文和中间点（·）' };
   }
 
   return { isValid: true };
@@ -294,6 +292,104 @@ export function validateEmail(email: string): ValidationResult {
   }
 
   return { isValid: true };
+}
+
+// ─── OTP Validation ────────────────────────────────────────────────────────
+
+/**
+ * Validates a 6-digit email OTP challenge code.
+ */
+export function validateOtp(otp: string): ValidationResult {
+  const trimmed = otp.trim();
+  if (!trimmed) {
+    return { isValid: false, error: '请输入邮箱验证码' };
+  }
+  if (!/^\d{6}$/.test(trimmed)) {
+    return { isValid: false, error: '请输入6位数字验证码' };
+  }
+  return { isValid: true };
+}
+
+// ─── ID Card Extraction Helper ─────────────────────────────────────────────
+
+/**
+ * Extracts normalized birthDate (YYYY-MM-DD) and gender ('男' | '女') from a valid Chinese ID card.
+ * Returns null if the ID card is not valid.
+ */
+export function extractDobAndGenderFromIdCard(idCard: string): { birthDate: string; gender: '男' | '女' } | null {
+  const result = validateChineseIdCard(idCard);
+  if (!result.isValid) return null;
+
+  const trimmed = idCard.trim().toUpperCase();
+  const year = trimmed.substring(6, 10);
+  const month = trimmed.substring(10, 12);
+  const day = trimmed.substring(12, 14);
+  const genderDigit = parseInt(trimmed.charAt(16), 10);
+
+  return {
+    birthDate: `${year}-${month}-${day}`,
+    gender: genderDigit % 2 === 1 ? '男' : '女',
+  };
+}
+
+// ─── Disposable Email Checker ──────────────────────────────────────────────
+
+const DISPOSABLE_EMAIL_DOMAINS = new Set([
+  'mailinator.com', 'tempmail.com', 'temp-mail.org',
+  'guerrillamail.com', 'guerrillamail.net', 'guerrillamail.org',
+  '10minutemail.com', '10minutemail.net', 'yopmail.com', 'yopmail.net',
+  'trashmail.com', 'sharklasers.com', 'getairmail.com', 'dispostable.com',
+  'mohmal.com', 'fakemailgenerator.com', 'throwawaymail.com', 'maildrop.cc',
+  'inboxkitten.com', 'crazymailing.com', 'tempinbox.com', 'mailcatch.com',
+  'trashmail.net', 'mintemail.com', 'mytemp.email'
+]);
+
+export function isDisposableEmail(email: string): boolean {
+  if (!email || !email.includes('@')) return false;
+  const domain = email.substring(email.lastIndexOf('@') + 1).trim().toLowerCase();
+  return DISPOSABLE_EMAIL_DOMAINS.has(domain);
+}
+
+// ─── Password Strength Evaluation ──────────────────────────────────────────
+
+export interface PasswordStrengthResult {
+  score: number; // 0 to 4
+  level: 'weak' | 'fair' | 'good' | 'strong';
+  checks: {
+    minLength: boolean;
+    hasLetter: boolean;
+    hasDigit: boolean;
+    hasSpecial: boolean;
+  };
+}
+
+export function evaluatePasswordStrength(password: string): PasswordStrengthResult {
+  const minLength = password.length >= 8;
+  const hasLetter = /[A-Za-z]/.test(password);
+  const hasDigit = /\d/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+  let score = 0;
+  if (minLength) score++;
+  if (hasLetter) score++;
+  if (hasDigit) score++;
+  if (hasSpecial && password.length >= 10) score++;
+
+  let level: 'weak' | 'fair' | 'good' | 'strong' = 'weak';
+  if (score >= 4) level = 'strong';
+  else if (score === 3) level = 'good';
+  else if (score === 2) level = 'fair';
+
+  return {
+    score,
+    level,
+    checks: {
+      minLength,
+      hasLetter,
+      hasDigit,
+      hasSpecial,
+    },
+  };
 }
 
 // ─── Password Validation ───────────────────────────────────────────────────

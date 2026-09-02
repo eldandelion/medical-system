@@ -59,15 +59,67 @@ value class EmailAddress(val value: String) {
 @JvmInline
 value class IdCardNumber(val value: String) {
     companion object {
-        val PATTERN = Regex(
-            "^[1-9]\\d{5}(18|19|20)\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$"
+        private val VALID_PROVINCE_CODES = setOf(
+            "11", "12", "13", "14", "15",
+            "21", "22", "23",
+            "31", "32", "33", "34", "35", "36", "37",
+            "41", "42", "43", "44", "45", "46",
+            "50", "51", "52", "53", "54",
+            "61", "62", "63", "64", "65",
+            "71", "81", "82"
         )
 
-        fun isValid(raw: String?): Boolean = raw != null && PATTERN.matches(raw)
+        private val WEIGHTS = intArrayOf(7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2)
+        private val CHECK_CHARS = charArrayOf('1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2')
+        val PATTERN = Regex("^[1-9]\\d{5}(18|19|20)\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$")
+
+        fun isValid(raw: String?): Boolean {
+            if (raw.isNullOrBlank()) return false
+            val upper = raw.trim().uppercase()
+            if (upper.length != 18) return false
+            if (!PATTERN.matches(upper)) return false
+
+            val provinceCode = upper.substring(0, 2)
+            if (!VALID_PROVINCE_CODES.contains(provinceCode)) return false
+
+            val year = upper.substring(6, 10).toIntOrNull() ?: return false
+            val month = upper.substring(10, 12).toIntOrNull() ?: return false
+            val day = upper.substring(12, 14).toIntOrNull() ?: return false
+
+            try {
+                LocalDate.of(year, month, day)
+            } catch (e: Exception) {
+                return false
+            }
+
+            var sum = 0
+            for (i in 0 until 17) {
+                val digit = upper[i] - '0'
+                if (digit !in 0..9) return false
+                sum += digit * WEIGHTS[i]
+            }
+            val expectedCheck = CHECK_CHARS[sum % 11]
+            return upper[17] == expectedCheck
+        }
 
         fun fromOrNull(raw: String?): IdCardNumber? =
-            raw?.takeIf { isValid(it) }?.let { IdCardNumber(it) }
+            raw?.trim()?.uppercase()?.takeIf { isValid(it) }?.let { IdCardNumber(it) }
     }
+
+    val birthDate: LocalDate
+        get() {
+            val upper = value.uppercase()
+            val year = upper.substring(6, 10).toInt()
+            val month = upper.substring(10, 12).toInt()
+            val day = upper.substring(12, 14).toInt()
+            return LocalDate.of(year, month, day)
+        }
+
+    val gender: Gender
+        get() {
+            val genderDigit = value[16].digitToInt()
+            return if (genderDigit % 2 != 0) Gender.MALE else Gender.FEMALE
+        }
 
     init {
         require(isValid(value)) {

@@ -191,6 +191,7 @@ export function RegisterAffiliation({
                   className="w-full"
                   value={institution}
                   error={!!institutionError || undefined}
+                  error-text={institutionError || undefined}
                   onChange={(e: React.SyntheticEvent) => {
                     const target = e.target as HTMLSelectElement;
                     setInstitution(target.value);
@@ -202,13 +203,8 @@ export function RegisterAffiliation({
                       <div slot="headline">{opt}</div>
                     </md-select-option>
                   ))}
+                  {institutionError && <span slot="error-text">{institutionError}</span>}
                 </md-outlined-select>
-                {institutionError && (
-                  <div className="text-xs text-[var(--md-sys-color-error)] flex items-center gap-1 pt-1.5">
-                    <span className="material-symbols-outlined text-[16px]">error</span>
-                    <span>{institutionError}</span>
-                  </div>
-                )}
               </div>
 
               {/* Department (School Department or Hospital Department) Selector */}
@@ -218,6 +214,7 @@ export function RegisterAffiliation({
                   className="w-full"
                   value={department}
                   error={!!departmentError || undefined}
+                  error-text={departmentError || undefined}
                   onChange={(e: React.SyntheticEvent) => {
                     const target = e.target as HTMLSelectElement;
                     setDepartment(target.value);
@@ -229,13 +226,8 @@ export function RegisterAffiliation({
                       <div slot="headline">{dept}</div>
                     </md-select-option>
                   ))}
+                  {departmentError && <span slot="error-text">{departmentError}</span>}
                 </md-outlined-select>
-                {departmentError && (
-                  <div className="text-xs text-[var(--md-sys-color-error)] flex items-center gap-1 pt-1.5">
-                    <span className="material-symbols-outlined text-[16px]">error</span>
-                    <span>{departmentError}</span>
-                  </div>
-                )}
               </div>
 
               {/* Worker Number Input */}
@@ -245,19 +237,16 @@ export function RegisterAffiliation({
                   maxLength={30}
                   value={workerNumber}
                   className="w-full"
-                  error={!!workerNumberError}
+                  error={!!workerNumberError || undefined}
+                  error-text={workerNumberError || undefined}
                   onInput={(e: React.SyntheticEvent) => {
                     const target = e.target as HTMLInputElement;
                     setWorkerNumber(target.value);
                     if (workerNumberError) setWorkerNumberError('');
                   }}
-                />
-                {workerNumberError && (
-                  <div className="text-xs text-[var(--md-sys-color-error)] flex items-center gap-1 pt-1.5">
-                    <span className="material-symbols-outlined text-[16px]">error</span>
-                    <span>{workerNumberError}</span>
-                  </div>
-                )}
+                >
+                  {workerNumberError && <span slot="error-text">{workerNumberError}</span>}
+                </md-outlined-text-field>
               </div>
             </div>
 

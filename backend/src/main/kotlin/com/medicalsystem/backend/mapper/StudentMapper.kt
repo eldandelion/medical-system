@@ -41,7 +41,7 @@ class StudentMapper(
                     gender = it.gender,
                     dateOfBirth = it.dateOfBirth,
                     ethnicity = it.ethnicity?.let { e -> Ethnicity(e.id ?: 0L, e.name) },
-                    idCardNumber = it.idCardNumber?.let { num -> com.medicalsystem.backend.model.IdCardNumber(num) },
+                    idCardNumber = it.idCardNumber?.let { num -> com.medicalsystem.backend.model.IdCardNumber.fromOrNull(num) },
                     contactNumber = it.contactNumber?.let { num -> com.medicalsystem.backend.model.MobileNumber(num) },
                     email = it.email?.let { e -> com.medicalsystem.backend.model.EmailAddress(e) },
                     homeAddress = it.homeAddress,

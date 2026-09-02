@@ -47,7 +47,7 @@ class UserProfileControllerTest {
             gender = Gender.MALE,
             birthday = "2001年2月5日",
             ethnicity = "汉族",
-            idCardNumber = "110101200301011234",
+            idCardNumber = "110101200301011238",
             contactNumber = "13800138000",
             homeAddress = "北京市海淀区",
             emergencyContactName = "张三",

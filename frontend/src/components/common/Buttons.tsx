@@ -17,12 +17,24 @@ interface ButtonProps {
 export function PrimaryButton({ id, icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
+  const setRef = React.useCallback((el: HTMLElement | null) => {
+    if (el) {
+      el.onclick = (e) => {
+        if (!disabled && onClick) {
+          e.preventDefault();
+          e.stopPropagation();
+          onClick();
+        }
+      };
+    }
+  }, [onClick, disabled]);
+
   return (
     <md-filled-button
+      ref={setRef}
       id={id}
-      className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       onClick={onClick}
-      onPointerUp={(e) => e.currentTarget.blur()}
+      className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       disabled={disabled}
       trailing-icon={trailingIcon ? "" : undefined}
       style={{
@@ -41,12 +53,24 @@ export function PrimaryButton({ id, icon, label, className = "h-10", onClick, st
 export function SecondaryButton({ id, icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
+  const setRef = React.useCallback((el: HTMLElement | null) => {
+    if (el) {
+      el.onclick = (e) => {
+        if (!disabled && onClick) {
+          e.preventDefault();
+          e.stopPropagation();
+          onClick();
+        }
+      };
+    }
+  }, [onClick, disabled]);
+
   return (
     <md-filled-tonal-button
+      ref={setRef}
       id={id}
-      className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       onClick={onClick}
-      onPointerUp={(e) => e.currentTarget.blur()}
+      className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       disabled={disabled}
       trailing-icon={trailingIcon ? "" : undefined}
       style={{
@@ -65,12 +89,25 @@ export const FilledTonalButton = SecondaryButton;
 export function OutlinedButton({ id, icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
+  const setRef = React.useCallback((el: HTMLElement | null) => {
+    if (el) {
+      el.onclick = (e) => {
+        if (!disabled && onClick) {
+          e.preventDefault();
+          e.stopPropagation();
+          onClick();
+        }
+      };
+    }
+  }, [onClick, disabled]);
+
   return (
     <md-outlined-button
+      ref={setRef}
       id={id}
-      className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
+      type="button"
       onClick={onClick}
-      onPointerUp={(e) => e.currentTarget.blur()}
+      className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       disabled={disabled}
       trailing-icon={trailingIcon ? "" : undefined}
       style={{
@@ -87,11 +124,25 @@ export function OutlinedButton({ id, icon, label, className = "h-10", onClick, s
 export function TertiaryButton({ id, icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
+  const setRef = React.useCallback((el: HTMLElement | null) => {
+    if (el) {
+      el.onclick = (e) => {
+        if (!disabled && onClick) {
+          e.preventDefault();
+          e.stopPropagation();
+          onClick();
+        }
+      };
+    }
+  }, [onClick, disabled]);
+
   return (
     <md-text-button
+      ref={setRef}
       id={id}
-      className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
+      type="button"
       onClick={onClick}
+      className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       disabled={disabled}
       trailing-icon={trailingIcon ? "" : undefined}
       style={{

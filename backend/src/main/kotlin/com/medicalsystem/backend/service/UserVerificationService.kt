@@ -47,6 +47,7 @@ class UserVerificationService(
         return VerifyIdentifierResponse(
             exists = true,
             isAccountActive = isActive,
+            status = userEntity.status,
             maskedIdentifier = masked,
             role = userEntity.role
         )

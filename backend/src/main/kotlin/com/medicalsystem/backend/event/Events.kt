@@ -39,3 +39,14 @@ data class ReferralRecalledEvent(
     val studentId: Long,
     override val occurredOn: LocalDateTime = LocalDateTime.now()
 ) : DomainEvent
+
+data class StaffRegisteredEvent(
+    val userId: Long,
+    val role: com.medicalsystem.backend.model.UserRole,
+    val name: String,
+    val email: com.medicalsystem.backend.model.EmailAddress,
+    val employeeNumber: String,
+    val status: com.medicalsystem.backend.model.AccountStatus = com.medicalsystem.backend.model.AccountStatus.PENDING_APPROVAL,
+    override val occurredOn: LocalDateTime = LocalDateTime.now()
+) : DomainEvent
+

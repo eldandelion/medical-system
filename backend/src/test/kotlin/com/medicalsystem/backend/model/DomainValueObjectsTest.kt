@@ -12,23 +12,32 @@ class DomainValueObjectsTest {
 
     @Test
     fun `IdCardNumber validates Chinese 18-digit ID format correctly`() {
-        val validId = "110101200001011234"
-        val validIdX = "11010120000101123X"
+        val validIdMale = "110101200001011232" // 17th digit = 3 (odd -> Male)
+        val validIdFemale = "110101200001011240" // 17th digit = 4 (even -> Female)
+        val invalidChecksum = "110101200001011234"
+        val invalidProvince = "990101200001011232"
         val invalidShort = "123456"
         val invalidMonth = "110101200013011234"
 
-        assertTrue(IdCardNumber.isValid(validId))
-        assertTrue(IdCardNumber.isValid(validIdX))
+        assertTrue(IdCardNumber.isValid(validIdMale))
+        assertTrue(IdCardNumber.isValid(validIdFemale))
+        assertFalse(IdCardNumber.isValid(invalidChecksum))
+        assertFalse(IdCardNumber.isValid(invalidProvince))
         assertFalse(IdCardNumber.isValid(invalidShort))
         assertFalse(IdCardNumber.isValid(invalidMonth))
         assertFalse(IdCardNumber.isValid(null))
 
-        assertNotNull(IdCardNumber.fromOrNull(validId))
+        assertNotNull(IdCardNumber.fromOrNull(validIdMale))
         assertNull(IdCardNumber.fromOrNull(invalidShort))
         assertNull(IdCardNumber.fromOrNull(null))
 
-        val vo = IdCardNumber(validId)
-        assertEquals(validId, vo.value)
+        val vo = IdCardNumber(validIdMale)
+        assertEquals(validIdMale, vo.value)
+        assertEquals(java.time.LocalDate.of(2000, 1, 1), vo.birthDate)
+        assertEquals(Gender.MALE, vo.gender)
+
+        val voFemale = IdCardNumber(validIdFemale)
+        assertEquals(Gender.FEMALE, voFemale.gender)
 
         assertThrows<IllegalArgumentException> {
             IdCardNumber(invalidShort)

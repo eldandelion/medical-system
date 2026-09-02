@@ -93,8 +93,8 @@ class StudentImportIntegrationTest {
     fun `preview and commit full import flow against database`() {
         val csvContent = """
             学号,姓名,专业,入学日期,身份证号,性别,民族,联系电话,电子邮箱,家庭住址,紧急联系人,紧急联系电话,班主任/辅导员工号
-            TEST-S01,张三,计算机科学与技术 (Test),2026-09-01,110101200801011234,男,汉族,13800138001,zhangsan@test.com,北京市海淀区,张父,13900139001,EMP-TEST-001
-            TEST-S02,李四,计算机科学与技术 (Test),2026-09-01,110101200802021234,女,汉族,13800138002,lisi@test.com,上海市浦东区,李母,13900139002,EMP-TEST-001
+            TEST-S01,张三,计算机科学与技术 (Test),2026-09-01,110101200801011230,男,汉族,13800138001,zhangsan@test.com,北京市海淀区,张父,13900139001,EMP-TEST-001
+            TEST-S02,李四,计算机科学与技术 (Test),2026-09-01,11010120080202122X,女,汉族,13800138002,lisi@test.com,上海市浦东区,李母,13900139002,EMP-TEST-001
         """.trimIndent()
 
         val multipartFile = MockMultipartFile(
@@ -132,7 +132,7 @@ class StudentImportIntegrationTest {
         assertEquals("张三", s1?.name)
         assertEquals("计算机科学与技术 (Test)", s1?.major?.name)
         assertEquals("EMP-TEST-001", s1?.assignedTeacher?.employeeNumber)
-        assertEquals("110101200801011234", s1?.demographics?.idCardNumber)
+        assertEquals("110101200801011230", s1?.demographics?.idCardNumber)
         assertEquals("zhangsan@test.com", s1?.demographics?.email)
 
         // Verify initial Health Profile created
@@ -143,7 +143,7 @@ class StudentImportIntegrationTest {
         // 4. Test duplicate detection and update
         val updatedCsvContent = """
             学号,姓名,专业,入学日期,身份证号,性别,民族,联系电话,电子邮箱,家庭住址,紧急联系人,紧急联系电话,班主任/辅导员工号
-            TEST-S01,张三丰,计算机科学与技术 (Test),2026-09-01,110101200801011234,男,汉族,13800138999,zhangsan.new@test.com,北京市朝阳区,张父,13900139001,EMP-TEST-001
+            TEST-S01,张三丰,计算机科学与技术 (Test),2026-09-01,110101200801011230,男,汉族,13800138999,zhangsan.new@test.com,北京市朝阳区,张父,13900139001,EMP-TEST-001
         """.trimIndent()
 
         val updatedMultipartFile = MockMultipartFile(

@@ -134,7 +134,30 @@ describe('RegisterBasicInfo Component', () => {
     const nextButton = screen.getByText('下一步');
     fireEvent.click(nextButton);
 
-    expect(screen.getByText('姓名只能包含中文、英文字母、中间点（·）和空格')).toBeDefined();
+    expect(screen.getByText('姓名只能包含中文和中间点（·）')).toBeDefined();
+    expect(onProceedMock).not.toHaveBeenCalled();
+  });
+
+  it('shows validation error when name contains English letters or spaces', () => {
+    const onProceedMock = vi.fn();
+    render(
+      <RegisterBasicInfo
+        role="teacher"
+        onBack={() => {}}
+        onProceed={onProceedMock}
+      />
+    );
+
+    const nameField = document.querySelector('md-outlined-text-field[label="姓名"]') as HTMLElement;
+    setMdInputValue(nameField, 'Zhang San');
+
+    const genderSelect = document.querySelector('md-outlined-select[label="性别"]') as HTMLElement;
+    setMdSelectValue(genderSelect, '男');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(screen.getByText('姓名只能包含中文和中间点（·）')).toBeDefined();
     expect(onProceedMock).not.toHaveBeenCalled();
   });
 

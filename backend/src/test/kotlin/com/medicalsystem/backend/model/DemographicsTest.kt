@@ -8,7 +8,7 @@ class DemographicsTest {
 
     private fun createValidDemographics(
         dateOfBirth: LocalDate? = LocalDate.of(2000, 1, 1),
-        idCardNumber: String? = "110105200001011234",
+        idCardNumber: String? = "110105200001011238",
         email: String? = "test@example.com",
         contactNumber: String? = "13800138000",
         emergencyContactPhone: String? = "13900139000"

@@ -99,19 +99,16 @@ export function RegisterBasicInfo({
                   maxLength={30}
                   value={name}
                   className="w-full"
-                  error={!!nameError}
+                  error={!!nameError || undefined}
+                  error-text={nameError || undefined}
                   onInput={(e: React.SyntheticEvent) => {
                     const target = e.target as HTMLInputElement;
                     setName(target.value);
                     if (nameError) setNameError('');
                   }}
-                />
-                {nameError && (
-                  <div className="text-xs text-[var(--md-sys-color-error)] flex items-center gap-1 pt-1.5">
-                    <span className="material-symbols-outlined text-[16px]">error</span>
-                    <span>{nameError}</span>
-                  </div>
-                )}
+                >
+                  {nameError && <span slot="error-text">{nameError}</span>}
+                </md-outlined-text-field>
               </div>
 
               {/* Gender Input Field */}
@@ -121,6 +118,7 @@ export function RegisterBasicInfo({
                   className="w-full"
                   value={gender}
                   error={!!genderError || undefined}
+                  error-text={genderError || undefined}
                   onChange={(e: React.SyntheticEvent) => {
                     const target = e.target as HTMLSelectElement;
                     setGender(target.value);
@@ -133,13 +131,8 @@ export function RegisterBasicInfo({
                   <md-select-option value="女">
                     <div slot="headline">女</div>
                   </md-select-option>
+                  {genderError && <span slot="error-text">{genderError}</span>}
                 </md-outlined-select>
-                {genderError && (
-                  <div className="text-xs text-[var(--md-sys-color-error)] flex items-center gap-1 pt-1.5">
-                    <span className="material-symbols-outlined text-[16px]">error</span>
-                    <span>{genderError}</span>
-                  </div>
-                )}
               </div>
             </div>
 

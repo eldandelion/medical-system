@@ -186,7 +186,7 @@ export function RegisterDemographics({
                 </div>
 
                 {dobError && (
-                  <div className="text-xs text-[var(--md-sys-color-error)] flex items-center gap-1 pt-1.5">
+                  <div className="text-xs text-[var(--md-sys-color-error)] flex items-center gap-1 pt-1">
                     <span className="material-symbols-outlined text-[16px]">error</span>
                     <span>{dobError}</span>
                   </div>
@@ -200,6 +200,7 @@ export function RegisterDemographics({
                   className="w-full"
                   value={ethnicity}
                   error={!!ethnicityError || undefined}
+                  error-text={ethnicityError || undefined}
                   onChange={(e: React.SyntheticEvent) => {
                     const target = e.target as HTMLSelectElement;
                     setEthnicity(target.value);
@@ -211,13 +212,8 @@ export function RegisterDemographics({
                       <div slot="headline">{eth}</div>
                     </md-select-option>
                   ))}
+                  {ethnicityError && <span slot="error-text">{ethnicityError}</span>}
                 </md-outlined-select>
-                {ethnicityError && (
-                  <div className="text-xs text-[var(--md-sys-color-error)] flex items-center gap-1 pt-1.5">
-                    <span className="material-symbols-outlined text-[16px]">error</span>
-                    <span>{ethnicityError}</span>
-                  </div>
-                )}
               </div>
             </div>
 

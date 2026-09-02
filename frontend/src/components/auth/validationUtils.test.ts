@@ -6,6 +6,10 @@ import {
   validateChineseIdCard,
   validateEmail,
   validatePassword,
+  validateOtp,
+  extractDobAndGenderFromIdCard,
+  isDisposableEmail,
+  evaluatePasswordStrength,
   getDaysInMonth,
 } from './validationUtils';
 
@@ -42,26 +46,47 @@ describe('validateName', () => {
   it('rejects names with digits', () => {
     const result = validateName('张三3');
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe('姓名只能包含中文、英文字母、中间点（·）和空格');
+    expect(result.error).toBe('姓名只能包含中文和中间点（·）');
   });
 
   it('rejects names with special symbols', () => {
     const result = validateName('张三@');
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe('姓名只能包含中文、英文字母、中间点（·）和空格');
+    expect(result.error).toBe('姓名只能包含中文和中间点（·）');
   });
 
-  it('rejects names with consecutive spaces', () => {
-    const result = validateName('张  三');
+  it('rejects names with spaces', () => {
+    const result = validateName('张 三');
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe('姓名只能包含中文、英文字母、中间点（·）和空格');
+    expect(result.error).toBe('姓名只能包含中文和中间点（·）');
+  });
+
+  it('rejects English and Latin names', () => {
+    const result = validateName('Zhang San');
+    expect(result.isValid).toBe(false);
+    expect(result.error).toBe('姓名只能包含中文和中间点（·）');
+  });
+
+  it('rejects mixed Chinese and Latin characters', () => {
+    const result = validateName('John 张');
+    expect(result.isValid).toBe(false);
+    expect(result.error).toBe('姓名只能包含中文和中间点（·）');
+  });
+
+  it('rejects names starting or ending with a middle dot', () => {
+    expect(validateName('·张三').isValid).toBe(false);
+    expect(validateName('张三·').isValid).toBe(false);
+  });
+
+  it('rejects names with consecutive middle dots', () => {
+    expect(validateName('买买提··吐尔逊').isValid).toBe(false);
   });
 
   it('accepts valid Chinese name', () => {
     expect(validateName('张三').isValid).toBe(true);
   });
 
-  it('accepts valid Chinese name with three characters', () => {
+  it('accepts valid Chinese name with four characters', () => {
     expect(validateName('欧阳娜娜').isValid).toBe(true);
   });
 
@@ -71,14 +96,6 @@ describe('validateName', () => {
 
   it('accepts minority name with bullet •', () => {
     expect(validateName('买买提•吐尔逊').isValid).toBe(true);
-  });
-
-  it('accepts English/Pinyin name', () => {
-    expect(validateName('Zhang San').isValid).toBe(true);
-  });
-
-  it('accepts mixed Chinese and Latin characters', () => {
-    expect(validateName('John 张').isValid).toBe(true);
   });
 
   it('accepts exactly 2 characters', () => {
@@ -586,3 +603,93 @@ describe('validatePassword', () => {
     expect(validatePassword('P@ssw0rd!123').isValid).toBe(true);
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// validateOtp
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('validateOtp', () => {
+  it('rejects empty or whitespace OTP', () => {
+    expect(validateOtp('').isValid).toBe(false);
+    expect(validateOtp('   ').isValid).toBe(false);
+  });
+
+  it('rejects non-6-digit OTP', () => {
+    expect(validateOtp('12345').isValid).toBe(false);
+    expect(validateOtp('1234567').isValid).toBe(false);
+    expect(validateOtp('abcdef').isValid).toBe(false);
+  });
+
+  it('accepts valid 6-digit OTP', () => {
+    expect(validateOtp('123456').isValid).toBe(true);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// extractDobAndGenderFromIdCard
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('extractDobAndGenderFromIdCard', () => {
+  it('returns null for invalid ID card', () => {
+    expect(extractDobAndGenderFromIdCard('123456')).toBeNull();
+    expect(extractDobAndGenderFromIdCard('110101200001011234')).toBeNull();
+  });
+
+  it('extracts DOB and gender accurately for male ID card', () => {
+    const result = extractDobAndGenderFromIdCard('110101200001011232');
+    expect(result).not.toBeNull();
+    expect(result?.birthDate).toBe('2000-01-01');
+    expect(result?.gender).toBe('男');
+  });
+
+  it('extracts DOB and gender accurately for female ID card', () => {
+    const result = extractDobAndGenderFromIdCard('110101200001011240');
+    expect(result).not.toBeNull();
+    expect(result?.birthDate).toBe('2000-01-01');
+    expect(result?.gender).toBe('女');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// isDisposableEmail
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('isDisposableEmail', () => {
+  it('identifies disposable email domains', () => {
+    expect(isDisposableEmail('test@mailinator.com')).toBe(true);
+    expect(isDisposableEmail('user@tempmail.com')).toBe(true);
+    expect(isDisposableEmail('temp@yopmail.com')).toBe(true);
+  });
+
+  it('allows institutional and legitimate email domains', () => {
+    expect(isDisposableEmail('teacher@csu.edu.cn')).toBe(false);
+    expect(isDisposableEmail('doctor@hospital.org')).toBe(false);
+    expect(isDisposableEmail('admin@gmail.com')).toBe(false);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// evaluatePasswordStrength
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('evaluatePasswordStrength', () => {
+  it('evaluates weak passwords', () => {
+    const res = evaluatePasswordStrength('123');
+    expect(res.level).toBe('weak');
+    expect(res.checks.minLength).toBe(false);
+  });
+
+  it('evaluates fair passwords', () => {
+    const res = evaluatePasswordStrength('Pass1234');
+    expect(res.checks.minLength).toBe(true);
+    expect(res.checks.hasLetter).toBe(true);
+    expect(res.checks.hasDigit).toBe(true);
+  });
+
+  it('evaluates strong passwords with special chars and length >= 10', () => {
+    const res = evaluatePasswordStrength('P@ssw0rd!2026');
+    expect(res.level).toBe('strong');
+    expect(res.checks.hasSpecial).toBe(true);
+  });
+});
+

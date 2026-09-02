@@ -23,7 +23,7 @@ describe('RegisterPassword Component', () => {
 
     expect(screen.getByText('CSU')).toBeDefined();
     expect(screen.getByText('设置密码')).toBeDefined();
-    expect(screen.getByText('为您的账号设置一个强密码')).toBeDefined();
+    expect(screen.getByText('为您的账号设置一个安全的登录密码')).toBeDefined();
 
     const pwdField = document.querySelector('md-outlined-text-field[label="密码"]');
     expect(pwdField).toBeDefined();
@@ -33,7 +33,7 @@ describe('RegisterPassword Component', () => {
 
     expect(screen.getByText('显示密码')).toBeDefined();
     expect(screen.getByText('返回')).toBeDefined();
-    expect(screen.getByText('创建账号')).toBeDefined();
+    expect(screen.getByText('提交注册')).toBeDefined();
   });
 
   it('validates password minimum length of 8 characters', () => {
@@ -51,7 +51,7 @@ describe('RegisterPassword Component', () => {
     const confirmField = document.querySelector('md-outlined-text-field[label="确认密码"]') as HTMLElement;
     setMdInputValue(confirmField, '12345');
 
-    const submitButton = screen.getByText('创建账号');
+    const submitButton = screen.getByText('提交注册');
     fireEvent.click(submitButton);
 
     expect(screen.getByText('密码长度至少需要 8 个字符')).toBeDefined();
@@ -73,7 +73,7 @@ describe('RegisterPassword Component', () => {
     const confirmField = document.querySelector('md-outlined-text-field[label="确认密码"]') as HTMLElement;
     setMdInputValue(confirmField, 'password456');
 
-    const submitButton = screen.getByText('创建账号');
+    const submitButton = screen.getByText('提交注册');
     fireEvent.click(submitButton);
 
     expect(screen.getByText('两次输入的密码不一致')).toBeDefined();
@@ -95,7 +95,7 @@ describe('RegisterPassword Component', () => {
     const confirmField = document.querySelector('md-outlined-text-field[label="确认密码"]') as HTMLElement;
     setMdInputValue(confirmField, 'SecurePassword123');
 
-    const submitButton = screen.getByText('创建账号');
+    const submitButton = screen.getByText('提交注册');
     fireEvent.click(submitButton);
 
     expect(onProceedMock).toHaveBeenCalledWith({
@@ -132,7 +132,7 @@ describe('RegisterPassword Component', () => {
 
     const pwdField = document.querySelector('md-outlined-text-field[label="密码"]') as HTMLElement;
     const confirmField = document.querySelector('md-outlined-text-field[label="确认密码"]') as HTMLElement;
-    const submitButton = screen.getByText('创建账号');
+    const submitButton = screen.getByText('提交注册');
 
     // Test all-digit password (e.g. 12345678)
     setMdInputValue(pwdField, '12345678');

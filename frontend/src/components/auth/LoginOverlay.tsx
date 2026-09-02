@@ -9,6 +9,10 @@ import { RegisterDemographics, type RegisterDemographicsData } from './RegisterD
 import { RegisterAffiliation, type RegisterAffiliationData } from './RegisterAffiliation';
 import { RegisterIdentity, type RegisterIdentityData } from './RegisterIdentity';
 import { RegisterPassword, type RegisterPasswordData } from './RegisterPassword';
+import { RegisterSuccessView } from './RegisterSuccessView';
+import { useRegistrationDraft } from './useRegistrationDraft';
+import { authApi } from '../../api/auth';
+import { UserRole } from '../../types';
 
 export type AuthView =
   | 'login'
@@ -18,7 +22,8 @@ export type AuthView =
   | 'register-demographics'
   | 'register-affiliation'
   | 'register-identity'
-  | 'register-password';
+  | 'register-password'
+  | 'register-success';
 
 export interface LoginOverlayProps {
   isOpen: boolean;
@@ -59,6 +64,7 @@ export interface LoginOverlayProps {
     gender: string;
     idCardNumber: string;
     email: string;
+    emailOtp?: string;
   }) => void;
   onRegisterComplete?: (data: {
     role?: RegisterRole | null;
@@ -88,6 +94,14 @@ export function CsuLogo() {
   );
 }
 
+const REGISTER_ROLE_TO_USER_ROLE: Record<RegisterRole, UserRole> = {
+  'student': 'STUDENT',
+  'teacher': 'TEACHER',
+  'head-councillor': 'HEAD_COUNSELLOR',
+  'trial-admin': 'TRIAL_ADMIN',
+  'doctor': 'DOCTOR',
+};
+
 export function LoginOverlay({
   isOpen,
   onClose,
@@ -103,12 +117,10 @@ export function LoginOverlay({
 }: LoginOverlayProps) {
   const [view, setView] = React.useState<AuthView>(initialView);
   const [selectedRole, setSelectedRole] = React.useState<RegisterRole | null>(null);
-  const [registerName, setRegisterName] = React.useState('');
-  const [registerGender, setRegisterGender] = React.useState('');
-  const [registerDemographics, setRegisterDemographics] = React.useState<RegisterDemographicsData | null>(null);
-  const [registerAffiliation, setRegisterAffiliation] = React.useState<RegisterAffiliationData | null>(null);
-  const [registerIdentity, setRegisterIdentity] = React.useState<RegisterIdentityData | null>(null);
-  const [registerPassword, setRegisterPassword] = React.useState<RegisterPasswordData | null>(null);
+
+  // Draft persistence across steps & browser sessions
+  const { formData, updateFormData, clearDraft } = useRegistrationDraft();
+
   const [step, setStep] = React.useState<1 | 2>(1);
   const [identifier, setIdentifier] = React.useState(initialIdentifier);
   const [password, setPassword] = React.useState('');
@@ -116,11 +128,14 @@ export function LoginOverlay({
   const [identifierError, setIdentifierError] = React.useState('');
   const [passwordError, setPasswordError] = React.useState('');
   const [isVerifying, setIsVerifying] = React.useState(false);
+  const [isSubmittingRegistration, setIsSubmittingRegistration] = React.useState(false);
   const abortControllerRef = React.useRef<AbortController | null>(null);
+
+  const prevIsOpenRef = React.useRef(isOpen);
 
   // Reset state when opening or when initial properties change
   React.useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !prevIsOpenRef.current) {
       setView(initialView);
       setSelectedRole(null);
       setStep(1);
@@ -130,9 +145,11 @@ export function LoginOverlay({
       setIdentifierError('');
       setPasswordError('');
       setIsVerifying(false);
-    } else {
+      setIsSubmittingRegistration(false);
+    } else if (!isOpen) {
       abortControllerRef.current?.abort();
     }
+    prevIsOpenRef.current = isOpen;
   }, [isOpen, initialIdentifier, initialView]);
 
   // Handle keyboard shortcuts (Escape to close)
@@ -180,15 +197,24 @@ export function LoginOverlay({
       const data = (await response.json()) as {
         exists: boolean;
         isAccountActive?: boolean;
+        accountActive?: boolean;
+        status?: 'PENDING_APPROVAL' | 'ACTIVE' | 'DISABLED' | 'DELETED';
         maskedIdentifier?: string;
       };
+
+      const isAccountActive = data.isAccountActive ?? data.accountActive ?? (data.status ? data.status === 'ACTIVE' : true);
 
       if (!data.exists) {
         setIdentifierError('找不到您的账号，请检查输入或联系管理员');
         return;
       }
 
-      if (data.isAccountActive === false) {
+      if (data.status === 'PENDING_APPROVAL') {
+        setIdentifierError('您的账号正在等待管理员审核，审核通过后方可登录');
+        return;
+      }
+
+      if (isAccountActive === false || data.status === 'DISABLED' || data.status === 'DELETED') {
         setIdentifierError('该账号已被停用或注销，请联系管理员');
         return;
       }
@@ -219,6 +245,62 @@ export function LoginOverlay({
     onClose();
   };
 
+  const handleRegisterSubmit = async (passwordData: RegisterPasswordData) => {
+    if (!selectedRole || selectedRole === 'student') return;
+
+    setIsSubmittingRegistration(true);
+    try {
+      const pad = (n: string | number) => String(n).padStart(2, '0');
+      const formattedDob = `${formData.birthYear.trim()}-${pad(formData.birthMonth.trim())}-${pad(formData.birthDay.trim())}`;
+      const userRole = REGISTER_ROLE_TO_USER_ROLE[selectedRole];
+      const isHospitalRole = selectedRole === 'trial-admin' || selectedRole === 'doctor';
+
+      await authApi.registerStaff({
+        role: userRole,
+        name: formData.name.trim(),
+        gender: formData.gender === '男' ? 'MALE' : 'FEMALE',
+        dateOfBirth: formattedDob,
+        ethnicity: formData.ethnicity || '汉族',
+        school: !isHospitalRole ? formData.school : undefined,
+        department: !isHospitalRole ? formData.department : undefined,
+        hospital: isHospitalRole ? formData.hospital : undefined,
+        hospitalDepartment: isHospitalRole ? (formData.hospitalDepartment || formData.department) : undefined,
+        workerNumber: formData.workerNumber.trim(),
+        idCardNumber: formData.idCardNumber.trim().toUpperCase(),
+        email: formData.email.trim(),
+        emailOtp: formData.emailOtp.trim(),
+        password: passwordData.password,
+      });
+
+      onRegisterComplete?.({
+        role: selectedRole,
+        name: formData.name,
+        gender: formData.gender,
+        year: formData.birthYear,
+        month: formData.birthMonth,
+        day: formData.birthDay,
+        dateOfBirth: formattedDob,
+        ethnicity: formData.ethnicity,
+        school: formData.school,
+        department: formData.department,
+        hospital: formData.hospital,
+        hospitalDepartment: formData.hospitalDepartment,
+        workerNumber: formData.workerNumber,
+        idCardNumber: formData.idCardNumber,
+        email: formData.email,
+        password: passwordData.password,
+      });
+
+      clearDraft();
+      setView('register-success');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '注册失败，请检查填写信息后重试';
+      alert(msg);
+    } finally {
+      setIsSubmittingRegistration(false);
+    }
+  };
+
   if (typeof document === 'undefined') return null;
 
   return createPortal(
@@ -237,15 +319,19 @@ export function LoginOverlay({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.96, opacity: 0 }}
             transition={{ duration: 0.25, ease: [0.2, 0, 0, 1] }}
-            className="relative w-full max-w-[1040px] min-h-[440px] bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-on-surface)] rounded-[28px] p-8 sm:p-10 md:p-12 shadow-sm flex flex-col justify-between"
+            className="relative w-full max-w-[1040px] min-h-[460px] bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-on-surface)] rounded-[28px] p-8 sm:p-10 md:p-12 shadow-sm flex flex-col justify-between"
           >
             {view === 'register-role-select' ? (
               <RegisterRoleSelect
-                selectedRole={selectedRole}
-                onSelectRole={(role) => setSelectedRole(role)}
+                selectedRole={selectedRole || (formData.role as RegisterRole)}
+                onSelectRole={(role) => {
+                  setSelectedRole(role);
+                  updateFormData({ role: REGISTER_ROLE_TO_USER_ROLE[role] });
+                }}
                 onBackToLogin={() => setView('login')}
                 onProceed={(role) => {
                   setSelectedRole(role);
+                  updateFormData({ role: REGISTER_ROLE_TO_USER_ROLE[role] });
                   onRoleSelect?.(role);
                   if (role === 'student') {
                     setView('register-student-notice');
@@ -262,12 +348,11 @@ export function LoginOverlay({
             ) : view === 'register-basic-info' ? (
               <RegisterBasicInfo
                 role={selectedRole}
-                initialName={registerName}
-                initialGender={registerGender}
+                initialName={formData.name}
+                initialGender={formData.gender}
                 onBack={() => setView('register-role-select')}
                 onProceed={(data) => {
-                  setRegisterName(data.name);
-                  setRegisterGender(data.gender);
+                  updateFormData({ name: data.name, gender: data.gender });
                   onBasicInfoSubmit?.({
                     role: selectedRole,
                     name: data.name,
@@ -278,14 +363,24 @@ export function LoginOverlay({
               />
             ) : view === 'register-demographics' ? (
               <RegisterDemographics
-                initialData={registerDemographics || undefined}
+                initialData={{
+                  year: formData.birthYear,
+                  month: formData.birthMonth,
+                  day: formData.birthDay,
+                  ethnicity: formData.ethnicity,
+                }}
                 onBack={() => setView('register-basic-info')}
                 onProceed={(data) => {
-                  setRegisterDemographics(data);
+                  updateFormData({
+                    birthYear: data.year,
+                    birthMonth: data.month,
+                    birthDay: data.day,
+                    ethnicity: data.ethnicity,
+                  });
                   onDemographicsSubmit?.({
                     role: selectedRole,
-                    name: registerName,
-                    gender: registerGender,
+                    name: formData.name,
+                    gender: formData.gender,
                     ...data,
                   });
                   setView('register-affiliation');
@@ -294,15 +389,31 @@ export function LoginOverlay({
             ) : view === 'register-affiliation' ? (
               <RegisterAffiliation
                 role={selectedRole}
-                initialData={registerAffiliation || undefined}
+                initialData={{
+                  school: formData.school,
+                  department: formData.department,
+                  hospital: formData.hospital,
+                  hospitalDepartment: formData.hospitalDepartment,
+                  workerNumber: formData.workerNumber,
+                }}
                 onBack={() => setView('register-demographics')}
                 onProceed={(data) => {
-                  setRegisterAffiliation(data);
+                  updateFormData({
+                    school: data.school,
+                    department: data.department,
+                    hospital: data.hospital,
+                    hospitalDepartment: data.hospitalDepartment,
+                    workerNumber: data.workerNumber,
+                  });
                   onAffiliationSubmit?.({
                     role: selectedRole,
-                    name: registerName,
-                    gender: registerGender,
-                    ...registerDemographics,
+                    name: formData.name,
+                    gender: formData.gender,
+                    year: formData.birthYear,
+                    month: formData.birthMonth,
+                    day: formData.birthDay,
+                    dateOfBirth: `${formData.birthYear}-${String(formData.birthMonth).padStart(2, '0')}-${String(formData.birthDay).padStart(2, '0')}`,
+                    ethnicity: formData.ethnicity,
                     ...data,
                   });
                   setView('register-identity');
@@ -310,16 +421,39 @@ export function LoginOverlay({
               />
             ) : view === 'register-identity' ? (
               <RegisterIdentity
-                initialData={registerIdentity || undefined}
-                expectedBirthDate={registerDemographics?.dateOfBirth}
-                expectedGender={registerGender}
+                initialData={{
+                  idCardNumber: formData.idCardNumber,
+                  email: formData.email,
+                  emailOtp: formData.emailOtp,
+                }}
+                expectedBirthDate={
+                  formData.birthYear && formData.birthMonth && formData.birthDay
+                    ? `${formData.birthYear}-${String(formData.birthMonth).padStart(2, '0')}-${String(formData.birthDay).padStart(2, '0')}`
+                    : undefined
+                }
+                expectedGender={formData.gender || undefined}
+                onAutoFillDemographics={(extracted) => {
+                  if (!formData.birthYear || !formData.gender) {
+                    const parts = extracted.birthDate.split('-');
+                    updateFormData({
+                      birthYear: formData.birthYear || parts[0],
+                      birthMonth: formData.birthMonth || String(parseInt(parts[1], 10)),
+                      birthDay: formData.birthDay || String(parseInt(parts[2], 10)),
+                      gender: formData.gender || extracted.gender,
+                    });
+                  }
+                }}
                 onBack={() => setView('register-affiliation')}
                 onProceed={(data) => {
-                  setRegisterIdentity(data);
+                  updateFormData({
+                    idCardNumber: data.idCardNumber,
+                    email: data.email,
+                    emailOtp: data.emailOtp,
+                  });
                   onIdentitySubmit?.({
                     role: selectedRole,
-                    name: registerName,
-                    gender: registerGender,
+                    name: formData.name,
+                    gender: formData.gender,
                     ...data,
                   });
                   setView('register-password');
@@ -328,23 +462,19 @@ export function LoginOverlay({
             ) : view === 'register-password' ? (
               <RegisterPassword
                 onBack={() => setView('register-identity')}
-                onProceed={(data) => {
-                  setRegisterPassword(data);
-                  onRegisterComplete?.({
-                    role: selectedRole,
-                    name: registerName,
-                    gender: registerGender,
-                    ...registerDemographics,
-                    ...registerAffiliation,
-                    school: registerAffiliation?.school || '',
-                    department: registerAffiliation?.department || '',
-                    hospital: registerAffiliation?.hospital || '',
-                    hospitalDepartment: registerAffiliation?.hospitalDepartment || '',
-                    workerNumber: registerAffiliation?.workerNumber || '',
-                    idCardNumber: registerIdentity?.idCardNumber || '',
-                    email: registerIdentity?.email || '',
-                    password: data.password,
-                  });
+                isLoading={isSubmittingRegistration}
+                onProceed={handleRegisterSubmit}
+              />
+            ) : view === 'register-success' ? (
+              <RegisterSuccessView
+                role={selectedRole}
+                name={formData.name}
+                email={formData.email}
+                workerNumber={formData.workerNumber}
+                onGoToLogin={() => {
+                  clearDraft();
+                  setView('login');
+                  setStep(1);
                 }}
               />
             ) : (
@@ -393,9 +523,14 @@ export function LoginOverlay({
                   <div className="mt-0 md:mt-6 flex flex-col justify-between flex-1">
                     {step === 1 ? (
                       /* Step 1 Form */
-                      <form
+                      <div
                         key="step1-form"
-                        onSubmit={handleStep1Submit}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleStep1Submit();
+                          }
+                        }}
                         className="flex flex-col justify-between h-full space-y-6"
                       >
                         <div className="space-y-2">
@@ -404,19 +539,16 @@ export function LoginOverlay({
                               label="电子邮件或学工号"
                               value={identifier}
                               className="w-full"
-                              error={!!identifierError}
+                              error={!!identifierError || undefined}
+                              error-text={identifierError || undefined}
                               onInput={(e: React.SyntheticEvent) => {
                                 const target = e.target as HTMLInputElement;
                                 setIdentifier(target.value);
                                 if (identifierError) setIdentifierError('');
                               }}
-                            />
-                            {identifierError && (
-                              <div className="text-xs text-[var(--md-sys-color-error)] flex items-center gap-1 pt-1.5">
-                                <span className="material-symbols-outlined text-[16px]">error</span>
-                                <span>{identifierError}</span>
-                              </div>
-                            )}
+                            >
+                              {identifierError && <span slot="error-text">{identifierError}</span>}
+                            </md-outlined-text-field>
                           </div>
 
                           <div className="pt-1">
@@ -445,12 +577,17 @@ export function LoginOverlay({
                             className="px-6 rounded-full"
                           />
                         </div>
-                      </form>
+                      </div>
                     ) : (
                       /* Step 2 Form */
-                      <form
+                      <div
                         key="step2-form"
-                        onSubmit={handleStep2Submit}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleStep2Submit();
+                          }
+                        }}
                         className="flex flex-col justify-between h-full space-y-6"
                       >
                         <div className="space-y-3">
@@ -464,19 +601,16 @@ export function LoginOverlay({
                               type={showPassword ? 'text' : 'password'}
                               value={password}
                               className="w-full"
-                              error={!!passwordError}
+                              error={!!passwordError || undefined}
+                              error-text={passwordError || undefined}
                               onInput={(e: React.SyntheticEvent) => {
                                 const target = e.target as HTMLInputElement;
                                 setPassword(target.value);
                                 if (passwordError) setPasswordError('');
                               }}
-                            />
-                            {passwordError && (
-                              <div className="text-xs text-[var(--md-sys-color-error)] flex items-center gap-1 pt-1.5">
-                                <span className="material-symbols-outlined text-[16px]">error</span>
-                                <span>{passwordError}</span>
-                              </div>
-                            )}
+                            >
+                              {passwordError && <span slot="error-text">{passwordError}</span>}
+                            </md-outlined-text-field>
                           </div>
 
                           {/* Show password checkbox */}
@@ -510,7 +644,7 @@ export function LoginOverlay({
                             className="px-6 rounded-full"
                           />
                         </div>
-                      </form>
+                      </div>
                     )}
                   </div>
                 </div>

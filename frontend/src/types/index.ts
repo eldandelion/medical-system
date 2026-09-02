@@ -1,3 +1,5 @@
+export type UserRole = 'STUDENT' | 'TEACHER' | 'HEAD_COUNSELLOR' | 'TRIAL_ADMIN' | 'DOCTOR' | 'SYSTEM_ADMIN';
+
 export type ReferralStepStatus = 'COMPLETED' | 'ISSUE' | 'PENDING' | 'ACTIVE';
 export type ReferralStepType = 'INITIATION' | 'REVIEW' | 'TRIAGE' | 'SCHEDULING' | 'EVALUATION' | 'FEEDBACK';
 

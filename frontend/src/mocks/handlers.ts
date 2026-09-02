@@ -91,6 +91,8 @@ export const handlers = [
       return HttpResponse.json({
         exists: true,
         isAccountActive: isActive,
+        accountActive: isActive,
+        status: adminUser.status,
         maskedIdentifier: rawInput.includes('@')
           ? `${rawInput.slice(0, 2)}***${rawInput.slice(rawInput.indexOf('@') - 1)}`
           : `${rawInput.slice(0, 2)}****${rawInput.slice(-2)}`,
@@ -103,6 +105,7 @@ export const handlers = [
       return HttpResponse.json({
         exists: true,
         isAccountActive: true,
+        status: 'ACTIVE',
         maskedIdentifier: rawInput,
         role: 'STUDENT',
       });
@@ -112,6 +115,65 @@ export const handlers = [
       exists: false,
       isAccountActive: false,
     });
+  }),
+
+  http.post(api('/api/auth/send-email-otp'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500 && res.status !== 404) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn('Could not send email OTP against real backend, falling back to mock', e);
+      }
+    }
+
+    const body = (await request.json().catch(() => ({}))) as { email?: string };
+    if (!body.email) {
+      return HttpResponse.json({ error: 'Email is required' }, { status: 400 });
+    }
+
+    return HttpResponse.json({
+      cooldownSeconds: 60,
+    });
+  }),
+
+  http.post(api('/api/auth/register'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500 && res.status !== 404) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn('Could not register staff against real backend, falling back to mock', e);
+      }
+    }
+
+    const body = (await request.json().catch(() => ({}))) as {
+      name?: string;
+      email?: string;
+      role?: string;
+    };
+
+    return HttpResponse.json({
+      userId: Date.now(),
+      email: body.email || 'registered@csu.edu.cn',
+      name: body.name || '注册教工',
+      role: body.role || 'TEACHER',
+      status: 'PENDING_APPROVAL',
+    }, { status: 201 });
   }),
 
   http.get(api('/api/assessments'), async ({ request }) => {

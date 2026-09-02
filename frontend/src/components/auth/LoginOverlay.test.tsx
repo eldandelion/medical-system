@@ -21,7 +21,13 @@ beforeEach(() => {
       if (raw === 'disabled_user@univ.edu.cn') {
         return {
           ok: true,
-          json: async () => ({ exists: true, isAccountActive: false, maskedIdentifier: raw }),
+          json: async () => ({ exists: true, isAccountActive: false, status: 'DISABLED', maskedIdentifier: raw }),
+        };
+      }
+      if (raw === 'pending_user@univ.edu.cn') {
+        return {
+          ok: true,
+          json: async () => ({ exists: true, isAccountActive: false, status: 'PENDING_APPROVAL', maskedIdentifier: raw }),
         };
       }
       if (
@@ -37,12 +43,30 @@ beforeEach(() => {
       ) {
         return {
           ok: true,
-          json: async () => ({ exists: true, isAccountActive: true, maskedIdentifier: raw }),
+          json: async () => ({ exists: true, isAccountActive: true, status: 'ACTIVE', maskedIdentifier: raw }),
         };
       }
       return {
         ok: true,
         json: async () => ({ exists: false, isAccountActive: false }),
+      };
+    }
+    if (url.includes('/api/auth/register')) {
+      return {
+        ok: true,
+        json: async () => ({
+          userId: 101,
+          email: 'zhangdoctor@csu.edu.cn',
+          name: '张医生',
+          role: 'DOCTOR',
+          status: 'PENDING_APPROVAL',
+        }),
+      };
+    }
+    if (url.includes('/api/auth/send-email-otp')) {
+      return {
+        ok: true,
+        json: async () => ({ cooldownSeconds: 60 }),
       };
     }
     return {
@@ -190,6 +214,20 @@ describe('LoginOverlay Component', () => {
     fireEvent.click(nextButton);
 
     expect(await screen.findByText('该账号已被停用或注销，请联系管理员')).toBeDefined();
+    expect(screen.getByText('登录')).toBeDefined();
+    expect(screen.queryByText('欢迎')).toBeNull();
+  });
+
+  it('displays error and stays on Step 1 when an account awaiting approval is submitted', async () => {
+    render(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+
+    const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]') as HTMLElement;
+    setMdInputValue(emailField, 'pending_user@univ.edu.cn');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(await screen.findByText('您的账号正在等待管理员审核，审核通过后方可登录')).toBeDefined();
     expect(screen.getByText('登录')).toBeDefined();
     expect(screen.queryByText('欢迎')).toBeNull();
   });
@@ -400,7 +438,6 @@ describe('LoginOverlay Component', () => {
     // 2. Click 下一步 -> Navigates to Basic Info step
     fireEvent.click(screen.getByText('下一步'));
 
-    expect(screen.getByText('基本信息')).toBeDefined();
     expect(screen.getByText('输入您的姓名和性别')).toBeDefined();
 
     // 3. Fill in name and gender
@@ -430,7 +467,6 @@ describe('LoginOverlay Component', () => {
       />
     );
 
-    expect(screen.getByText('基本信息')).toBeDefined();
     expect(screen.getByText('输入您的姓名和性别')).toBeDefined();
 
     // Click 返回
@@ -458,7 +494,6 @@ describe('LoginOverlay Component', () => {
     fireEvent.click(screen.getByText('下一步'));
 
     // Step 2: Name & Gender
-    expect(screen.getByText('基本信息')).toBeDefined();
     expect(screen.getByText('输入您的姓名和性别')).toBeDefined();
 
     const nameField = document.querySelector('md-outlined-text-field[label="姓名"]') as HTMLElement;
@@ -575,7 +610,7 @@ describe('LoginOverlay Component', () => {
     });
   });
 
-  it('navigates through complete 6-step registration: Role -> Name & Gender -> DOB -> Affiliation -> ID & Email -> Password', () => {
+  it('navigates through complete 6-step registration: Role -> Name & Gender -> DOB -> Affiliation -> ID & Email -> Password', async () => {
     const onRegisterCompleteMock = vi.fn();
     render(
       <LoginOverlay
@@ -626,40 +661,46 @@ describe('LoginOverlay Component', () => {
     setMdInputValue(workerField, 'DOC-00001');
     fireEvent.click(screen.getByText('下一步'));
 
-    // Step 5: ID Card Number & Email
-    expect(screen.getByText('输入您的身份证号和电子邮箱')).toBeDefined();
+    // Step 5: ID Card Number, Email & OTP
+    expect(screen.getByText('身份认证')).toBeDefined();
     const idCardField = document.querySelector('md-outlined-text-field[label="身份证号"]') as HTMLElement;
     setMdInputValue(idCardField, '110101199010251232');
     const emailField = document.querySelector('md-outlined-text-field[label="电子邮箱"]') as HTMLElement;
     setMdInputValue(emailField, 'zhangdoctor@csu.edu.cn');
+    const otpField = document.querySelector('md-outlined-text-field[label="邮箱验证码"]') as HTMLElement;
+    setMdInputValue(otpField, '123456');
     fireEvent.click(screen.getByText('下一步'));
 
     // Step 6: Password & Confirm Password
-    expect(screen.getByText('为您的账号设置一个强密码')).toBeDefined();
+    expect(screen.getByText('设置密码')).toBeDefined();
     const pwdField = document.querySelector('md-outlined-text-field[label="密码"]') as HTMLElement;
     setMdInputValue(pwdField, 'DoctorPassword123');
     const confirmPwdField = document.querySelector('md-outlined-text-field[label="确认密码"]') as HTMLElement;
     setMdInputValue(confirmPwdField, 'DoctorPassword123');
-    fireEvent.click(screen.getByText('创建账号'));
+    fireEvent.click(screen.getByText('提交注册'));
 
-    expect(onRegisterCompleteMock).toHaveBeenCalledWith({
-      role: 'doctor',
-      name: '张医生',
-      gender: '男',
-      year: '1990',
-      month: '10',
-      day: '25',
-      dateOfBirth: '1990-10-25',
-      ethnicity: '汉族',
-      hospital: '中南大学湘雅医院',
-      hospitalDepartment: '精神科',
-      school: '',
-      department: '精神科',
-      workerNumber: 'DOC-00001',
-      idCardNumber: '110101199010251232',
-      email: 'zhangdoctor@csu.edu.cn',
-      password: 'DoctorPassword123',
+    // Verify callback was called
+    await waitFor(() => {
+      expect(onRegisterCompleteMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          role: 'doctor',
+          name: '张医生',
+          gender: '男',
+          dateOfBirth: '1990-10-25',
+          hospital: '中南大学湘雅医院',
+          hospitalDepartment: '精神科',
+          workerNumber: 'DOC-00001',
+          idCardNumber: '110101199010251232',
+          email: 'zhangdoctor@csu.edu.cn',
+          password: 'DoctorPassword123',
+        })
+      );
     });
+
+    // Verify transition to RegisterSuccessView
+    expect(await screen.findByText('注册申请已提交')).toBeDefined();
+    expect(screen.getByText('等待管理员审核')).toBeDefined();
+    expect(screen.getByText('返回登录')).toBeDefined();
   });
 
   it('prevents proceeding on Step 5 when ID card birth date mismatches Step 3 birth date', () => {
@@ -710,10 +751,12 @@ describe('LoginOverlay Component', () => {
     setMdInputValue(idCardField, '110101199001011237');
     const emailField = document.querySelector('md-outlined-text-field[label="电子邮箱"]') as HTMLElement;
     setMdInputValue(emailField, 'zhangdoctor@csu.edu.cn');
+    const otpField = document.querySelector('md-outlined-text-field[label="邮箱验证码"]') as HTMLElement;
+    setMdInputValue(otpField, '123456');
     fireEvent.click(screen.getByText('下一步'));
 
     // Should display cross-step error and remain on Step 5
     expect(screen.getByText('身份证号中的出生日期与之前填写的出生日期不一致')).toBeDefined();
-    expect(screen.queryByText('为您的账号设置一个强密码')).toBeNull();
+    expect(screen.queryByText('设置密码')).toBeNull();
   });
 });
