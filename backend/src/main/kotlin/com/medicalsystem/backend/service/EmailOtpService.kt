@@ -1,9 +1,12 @@
 package com.medicalsystem.backend.service
 
+import com.medicalsystem.backend.event.DomainEventPublisher
+import com.medicalsystem.backend.event.OtpChallengeIssuedEvent
 import com.medicalsystem.backend.exception.ConflictException
 import com.medicalsystem.backend.exception.ValidationException
 import com.medicalsystem.backend.model.DisposableEmailBlacklist
 import com.medicalsystem.backend.model.EmailAddress
+import com.medicalsystem.backend.model.OtpCode
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.security.SecureRandom
@@ -14,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 @Service
 class EmailOtpService(
+    private val domainEventPublisher: DomainEventPublisher,
     private val clock: Clock = Clock.systemDefaultZone()
 ) {
     private val logger = LoggerFactory.getLogger(EmailOtpService::class.java)
@@ -49,9 +53,9 @@ class EmailOtpService(
             throw ConflictException("OTP_COOLDOWN_ACTIVE:$secondsRemaining")
         }
 
-        val code = String.format("%06d", random.nextInt(1_000_000))
+        val otpCode = OtpCode.generate(random)
         val record = OtpRecord(
-            code = code,
+            code = otpCode.value,
             createdAt = now,
             expiresAt = now.plus(Duration.ofMinutes(5)),
             cooldownUntil = now.plus(Duration.ofSeconds(60)),
@@ -59,7 +63,15 @@ class EmailOtpService(
         )
 
         otpStore[email] = record
-        logger.info("Generated Email OTP for {}: code={} (expires at {})", email, code, record.expiresAt)
+        logger.info("Generated Email OTP for {}: code={} (expires at {})", email, otpCode.value, record.expiresAt)
+
+        domainEventPublisher.publish(
+            OtpChallengeIssuedEvent(
+                email = EmailAddress(email),
+                code = otpCode,
+                expiresInMinutes = 5
+            )
+        )
 
         return 60
     }

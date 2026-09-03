@@ -1,5 +1,8 @@
 package com.medicalsystem.backend.service
 
+import com.medicalsystem.backend.event.DomainEvent
+import com.medicalsystem.backend.event.DomainEventPublisher
+import com.medicalsystem.backend.event.OtpChallengeIssuedEvent
 import com.medicalsystem.backend.exception.ConflictException
 import com.medicalsystem.backend.exception.ValidationException
 import org.junit.jupiter.api.Assertions.*
@@ -13,6 +16,7 @@ import java.time.ZoneId
 class EmailOtpServiceTest {
 
     private lateinit var emailOtpService: EmailOtpService
+    private lateinit var fakeDomainEventPublisher: FakeDomainEventPublisher
     private var currentInstant: Instant = Instant.parse("2026-08-30T10:00:00Z")
 
     private val mutableClock = object : Clock() {
@@ -21,15 +25,30 @@ class EmailOtpServiceTest {
         override fun instant(): Instant = currentInstant
     }
 
+    class FakeDomainEventPublisher : DomainEventPublisher {
+        val publishedEvents = mutableListOf<DomainEvent>()
+        override fun publish(event: DomainEvent) {
+            publishedEvents.add(event)
+        }
+    }
+
     @BeforeEach
     fun setUp() {
-        emailOtpService = EmailOtpService(mutableClock)
+        fakeDomainEventPublisher = FakeDomainEventPublisher()
+        emailOtpService = EmailOtpService(fakeDomainEventPublisher, mutableClock)
     }
 
     @Test
-    fun `sendOtp generates 6-digit OTP and returns 60s cooldown`() {
+    fun `sendOtp generates 6-digit OTP, publishes OtpChallengeIssuedEvent, and returns 60s cooldown`() {
         val cooldown = emailOtpService.sendOtp("teacher@csu.edu.cn")
         assertEquals(60, cooldown)
+        assertEquals(1, fakeDomainEventPublisher.publishedEvents.size)
+
+        val event = fakeDomainEventPublisher.publishedEvents.first() as OtpChallengeIssuedEvent
+        assertEquals("teacher@csu.edu.cn", event.email.value)
+        assertEquals(6, event.code.value.length)
+        assertTrue(event.code.value.all { it.isDigit() })
+        assertEquals(5, event.expiresInMinutes)
     }
 
     @Test
@@ -37,6 +56,7 @@ class EmailOtpServiceTest {
         assertThrows<ValidationException> {
             emailOtpService.sendOtp("notanemail")
         }
+        assertEquals(0, fakeDomainEventPublisher.publishedEvents.size)
     }
 
     @Test
@@ -44,6 +64,7 @@ class EmailOtpServiceTest {
         assertThrows<ValidationException> {
             emailOtpService.sendOtp("hacker@mailinator.com")
         }
+        assertEquals(0, fakeDomainEventPublisher.publishedEvents.size)
     }
 
     @Test
@@ -62,20 +83,15 @@ class EmailOtpServiceTest {
         // Requesting after cooldown should succeed
         val newCooldown = emailOtpService.sendOtp("teacher@csu.edu.cn")
         assertEquals(60, newCooldown)
+        assertEquals(2, fakeDomainEventPublisher.publishedEvents.size)
     }
 
     @Test
     fun `verifyAndConsume succeeds with correct code and fails on replay`() {
         emailOtpService.sendOtp("doctor@csu.edu.cn")
 
-        // Extract generated code using reflection for deterministic testing
-        val storeField = EmailOtpService::class.java.getDeclaredField("otpStore")
-        storeField.isAccessible = true
-        val store = storeField.get(emailOtpService) as Map<*, *>
-        val record = store["doctor@csu.edu.cn"]!!
-        val codeField = record.javaClass.getDeclaredField("code")
-        codeField.isAccessible = true
-        val generatedCode = codeField.get(record) as String
+        val event = fakeDomainEventPublisher.publishedEvents.first() as OtpChallengeIssuedEvent
+        val generatedCode = event.code.value
 
         // Wrong code fails
         assertThrows<ValidationException> {

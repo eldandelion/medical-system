@@ -193,3 +193,24 @@ value class PersonName(val value: String) {
 data class BatteryId(val value: String)
 
 data class Score(val points: Int, val max: Int)
+
+@JvmInline
+value class OtpCode(val value: String) {
+    companion object {
+        val PATTERN = Regex("^\\d{6}$")
+
+        fun isValid(raw: String?): Boolean = raw != null && PATTERN.matches(raw.trim())
+
+        fun generate(random: java.security.SecureRandom = java.security.SecureRandom()): OtpCode =
+            OtpCode(String.format("%06d", random.nextInt(1_000_000)))
+
+        fun fromOrNull(raw: String?): OtpCode? =
+            raw?.trim()?.takeIf { isValid(it) }?.let { OtpCode(it) }
+    }
+
+    init {
+        require(isValid(value)) {
+            "OTP code must be exactly 6 digits."
+        }
+    }
+}

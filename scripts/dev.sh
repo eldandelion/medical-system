@@ -12,6 +12,13 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
+# Load root .env if present (ignored by git)
+if [ -f "${ROOT_DIR}/.env" ]; then
+  set -a
+  source "${ROOT_DIR}/.env"
+  set +a
+fi
+
 BACKEND_PORT=8080
 FRONTEND_PORT=3000
 RUN_BACKEND=true

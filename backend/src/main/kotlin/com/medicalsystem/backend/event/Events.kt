@@ -50,3 +50,11 @@ data class StaffRegisteredEvent(
     override val occurredOn: LocalDateTime = LocalDateTime.now()
 ) : DomainEvent
 
+data class OtpChallengeIssuedEvent(
+    val email: com.medicalsystem.backend.model.EmailAddress,
+    val code: com.medicalsystem.backend.model.OtpCode,
+    val expiresInMinutes: Long = 5,
+    override val occurredOn: LocalDateTime = LocalDateTime.now()
+) : DomainEvent
+
+
