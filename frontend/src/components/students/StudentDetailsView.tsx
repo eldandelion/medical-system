@@ -10,7 +10,7 @@ import { ACADEMIC_YEAR_LABELS } from '../../config/referralConstants';
 import { useDetails } from '../../contexts/DetailsContext';
 import { SecondaryTabs } from '../common/Tabs';
 import { PsychometricsTabContent } from '../assessments/PsychometricsTabContent';
-import { AssignQuestionnaireDialog } from '../assessments/AssignQuestionnaireDialog';
+import { AssessmentAssignmentCreationForm } from '../assessments/AssessmentAssignmentCreationForm';
 import { ReferralCreationForm } from '../records/ReferralCreationForm';
 import { Student } from '../../types';
 import AssessmentHistoryTab from './AssessmentHistoryTab';
@@ -43,8 +43,6 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
   const { session } = useAuth();
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>(StudentDetailsTabs.OVERVIEW);
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
-  
-  const [isAssignDialogOpen, setIsAssignDialogOpen] = React.useState(false);
 
   const setActiveTab = (tab: TabType) => {
     setInternalActiveTab(tab);
@@ -123,17 +121,22 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
             <OutlinedButton
               icon="assignment"
               label="分配问卷"
-              onClick={() => setIsAssignDialogOpen(true)}
+              onClick={() =>
+                openCreation(
+                  `为 ${student.name} 指派心理测评`,
+                  <AssessmentAssignmentCreationForm
+                    initialStudent={student}
+                    initialTargetType="INDIVIDUAL"
+                    onClose={closeCreation}
+                  />,
+                  { initialViewState: 'FULLSCREEN', allowStandardView: false }
+                )
+              }
             />
           </ActionFooter>
         )
       }
     >
-      <AssignQuestionnaireDialog
-        isOpen={isAssignDialogOpen}
-        onClose={() => setIsAssignDialogOpen(false)}
-        studentId={student.id}
-      />
       <AnimatePresence mode="wait">
             {activeTab === StudentDetailsTabs.OVERVIEW && (
               <motion.div
