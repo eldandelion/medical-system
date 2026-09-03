@@ -39,6 +39,9 @@ class UserManagementServiceTest {
     @Mock
     private lateinit var trialAdminJpaRepository: TrialAdminJpaRepository
 
+    @Mock
+    private lateinit var userDetailAssembler: com.medicalsystem.backend.mapper.UserDetailAssembler
+
     @InjectMocks
     private lateinit var userManagementService: UserManagementService
 
@@ -96,4 +99,41 @@ class UserManagementServiceTest {
         assertEquals(AccountStatus.ACTIVE, activeResult.status)
         assertNull(userEntity.deletedAt)
     }
+
+    @Test
+    fun `getUserDetails throws ForbiddenException for non-admin user`() {
+        assertThrows(ForbiddenException::class.java) {
+            userManagementService.getUserDetails(10L, nonAdminUser)
+        }
+    }
+
+    @Test
+    fun `getUserDetails throws ResourceNotFoundException for non-existent user`() {
+        `when`(userJpaRepository.findById(999L)).thenReturn(Optional.empty())
+
+        assertThrows(com.medicalsystem.backend.exception.ResourceNotFoundException::class.java) {
+            userManagementService.getUserDetails(999L, adminUser)
+        }
+    }
+
+    @Test
+    fun `getUserDetails delegates to UserDetailAssembler for valid user`() {
+        val userEntity = UserEntity(id = 10L, name = "Zhang", email = EmailAddress("zhang@univ.edu.cn"), role = UserRole.TEACHER, status = AccountStatus.ACTIVE)
+        val expectedDto = com.medicalsystem.backend.dto.AdminUserDetailsDto(
+            id = 10L,
+            name = "Zhang",
+            email = "zhang@univ.edu.cn",
+            role = UserRole.TEACHER,
+            status = AccountStatus.ACTIVE
+        )
+
+        `when`(userJpaRepository.findById(10L)).thenReturn(Optional.of(userEntity))
+        `when`(userDetailAssembler.assemble(userEntity)).thenReturn(expectedDto)
+
+        val result = userManagementService.getUserDetails(10L, adminUser)
+        assertEquals(10L, result.id)
+        assertEquals("Zhang", result.name)
+        assertEquals(UserRole.TEACHER, result.role)
+    }
 }
+

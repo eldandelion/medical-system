@@ -1392,6 +1392,26 @@ export const handlers = [
     return HttpResponse.json(users);
   }),
 
+  http.get(api('/api/admin/users/:id'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not fetch real user details, falling back to mock", e);
+      }
+    }
+    const userId = Number(params.id);
+    const user = mockAdminUsersDb.find((u) => u.id === userId);
+    if (!user) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    return HttpResponse.json(user);
+  }),
+
   http.put(api('/api/admin/users/:id/status'), async ({ request, params }) => {
     if (import.meta.env.MODE !== 'test') {
       try {

@@ -14,7 +14,7 @@ import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { StudentDetailsView, STUDENT_DETAILS_TABS } from '../components/students/StudentDetailsView';
 import { ReferralDetailsView, REFERRAL_DETAILS_TABS } from '../components/records/ReferralDetailsView';
 import { UserManagementView } from '../components/admin/UserManagementView';
-import { UserDetailsView, USER_DETAILS_TABS } from '../components/admin/UserDetailsView';
+import { UserDetailsView } from '../components/admin/UserDetailsView';
 import { UserGovernanceFooter } from '../components/admin/UserGovernanceFooter';
 import { AssessmentCatalogManagementView } from '../components/admin/AssessmentCatalogManagementView';
 import { EssentialsManagementView } from '../components/admin/EssentialsManagementView';
@@ -93,7 +93,7 @@ export function AdminPage() {
         if (selectedItem?.role === 'STUDENT') {
           return STUDENT_DETAILS_TABS;
         }
-        return USER_DETAILS_TABS;
+        return [];
       case AdminTabs.STUDENTS:
         return STUDENT_DETAILS_TABS;
       case AdminTabs.REFERRALS:

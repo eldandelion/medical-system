@@ -1,5 +1,6 @@
 package com.medicalsystem.backend.controller
 
+import com.medicalsystem.backend.dto.AdminUserDetailsDto
 import com.medicalsystem.backend.dto.AdminUserSummaryDto
 import com.medicalsystem.backend.dto.UpdateAccountStatusRequest
 import com.medicalsystem.backend.exception.ForbiddenException
@@ -28,6 +29,16 @@ class AdminUserController(
         val currentUser = user ?: throw ForbiddenException("Authorized user not found")
         val users = userManagementService.getUsers(role, status, keyword, currentUser)
         return ResponseEntity.ok(users)
+    }
+
+    @GetMapping("/{id}")
+    fun getUserDetails(
+        @PathVariable id: Long,
+        @CurrentUser user: User?
+    ): ResponseEntity<AdminUserDetailsDto> {
+        val currentUser = user ?: throw ForbiddenException("Authorized user not found")
+        val details = userManagementService.getUserDetails(id, currentUser)
+        return ResponseEntity.ok(details)
     }
 
     @PutMapping("/{id}/status")

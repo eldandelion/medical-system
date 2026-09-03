@@ -84,6 +84,25 @@ const mockStudentDetails = {
   clinicalStatus: 'NORMAL',
 };
 
+const mockTeacherDetails = {
+  id: 201,
+  name: '李老师',
+  email: 'liteacher@university.edu.cn',
+  role: 'TEACHER',
+  status: 'ACTIVE',
+  employeeOrStudentId: 'TEA2001',
+  departmentOrCollege: '心理咨询中心',
+  hospital: null,
+  contactNumber: '13800138201',
+  homeAddress: '北京市海淀区学院路15号',
+  affiliation: {
+    identifier: 'TEA2001',
+    primaryOrganization: '心理学院',
+    departmentOrMajor: '心理咨询中心',
+    titleOrDegree: '专任教师 / 班导师'
+  }
+};
+
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({
     session: {
@@ -167,6 +186,12 @@ describe('AdminPage - User Management Dynamic Details View Integration', () => {
           json: () => Promise.resolve(mockStudentDetails),
         });
       }
+      if (url.includes('/api/admin/users/201')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockTeacherDetails),
+        });
+      }
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve({}),
@@ -226,7 +251,7 @@ describe('AdminPage - User Management Dynamic Details View Integration', () => {
     expect(screen.queryByText('分配问卷')).toBeNull();
   });
 
-  it('renders user details tabs when a teacher user is selected', async () => {
+  it('renders user details and standardized metric cards when a teacher user is selected', async () => {
     renderAdminPage();
 
     // Navigate to User Management tab
@@ -239,15 +264,18 @@ describe('AdminPage - User Management Dynamic Details View Integration', () => {
     });
     fireEvent.click(screen.getByText('李老师'));
 
-    // Verify dynamic tabs for teacher (USER_DETAILS_TABS)
-    await waitFor(() => {
-      expect(screen.getByText('基本信息')).toBeDefined();
-      expect(screen.getByText('状态与权限')).toBeDefined();
-    });
-
-    // Student clinical tabs should not be present
+    // Student clinical tabs and separate security tab should not be present
     expect(screen.queryByText('量表数据')).toBeNull();
     expect(screen.queryByText('档案记录')).toBeNull();
+    expect(screen.queryByText('状态与权限')).toBeNull();
+
+    // Deep assertion: verify teacher personal & affiliation details fetched from /api/admin/users/201 are rendered
+    await waitFor(() => {
+      expect(screen.getByText('13800138201')).toBeDefined();
+      expect(screen.getByText('北京市海淀区学院路15号')).toBeDefined();
+      expect(screen.getAllByText('TEA2001').length).toBeGreaterThan(0);
+      expect(screen.getByText('心理学院')).toBeDefined();
+    });
 
     // Verify UserGovernanceFooter buttons are rendered in the footer
     expect(screen.getByText('禁用账号')).toBeDefined();
