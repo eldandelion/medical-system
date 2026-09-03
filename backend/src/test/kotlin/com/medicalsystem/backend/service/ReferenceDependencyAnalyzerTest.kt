@@ -22,6 +22,7 @@ class ReferenceDependencyAnalyzerTest {
     @Mock private lateinit var trialAdminJpaRepository: TrialAdminJpaRepository
     @Mock private lateinit var referralJpaRepository: ReferralJpaRepository
     @Mock private lateinit var doctorRepository: DoctorRepository
+    @Mock private lateinit var schoolDepartmentJpaRepository: SchoolDepartmentJpaRepository
 
     private lateinit var analyzer: ReferenceDependencyAnalyzer
 
@@ -35,7 +36,8 @@ class ReferenceDependencyAnalyzerTest {
             hospitalDepartmentRepository,
             trialAdminJpaRepository,
             referralJpaRepository,
-            doctorRepository
+            doctorRepository,
+            schoolDepartmentJpaRepository
         )
     }
 
@@ -76,6 +78,20 @@ class ReferenceDependencyAnalyzerTest {
         assertFalse(result.canHardDelete)
         assertEquals(7L, result.totalReferences)
         assertEquals(3, result.dependencies.size)
+    }
+
+    @Test
+    fun `checkDependencies for School with departments and students`() {
+        whenever(schoolDepartmentJpaRepository.countBySchoolId(100L)).thenReturn(4L)
+        whenever(studentJpaRepository.countByDemographicsSchoolId(100L)).thenReturn(50L)
+
+        val result = analyzer.checkDependencies(ReferenceCategory.SCHOOL, 100L)
+
+        assertFalse(result.canHardDelete)
+        assertEquals(54L, result.totalReferences)
+        assertEquals(2, result.dependencies.size)
+        assertTrue(result.dependencies.any { it.subjectType == ReferenceSubjectType.SCHOOL_DEPARTMENT && it.count == 4L })
+        assertTrue(result.dependencies.any { it.subjectType == ReferenceSubjectType.STUDENT && it.count == 50L })
     }
 
     @Test

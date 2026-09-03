@@ -54,9 +54,10 @@ describe('EssentialsManagementView', () => {
     cleanup();
   });
 
-  it('renders all 7 category filter chips', () => {
+  it('renders all 8 category filter chips', () => {
     const { container } = render(<EssentialsManagementView />);
 
+    expect(container.querySelector('md-filter-chip[data-category-key="SCHOOL"]')).toBeDefined();
     expect(container.querySelector('md-filter-chip[data-category-key="COLLEGE"]')).toBeDefined();
     expect(container.querySelector('md-filter-chip[data-category-key="MAJOR"]')).toBeDefined();
     expect(container.querySelector('md-filter-chip[data-category-key="SCHOOL_DEPARTMENT"]')).toBeDefined();
@@ -79,19 +80,19 @@ describe('EssentialsManagementView', () => {
   it('switches category when clicking on another filter chip', () => {
     const { container } = render(<EssentialsManagementView />);
 
-    const majorChip = container.querySelector('md-filter-chip[data-category-key="MAJOR"]');
-    expect(majorChip).toBeTruthy();
-    if (majorChip) {
-      fireEvent.click(majorChip);
+    const schoolChip = container.querySelector('md-filter-chip[data-category-key="SCHOOL"]');
+    expect(schoolChip).toBeTruthy();
+    if (schoolChip) {
+      fireEvent.click(schoolChip);
     }
-    expect(mockUseReferencesList).toHaveBeenCalledWith('MAJOR', expect.anything());
+    expect(mockUseReferencesList).toHaveBeenCalledWith('SCHOOL', expect.anything());
   });
 
   it('opens create modal when clicking 新增 button', () => {
     render(<EssentialsManagementView />);
 
-    fireEvent.click(screen.getByText('新增学院'));
-    expect(screen.getAllByText(/学院名称/).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByText('新增学校'));
+    expect(screen.getAllByText(/学校名称/).length).toBeGreaterThan(0);
   });
 
   it('opens bulk import modal when clicking 批量导入 in split button menu', () => {

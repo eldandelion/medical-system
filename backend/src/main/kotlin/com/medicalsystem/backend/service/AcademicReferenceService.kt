@@ -4,8 +4,10 @@ import com.medicalsystem.backend.dto.*
 import com.medicalsystem.backend.entity.CollegeEntity
 import com.medicalsystem.backend.entity.MajorEntity
 import com.medicalsystem.backend.entity.SchoolDepartmentEntity
+import com.medicalsystem.backend.entity.SchoolEntity
 import com.medicalsystem.backend.event.CollegeStatusChangedEvent
 import com.medicalsystem.backend.event.DomainEventPublisher
+import com.medicalsystem.backend.event.SchoolStatusChangedEvent
 import com.medicalsystem.backend.exception.ConflictException
 import com.medicalsystem.backend.exception.NotFoundException
 import com.medicalsystem.backend.model.ReferenceCategory
@@ -241,6 +243,9 @@ class AcademicReferenceService(
             schoolJpaRepository.findAll().firstOrNull()
                 ?: throw NotFoundException("No default school found in system")
         }
+        if (school.status == ReferenceDataStatus.DEPRECATED) {
+            throw ConflictException("Cannot create school department under deprecated school: ${school.name}")
+        }
         val entity = SchoolDepartmentEntity(name = trimmedName, school = school, status = ReferenceDataStatus.ACTIVE)
         val saved = schoolDepartmentJpaRepository.save(entity)
         return SchoolDepartmentDto(
@@ -261,6 +266,9 @@ class AcademicReferenceService(
         }
         if (req.schoolId != null) {
             val school = schoolJpaRepository.findById(req.schoolId).orElseThrow { NotFoundException("School not found with id: ${req.schoolId}") }
+            if (school.status == ReferenceDataStatus.DEPRECATED) {
+                throw ConflictException("Cannot move school department under deprecated school: ${school.name}")
+            }
             entity.school = school
         }
         entity.name = trimmedName
@@ -296,5 +304,84 @@ class AcademicReferenceService(
         }
         val entity = schoolDepartmentJpaRepository.findById(id).orElseThrow { NotFoundException("School department not found with id: $id") }
         schoolDepartmentJpaRepository.delete(entity)
+    }
+
+    // === Schools ===
+
+    @Transactional(readOnly = true)
+    fun listSchools(query: String?, includeDeprecated: Boolean): List<SchoolDto> {
+        val schools = if (includeDeprecated) {
+            schoolJpaRepository.findAllByOrderByNameAsc()
+        } else {
+            schoolJpaRepository.findByStatusOrderByNameAsc(ReferenceDataStatus.ACTIVE)
+        }
+
+        val filtered = if (!query.isNullOrBlank()) {
+            schools.filter { it.name.contains(query.trim(), ignoreCase = true) }
+        } else {
+            schools
+        }
+
+        return filtered.map { school ->
+            val sId = school.id
+            SchoolDto(
+                id = sId,
+                name = school.name,
+                status = school.status,
+                departmentCount = schoolDepartmentJpaRepository.countBySchoolId(sId),
+                studentCount = studentJpaRepository.countByDemographicsSchoolId(sId)
+            )
+        }
+    }
+
+    fun createSchool(req: SaveSimpleReferenceRequest): SchoolDto {
+        val trimmedName = req.name.trim()
+        if (schoolJpaRepository.findByName(trimmedName).isPresent) {
+            throw ConflictException("School with name '$trimmedName' already exists")
+        }
+        val entity = SchoolEntity(name = trimmedName, status = ReferenceDataStatus.ACTIVE)
+        val saved = schoolJpaRepository.save(entity)
+        return SchoolDto(id = saved.id, name = saved.name, status = saved.status)
+    }
+
+    fun updateSchool(id: Long, req: SaveSimpleReferenceRequest): SchoolDto {
+        val entity = schoolJpaRepository.findById(id).orElseThrow { NotFoundException("School not found with id: $id") }
+        val trimmedName = req.name.trim()
+        val existing = schoolJpaRepository.findByName(trimmedName).orElse(null)
+        if (existing != null && existing.id != id) {
+            throw ConflictException("Another school with name '$trimmedName' already exists")
+        }
+        entity.name = trimmedName
+        val saved = schoolJpaRepository.save(entity)
+        return SchoolDto(
+            id = saved.id,
+            name = saved.name,
+            status = saved.status,
+            departmentCount = schoolDepartmentJpaRepository.countBySchoolId(id),
+            studentCount = studentJpaRepository.countByDemographicsSchoolId(id)
+        )
+    }
+
+    fun setSchoolStatus(id: Long, newStatus: ReferenceDataStatus): SchoolDto {
+        val entity = schoolJpaRepository.findById(id).orElseThrow { NotFoundException("School not found with id: $id") }
+        entity.status = newStatus
+        val saved = schoolJpaRepository.save(entity)
+        eventPublisher.publish(SchoolStatusChangedEvent(id, newStatus))
+        return SchoolDto(
+            id = saved.id,
+            name = saved.name,
+            status = saved.status,
+            departmentCount = schoolDepartmentJpaRepository.countBySchoolId(id),
+            studentCount = studentJpaRepository.countByDemographicsSchoolId(id)
+        )
+    }
+
+    fun deleteSchool(id: Long) {
+        val check = dependencyAnalyzer.checkDependencies(ReferenceCategory.SCHOOL, id)
+        if (!check.canHardDelete) {
+            throw ConflictException("Cannot delete school '$id' because it is referenced in the system")
+        }
+        val entity = schoolJpaRepository.findById(id).orElseThrow { NotFoundException("School not found with id: $id") }
+        schoolJpaRepository.delete(entity)
     }
 }

@@ -18,7 +18,8 @@ class ReferenceDependencyAnalyzer(
     private val hospitalDepartmentRepository: HospitalDepartmentRepository,
     private val trialAdminJpaRepository: TrialAdminJpaRepository,
     private val referralJpaRepository: ReferralJpaRepository,
-    private val doctorRepository: DoctorRepository
+    private val doctorRepository: DoctorRepository,
+    private val schoolDepartmentJpaRepository: SchoolDepartmentJpaRepository
 ) {
 
     fun checkDependencies(category: ReferenceCategory, id: Long): ReferenceDependencyCheckDto {
@@ -47,6 +48,17 @@ class ReferenceDependencyAnalyzer(
                 val staffCount = headCounsellorJpaRepository.countByDepartmentId(id)
                 if (staffCount > 0) {
                     dependencies.add(ReferenceDependencyItemDto(ReferenceSubjectType.HEAD_COUNSELLOR, staffCount))
+                }
+            }
+
+            ReferenceCategory.SCHOOL -> {
+                val deptCount = schoolDepartmentJpaRepository.countBySchoolId(id)
+                if (deptCount > 0) {
+                    dependencies.add(ReferenceDependencyItemDto(ReferenceSubjectType.SCHOOL_DEPARTMENT, deptCount))
+                }
+                val studentCount = studentJpaRepository.countByDemographicsSchoolId(id)
+                if (studentCount > 0) {
+                    dependencies.add(ReferenceDependencyItemDto(ReferenceSubjectType.STUDENT, studentCount))
                 }
             }
 

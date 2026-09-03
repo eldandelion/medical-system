@@ -3,6 +3,7 @@ package com.medicalsystem.backend.event
 import com.medicalsystem.backend.model.ReferenceDataStatus
 import com.medicalsystem.backend.repository.HospitalDepartmentRepository
 import com.medicalsystem.backend.repository.MajorJpaRepository
+import com.medicalsystem.backend.repository.SchoolDepartmentJpaRepository
 import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
@@ -11,7 +12,8 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class ReferenceDataCascadeListener(
     private val majorJpaRepository: MajorJpaRepository,
-    private val hospitalDepartmentRepository: HospitalDepartmentRepository
+    private val hospitalDepartmentRepository: HospitalDepartmentRepository,
+    private val schoolDepartmentJpaRepository: SchoolDepartmentJpaRepository
 ) {
     private val logger = LoggerFactory.getLogger(ReferenceDataCascadeListener::class.java)
 
@@ -37,6 +39,19 @@ class ReferenceDataCascadeListener(
                 logger.info("Cascading DEPRECATED status to ${childDepts.size} departments under hospital ${event.hospitalId}")
                 childDepts.forEach { it.status = ReferenceDataStatus.DEPRECATED }
                 hospitalDepartmentRepository.saveAll(childDepts)
+            }
+        }
+    }
+
+    @EventListener
+    @Transactional
+    fun onSchoolStatusChanged(event: SchoolStatusChangedEvent) {
+        if (event.newStatus == ReferenceDataStatus.DEPRECATED) {
+            val childDepts = schoolDepartmentJpaRepository.findBySchoolIdAndStatus(event.schoolId, ReferenceDataStatus.ACTIVE)
+            if (childDepts.isNotEmpty()) {
+                logger.info("Cascading DEPRECATED status to ${childDepts.size} departments under school ${event.schoolId}")
+                childDepts.forEach { it.status = ReferenceDataStatus.DEPRECATED }
+                schoolDepartmentJpaRepository.saveAll(childDepts)
             }
         }
     }

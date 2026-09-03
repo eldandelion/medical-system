@@ -19,6 +19,7 @@ class ReferenceDataImportServiceTest {
     @Mock private lateinit var collegeJpaRepository: CollegeJpaRepository
     @Mock private lateinit var majorJpaRepository: MajorJpaRepository
     @Mock private lateinit var schoolDepartmentJpaRepository: SchoolDepartmentJpaRepository
+    @Mock private lateinit var schoolJpaRepository: SchoolJpaRepository
     @Mock private lateinit var hospitalRepository: HospitalRepository
     @Mock private lateinit var hospitalDepartmentRepository: HospitalDepartmentRepository
     @Mock private lateinit var ethnicityJpaRepository: EthnicityJpaRepository
@@ -35,6 +36,7 @@ class ReferenceDataImportServiceTest {
             collegeJpaRepository,
             majorJpaRepository,
             schoolDepartmentJpaRepository,
+            schoolJpaRepository,
             hospitalRepository,
             hospitalDepartmentRepository,
             ethnicityJpaRepository,

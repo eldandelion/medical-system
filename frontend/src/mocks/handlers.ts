@@ -8,6 +8,7 @@ import {
   mockAdminUsersDb,
   generateTrackerSteps,
   mockCollegesDb,
+  mockSchoolsDb,
   mockMajorsDb,
   mockSchoolDepartmentsDb,
   mockAdminHospitalsDb,
@@ -16,6 +17,7 @@ import {
   mockDegreeLevelsDb,
 } from './db';
 import {
+  SchoolDto,
   CollegeDto,
   MajorDto,
   SchoolDepartmentDto,
@@ -1590,6 +1592,27 @@ export const handlers = [
 
   // === Admin References Management Endpoints ===
 
+  http.get(api('/api/admin/references/schools'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not fetch real schools, falling back to mock", e);
+      }
+    }
+    const url = new URL(request.url);
+    const query = url.searchParams.get('query')?.toLowerCase();
+    const includeDeprecated = url.searchParams.get('includeDeprecated') !== 'false';
+    let res = mockSchoolsDb;
+    if (!includeDeprecated) res = res.filter((c) => c.status === 'ACTIVE');
+    if (query) res = res.filter((c) => c.name.toLowerCase().includes(query));
+    return HttpResponse.json(res);
+  }),
+
   http.get(api('/api/admin/references/colleges'), async ({ request }) => {
     if (import.meta.env.MODE !== 'test') {
       try {
@@ -1739,6 +1762,34 @@ export const handlers = [
     if (!includeDeprecated) res = res.filter((d) => d.status === 'ACTIVE');
     if (query) res = res.filter((d) => d.name.toLowerCase().includes(query));
     return HttpResponse.json(res);
+  }),
+
+  http.post(api('/api/admin/references/schools'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request.clone()));
+        if (res.ok) {
+          return HttpResponse.json(await res.json(), { status: 201 });
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not create real school, falling back to mock", e);
+      }
+    }
+    const body = (await request.json()) as { name: string };
+    const newItem: SchoolDto = {
+      id: Date.now(),
+      name: body.name,
+      status: 'ACTIVE',
+      departmentCount: 0,
+      studentCount: 0,
+    };
+    mockSchoolsDb.push(newItem);
+    return HttpResponse.json(newItem, { status: 201 });
   }),
 
   http.post(api('/api/admin/references/colleges'), async ({ request }) => {
@@ -2017,6 +2068,11 @@ export const handlers = [
     }
     const id = Number(params.id);
     const category = params.category as ReferenceCategory;
+    if (category === 'SCHOOL') {
+      const s = mockSchoolsDb.find((item) => item.id === id);
+      if (s) s.status = 'DEPRECATED';
+      return HttpResponse.json(s);
+    }
     if (category === 'COLLEGE') {
       const c = mockCollegesDb.find((item) => item.id === id);
       if (c) c.status = 'DEPRECATED';
@@ -2043,6 +2099,11 @@ export const handlers = [
     }
     const id = Number(params.id);
     const category = params.category as ReferenceCategory;
+    if (category === 'SCHOOL') {
+      const s = mockSchoolsDb.find((item) => item.id === id);
+      if (s) s.status = 'ACTIVE';
+      return HttpResponse.json(s);
+    }
     if (category === 'COLLEGE') {
       const c = mockCollegesDb.find((item) => item.id === id);
       if (c) c.status = 'ACTIVE';
@@ -2069,6 +2130,10 @@ export const handlers = [
     }
     const id = Number(params.id);
     const cat = params.category as ReferenceCategory;
+    if (cat === 'SCHOOL') {
+      const idx = mockSchoolsDb.findIndex((s) => s.id === id);
+      if (idx !== -1) mockSchoolsDb.splice(idx, 1);
+    }
     if (cat === 'COLLEGE') {
       const idx = mockCollegesDb.findIndex((c) => c.id === id);
       if (idx !== -1) mockCollegesDb.splice(idx, 1);

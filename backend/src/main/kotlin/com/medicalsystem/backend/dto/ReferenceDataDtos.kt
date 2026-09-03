@@ -65,6 +65,14 @@ data class DegreeLevelDto(
     val studentCount: Long = 0
 )
 
+data class SchoolDto(
+    val id: Long,
+    val name: String,
+    val status: ReferenceDataStatus,
+    val departmentCount: Long = 0,
+    val studentCount: Long = 0
+)
+
 // Create & Update Requests
 data class SaveCollegeRequest(
     @field:NotBlank val name: String

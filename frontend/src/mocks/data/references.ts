@@ -1,4 +1,5 @@
 import {
+  SchoolDto,
   CollegeDto,
   MajorDto,
   SchoolDepartmentDto,
@@ -7,6 +8,13 @@ import {
   EthnicityDto,
   DegreeLevelDto,
 } from '../../types/references';
+
+export const mockSchoolsDb: SchoolDto[] = [
+  { id: 1, name: '某重点大学', status: 'ACTIVE', departmentCount: 4, studentCount: 1540 },
+  { id: 2, name: '中南大学', status: 'ACTIVE', departmentCount: 5, studentCount: 2200 },
+  { id: 3, name: '湖南大学', status: 'ACTIVE', departmentCount: 3, studentCount: 1800 },
+  { id: 4, name: '旧合作附属院校 (已终止)', status: 'DEPRECATED', departmentCount: 0, studentCount: 0 },
+];
 
 export const mockCollegesDb: CollegeDto[] = [
   { id: 1, name: '计算机与通信工程学院', status: 'ACTIVE', majorCount: 4, teacherCount: 18 },

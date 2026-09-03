@@ -14,6 +14,7 @@ enum class ReferenceCategory {
     COLLEGE,
     MAJOR,
     SCHOOL_DEPARTMENT,
+    SCHOOL,
     HOSPITAL,
     HOSPITAL_DEPARTMENT,
     ETHNICITY,
@@ -28,5 +29,6 @@ enum class ReferenceSubjectType {
     DOCTOR,
     REFERRAL,
     MAJOR,
-    HOSPITAL_DEPARTMENT
+    HOSPITAL_DEPARTMENT,
+    SCHOOL_DEPARTMENT
 }

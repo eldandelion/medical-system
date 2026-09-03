@@ -2,10 +2,14 @@ package com.medicalsystem.backend.service
 
 import com.medicalsystem.backend.dto.SaveCollegeRequest
 import com.medicalsystem.backend.dto.SaveMajorRequest
+import com.medicalsystem.backend.dto.SaveSchoolDepartmentRequest
+import com.medicalsystem.backend.dto.SaveSimpleReferenceRequest
 import com.medicalsystem.backend.entity.CollegeEntity
 import com.medicalsystem.backend.entity.MajorEntity
+import com.medicalsystem.backend.entity.SchoolEntity
 import com.medicalsystem.backend.event.CollegeStatusChangedEvent
 import com.medicalsystem.backend.event.DomainEventPublisher
+import com.medicalsystem.backend.event.SchoolStatusChangedEvent
 import com.medicalsystem.backend.exception.ConflictException
 import com.medicalsystem.backend.model.ReferenceCategory
 import com.medicalsystem.backend.model.ReferenceDataStatus
@@ -94,6 +98,52 @@ class AcademicReferenceServiceTest {
 
         assertThrows(ConflictException::class.java) {
             service.createMajor(SaveMajorRequest("新专业", 1L))
+        }
+    }
+
+    @Test
+    fun `createSchool creates active school when name is unique`() {
+        whenever(schoolJpaRepository.findByName("中南大学")).thenReturn(Optional.empty())
+        val saved = SchoolEntity(id = 10L, name = "中南大学", status = ReferenceDataStatus.ACTIVE)
+        whenever(schoolJpaRepository.save(any<SchoolEntity>())).thenReturn(saved)
+
+        val result = service.createSchool(SaveSimpleReferenceRequest("中南大学"))
+
+        assertEquals(10L, result.id)
+        assertEquals("中南大学", result.name)
+        assertEquals(ReferenceDataStatus.ACTIVE, result.status)
+    }
+
+    @Test
+    fun `createSchool throws ConflictException on duplicate name`() {
+        whenever(schoolJpaRepository.findByName("中南大学")).thenReturn(Optional.of(SchoolEntity(id = 10L, name = "中南大学")))
+
+        assertThrows(ConflictException::class.java) {
+            service.createSchool(SaveSimpleReferenceRequest("中南大学"))
+        }
+    }
+
+    @Test
+    fun `setSchoolStatus updates status and publishes SchoolStatusChangedEvent`() {
+        val school = SchoolEntity(id = 10L, name = "中南大学", status = ReferenceDataStatus.ACTIVE)
+        whenever(schoolJpaRepository.findById(10L)).thenReturn(Optional.of(school))
+        whenever(schoolJpaRepository.save(any<SchoolEntity>())).thenReturn(school)
+
+        val result = service.setSchoolStatus(10L, ReferenceDataStatus.DEPRECATED)
+
+        assertEquals(ReferenceDataStatus.DEPRECATED, result.status)
+        verify(eventPublisher).publish(org.mockito.kotlin.argThat {
+            this is SchoolStatusChangedEvent && this.schoolId == 10L && this.newStatus == ReferenceDataStatus.DEPRECATED
+        })
+    }
+
+    @Test
+    fun `createSchoolDepartment under deprecated school throws ConflictException`() {
+        val deprecatedSchool = SchoolEntity(id = 10L, name = "已停用高校", status = ReferenceDataStatus.DEPRECATED)
+        whenever(schoolJpaRepository.findById(10L)).thenReturn(Optional.of(deprecatedSchool))
+
+        assertThrows(ConflictException::class.java) {
+            service.createSchoolDepartment(SaveSchoolDepartmentRequest("心理中心", 10L))
         }
     }
 }

@@ -1,4 +1,5 @@
 export type ReferenceCategory =
+  | 'SCHOOL'
   | 'COLLEGE'
   | 'MAJOR'
   | 'SCHOOL_DEPARTMENT'
@@ -17,7 +18,16 @@ export type ReferenceSubjectType =
   | 'DOCTOR'
   | 'REFERRAL'
   | 'MAJOR'
-  | 'HOSPITAL_DEPARTMENT';
+  | 'HOSPITAL_DEPARTMENT'
+  | 'SCHOOL_DEPARTMENT';
+
+export interface SchoolDto {
+  id: number;
+  name: string;
+  status: ReferenceDataStatus;
+  departmentCount: number;
+  studentCount: number;
+}
 
 export interface CollegeDto {
   id: number;
@@ -79,6 +89,7 @@ export interface DegreeLevelDto {
 }
 
 export type AnyReferenceItem =
+  | SchoolDto
   | CollegeDto
   | MajorDto
   | SchoolDepartmentDto
@@ -145,6 +156,14 @@ export interface CategoryMeta {
 }
 
 export const REFERENCE_CATEGORIES: CategoryMeta[] = [
+  {
+    key: 'SCHOOL',
+    title: '学校管理',
+    singularTitle: '学校',
+    icon: 'account_balance',
+    description: '学校基本信息及多校区/直属高校单位',
+    hasParent: false,
+  },
   {
     key: 'COLLEGE',
     title: '学院管理',
@@ -214,4 +233,5 @@ export const SUBJECT_TYPE_LABELS: Record<ReferenceSubjectType, string> = {
   REFERRAL: '条转诊记录',
   MAJOR: '个下属专业',
   HOSPITAL_DEPARTMENT: '个下属科室',
+  SCHOOL_DEPARTMENT: '个下属部门',
 };

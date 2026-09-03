@@ -64,6 +64,16 @@ class AdminReferenceDataController(
         return academicReferenceService.listSchoolDepartments(query, includeDeprecated)
     }
 
+    @GetMapping("/schools")
+    fun listSchools(
+        @RequestParam(required = false) query: String?,
+        @RequestParam(required = false, defaultValue = "true") includeDeprecated: Boolean,
+        @CurrentUser user: User?
+    ): List<SchoolDto> {
+        checkAdmin(user)
+        return academicReferenceService.listSchools(query, includeDeprecated)
+    }
+
     @GetMapping("/hospitals")
     fun listHospitals(
         @RequestParam(required = false) query: String?,
@@ -125,6 +135,12 @@ class AdminReferenceDataController(
         return ResponseEntity.status(HttpStatus.CREATED).body(academicReferenceService.createSchoolDepartment(req))
     }
 
+    @PostMapping("/schools")
+    fun createSchool(@Valid @RequestBody req: SaveSimpleReferenceRequest, @CurrentUser user: User?): ResponseEntity<SchoolDto> {
+        checkAdmin(user)
+        return ResponseEntity.status(HttpStatus.CREATED).body(academicReferenceService.createSchool(req))
+    }
+
     @PostMapping("/hospitals")
     fun createHospital(@Valid @RequestBody req: SaveHospitalRequest, @CurrentUser user: User?): ResponseEntity<AdminHospitalDto> {
         checkAdmin(user)
@@ -167,6 +183,12 @@ class AdminReferenceDataController(
     fun updateSchoolDepartment(@PathVariable id: Long, @Valid @RequestBody req: SaveSchoolDepartmentRequest, @CurrentUser user: User?): SchoolDepartmentDto {
         checkAdmin(user)
         return academicReferenceService.updateSchoolDepartment(id, req)
+    }
+
+    @PutMapping("/schools/{id}")
+    fun updateSchool(@PathVariable id: Long, @Valid @RequestBody req: SaveSimpleReferenceRequest, @CurrentUser user: User?): SchoolDto {
+        checkAdmin(user)
+        return academicReferenceService.updateSchool(id, req)
     }
 
     @PutMapping("/hospitals/{id}")
@@ -218,6 +240,7 @@ class AdminReferenceDataController(
             ReferenceCategory.COLLEGE -> academicReferenceService.setCollegeStatus(id, ReferenceDataStatus.DEPRECATED)
             ReferenceCategory.MAJOR -> academicReferenceService.setMajorStatus(id, ReferenceDataStatus.DEPRECATED)
             ReferenceCategory.SCHOOL_DEPARTMENT -> academicReferenceService.setSchoolDepartmentStatus(id, ReferenceDataStatus.DEPRECATED)
+            ReferenceCategory.SCHOOL -> academicReferenceService.setSchoolStatus(id, ReferenceDataStatus.DEPRECATED)
             ReferenceCategory.HOSPITAL -> clinicalReferenceService.setHospitalStatus(id, ReferenceDataStatus.DEPRECATED)
             ReferenceCategory.HOSPITAL_DEPARTMENT -> clinicalReferenceService.setHospitalDepartmentStatus(id, ReferenceDataStatus.DEPRECATED)
             ReferenceCategory.ETHNICITY -> demographicsReferenceService.setEthnicityStatus(id, ReferenceDataStatus.DEPRECATED)
@@ -236,6 +259,7 @@ class AdminReferenceDataController(
             ReferenceCategory.COLLEGE -> academicReferenceService.setCollegeStatus(id, ReferenceDataStatus.ACTIVE)
             ReferenceCategory.MAJOR -> academicReferenceService.setMajorStatus(id, ReferenceDataStatus.ACTIVE)
             ReferenceCategory.SCHOOL_DEPARTMENT -> academicReferenceService.setSchoolDepartmentStatus(id, ReferenceDataStatus.ACTIVE)
+            ReferenceCategory.SCHOOL -> academicReferenceService.setSchoolStatus(id, ReferenceDataStatus.ACTIVE)
             ReferenceCategory.HOSPITAL -> clinicalReferenceService.setHospitalStatus(id, ReferenceDataStatus.ACTIVE)
             ReferenceCategory.HOSPITAL_DEPARTMENT -> clinicalReferenceService.setHospitalDepartmentStatus(id, ReferenceDataStatus.ACTIVE)
             ReferenceCategory.ETHNICITY -> demographicsReferenceService.setEthnicityStatus(id, ReferenceDataStatus.ACTIVE)
@@ -256,6 +280,7 @@ class AdminReferenceDataController(
             ReferenceCategory.COLLEGE -> academicReferenceService.deleteCollege(id)
             ReferenceCategory.MAJOR -> academicReferenceService.deleteMajor(id)
             ReferenceCategory.SCHOOL_DEPARTMENT -> academicReferenceService.deleteSchoolDepartment(id)
+            ReferenceCategory.SCHOOL -> academicReferenceService.deleteSchool(id)
             ReferenceCategory.HOSPITAL -> clinicalReferenceService.deleteHospital(id)
             ReferenceCategory.HOSPITAL_DEPARTMENT -> clinicalReferenceService.deleteHospitalDepartment(id)
             ReferenceCategory.ETHNICITY -> demographicsReferenceService.deleteEthnicity(id)

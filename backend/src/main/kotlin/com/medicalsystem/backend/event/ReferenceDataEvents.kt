@@ -14,3 +14,9 @@ data class HospitalStatusChangedEvent(
     val newStatus: ReferenceDataStatus,
     override val occurredOn: LocalDateTime = LocalDateTime.now()
 ) : DomainEvent
+
+data class SchoolStatusChangedEvent(
+    val schoolId: Long,
+    val newStatus: ReferenceDataStatus,
+    override val occurredOn: LocalDateTime = LocalDateTime.now()
+) : DomainEvent

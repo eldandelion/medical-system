@@ -12,5 +12,6 @@ interface SchoolDepartmentJpaRepository : JpaRepository<SchoolDepartmentEntity, 
     fun findByStatusOrderByNameAsc(status: ReferenceDataStatus): List<SchoolDepartmentEntity>
     fun findBySchoolId(schoolId: Long): List<SchoolDepartmentEntity>
     fun findBySchoolIdAndStatus(schoolId: Long, status: ReferenceDataStatus): List<SchoolDepartmentEntity>
+    fun countBySchoolId(schoolId: Long): Long
     fun findAllByOrderByNameAsc(): List<SchoolDepartmentEntity>
 }

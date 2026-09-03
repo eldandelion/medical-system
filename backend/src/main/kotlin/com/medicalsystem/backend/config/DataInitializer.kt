@@ -104,6 +104,9 @@ class DataInitializer {
         val otherDegree = degreeLevelRepository.save(DegreeLevelEntity(name = "OTHER"))
 
         val mainSchool = schoolRepository.save(SchoolEntity(name = "某重点大学"))
+        val csu = schoolRepository.save(SchoolEntity(name = "中南大学"))
+        val hnu = schoolRepository.save(SchoolEntity(name = "湖南大学"))
+        val pku = schoolRepository.save(SchoolEntity(name = "北京大学"))
 
         val s1Demo = StudentDemographicsEntity(gender = Gender.MALE, dateOfBirth = LocalDate.of(2004, 5, 12), ethnicity = han, idCardNumber = "110105200405123456", contactNumber = "13800138000", email = "liming@univ.edu.cn", homeAddress = "北京市朝阳区某街道", emergencyContactName = "李建国", emergencyContactPhone = "13900139000", school = mainSchool)
         val s2Demo = StudentDemographicsEntity(gender = Gender.FEMALE, dateOfBirth = LocalDate.of(2003, 8, 24), ethnicity = hui, idCardNumber = "310101200308241234", contactNumber = "13700137000", email = "wangfang@univ.edu.cn", homeAddress = "上海市黄浦区某街道", emergencyContactName = "王强", emergencyContactPhone = "13600136000", school = mainSchool)

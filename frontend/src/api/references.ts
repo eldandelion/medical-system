@@ -9,6 +9,7 @@ import {
 } from '../types/references';
 
 const CATEGORY_PATH_MAP: Record<ReferenceCategory, string> = {
+  SCHOOL: 'schools',
   COLLEGE: 'colleges',
   MAJOR: 'majors',
   SCHOOL_DEPARTMENT: 'school-departments',

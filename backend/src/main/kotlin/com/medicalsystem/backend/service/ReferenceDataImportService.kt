@@ -19,6 +19,7 @@ class ReferenceDataImportService(
     private val collegeJpaRepository: CollegeJpaRepository,
     private val majorJpaRepository: MajorJpaRepository,
     private val schoolDepartmentJpaRepository: SchoolDepartmentJpaRepository,
+    private val schoolJpaRepository: SchoolJpaRepository,
     private val hospitalRepository: HospitalRepository,
     private val hospitalDepartmentRepository: HospitalDepartmentRepository,
     private val ethnicityJpaRepository: EthnicityJpaRepository,
@@ -37,6 +38,7 @@ class ReferenceDataImportService(
         const val HEADER_MAJOR = "专业名称"
         const val HEADER_COLLEGE_NAME = "所属学院"
         const val HEADER_SCHOOL_DEPT = "部门名称"
+        const val HEADER_SCHOOL = "学校名称"
         const val HEADER_HOSPITAL = "医院名称"
         const val HEADER_HOSPITAL_ADDRESS = "医院地址"
         const val HEADER_HOSPITAL_PHONE = "联系电话"
@@ -51,6 +53,7 @@ class ReferenceDataImportService(
             ReferenceCategory.COLLEGE -> HEADER_COLLEGE to "计算机学院\n软件学院"
             ReferenceCategory.MAJOR -> "$HEADER_MAJOR,$HEADER_COLLEGE_NAME" to "软件工程,计算机学院\n计算机科学与技术,计算机学院"
             ReferenceCategory.SCHOOL_DEPARTMENT -> HEADER_SCHOOL_DEPT to "心理咨询中心\n学生工作处"
+            ReferenceCategory.SCHOOL -> HEADER_SCHOOL to "中南大学\n湖南大学"
             ReferenceCategory.HOSPITAL -> "$HEADER_HOSPITAL,$HEADER_HOSPITAL_ADDRESS,$HEADER_HOSPITAL_PHONE" to "中南大学湘雅二医院,长沙市人民中路139号,0731-85295888"
             ReferenceCategory.HOSPITAL_DEPARTMENT -> "$HEADER_HOSPITAL_DEPT,$HEADER_HOSPITAL_NAME" to "临床心理科,中南大学湘雅二医院\n精神卫生科,中南大学湘雅二医院"
             ReferenceCategory.ETHNICITY -> HEADER_ETHNICITY to "汉族\n壮族\n回族"
@@ -130,6 +133,7 @@ class ReferenceDataImportService(
         val hospitalsMap = hospitalRepository.findAll().associateBy { it.name }
         val majorsSet = majorJpaRepository.findAll().map { "${it.name}#${it.college.name}" }.toSet()
         val schoolDeptsSet = schoolDepartmentJpaRepository.findAll().map { it.name }.toSet()
+        val schoolsSet = schoolJpaRepository.findAll().map { it.name }.toSet()
         val hospDeptsSet = hospitalDepartmentRepository.findAll().map { "${it.name}#${it.hospital.name}" }.toSet()
         val ethnicitiesSet = ethnicityJpaRepository.findAll().map { it.name }.toSet()
         val degreeLevelsSet = degreeLevelJpaRepository.findAll().map { it.name }.toSet()
@@ -162,6 +166,14 @@ class ReferenceDataImportService(
                     when {
                         name.isBlank() -> ReferenceImportRowDto(rowNum, "INVALID", name, errorCode = "NAME_REQUIRED")
                         schoolDeptsSet.contains(name) -> ReferenceImportRowDto(rowNum, "DUPLICATE", name)
+                        else -> ReferenceImportRowDto(rowNum, "READY", name)
+                    }
+                }
+                ReferenceCategory.SCHOOL -> {
+                    val name = map[HEADER_SCHOOL]?.trim() ?: ""
+                    when {
+                        name.isBlank() -> ReferenceImportRowDto(rowNum, "INVALID", name, errorCode = "NAME_REQUIRED")
+                        schoolsSet.contains(name) -> ReferenceImportRowDto(rowNum, "DUPLICATE", name)
                         else -> ReferenceImportRowDto(rowNum, "READY", name)
                     }
                 }
@@ -215,6 +227,7 @@ class ReferenceDataImportService(
                 academicReferenceService.createMajor(SaveMajorRequest(row.name, college.id ?: 0L))
             }
             ReferenceCategory.SCHOOL_DEPARTMENT -> academicReferenceService.createSchoolDepartment(SaveSchoolDepartmentRequest(row.name))
+            ReferenceCategory.SCHOOL -> academicReferenceService.createSchool(SaveSimpleReferenceRequest(row.name))
             ReferenceCategory.HOSPITAL -> clinicalReferenceService.createHospital(SaveHospitalRequest(row.name, row.address, row.contactPhone))
             ReferenceCategory.HOSPITAL_DEPARTMENT -> {
                 val hospital = hospitalRepository.findByName(row.parentName ?: "")
@@ -241,6 +254,10 @@ class ReferenceDataImportService(
                 val entity = schoolDepartmentJpaRepository.findByName(row.name) ?: return
                 academicReferenceService.updateSchoolDepartment(entity.id, SaveSchoolDepartmentRequest(row.name))
             }
+            ReferenceCategory.SCHOOL -> {
+                val entity = schoolJpaRepository.findByName(row.name).orElse(null) ?: return
+                academicReferenceService.updateSchool(entity.id, SaveSimpleReferenceRequest(row.name))
+            }
             ReferenceCategory.HOSPITAL -> {
                 val entity = hospitalRepository.findByName(row.name) ?: return
                 clinicalReferenceService.updateHospital(entity.id, SaveHospitalRequest(row.name, row.address, row.contactPhone))
@@ -266,6 +283,7 @@ class ReferenceDataImportService(
             ReferenceCategory.COLLEGE -> mapOf(HEADER_COLLEGE to row.name)
             ReferenceCategory.MAJOR -> mapOf(HEADER_MAJOR to row.name, HEADER_COLLEGE_NAME to (row.parentName ?: ""))
             ReferenceCategory.SCHOOL_DEPARTMENT -> mapOf(HEADER_SCHOOL_DEPT to row.name)
+            ReferenceCategory.SCHOOL -> mapOf(HEADER_SCHOOL to row.name)
             ReferenceCategory.HOSPITAL -> mapOf(HEADER_HOSPITAL to row.name, HEADER_HOSPITAL_ADDRESS to (row.address ?: ""), HEADER_HOSPITAL_PHONE to (row.contactPhone ?: ""))
             ReferenceCategory.HOSPITAL_DEPARTMENT -> mapOf(HEADER_HOSPITAL_DEPT to row.name, HEADER_HOSPITAL_NAME to (row.parentName ?: ""))
             ReferenceCategory.ETHNICITY -> mapOf(HEADER_ETHNICITY to row.name)

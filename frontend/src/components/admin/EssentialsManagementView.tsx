@@ -17,7 +17,7 @@ import { EssentialDeleteConfirmDialog } from './EssentialDeleteConfirmDialog';
 import { EssentialBulkImportDialog } from './EssentialBulkImportDialog';
 
 export function EssentialsManagementView() {
-  const [activeCategory, setActiveCategory] = React.useState<ReferenceCategory>('COLLEGE');
+  const [activeCategory, setActiveCategory] = React.useState<ReferenceCategory>('SCHOOL');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [includeDeprecated, setIncludeDeprecated] = React.useState(true);
   const [parentFilterId, setParentFilterId] = React.useState<number | undefined>(undefined);
@@ -71,7 +71,30 @@ export function EssentialsManagementView() {
       });
     }
 
-    if (activeCategory === 'COLLEGE') {
+    if (activeCategory === 'SCHOOL') {
+      cols.push(
+        {
+          key: 'departmentCount',
+          label: '下属部门',
+          width: 'w-[18%]',
+          render: (item) => (
+            <span className="text-[14px] text-[var(--md-sys-color-on-surface-variant)]">
+              {'departmentCount' in item ? item.departmentCount : 0} 个部门
+            </span>
+          ),
+        },
+        {
+          key: 'studentCount',
+          label: '在籍学生',
+          width: 'w-[18%]',
+          render: (item) => (
+            <span className="text-[14px] text-[var(--md-sys-color-on-surface-variant)]">
+              {'studentCount' in item ? item.studentCount : 0} 人
+            </span>
+          ),
+        }
+      );
+    } else if (activeCategory === 'COLLEGE') {
       cols.push(
         {
           key: 'majorCount',
