@@ -49,9 +49,13 @@ data class RegisterStaffRequest(
     val ethnicityId: Long? = null,
 
     val school: String? = null,
+    val schoolId: Long? = null,
     val department: String? = null,
+    val departmentId: Long? = null,
     val hospital: String? = null,
+    val hospitalId: Long? = null,
     val hospitalDepartment: String? = null,
+    val hospitalDepartmentId: Long? = null,
 
     @field:NotBlank(message = "WORKER_NUMBER_REQUIRED")
     @field:Size(min = 2, max = 30, message = "WORKER_NUMBER_INVALID_LENGTH")

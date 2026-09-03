@@ -12,6 +12,7 @@ import { RegisterPassword, type RegisterPasswordData } from './RegisterPassword'
 import { RegisterSuccessView } from './RegisterSuccessView';
 import { useRegistrationDraft } from './useRegistrationDraft';
 import { useEthnicities } from '../../hooks/useEthnicities';
+import { useSchools, useHospitals } from '../../hooks/useAffiliations';
 import { authApi } from '../../api/auth';
 import { UserRole } from '../../types';
 
@@ -131,11 +132,17 @@ export function LoginOverlay({
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [isSubmittingRegistration, setIsSubmittingRegistration] = React.useState(false);
   const { isLoading: isEthnicitiesLoading, isFetching: isEthnicitiesFetching } = useEthnicities();
+  const { isLoading: isSchoolsLoading, isFetching: isSchoolsFetching } = useSchools();
+  const { isLoading: isHospitalsLoading, isFetching: isHospitalsFetching } = useHospitals();
   const abortControllerRef = React.useRef<AbortController | null>(null);
+
+  const isAffiliationLoading = isSchoolsLoading || isSchoolsFetching || isHospitalsLoading || isHospitalsFetching;
 
   const showContainerProgress =
     view !== 'login' &&
-    (isSubmittingRegistration || (view === 'register-demographics' && (isEthnicitiesLoading || isEthnicitiesFetching)));
+    (isSubmittingRegistration ||
+      (view === 'register-demographics' && (isEthnicitiesLoading || isEthnicitiesFetching)) ||
+      (view === 'register-affiliation' && isAffiliationLoading));
 
   const prevIsOpenRef = React.useRef(isOpen);
 

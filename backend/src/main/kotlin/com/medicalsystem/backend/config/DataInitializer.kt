@@ -102,6 +102,37 @@ class DataInitializer {
         val otherDegree = degreeLevelRepository.save(DegreeLevelEntity(name = "OTHER"))
 
         val mainSchool = schoolRepository.save(SchoolEntity(name = "某重点大学"))
+        val csuSchool = schoolRepository.save(SchoolEntity(name = "中南大学"))
+        val hnuSchool = schoolRepository.save(SchoolEntity(name = "湖南大学"))
+        val hnnSchool = schoolRepository.save(SchoolEntity(name = "湖南师范大学"))
+        val csustSchool = schoolRepository.save(SchoolEntity(name = "长沙理工大学"))
+        val csuftSchool = schoolRepository.save(SchoolEntity(name = "中南林业科技大学"))
+        val otherSchool = schoolRepository.save(SchoolEntity(name = "其他高校"))
+
+        val schoolDeptNames = listOf(
+            "心理健康教育与咨询中心",
+            "咨询中心",
+            "学生工作部（处）",
+            "教务处",
+            "计算机学院",
+            "湘雅医学院",
+            "工程学院",
+            "商学院",
+            "文学院",
+            "外国语学院",
+            "数学与统计学院",
+            "物理与电子学院",
+            "化学化工学院",
+            "法学院",
+            "马克思主义学院",
+            "其他部门"
+        )
+        val allSchools = listOf(mainSchool, csuSchool, hnuSchool, hnnSchool, csustSchool, csuftSchool, otherSchool)
+        allSchools.forEach { s ->
+            schoolDeptNames.forEach { deptName ->
+                schoolDepartmentJpaRepository.save(SchoolDepartmentEntity(name = deptName, school = s))
+            }
+        }
 
         val s1Demo = StudentDemographicsEntity(gender = Gender.MALE, dateOfBirth = LocalDate.of(2004, 5, 12), ethnicity = han, idCardNumber = "110105200405123457", contactNumber = "13800138000", email = "liming@univ.edu.cn", homeAddress = "北京市朝阳区某街道", emergencyContactName = "李建国", emergencyContactPhone = "13900139000", school = mainSchool)
         val s2Demo = StudentDemographicsEntity(gender = Gender.FEMALE, dateOfBirth = LocalDate.of(2003, 8, 24), ethnicity = hui, idCardNumber = "310101200308241240", contactNumber = "13700137000", email = "wangfang@univ.edu.cn", homeAddress = "上海市黄浦区某街道", emergencyContactName = "王强", emergencyContactPhone = "13600136000", school = mainSchool)
@@ -172,14 +203,37 @@ class DataInitializer {
         studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s9.id))
         studentHealthProfileRepository.save(StudentHealthProfileEntity(studentId = s10.id, scidDiagnosis = "睡眠障碍"))
 
-        val hosp = hospitalRepository.save(HospitalEntity(name = "中南大学湘雅医院"))
-        val medDept = hospitalDepartmentRepository.save(HospitalDepartmentEntity(name = "内科", hospital = hosp))
-        val psychDept = hospitalDepartmentRepository.save(HospitalDepartmentEntity(name = "心理咨询科", hospital = hosp))
+        val hosp1 = hospitalRepository.save(HospitalEntity(name = "中南大学湘雅医院", address = "湖南省长沙市开福区湘雅路87号", contactPhone = "0731-84328888"))
+        val hosp2 = hospitalRepository.save(HospitalEntity(name = "中南大学湘雅二医院", address = "湖南省长沙市芙蓉区人民中路139号", contactPhone = "0731-85295888"))
+        val hosp3 = hospitalRepository.save(HospitalEntity(name = "中南大学湘雅三医院", address = "湖南省长沙市岳麓区桐梓坡路138号", contactPhone = "0731-88618888"))
+        val hosp4 = hospitalRepository.save(HospitalEntity(name = "湖南省人民医院", address = "湖南省长沙市芙蓉区解放西路61号", contactPhone = "0731-83929114"))
+        val hosp5 = hospitalRepository.save(HospitalEntity(name = "湖南省脑科医院（湖南省第二人民医院）", address = "湖南省长沙市雨花区芙蓉中路三段427号", contactPhone = "0731-85232233"))
+        val hospOther = hospitalRepository.save(HospitalEntity(name = "其他医疗机构", address = "其他地区", contactPhone = "0731-80000000"))
+
+        val hospDeptNames = listOf(
+            "心理咨询科",
+            "精神科",
+            "临床心理科",
+            "心身医学科",
+            "门诊分诊部",
+            "急诊科",
+            "神经内科",
+            "内科",
+            "其他科室"
+        )
+        val allHospitals = listOf(hosp1, hosp2, hosp3, hosp4, hosp5, hospOther)
+        allHospitals.forEach { h ->
+            hospDeptNames.forEach { deptName ->
+                hospitalDepartmentRepository.save(HospitalDepartmentEntity(name = deptName, hospital = h))
+            }
+        }
+
+        val hosp = hosp1
+        val medDept = hospitalDepartmentRepository.findByHospitalIdOrderByIdAsc(hosp.id).find { it.name == "内科" }!!
+        val psychDept = hospitalDepartmentRepository.findByHospitalIdOrderByIdAsc(hosp.id).find { it.name == "心理咨询科" }!!
 
         val triageAdminBase = userRepository.save(UserEntity(name = "张老师", email = EmailAddress("zhang@univ.edu.cn"), role = UserRole.TRIAL_ADMIN))
         val triageAdmin = trialAdminRepository.save(TrialAdminEntity(userId = triageAdminBase.id, employeeNumber = "TA-00001", hospital = hosp))
-
-
 
         val doctorBase = userRepository.save(UserEntity(name = "李医生", email = EmailAddress("li@univ.edu.cn"), role = UserRole.DOCTOR))
         val doctor = doctorRepository.save(DoctorEntity(userId = doctorBase.id, employeeNumber = "DOC-00001", department = medDept))
@@ -188,8 +242,8 @@ class DataInitializer {
         val doctorWang = doctorRepository.save(DoctorEntity(userId = doctorWangBase.id, employeeNumber = "DOC-00002", department = psychDept))
 
         val headCounsellorBase = userRepository.save(UserEntity(name = "王主任", email = EmailAddress("wang_head@univ.edu.cn"), role = UserRole.HEAD_COUNSELLOR))
-        val scDept = schoolDepartmentJpaRepository.save(SchoolDepartmentEntity(name = "咨询中心", school = mainSchool))
-        val headCounsellor = headCounsellorJpaRepository.save(HeadCounsellorEntity(userId = headCounsellorBase.id, employeeNumber = "HC-00001", schoolId = mainSchool.id!!, departmentId = scDept.id!!))
+        val scDept = schoolDepartmentJpaRepository.findBySchoolIdOrderByIdAsc(mainSchool.id).find { it.name == "咨询中心" }!!
+        val headCounsellor = headCounsellorJpaRepository.save(HeadCounsellorEntity(userId = headCounsellorBase.id, employeeNumber = "HC-00001", schoolId = mainSchool.id, departmentId = scDept.id))
 
         val adminBase = userRepository.save(UserEntity(name = "系统管理员", email = EmailAddress("admin@univ.edu.cn"), role = UserRole.SYSTEM_ADMIN, status = AccountStatus.ACTIVE))
         val pendingTeacher = userRepository.save(UserEntity(name = "赵老师", email = EmailAddress("zhao_pending@univ.edu.cn"), role = UserRole.TEACHER, status = AccountStatus.PENDING_APPROVAL))

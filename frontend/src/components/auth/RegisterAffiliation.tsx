@@ -4,59 +4,31 @@ import { PrimaryButton, TertiaryButton } from '../common/Buttons';
 import { CsuLogo } from './LoginOverlay';
 import { type RegisterRole } from './RegisterRoleSelect';
 import { validateWorkerNumber } from './validationUtils';
+import {
+  useSchools,
+  useSchoolDepartments,
+  useHospitals,
+  useHospitalDepartments,
+  FALLBACK_SCHOOLS,
+  FALLBACK_SCHOOL_DEPARTMENTS,
+  FALLBACK_HOSPITALS,
+  FALLBACK_HOSPITAL_DEPARTMENTS,
+} from '../../hooks/useAffiliations';
 
-export const DEFAULT_SCHOOL_OPTIONS = [
-  '中南大学',
-  '湖南大学',
-  '湖南师范大学',
-  '长沙理工大学',
-  '中南林业科技大学',
-  '其他高校',
-];
-
-export const DEFAULT_DEPARTMENT_OPTIONS = [
-  '心理健康教育与咨询中心',
-  '学生工作部（处）',
-  '教务处',
-  '计算机学院',
-  '湘雅医学院',
-  '工程学院',
-  '商学院',
-  '文学院',
-  '外国语学院',
-  '数学与统计学院',
-  '物理与电子学院',
-  '化学化工学院',
-  '法学院',
-  '马克思主义学院',
-  '其他部门',
-];
-
-export const DEFAULT_HOSPITAL_OPTIONS = [
-  '中南大学湘雅医院',
-  '中南大学湘雅二医院',
-  '中南大学湘雅三医院',
-  '湖南省人民医院',
-  '湖南省脑科医院（湖南省第二人民医院）',
-  '其他医疗机构',
-];
-
-export const DEFAULT_HOSPITAL_DEPARTMENT_OPTIONS = [
-  '心理咨询科',
-  '精神科',
-  '临床心理科',
-  '心身医学科',
-  '门诊分诊部',
-  '急诊科',
-  '神经内科',
-  '其他科室',
-];
+export const DEFAULT_SCHOOL_OPTIONS = FALLBACK_SCHOOLS.map((s) => s.name);
+export const DEFAULT_DEPARTMENT_OPTIONS = FALLBACK_SCHOOL_DEPARTMENTS.map((d) => d.name);
+export const DEFAULT_HOSPITAL_OPTIONS = FALLBACK_HOSPITALS.map((h) => h.name);
+export const DEFAULT_HOSPITAL_DEPARTMENT_OPTIONS = FALLBACK_HOSPITAL_DEPARTMENTS.map((d) => d.name);
 
 export interface RegisterAffiliationData {
   school?: string;
+  schoolId?: number;
   department?: string;
+  departmentId?: number;
   hospital?: string;
+  hospitalId?: number;
   hospitalDepartment?: string;
+  hospitalDepartmentId?: number;
   workerNumber: string;
 }
 
@@ -94,10 +66,19 @@ export function RegisterAffiliation({
   const [departmentError, setDepartmentError] = React.useState('');
   const [workerNumberError, setWorkerNumberError] = React.useState('');
 
+  const { schools } = useSchools();
+  const { hospitals } = useHospitals();
+
+  const selectedSchool = schools.find((s) => s.name === institution);
+  const selectedHospital = hospitals.find((h) => h.name === institution);
+
+  const { departments: schoolDepts } = useSchoolDepartments(selectedSchool?.id);
+  const { departments: hospitalDepts } = useHospitalDepartments(selectedHospital?.id);
+
   const institutionLabel = isHospitalRole ? '医院' : '学校';
   const departmentLabel = isHospitalRole ? '科室' : '部门';
-  const institutionOptions = isHospitalRole ? DEFAULT_HOSPITAL_OPTIONS : DEFAULT_SCHOOL_OPTIONS;
-  const departmentOptions = isHospitalRole ? DEFAULT_HOSPITAL_DEPARTMENT_OPTIONS : DEFAULT_DEPARTMENT_OPTIONS;
+  const institutionList = isHospitalRole ? hospitals : schools;
+  const departmentList = isHospitalRole ? hospitalDepts : schoolDepts;
 
   const subtitle = isHospitalRole
     ? '选择您的所属医院与科室，并输入工号'
@@ -134,16 +115,23 @@ export function RegisterAffiliation({
     if (hasError) return;
 
     if (isHospitalRole) {
+      const matchedDept = hospitalDepts.find((d) => d.name === department.trim());
       onProceed({
         hospital: institution.trim(),
+        hospitalId: selectedHospital?.id,
         hospitalDepartment: department.trim(),
+        hospitalDepartmentId: matchedDept?.id,
         department: department.trim(),
+        departmentId: matchedDept?.id,
         workerNumber: workerNumber.trim(),
       });
     } else {
+      const matchedDept = schoolDepts.find((d) => d.name === department.trim());
       onProceed({
         school: institution.trim(),
+        schoolId: selectedSchool?.id,
         department: department.trim(),
+        departmentId: matchedDept?.id,
         workerNumber: workerNumber.trim(),
       });
     }
@@ -194,13 +182,16 @@ export function RegisterAffiliation({
                   error-text={institutionError || undefined}
                   onChange={(e: React.SyntheticEvent) => {
                     const target = e.target as HTMLSelectElement;
-                    setInstitution(target.value);
+                    const nextVal = target.value;
+                    setInstitution(nextVal);
+                    setDepartment('');
                     if (institutionError) setInstitutionError('');
+                    if (departmentError) setDepartmentError('');
                   }}
                 >
-                  {institutionOptions.map((opt) => (
-                    <md-select-option key={opt} value={opt}>
-                      <div slot="headline">{opt}</div>
+                  {institutionList.map((item) => (
+                    <md-select-option key={item.id} value={item.name}>
+                      <div slot="headline">{item.name}</div>
                     </md-select-option>
                   ))}
                   {institutionError && <span slot="error-text">{institutionError}</span>}
@@ -221,9 +212,9 @@ export function RegisterAffiliation({
                     if (departmentError) setDepartmentError('');
                   }}
                 >
-                  {departmentOptions.map((dept) => (
-                    <md-select-option key={dept} value={dept}>
-                      <div slot="headline">{dept}</div>
+                  {departmentList.map((dept) => (
+                    <md-select-option key={dept.id} value={dept.name}>
+                      <div slot="headline">{dept.name}</div>
                     </md-select-option>
                   ))}
                   {departmentError && <span slot="error-text">{departmentError}</span>}

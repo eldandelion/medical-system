@@ -1,11 +1,30 @@
 import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RegisterAffiliation, DEFAULT_SCHOOL_OPTIONS, DEFAULT_DEPARTMENT_OPTIONS } from './RegisterAffiliation';
 
 afterEach(() => {
   cleanup();
 });
+
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
+const renderWithProviders = (ui: React.ReactElement) => {
+  const queryClient = createTestQueryClient();
+  return render(
+    <QueryClientProvider client={queryClient}>
+      {ui}
+    </QueryClientProvider>
+  );
+};
 
 function setMdInputValue(field: HTMLElement, value: string) {
   (field as any).value = value;
@@ -19,7 +38,7 @@ function setMdSelectValue(select: HTMLElement, value: string) {
 
 describe('RegisterAffiliation Component', () => {
   it('renders CSU branding, title, subtitle, school/dept selects, and worker number input', () => {
-    render(
+    renderWithProviders(
       <RegisterAffiliation
         onBack={() => {}}
         onProceed={() => {}}
@@ -47,7 +66,7 @@ describe('RegisterAffiliation Component', () => {
 
   it('validates required fields on submission', () => {
     const onProceedMock = vi.fn();
-    render(
+    renderWithProviders(
       <RegisterAffiliation
         initialData={{ school: '', department: '', workerNumber: '' }}
         onBack={() => {}}
@@ -66,7 +85,7 @@ describe('RegisterAffiliation Component', () => {
 
   it('submits correctly when valid school, department, and worker number are provided', () => {
     const onProceedMock = vi.fn();
-    render(
+    renderWithProviders(
       <RegisterAffiliation
         onBack={() => {}}
         onProceed={onProceedMock}
@@ -85,16 +104,18 @@ describe('RegisterAffiliation Component', () => {
     const nextButton = screen.getByText('下一步');
     fireEvent.click(nextButton);
 
-    expect(onProceedMock).toHaveBeenCalledWith({
-      school: '中南大学',
-      department: '计算机学院',
-      workerNumber: 'EMP-00123',
-    });
+    expect(onProceedMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        school: '中南大学',
+        department: '计算机学院',
+        workerNumber: 'EMP-00123',
+      })
+    );
   });
 
   it('calls onBack when clicking "返回"', () => {
     const onBackMock = vi.fn();
-    render(
+    renderWithProviders(
       <RegisterAffiliation
         onBack={onBackMock}
         onProceed={() => {}}
@@ -109,7 +130,7 @@ describe('RegisterAffiliation Component', () => {
 
   it('renders hospital and hospital department selectors when role is doctor or trial-admin', () => {
     const onProceedMock = vi.fn();
-    render(
+    renderWithProviders(
       <RegisterAffiliation
         role="doctor"
         onBack={() => {}}
@@ -132,17 +153,37 @@ describe('RegisterAffiliation Component', () => {
 
     fireEvent.click(screen.getByText('下一步'));
 
-    expect(onProceedMock).toHaveBeenCalledWith({
-      hospital: '中南大学湘雅医院',
-      hospitalDepartment: '精神科',
-      department: '精神科',
-      workerNumber: 'DOC-8888',
-    });
+    expect(onProceedMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        hospital: '中南大学湘雅医院',
+        hospitalDepartment: '精神科',
+        department: '精神科',
+        workerNumber: 'DOC-8888',
+      })
+    );
+  });
+
+  it('resets department selection when institution changes', () => {
+    renderWithProviders(
+      <RegisterAffiliation
+        onBack={() => {}}
+        onProceed={() => {}}
+      />
+    );
+
+    const schoolSelect = document.querySelector('md-outlined-select[label="学校"]') as HTMLElement;
+    const deptSelect = document.querySelector('md-outlined-select[label="部门"]') as HTMLElement;
+
+    setMdSelectValue(deptSelect, '计算机学院');
+    expect((deptSelect as any).value).toBe('计算机学院');
+
+    setMdSelectValue(schoolSelect, '湖南大学');
+    expect((deptSelect as any).value).toBe('');
   });
 
   it('validates worker number minimum length (at least 2 characters)', () => {
     const onProceedMock = vi.fn();
-    render(
+    renderWithProviders(
       <RegisterAffiliation
         onBack={() => {}}
         onProceed={onProceedMock}
@@ -161,7 +202,7 @@ describe('RegisterAffiliation Component', () => {
 
   it('validates worker number character format (rejects spaces and special characters)', () => {
     const onProceedMock = vi.fn();
-    render(
+    renderWithProviders(
       <RegisterAffiliation
         onBack={() => {}}
         onProceed={onProceedMock}

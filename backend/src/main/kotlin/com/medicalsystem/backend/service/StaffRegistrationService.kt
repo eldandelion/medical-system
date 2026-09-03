@@ -115,7 +115,12 @@ class StaffRegistrationService(
                 )
             }
             UserRole.DOCTOR -> {
-                val department = resolveHospitalDepartment(request.hospitalDepartment ?: request.department, request.hospital)
+                val department = resolveHospitalDepartment(
+                    request.hospitalDepartmentId,
+                    request.hospitalId,
+                    request.hospitalDepartment ?: request.department,
+                    request.hospital
+                )
                 doctorRepository.save(
                     DoctorEntity(
                         userId = userEntity.id,
@@ -125,7 +130,12 @@ class StaffRegistrationService(
                 )
             }
             UserRole.HEAD_COUNSELLOR -> {
-                val (schoolId, deptId) = resolveSchoolAndDepartment(request.school, request.department)
+                val (schoolId, deptId) = resolveSchoolAndDepartment(
+                    request.schoolId,
+                    request.departmentId,
+                    request.school,
+                    request.department
+                )
                 headCounsellorJpaRepository.save(
                     HeadCounsellorEntity(
                         userId = userEntity.id,
@@ -136,7 +146,7 @@ class StaffRegistrationService(
                 )
             }
             UserRole.TRIAL_ADMIN -> {
-                val hospital = resolveHospital(request.hospital)
+                val hospital = resolveHospital(request.hospitalId, request.hospital)
                 trialAdminJpaRepository.save(
                     TrialAdminEntity(
                         userId = userEntity.id,
@@ -196,7 +206,12 @@ class StaffRegistrationService(
             ?: collegeJpaRepository.save(CollegeEntity(name = "通用学院"))
     }
 
-    private fun resolveHospital(name: String?): HospitalEntity {
+    private fun resolveHospital(hospitalId: Long?, name: String?): HospitalEntity {
+        if (hospitalId != null) {
+            return hospitalRepository.findById(hospitalId).orElseThrow {
+                ValidationException("HOSPITAL_NOT_FOUND")
+            }
+        }
         if (!name.isNullOrBlank()) {
             val existing = hospitalRepository.findAll().firstOrNull { it.name.equals(name.trim(), ignoreCase = true) }
             if (existing != null) return existing
@@ -206,8 +221,23 @@ class StaffRegistrationService(
             ?: hospitalRepository.save(HospitalEntity(name = "中心医院"))
     }
 
-    private fun resolveHospitalDepartment(deptName: String?, hospitalName: String?): HospitalDepartmentEntity {
-        val hospital = resolveHospital(hospitalName)
+    private fun resolveHospitalDepartment(
+        deptId: Long?,
+        hospitalId: Long?,
+        deptName: String?,
+        hospitalName: String?
+    ): HospitalDepartmentEntity {
+        if (deptId != null) {
+            val dept = hospitalDepartmentRepository.findById(deptId).orElseThrow {
+                ValidationException("HOSPITAL_DEPARTMENT_NOT_FOUND")
+            }
+            if (hospitalId != null && dept.hospital.id != hospitalId) {
+                throw ValidationException("HOSPITAL_DEPARTMENT_MISMATCH")
+            }
+            return dept
+        }
+
+        val hospital = resolveHospital(hospitalId, hospitalName)
         if (!deptName.isNullOrBlank()) {
             val existing = hospitalDepartmentRepository.findAll().firstOrNull {
                 it.hospital.id == hospital.id && it.name.equals(deptName.trim(), ignoreCase = true)
@@ -219,15 +249,32 @@ class StaffRegistrationService(
             ?: hospitalDepartmentRepository.save(HospitalDepartmentEntity(name = "心理咨询科", hospital = hospital))
     }
 
-    private fun resolveSchoolAndDepartment(schoolName: String?, deptName: String?): Pair<Long, Long> {
-        val school = if (!schoolName.isNullOrBlank()) {
+    private fun resolveSchoolAndDepartment(
+        schoolId: Long?,
+        deptId: Long?,
+        schoolName: String?,
+        deptName: String?
+    ): Pair<Long, Long> {
+        val school = if (schoolId != null) {
+            schoolJpaRepository.findById(schoolId).orElseThrow {
+                ValidationException("SCHOOL_NOT_FOUND")
+            }
+        } else if (!schoolName.isNullOrBlank()) {
             val existing = schoolJpaRepository.findAll().firstOrNull { it.name.equals(schoolName.trim(), ignoreCase = true) }
             existing ?: schoolJpaRepository.save(SchoolEntity(name = schoolName.trim()))
         } else {
             schoolJpaRepository.findAll().firstOrNull() ?: schoolJpaRepository.save(SchoolEntity(name = "中南大学"))
         }
 
-        val dept = if (!deptName.isNullOrBlank()) {
+        val dept = if (deptId != null) {
+            val d = schoolDepartmentJpaRepository.findById(deptId).orElseThrow {
+                ValidationException("SCHOOL_DEPARTMENT_NOT_FOUND")
+            }
+            if (d.school.id != school.id) {
+                throw ValidationException("SCHOOL_DEPARTMENT_MISMATCH")
+            }
+            d
+        } else if (!deptName.isNullOrBlank()) {
             val existing = schoolDepartmentJpaRepository.findAll().firstOrNull {
                 it.school.id == school.id && it.name.equals(deptName.trim(), ignoreCase = true)
             }

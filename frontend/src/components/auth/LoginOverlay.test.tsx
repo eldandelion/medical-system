@@ -625,19 +625,21 @@ describe('LoginOverlay Component', () => {
 
     fireEvent.click(screen.getByText('下一步'));
 
-    expect(onAffiliationSubmitMock).toHaveBeenCalledWith({
-      role: 'teacher',
-      name: '李老师',
-      gender: '女',
-      year: '1985',
-      month: '6',
-      day: '15',
-      dateOfBirth: '1985-06-15',
-      ethnicity: '汉族',
-      school: '中南大学',
-      department: '心理健康教育与咨询中心',
-      workerNumber: 'EMP-00001',
-    });
+    expect(onAffiliationSubmitMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        role: 'teacher',
+        name: '李老师',
+        gender: '女',
+        year: '1985',
+        month: '6',
+        day: '15',
+        dateOfBirth: '1985-06-15',
+        ethnicity: '汉族',
+        school: '中南大学',
+        department: '心理健康教育与咨询中心',
+        workerNumber: 'EMP-00001',
+      })
+    );
   });
 
   it('navigates through complete 6-step registration: Role -> Name & Gender -> DOB -> Affiliation -> ID & Email -> Password', async () => {

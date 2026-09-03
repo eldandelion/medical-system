@@ -52,6 +52,86 @@ export const handlers = [
     return HttpResponse.json(FALLBACK_ETHNICITIES);
   }),
 
+  http.get(api('/api/dictionaries/schools'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn('Could not fetch schools from real backend, falling back to mock', e);
+      }
+    }
+
+    const { FALLBACK_SCHOOLS } = await import('../hooks/useAffiliations');
+    return HttpResponse.json(FALLBACK_SCHOOLS);
+  }),
+
+  http.get(api('/api/dictionaries/school-departments'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn('Could not fetch school departments from real backend, falling back to mock', e);
+      }
+    }
+
+    const url = new URL(request.url);
+    const schoolIdStr = url.searchParams.get('schoolId');
+    const { FALLBACK_SCHOOL_DEPARTMENTS } = await import('../hooks/useAffiliations');
+    if (schoolIdStr) {
+      const schoolId = parseInt(schoolIdStr, 10);
+      return HttpResponse.json(FALLBACK_SCHOOL_DEPARTMENTS.filter(d => d.schoolId === schoolId));
+    }
+    return HttpResponse.json(FALLBACK_SCHOOL_DEPARTMENTS);
+  }),
+
+  http.get(api('/api/dictionaries/hospitals'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn('Could not fetch hospitals from real backend, falling back to mock', e);
+      }
+    }
+
+    const { FALLBACK_HOSPITALS } = await import('../hooks/useAffiliations');
+    return HttpResponse.json(FALLBACK_HOSPITALS);
+  }),
+
+  http.get(api('/api/dictionaries/hospital-departments'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn('Could not fetch hospital departments from real backend, falling back to mock', e);
+      }
+    }
+
+    const url = new URL(request.url);
+    const hospitalIdStr = url.searchParams.get('hospitalId');
+    const { FALLBACK_HOSPITAL_DEPARTMENTS } = await import('../hooks/useAffiliations');
+    if (hospitalIdStr) {
+      const hospitalId = parseInt(hospitalIdStr, 10);
+      return HttpResponse.json(FALLBACK_HOSPITAL_DEPARTMENTS.filter(d => d.hospitalId === hospitalId));
+    }
+    return HttpResponse.json(FALLBACK_HOSPITAL_DEPARTMENTS);
+  }),
+
   http.post(api('/api/auth/verify-identifier'), async ({ request }) => {
     if (import.meta.env.MODE !== 'test') {
       try {
