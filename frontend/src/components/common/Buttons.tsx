@@ -294,7 +294,7 @@ export function SplitButton({
 
   return (
     <div
-      className={`inline-flex items-center gap-1 shrink-0 ${effectiveCollapsed ? 'w-10 min-w-0 overflow-hidden' : ''}`}
+      className={`inline-flex items-center gap-0.5 shrink-0 ${effectiveCollapsed ? 'w-10 min-w-0 overflow-hidden' : ''}`}
       style={style}
     >
       {/* 1. Main Action Button */}
