@@ -27,9 +27,7 @@ export const mockStudentsDb: Student[] = [
       homeAddress: '北京市海淀区中关村南大街1号',
       emergencyContactName: '张建军',
       emergencyContactPhone: '13900139001',
-      school: '中南大学',
-      studentId: '2021001',
-      emergencyContact: '+86 139-0013-9001'
+      school: '中南大学'
     },
     psychometrics: {
       scores: [
@@ -78,9 +76,7 @@ export const mockStudentsDb: Student[] = [
       homeAddress: '湖南省长沙市岳麓区麓山南路2号',
       emergencyContactName: '李强',
       emergencyContactPhone: '13900139002',
-      school: '中南大学',
-      studentId: '2021002',
-      emergencyContact: '+86 138-0013-8000'
+      school: '中南大学'
     },
     psychometrics: {
       scores: [
@@ -128,9 +124,7 @@ export const mockStudentsDb: Student[] = [
       homeAddress: '湖北省武汉市武昌区珞珈山路3号',
       emergencyContactName: '王大伟',
       emergencyContactPhone: '13900139003',
-      school: '中南大学',
-      studentId: '2022001',
-      emergencyContact: '+86 139-1111-2222'
+      school: '中南大学'
     },
     psychometrics: {
       scores: [
@@ -177,9 +171,7 @@ export const mockStudentsDb: Student[] = [
       homeAddress: '广东省广州市天河区五山路4号',
       emergencyContactName: '刘保国',
       emergencyContactPhone: '13900139004',
-      school: '中南大学',
-      studentId: '2022002',
-      emergencyContact: '+86 186-2222-3333'
+      school: '中南大学'
     },
     psychometrics: {
       scores: [
@@ -226,9 +218,7 @@ export const mockStudentsDb: Student[] = [
       homeAddress: '四川省成都市武侯区一环路5号',
       emergencyContactName: '陈建华',
       emergencyContactPhone: '13900139005',
-      school: '中南大学',
-      studentId: '2023001',
-      emergencyContact: '+86 138-0000-1111'
+      school: '中南大学'
     },
     psychometrics: { scores: [], radarData: [] },
     history: []
@@ -259,9 +249,7 @@ export const mockStudentsDb: Student[] = [
       homeAddress: '浙江省杭州市西湖区浙大路6号',
       emergencyContactName: '赵志刚',
       emergencyContactPhone: '13900139006',
-      school: '中南大学',
-      studentId: '2023002',
-      emergencyContact: '+86 138-0000-2222'
+      school: '中南大学'
     },
     psychometrics: { scores: [], radarData: [] },
     history: []
@@ -292,9 +280,7 @@ export const mockStudentsDb: Student[] = [
       homeAddress: '北京市海淀区中关村南大街5号',
       emergencyContactName: '李建国',
       emergencyContactPhone: '13900139000',
-      school: '中南大学',
-      studentId: 'S2023001',
-      emergencyContact: '+86 139-0013-9000'
+      school: '中南大学'
     },
     psychometrics: {
       scores: [
@@ -339,9 +325,7 @@ export const mockStudentsDb: Student[] = [
       homeAddress: '湖南省长沙市岳麓区麓山南路8号',
       emergencyContactName: '王建华',
       emergencyContactPhone: '13600136000',
-      school: '中南大学',
-      studentId: 'S2023002',
-      emergencyContact: '+86 136-0013-6000'
+      school: '中南大学'
     },
     psychometrics: {
       scores: [

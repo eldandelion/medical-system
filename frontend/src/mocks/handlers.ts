@@ -598,8 +598,7 @@ export const handlers = [
             email: row.email || `${row.studentNumber}@univ.edu.cn`,
             homeAddress: row.homeAddress || undefined,
             emergencyContactName: row.emergencyContactName || undefined,
-            emergencyContactPhone: row.emergencyContactPhone || undefined,
-            studentId: row.studentNumber
+            emergencyContactPhone: row.emergencyContactPhone || undefined
           }
         });
       } else if (row.status === 'DUPLICATE') {

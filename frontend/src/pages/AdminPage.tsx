@@ -345,14 +345,15 @@ export function AdminPage() {
                       <StudentDetailsView
                         student={{
                           id: selectedItem.id,
+                          studentNumber: selectedItem.employeeOrStudentId || '',
                           name: selectedItem.name,
                           major: selectedItem.departmentOrCollege || '',
                           riskLevel: 'LOW',
+                          status: 'Active',
                           demographics: {
-                            studentId: selectedItem.employeeOrStudentId || '',
                             email: selectedItem.email || '',
-                          } as any
-                        } as any}
+                          }
+                        }}
                         activeTab={activeTab}
                         onTabChange={setActiveTab}
                         footer={

@@ -217,7 +217,7 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
                 error-text="此项为必填项"
               >
                 {students.map((student) => {
-                  const displayId = student.demographics?.studentId || student.id;
+                  const displayId = student.studentNumber || student.id;
                   return (
                     <md-select-option key={student.id} value={student.id}>
                       <div slot="headline">{student.name}</div>
@@ -236,7 +236,7 @@ export function ReferralCreationForm({ onClose, initialData }: { onClose: () => 
                   <div className="flex flex-col">
                     <span className="text-[14px] font-medium tracking-[0.1px] text-[var(--md-sys-color-on-surface-variant)]">学号</span>
                     <span className="text-[16px] leading-[24px] tracking-[0.5px] text-[var(--md-sys-color-on-surface)] mt-1">
-                      {selectedStudent.demographics?.studentId || selectedStudent.id}
+                      {selectedStudent.studentNumber || selectedStudent.id}
                     </span>
                   </div>
                   <div className="flex flex-col">

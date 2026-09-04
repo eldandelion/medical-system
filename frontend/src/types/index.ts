@@ -112,8 +112,6 @@ export interface DemographicsDto {
   emergencyContactName?: string | null;
   emergencyContactPhone?: string | null;
   school?: string | null;
-  studentId?: string | null;
-  emergencyContact?: string | null;
 }
 
 export interface Student {

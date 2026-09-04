@@ -87,7 +87,7 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
               </h1>
               <div className="flex items-center gap-x-2 gap-y-1 text-[14px] text-[var(--md-sys-color-on-surface-variant)] flex-wrap">
                 <span className="font-mono text-[13px] tracking-tight text-[var(--md-sys-color-primary)] font-bold">
-                  {student.demographics?.studentId || 'N/A'}
+                  {student.studentNumber || 'N/A'}
                 </span>
                 <span className="opacity-40 shrink-0">•</span>
                 <span className="font-normal truncate">{student.major}</span>
