@@ -12,14 +12,19 @@ import {
 } from '../../hooks/useReferenceData';
 import { SplitButton } from '../common/Buttons';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
+import { ExpandableSearchBar } from '../common/ExpandableSearchBar';
+import { FilterChip } from '../common/FilterChip';
 import { EssentialEditDialog } from './EssentialEditDialog';
 import { EssentialDeleteConfirmDialog } from './EssentialDeleteConfirmDialog';
 import { EssentialBulkImportDialog } from './EssentialBulkImportDialog';
 
+type StatusFilterType = 'ALL' | 'ACTIVE' | 'DEPRECATED';
+
 export function EssentialsManagementView() {
   const [activeCategory, setActiveCategory] = React.useState<ReferenceCategory>('SCHOOL');
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [includeDeprecated, setIncludeDeprecated] = React.useState(true);
+  const [statusFilter, setStatusFilter] = React.useState<StatusFilterType>('ALL');
+  const [isStatusChipOpen, setIsStatusChipOpen] = React.useState(false);
   const [parentFilterId, setParentFilterId] = React.useState<number | undefined>(undefined);
 
   // Dialog states
@@ -257,7 +262,7 @@ export function EssentialsManagementView() {
 
   // Main data list
   const {
-    data: items = [],
+    data: rawItems = [],
     isLoading,
     isError,
     refetch,
@@ -265,14 +270,25 @@ export function EssentialsManagementView() {
     query: searchQuery,
     collegeId: activeCategory === 'MAJOR' ? parentFilterId : undefined,
     hospitalId: activeCategory === 'HOSPITAL_DEPARTMENT' ? parentFilterId : undefined,
-    includeDeprecated,
+    includeDeprecated: statusFilter !== 'ACTIVE',
   });
 
-  // Reset parent filter and search on category switch
+  const items = React.useMemo(() => {
+    if (statusFilter === 'ACTIVE') {
+      return rawItems.filter((item) => item.status === 'ACTIVE');
+    }
+    if (statusFilter === 'DEPRECATED') {
+      return rawItems.filter((item) => item.status === 'DEPRECATED');
+    }
+    return rawItems;
+  }, [rawItems, statusFilter]);
+
+  // Reset parent filter, status filter, and search on category switch
   const handleCategoryChange = (newCat: ReferenceCategory) => {
     setActiveCategory(newCat);
     setSearchQuery('');
     setParentFilterId(undefined);
+    setStatusFilter('ALL');
   };
 
   const handleOpenCreate = () => {
@@ -368,80 +384,86 @@ export function EssentialsManagementView() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="shrink-0 px-6 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
-          {/* Search Box */}
-          <div className="relative flex-1 max-w-sm">
-            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] text-[var(--md-sys-color-on-surface-variant)] pointer-events-none">
-              search
-            </span>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={`搜索${currentMeta.singularTitle}名称...`}
-              className="w-full h-9 pl-10 pr-4 rounded-full text-xs bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] placeholder-[var(--md-sys-color-outline)] border border-transparent focus:border-[var(--md-sys-color-primary)] focus:bg-[var(--md-sys-color-surface)] focus:outline-none transition-all"
-            />
+      <div className="shrink-0 px-6 mb-4 flex flex-wrap items-center gap-2">
+        {/* Status Filter Chip */}
+        <FilterChip
+          label="状态"
+          options={['全部', '仅正常', '仅已停用']}
+          selectedValue={
+            statusFilter === 'ACTIVE'
+              ? '仅正常'
+              : statusFilter === 'DEPRECATED'
+              ? '仅已停用'
+              : '全部'
+          }
+          onOptionSelect={(opt) => {
+            if (opt === '仅正常' || opt === '正常') {
+              setStatusFilter('ACTIVE');
+            } else if (opt === '仅已停用' || opt === '已停用') {
+              setStatusFilter('DEPRECATED');
+            } else {
+              setStatusFilter('ALL');
+            }
+            setIsStatusChipOpen(false);
+          }}
+          isOpen={isStatusChipOpen}
+          onToggle={() => setIsStatusChipOpen(!isStatusChipOpen)}
+        />
+
+        {/* Search Box */}
+        <ExpandableSearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder={`搜索${currentMeta.singularTitle}名称...`}
+        />
+
+        {/* Parent Filter for Major */}
+        {activeCategory === 'MAJOR' && (
+          <div className="min-w-[180px]">
+            <md-outlined-select
+              label="所属学院"
+              className="w-full"
+              value={parentFilterId !== undefined ? String(parentFilterId) : ''}
+              onChange={(e: React.SyntheticEvent) => {
+                const target = e.target as HTMLSelectElement;
+                setParentFilterId(target.value ? Number(target.value) : undefined);
+              }}
+            >
+              <md-select-option value="">
+                <div slot="headline">全部学院</div>
+              </md-select-option>
+              {(colleges as CollegeDto[]).map((c) => (
+                <md-select-option key={c.id} value={String(c.id)}>
+                  <div slot="headline">{c.name}</div>
+                </md-select-option>
+              ))}
+            </md-outlined-select>
           </div>
+        )}
 
-          {/* Parent Filter for Major */}
-          {activeCategory === 'MAJOR' && (
-            <div className="min-w-[180px]">
-              <md-outlined-select
-                label="所属学院"
-                className="w-full"
-                value={parentFilterId !== undefined ? String(parentFilterId) : ''}
-                onChange={(e: React.SyntheticEvent) => {
-                  const target = e.target as HTMLSelectElement;
-                  setParentFilterId(target.value ? Number(target.value) : undefined);
-                }}
-              >
-                <md-select-option value="">
-                  <div slot="headline">全部学院</div>
+        {/* Parent Filter for Hospital Department */}
+        {activeCategory === 'HOSPITAL_DEPARTMENT' && (
+          <div className="min-w-[180px]">
+            <md-outlined-select
+              label="所属医院"
+              className="w-full"
+              value={parentFilterId !== undefined ? String(parentFilterId) : ''}
+              onChange={(e: React.SyntheticEvent) => {
+                const target = e.target as HTMLSelectElement;
+                setParentFilterId(target.value ? Number(target.value) : undefined);
+              }}
+            >
+              <md-select-option value="">
+                <div slot="headline">全部医院</div>
+              </md-select-option>
+              {(hospitals as AdminHospitalDto[]).map((h) => (
+                <md-select-option key={h.id} value={String(h.id)}>
+                  <div slot="headline">{h.name}</div>
                 </md-select-option>
-                {(colleges as CollegeDto[]).map((c) => (
-                  <md-select-option key={c.id} value={String(c.id)}>
-                    <div slot="headline">{c.name}</div>
-                  </md-select-option>
-                ))}
-              </md-outlined-select>
-            </div>
-          )}
-
-          {/* Parent Filter for Hospital Department */}
-          {activeCategory === 'HOSPITAL_DEPARTMENT' && (
-            <div className="min-w-[180px]">
-              <md-outlined-select
-                label="所属医院"
-                className="w-full"
-                value={parentFilterId !== undefined ? String(parentFilterId) : ''}
-                onChange={(e: React.SyntheticEvent) => {
-                  const target = e.target as HTMLSelectElement;
-                  setParentFilterId(target.value ? Number(target.value) : undefined);
-                }}
-              >
-                <md-select-option value="">
-                  <div slot="headline">全部医院</div>
-                </md-select-option>
-                {(hospitals as AdminHospitalDto[]).map((h) => (
-                  <md-select-option key={h.id} value={String(h.id)}>
-                    <div slot="headline">{h.name}</div>
-                  </md-select-option>
-                ))}
-              </md-outlined-select>
-            </div>
-          )}
-        </div>
-
-        {/* Include Deprecated Toggle */}
-        <label
-          className="flex items-center gap-2 cursor-pointer select-none text-[13px] font-medium text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-on-surface)]"
-          onClick={() => setIncludeDeprecated(!includeDeprecated)}
-        >
-          {/* @ts-ignore */}
-          <md-checkbox checked={includeDeprecated || undefined} />
-          <span>显示已停用数据</span>
-        </label>
+              ))}
+            </md-outlined-select>
+          </div>
+        )}
       </div>
 
       {/* Table Content Area - Edge to Edge */}
@@ -469,9 +491,9 @@ export function EssentialsManagementView() {
               folder_open
             </span>
             <span className="text-[14px]">未找到匹配的{currentMeta.singularTitle}数据</span>
-            {searchQuery && (
+            {(searchQuery || statusFilter !== 'ALL') && (
               <span className="text-[12px] opacity-70 mt-1">
-                请尝试清除搜索关键词或调整上级分类筛选
+                请尝试清除搜索关键词或调整状态与上级分类筛选
               </span>
             )}
           </div>

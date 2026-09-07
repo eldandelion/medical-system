@@ -50,6 +50,15 @@ describe('StudentsView Component', () => {
               year: 'FRESHMAN',
               status: 'Active',
               riskLevel: 'LOW'
+            },
+            {
+              id: '2',
+              studentNumber: 'S2026002',
+              name: '李四',
+              major: '心理学',
+              year: 'SOPHOMORE',
+              status: 'Active',
+              riskLevel: 'MEDIUM'
             }
           ])
         });
@@ -127,5 +136,46 @@ describe('StudentsView Component', () => {
 
     expect(screen.queryByText('批量导入')).toBeNull();
   });
+
+  it('filters students live using the ExpandableSearchBar', async () => {
+    mockUseAuth.mockReturnValue({
+      session: {
+        role: 'admin',
+        token: 'mock-admin-token'
+      }
+    });
+
+    renderWithProviders(<StudentsView />);
+
+    // Wait for both students to load
+    await waitFor(() => {
+      expect(screen.getByText('张三')).toBeDefined();
+      expect(screen.getByText('李四')).toBeDefined();
+    });
+
+    // Expand the search bar
+    const searchExpandBtn = screen.getByRole('button', { name: '展开搜索' });
+    fireEvent.click(searchExpandBtn);
+
+    // Find the search input
+    const input = screen.getByPlaceholderText('搜索学生姓名、学号、专业...');
+    expect(input).toBeDefined();
+
+    // Type '李四'
+    fireEvent.change(input, { target: { value: '李四' } });
+
+    // '李四' should remain, '张三' should be filtered out
+    expect(screen.getByText('李四')).toBeDefined();
+    expect(screen.queryByText('张三')).toBeNull();
+
+    // Clear search using cancel button
+    const clearBtn = screen.getByRole('button', { name: '清除搜索' });
+    fireEvent.click(clearBtn);
+
+    // Both students should be visible again
+    expect(screen.getByText('张三')).toBeDefined();
+    expect(screen.getByText('李四')).toBeDefined();
+  });
 });
+
 

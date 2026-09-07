@@ -43,10 +43,16 @@ describe('EssentialsManagementView', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseReferencesList.mockReturnValue({
-      data: sampleColleges,
-      isLoading: false,
-      isFetching: false,
+    mockUseReferencesList.mockImplementation((_category, options) => {
+      let filtered = sampleColleges;
+      if (options?.query) {
+        filtered = filtered.filter((item) => item.name.includes(options.query));
+      }
+      return {
+        data: filtered,
+        isLoading: false,
+        isFetching: false,
+      };
     });
   });
 
@@ -105,5 +111,90 @@ describe('EssentialsManagementView', () => {
     fireEvent.click(importOption);
 
     expect(screen.getByText(/基础数据批量导入/)).toBeDefined();
+  });
+
+  it('filters reference items using ExpandableSearchBar', () => {
+    render(<EssentialsManagementView />);
+
+    // Initially all 3 items are present
+    expect(screen.getByText('计算机与通信工程学院')).toBeDefined();
+    expect(screen.getByText('经济与管理学院')).toBeDefined();
+
+    // Expand search bar
+    const searchButton = screen.getByRole('button', { name: '展开搜索' });
+    fireEvent.click(searchButton);
+
+    const searchInput = screen.getByPlaceholderText(/搜索.*名称\.\.\./);
+    fireEvent.change(searchInput, { target: { value: '计算机' } });
+
+    // Should filter to only matching item
+    expect(screen.getByText('计算机与通信工程学院')).toBeDefined();
+    expect(screen.queryByText('经济与管理学院')).toBeNull();
+
+    // Clear search
+    const clearButton = screen.getByRole('button', { name: '清除搜索' });
+    fireEvent.click(clearButton);
+
+    // Restores items
+    expect(screen.getByText('计算机与通信工程学院')).toBeDefined();
+    expect(screen.getByText('经济与管理学院')).toBeDefined();
+  });
+
+  it('filters reference items using status FilterChip (all, only active, only stopped)', () => {
+    render(<EssentialsManagementView />);
+
+    // Status filter chip is positioned in front of the search bar, defaulted to 全部
+    const statusChipButton = screen.getByText('状态: 全部');
+    expect(statusChipButton).toBeDefined();
+
+    // Verify initially all items (active and deprecated) are visible
+    expect(screen.getByText('计算机与通信工程学院')).toBeDefined();
+    expect(screen.getByText('经济与管理学院')).toBeDefined();
+    expect(screen.getByText('历史与文化学院 (已停用)')).toBeDefined();
+
+    // Open status filter dropdown
+    fireEvent.click(statusChipButton);
+
+    // Select 仅正常 (only active)
+    const onlyActiveOption = screen.getByText('仅正常').closest('md-menu-item');
+    expect(onlyActiveOption).toBeTruthy();
+    if (onlyActiveOption) {
+      fireEvent.click(onlyActiveOption);
+    }
+
+    // Now chip displays 状态: 仅正常
+    expect(screen.getByText('状态: 仅正常')).toBeDefined();
+    // Only active items should be rendered
+    expect(screen.getByText('计算机与通信工程学院')).toBeDefined();
+    expect(screen.getByText('经济与管理学院')).toBeDefined();
+    expect(screen.queryByText('历史与文化学院 (已停用)')).toBeNull();
+
+    // Open dropdown again and select 仅已停用 (only stopped)
+    fireEvent.click(screen.getByText('状态: 仅正常'));
+    const onlyStoppedOption = screen.getByText('仅已停用').closest('md-menu-item');
+    expect(onlyStoppedOption).toBeTruthy();
+    if (onlyStoppedOption) {
+      fireEvent.click(onlyStoppedOption);
+    }
+
+    // Now chip displays 状态: 仅已停用
+    expect(screen.getByText('状态: 仅已停用')).toBeDefined();
+    // Only deprecated items should be rendered
+    expect(screen.queryByText('计算机与通信工程学院')).toBeNull();
+    expect(screen.queryByText('经济与管理学院')).toBeNull();
+    expect(screen.getByText('历史与文化学院 (已停用)')).toBeDefined();
+
+    // Switch back to 全部
+    fireEvent.click(screen.getByText('状态: 仅已停用'));
+    const allOption = screen.getByText('全部').closest('md-menu-item');
+    expect(allOption).toBeTruthy();
+    if (allOption) {
+      fireEvent.click(allOption);
+    }
+
+    expect(screen.getByText('状态: 全部')).toBeDefined();
+    expect(screen.getByText('计算机与通信工程学院')).toBeDefined();
+    expect(screen.getByText('经济与管理学院')).toBeDefined();
+    expect(screen.getByText('历史与文化学院 (已停用)')).toBeDefined();
   });
 });
