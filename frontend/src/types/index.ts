@@ -103,6 +103,19 @@ export interface ReferralTrackingData {
   steps?: ReferralStep[];
 }
 
+export interface DemographicsDto {
+  gender?: string | null;
+  age?: number | null;
+  ethnicity?: string | null;
+  idCardNumber?: string | null;
+  contactNumber?: string | null;
+  email?: string | null;
+  homeAddress?: string | null;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
+  school?: string | null;
+}
+
 export interface Student {
   id: string;
   studentNumber: string;
@@ -117,20 +130,7 @@ export interface Student {
   referralReason?: string;
   scidDiagnosis?: string;
   riskFlags?: { label: string; value: boolean; severity: 'high' | 'medium' | 'none' }[];
-  demographics?: {
-    gender?: string;
-    age?: number;
-    ethnicity?: string;
-    idCardNumber?: string;
-    contactNumber?: string;
-    email?: string;
-    homeAddress?: string;
-    emergencyContactName?: string;
-    emergencyContactPhone?: string;
-    school?: string;
-    studentId?: string; // Kept for backwards compatibility if needed
-    emergencyContact?: string; // Kept for backwards compatibility
-  };
+  demographics?: DemographicsDto;
   psychometrics?: {
     scores: { date: string; value: number }[];
     radarData: { subject: string; A: number; fullMark: number }[];

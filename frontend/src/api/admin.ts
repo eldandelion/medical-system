@@ -1,4 +1,4 @@
-import { AdminUserSummaryDto, UpdateAccountStatusRequest, ToggleScaleAvailabilityRequest } from '../types/admin';
+import { AdminUserSummaryDto, AdminUserDetailsDto, UpdateAccountStatusRequest, ToggleScaleAvailabilityRequest } from '../types/admin';
 import { AdminMetricsDto, AssessmentCatalogItemDto, DashboardResponseDto } from '../types';
 import { apiFetch } from './client';
 
@@ -9,6 +9,15 @@ export const fetchAdminUsers = async (
   return apiFetch<AdminUserSummaryDto[]>('/api/admin/users', {
     token,
     params,
+  });
+};
+
+export const fetchAdminUserDetails = async (
+  token: string | undefined,
+  userId: number
+): Promise<AdminUserDetailsDto> => {
+  return apiFetch<AdminUserDetailsDto>(`/api/admin/users/${userId}`, {
+    token,
   });
 };
 

@@ -14,9 +14,10 @@ import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { StudentDetailsView, STUDENT_DETAILS_TABS } from '../components/students/StudentDetailsView';
 import { ReferralDetailsView, REFERRAL_DETAILS_TABS } from '../components/records/ReferralDetailsView';
 import { UserManagementView } from '../components/admin/UserManagementView';
-import { UserDetailsView, USER_DETAILS_TABS } from '../components/admin/UserDetailsView';
+import { UserDetailsView } from '../components/admin/UserDetailsView';
 import { UserGovernanceFooter } from '../components/admin/UserGovernanceFooter';
 import { AssessmentCatalogManagementView } from '../components/admin/AssessmentCatalogManagementView';
+import { EssentialsManagementView } from '../components/admin/EssentialsManagementView';
 import { REFERRAL_TYPE_LABELS } from '../config/styleConstants';
 import { useCreationOverlay } from '../contexts/CreationContext';
 import { ReferralCreationForm } from '../components/records/ReferralCreationForm';
@@ -35,6 +36,7 @@ export const AdminTabs = {
   REFERRALS: 'Referral Management',
   ASSESSMENTS: 'Assessments',
   STUDENTS: 'Students',
+  ESSENTIALS: 'Essentials',
   NOTIFICATIONS: 'Notifications',
   SECURITY: 'Security & Consent',
 } as const;
@@ -47,6 +49,7 @@ const ADMIN_TAB_TITLES: Record<AdminPageName, string> = {
   [AdminTabs.REFERRALS]: '全局转诊管理',
   [AdminTabs.ASSESSMENTS]: '测评量表',
   [AdminTabs.STUDENTS]: '全校学生档案',
+  [AdminTabs.ESSENTIALS]: '基础数据管理',
   [AdminTabs.NOTIFICATIONS]: '通知中心',
   [AdminTabs.SECURITY]: '隐私与安全审计',
 };
@@ -90,7 +93,7 @@ export function AdminPage() {
         if (selectedItem?.role === 'STUDENT') {
           return STUDENT_DETAILS_TABS;
         }
-        return USER_DETAILS_TABS;
+        return [];
       case AdminTabs.STUDENTS:
         return STUDENT_DETAILS_TABS;
       case AdminTabs.REFERRALS:
@@ -197,6 +200,14 @@ export function AdminPage() {
           </>
         );
 
+      case AdminTabs.ESSENTIALS:
+        return (
+          <>
+            <CanvasHeader title={ADMIN_TAB_TITLES[activePage]} />
+            <EssentialsManagementView />
+          </>
+        );
+
       case AdminTabs.NOTIFICATIONS:
         return (
           <>
@@ -261,6 +272,12 @@ export function AdminPage() {
           label="全校学生"
           active={activePage === AdminTabs.STUDENTS}
           onClick={() => handlePageChange(AdminTabs.STUDENTS)}
+        />
+        <NavItem
+          icon="category"
+          label="基础数据"
+          active={activePage === AdminTabs.ESSENTIALS}
+          onClick={() => handlePageChange(AdminTabs.ESSENTIALS)}
         />
         <NavItem
           icon="notifications"
@@ -328,14 +345,15 @@ export function AdminPage() {
                       <StudentDetailsView
                         student={{
                           id: selectedItem.id,
+                          studentNumber: selectedItem.employeeOrStudentId || '',
                           name: selectedItem.name,
                           major: selectedItem.departmentOrCollege || '',
                           riskLevel: 'LOW',
+                          status: 'Active',
                           demographics: {
-                            studentId: selectedItem.employeeOrStudentId || '',
                             email: selectedItem.email || '',
-                          } as any
-                        } as any}
+                          }
+                        }}
                         activeTab={activeTab}
                         onTabChange={setActiveTab}
                         footer={

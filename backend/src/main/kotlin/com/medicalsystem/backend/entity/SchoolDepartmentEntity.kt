@@ -1,5 +1,6 @@
 package com.medicalsystem.backend.entity
 
+import com.medicalsystem.backend.model.ReferenceDataStatus
 import jakarta.persistence.*
 
 @Entity
@@ -13,5 +14,8 @@ class SchoolDepartmentEntity(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "school_id", nullable = false)
-    var school: SchoolEntity
+    var school: SchoolEntity,
+
+    @Column(name = "status", nullable = false)
+    var status: ReferenceDataStatus = ReferenceDataStatus.ACTIVE
 )

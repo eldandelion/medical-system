@@ -1,5 +1,32 @@
 import { http, HttpResponse, delay } from 'msw';
-import { mockAssessmentsDb, mockAssessmentCatalog, mockDashboardDb, mockStudentsDb, mockReferralsDb, mockAdminUsersDb, generateTrackerSteps } from './db';
+import {
+  mockAssessmentsDb,
+  mockAssessmentCatalog,
+  mockDashboardDb,
+  mockStudentsDb,
+  mockReferralsDb,
+  mockAdminUsersDb,
+  generateTrackerSteps,
+  mockCollegesDb,
+  mockSchoolsDb,
+  mockMajorsDb,
+  mockSchoolDepartmentsDb,
+  mockAdminHospitalsDb,
+  mockHospitalDepartmentsDb,
+  mockEthnicitiesDb,
+  mockDegreeLevelsDb,
+} from './db';
+import {
+  SchoolDto,
+  CollegeDto,
+  MajorDto,
+  SchoolDepartmentDto,
+  AdminHospitalDto,
+  HospitalDepartmentDto,
+  EthnicityDto,
+  DegreeLevelDto,
+  ReferenceCategory,
+} from '../types/references';
 const MOCK_DELAY_MS = 1000;
 
 import { Referral, ReferralAction, UserProfileDto, UpdateUserProfileRequest, StudentImportPreview, StudentImportCommitRequest, StudentImportResult, StudentImportRow } from '../types';
@@ -730,8 +757,7 @@ export const handlers = [
             email: row.email || `${row.studentNumber}@univ.edu.cn`,
             homeAddress: row.homeAddress || undefined,
             emergencyContactName: row.emergencyContactName || undefined,
-            emergencyContactPhone: row.emergencyContactPhone || undefined,
-            studentId: row.studentNumber
+            emergencyContactPhone: row.emergencyContactPhone || undefined
           }
         });
       } else if (row.status === 'DUPLICATE') {
@@ -1526,6 +1552,26 @@ export const handlers = [
     return HttpResponse.json(users);
   }),
 
+  http.get(api('/api/admin/users/:id'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not fetch real user details, falling back to mock", e);
+      }
+    }
+    const userId = Number(params.id);
+    const user = mockAdminUsersDb.find((u) => u.id === userId);
+    if (!user) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    return HttpResponse.json(user);
+  }),
+
   http.put(api('/api/admin/users/:id/status'), async ({ request, params }) => {
     if (import.meta.env.MODE !== 'test') {
       try {
@@ -1700,7 +1746,558 @@ export const handlers = [
     }
 
     return HttpResponse.json(profile);
-  })
+  }),
+
+  // === Admin References Management Endpoints ===
+
+  http.get(api('/api/admin/references/schools'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not fetch real schools, falling back to mock", e);
+      }
+    }
+    const url = new URL(request.url);
+    const query = url.searchParams.get('query')?.toLowerCase();
+    const includeDeprecated = url.searchParams.get('includeDeprecated') !== 'false';
+    let res = mockSchoolsDb;
+    if (!includeDeprecated) res = res.filter((c) => c.status === 'ACTIVE');
+    if (query) res = res.filter((c) => c.name.toLowerCase().includes(query));
+    return HttpResponse.json(res);
+  }),
+
+  http.get(api('/api/admin/references/colleges'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not fetch real colleges, falling back to mock", e);
+      }
+    }
+    const url = new URL(request.url);
+    const query = url.searchParams.get('query')?.toLowerCase();
+    const includeDeprecated = url.searchParams.get('includeDeprecated') !== 'false';
+    let res = mockCollegesDb;
+    if (!includeDeprecated) res = res.filter((c) => c.status === 'ACTIVE');
+    if (query) res = res.filter((c) => c.name.toLowerCase().includes(query));
+    return HttpResponse.json(res);
+  }),
+
+  http.get(api('/api/admin/references/majors'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not fetch real majors, falling back to mock", e);
+      }
+    }
+    const url = new URL(request.url);
+    const query = url.searchParams.get('query')?.toLowerCase();
+    const collegeId = url.searchParams.get('collegeId');
+    const includeDeprecated = url.searchParams.get('includeDeprecated') !== 'false';
+    let res = mockMajorsDb;
+    if (collegeId) res = res.filter((m) => m.collegeId === Number(collegeId));
+    if (!includeDeprecated) res = res.filter((m) => m.status === 'ACTIVE');
+    if (query) res = res.filter((m) => m.name.toLowerCase().includes(query) || m.collegeName.toLowerCase().includes(query));
+    return HttpResponse.json(res);
+  }),
+
+  http.get(api('/api/admin/references/school-departments'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not fetch real school departments, falling back to mock", e);
+      }
+    }
+    const url = new URL(request.url);
+    const query = url.searchParams.get('query')?.toLowerCase();
+    const includeDeprecated = url.searchParams.get('includeDeprecated') !== 'false';
+    let res = mockSchoolDepartmentsDb;
+    if (!includeDeprecated) res = res.filter((d) => d.status === 'ACTIVE');
+    if (query) res = res.filter((d) => d.name.toLowerCase().includes(query));
+    return HttpResponse.json(res);
+  }),
+
+  http.get(api('/api/admin/references/hospitals'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not fetch real hospitals, falling back to mock", e);
+      }
+    }
+    const url = new URL(request.url);
+    const query = url.searchParams.get('query')?.toLowerCase();
+    const includeDeprecated = url.searchParams.get('includeDeprecated') !== 'false';
+    let res = mockAdminHospitalsDb;
+    if (!includeDeprecated) res = res.filter((h) => h.status === 'ACTIVE');
+    if (query) res = res.filter((h) => h.name.toLowerCase().includes(query) || (h.address?.toLowerCase().includes(query) ?? false));
+    return HttpResponse.json(res);
+  }),
+
+  http.get(api('/api/admin/references/hospital-departments'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not fetch real hospital departments, falling back to mock", e);
+      }
+    }
+    const url = new URL(request.url);
+    const query = url.searchParams.get('query')?.toLowerCase();
+    const hospitalId = url.searchParams.get('hospitalId');
+    const includeDeprecated = url.searchParams.get('includeDeprecated') !== 'false';
+    let res = mockHospitalDepartmentsDb;
+    if (hospitalId) res = res.filter((d) => d.hospitalId === Number(hospitalId));
+    if (!includeDeprecated) res = res.filter((d) => d.status === 'ACTIVE');
+    if (query) res = res.filter((d) => d.name.toLowerCase().includes(query) || d.hospitalName.toLowerCase().includes(query));
+    return HttpResponse.json(res);
+  }),
+
+  http.get(api('/api/admin/references/ethnicities'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not fetch real ethnicities, falling back to mock", e);
+      }
+    }
+    const url = new URL(request.url);
+    const query = url.searchParams.get('query')?.toLowerCase();
+    const includeDeprecated = url.searchParams.get('includeDeprecated') !== 'false';
+    let res = mockEthnicitiesDb;
+    if (!includeDeprecated) res = res.filter((e) => e.status === 'ACTIVE');
+    if (query) res = res.filter((e) => e.name.toLowerCase().includes(query));
+    return HttpResponse.json(res);
+  }),
+
+  http.get(api('/api/admin/references/degree-levels'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not fetch real degree levels, falling back to mock", e);
+      }
+    }
+    const url = new URL(request.url);
+    const query = url.searchParams.get('query')?.toLowerCase();
+    const includeDeprecated = url.searchParams.get('includeDeprecated') !== 'false';
+    let res = mockDegreeLevelsDb;
+    if (!includeDeprecated) res = res.filter((d) => d.status === 'ACTIVE');
+    if (query) res = res.filter((d) => d.name.toLowerCase().includes(query));
+    return HttpResponse.json(res);
+  }),
+
+  http.post(api('/api/admin/references/schools'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request.clone()));
+        if (res.ok) {
+          return HttpResponse.json(await res.json(), { status: 201 });
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not create real school, falling back to mock", e);
+      }
+    }
+    const body = (await request.json()) as { name: string };
+    const newItem: SchoolDto = {
+      id: Date.now(),
+      name: body.name,
+      status: 'ACTIVE',
+      departmentCount: 0,
+      studentCount: 0,
+    };
+    mockSchoolsDb.push(newItem);
+    return HttpResponse.json(newItem, { status: 201 });
+  }),
+
+  http.post(api('/api/admin/references/colleges'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request.clone()));
+        if (res.ok) {
+          return HttpResponse.json(await res.json(), { status: 201 });
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not create real college, falling back to mock", e);
+      }
+    }
+    const body = (await request.json()) as { name: string };
+    const newItem: CollegeDto = {
+      id: Date.now(),
+      name: body.name,
+      status: 'ACTIVE',
+      majorCount: 0,
+      teacherCount: 0,
+    };
+    mockCollegesDb.push(newItem);
+    return HttpResponse.json(newItem, { status: 201 });
+  }),
+
+  http.post(api('/api/admin/references/majors'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request.clone()));
+        if (res.ok) {
+          return HttpResponse.json(await res.json(), { status: 201 });
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not create real major, falling back to mock", e);
+      }
+    }
+    const body = (await request.json()) as { name: string; collegeId: number };
+    const college = mockCollegesDb.find((c) => c.id === body.collegeId);
+    const newItem: MajorDto = {
+      id: Date.now(),
+      name: body.name,
+      collegeId: body.collegeId,
+      collegeName: college?.name || '所属学院',
+      status: 'ACTIVE',
+      studentCount: 0,
+    };
+    mockMajorsDb.push(newItem);
+    return HttpResponse.json(newItem, { status: 201 });
+  }),
+
+  http.post(api('/api/admin/references/school-departments'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request.clone()));
+        if (res.ok) {
+          return HttpResponse.json(await res.json(), { status: 201 });
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not create real school department, falling back to mock", e);
+      }
+    }
+    const body = (await request.json()) as { name: string };
+    const newItem: SchoolDepartmentDto = {
+      id: Date.now(),
+      name: body.name,
+      schoolId: 1,
+      schoolName: '中南大学',
+      status: 'ACTIVE',
+      staffCount: 0,
+    };
+    mockSchoolDepartmentsDb.push(newItem);
+    return HttpResponse.json(newItem, { status: 201 });
+  }),
+
+  http.post(api('/api/admin/references/hospitals'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request.clone()));
+        if (res.ok) {
+          return HttpResponse.json(await res.json(), { status: 201 });
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not create real hospital, falling back to mock", e);
+      }
+    }
+    const body = (await request.json()) as { name: string; address?: string; contactPhone?: string };
+    const newItem: AdminHospitalDto = {
+      id: Date.now(),
+      name: body.name,
+      address: body.address,
+      contactPhone: body.contactPhone,
+      status: 'ACTIVE',
+      departmentCount: 0,
+      activeReferralCount: 0,
+    };
+    mockAdminHospitalsDb.push(newItem);
+    return HttpResponse.json(newItem, { status: 201 });
+  }),
+
+  http.post(api('/api/admin/references/hospital-departments'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request.clone()));
+        if (res.ok) {
+          return HttpResponse.json(await res.json(), { status: 201 });
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not create real hospital department, falling back to mock", e);
+      }
+    }
+    const body = (await request.json()) as { name: string; hospitalId: number };
+    const hospital = mockAdminHospitalsDb.find((h) => h.id === body.hospitalId);
+    const newItem: HospitalDepartmentDto = {
+      id: Date.now(),
+      name: body.name,
+      hospitalId: body.hospitalId,
+      hospitalName: hospital?.name || '所属医院',
+      status: 'ACTIVE',
+      doctorCount: 0,
+    };
+    mockHospitalDepartmentsDb.push(newItem);
+    return HttpResponse.json(newItem, { status: 201 });
+  }),
+
+  http.post(api('/api/admin/references/ethnicities'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request.clone()));
+        if (res.ok) {
+          return HttpResponse.json(await res.json(), { status: 201 });
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not create real ethnicity, falling back to mock", e);
+      }
+    }
+    const body = (await request.json()) as { name: string };
+    const newItem: EthnicityDto = {
+      id: Date.now(),
+      name: body.name,
+      status: 'ACTIVE',
+      studentCount: 0,
+    };
+    mockEthnicitiesDb.push(newItem);
+    return HttpResponse.json(newItem, { status: 201 });
+  }),
+
+  http.post(api('/api/admin/references/degree-levels'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request.clone()));
+        if (res.ok) {
+          return HttpResponse.json(await res.json(), { status: 201 });
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not create real degree level, falling back to mock", e);
+      }
+    }
+    const body = (await request.json()) as { name: string };
+    const newItem: DegreeLevelDto = {
+      id: Date.now(),
+      name: body.name,
+      status: 'ACTIVE',
+      studentCount: 0,
+    };
+    mockDegreeLevelsDb.push(newItem);
+    return HttpResponse.json(newItem, { status: 201 });
+  }),
+
+  http.put(api('/api/admin/references/:categoryPath/:id'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request.clone()));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not update real reference, falling back to mock", e);
+      }
+    }
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json({ id: Number(params.id), ...body });
+  }),
+
+  http.get(api('/api/admin/references/:category/:id/dependency-check'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not check real dependencies, falling back to mock", e);
+      }
+    }
+    const id = Number(params.id);
+    const category = params.category as ReferenceCategory;
+    
+    // Simulate realistic dependency check
+    if (id === 1) {
+      return HttpResponse.json({
+        targetId: id,
+        category,
+        canHardDelete: false,
+        totalReferences: 22,
+        dependencies: [
+          { subjectType: 'STUDENT', count: 18 },
+          { subjectType: 'MAJOR', count: 4 },
+        ],
+      });
+    }
+    return HttpResponse.json({
+      targetId: id,
+      category,
+      canHardDelete: true,
+      totalReferences: 0,
+      dependencies: [],
+    });
+  }),
+
+  http.patch(api('/api/admin/references/:category/:id/deprecate'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not deprecate real reference, falling back to mock", e);
+      }
+    }
+    const id = Number(params.id);
+    const category = params.category as ReferenceCategory;
+    if (category === 'SCHOOL') {
+      const s = mockSchoolsDb.find((item) => item.id === id);
+      if (s) s.status = 'DEPRECATED';
+      return HttpResponse.json(s);
+    }
+    if (category === 'COLLEGE') {
+      const c = mockCollegesDb.find((item) => item.id === id);
+      if (c) c.status = 'DEPRECATED';
+      return HttpResponse.json(c);
+    }
+    return HttpResponse.json({ id, status: 'DEPRECATED' });
+  }),
+
+  http.patch(api('/api/admin/references/:category/:id/reactivate'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not reactivate real reference, falling back to mock", e);
+      }
+    }
+    const id = Number(params.id);
+    const category = params.category as ReferenceCategory;
+    if (category === 'SCHOOL') {
+      const s = mockSchoolsDb.find((item) => item.id === id);
+      if (s) s.status = 'ACTIVE';
+      return HttpResponse.json(s);
+    }
+    if (category === 'COLLEGE') {
+      const c = mockCollegesDb.find((item) => item.id === id);
+      if (c) c.status = 'ACTIVE';
+      return HttpResponse.json(c);
+    }
+    return HttpResponse.json({ id, status: 'ACTIVE' });
+  }),
+
+  http.delete(api('/api/admin/references/:category/:id'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.status === 204 || res.ok) {
+          return new HttpResponse(null, { status: 204 });
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not delete real reference, falling back to mock", e);
+      }
+    }
+    const id = Number(params.id);
+    const cat = params.category as ReferenceCategory;
+    if (cat === 'SCHOOL') {
+      const idx = mockSchoolsDb.findIndex((s) => s.id === id);
+      if (idx !== -1) mockSchoolsDb.splice(idx, 1);
+    }
+    if (cat === 'COLLEGE') {
+      const idx = mockCollegesDb.findIndex((c) => c.id === id);
+      if (idx !== -1) mockCollegesDb.splice(idx, 1);
+    }
+    return new HttpResponse(null, { status: 204 });
+  }),
 ];
 
 export const mockProfilesDb: Record<string, UserProfileDto> = {

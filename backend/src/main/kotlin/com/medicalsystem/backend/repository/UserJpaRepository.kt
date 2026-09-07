@@ -17,14 +17,17 @@ interface UserJpaRepository : JpaRepository<UserEntity, Long> {
 @Repository
 interface TeacherJpaRepository : JpaRepository<TeacherEntity, Long> {
     fun findByEmployeeNumber(employeeNumber: String): TeacherEntity?
+    fun countByCollegeId(collegeId: Long): Long
 }
 
 @Repository
 interface HeadCounsellorJpaRepository : JpaRepository<HeadCounsellorEntity, Long> {
     fun findByEmployeeNumber(employeeNumber: String): HeadCounsellorEntity?
+    fun countByDepartmentId(departmentId: Long): Long
 }
 
 @Repository
 interface TrialAdminJpaRepository : JpaRepository<TrialAdminEntity, Long> {
     fun findByEmployeeNumber(employeeNumber: String): TrialAdminEntity?
+    fun countByHospitalId(hospitalId: Long): Long
 }

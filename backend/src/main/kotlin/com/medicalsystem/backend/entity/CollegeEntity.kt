@@ -1,5 +1,6 @@
 package com.medicalsystem.backend.entity
 
+import com.medicalsystem.backend.model.ReferenceDataStatus
 import jakarta.persistence.*
 
 @Entity
@@ -10,5 +11,8 @@ class CollegeEntity(
     var id: Long? = null,
 
     @Column(nullable = false, unique = true)
-    var name: String
+    var name: String,
+
+    @Column(name = "status", nullable = false)
+    var status: ReferenceDataStatus = ReferenceDataStatus.ACTIVE
 )

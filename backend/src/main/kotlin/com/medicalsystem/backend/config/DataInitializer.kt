@@ -104,6 +104,7 @@ class DataInitializer {
         val mainSchool = schoolRepository.save(SchoolEntity(name = "某重点大学"))
         val csuSchool = schoolRepository.save(SchoolEntity(name = "中南大学"))
         val hnuSchool = schoolRepository.save(SchoolEntity(name = "湖南大学"))
+        val pkuSchool = schoolRepository.save(SchoolEntity(name = "北京大学"))
         val hnnSchool = schoolRepository.save(SchoolEntity(name = "湖南师范大学"))
         val csustSchool = schoolRepository.save(SchoolEntity(name = "长沙理工大学"))
         val csuftSchool = schoolRepository.save(SchoolEntity(name = "中南林业科技大学"))
@@ -127,7 +128,7 @@ class DataInitializer {
             "马克思主义学院",
             "其他部门"
         )
-        val allSchools = listOf(mainSchool, csuSchool, hnuSchool, hnnSchool, csustSchool, csuftSchool, otherSchool)
+        val allSchools = listOf(mainSchool, csuSchool, hnuSchool, pkuSchool, hnnSchool, csustSchool, csuftSchool, otherSchool)
         allSchools.forEach { s ->
             schoolDeptNames.forEach { deptName ->
                 schoolDepartmentJpaRepository.save(SchoolDepartmentEntity(name = deptName, school = s))

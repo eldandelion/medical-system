@@ -34,6 +34,25 @@ export function FilterChip({ label, options = ['Option 1', 'Option 2'], selected
     };
   }, [isOpen, onToggle]);
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handleDocumentClick = (event: MouseEvent) => {
+      const target = event.target as Element | null;
+      if (target?.closest('md-menu') || target?.closest('md-menu-item')) {
+        return;
+      }
+      if (containerRef.current && !containerRef.current.contains(target as Node)) {
+        onToggle();
+      }
+    };
+
+    document.addEventListener('mousedown', handleDocumentClick);
+    return () => {
+      document.removeEventListener('mousedown', handleDocumentClick);
+    };
+  }, [isOpen, onToggle]);
+
   return (
     <div ref={containerRef} className="relative shrink-0">
       <button 
@@ -83,9 +102,10 @@ interface FilterChipSetProps {
   initialFilters?: Record<string, string>;
   onFilterChange?: (filters: Record<string, string>) => void;
   className?: string;
+  children?: React.ReactNode;
 }
 
-export function FilterChipSet({ chips, initialFilters = {}, onFilterChange, className }: FilterChipSetProps) {
+export function FilterChipSet({ chips, initialFilters = {}, onFilterChange, className, children }: FilterChipSetProps) {
   const [openChip, setOpenChip] = React.useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = React.useState<Record<string, string>>(initialFilters);
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -135,6 +155,7 @@ export function FilterChipSet({ chips, initialFilters = {}, onFilterChange, clas
           />
         </div>
       ))}
+      {children}
     </div>
   );
 }

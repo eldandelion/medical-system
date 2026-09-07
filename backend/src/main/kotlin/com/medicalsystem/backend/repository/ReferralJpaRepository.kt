@@ -17,4 +17,7 @@ interface ReferralJpaRepository : JpaRepository<ReferralEntity, Long>, JpaSpecif
 
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = ["steps", "attachments"])
     override fun findById(id: Long): java.util.Optional<ReferralEntity>
+
+    fun countByDestinationHospitalId(hospitalId: Long): Long
+    fun countByDestinationDepartmentId(departmentId: Long): Long
 }

@@ -103,7 +103,11 @@ describe('AssessmentAssignmentCreationForm', () => {
     cleanup();
   });
 
-  const renderComponent = (initialScaleProp = sampleScale) => {
+  const renderComponent = (
+    initialScaleProp: AssessmentCatalogItemDto | null = sampleScale,
+    initialStudentProp: Student | null = null,
+    initialTargetTypeProp?: any
+  ) => {
     function Host() {
       const { headerActions } = useCreationOverlay();
       return (
@@ -111,6 +115,8 @@ describe('AssessmentAssignmentCreationForm', () => {
           <div data-testid="header-actions">{headerActions}</div>
           <AssessmentAssignmentCreationForm
             initialScale={initialScaleProp}
+            initialStudent={initialStudentProp}
+            initialTargetType={initialTargetTypeProp}
             onClose={mockOnClose}
           />
         </>
@@ -138,6 +144,52 @@ describe('AssessmentAssignmentCreationForm', () => {
     expect(document.querySelector('md-outlined-select[label="专业方向"]')).toBeDefined();
     expect(document.querySelector('md-outlined-select[label="年级 / 届别"]')).toBeDefined();
     expect(document.querySelector('md-outlined-select[label="班级"]')).toBeDefined();
+  });
+
+  it('initializes in individual mode with pre-populated student and empty scale placeholder when opened from student profile', async () => {
+    renderComponent(null, sampleStudents[0], 'INDIVIDUAL');
+
+    // Individual mode is preselected
+    expect(screen.getByText('选择指派学生')).toBeDefined();
+    expect(screen.getByText('张三')).toBeDefined();
+    expect(screen.getByText('已选学生：')).toBeDefined();
+    expect(screen.getByText('1 人')).toBeDefined();
+
+    // Scale list starts empty with placeholder
+    expect(screen.getByText('暂未添加测评量表，请点击右上角「添加」选择量表')).toBeDefined();
+    expect(screen.getByText('0 套')).toBeDefined();
+
+    // Submitting without scales shows error toast
+    const submitBtn = screen.getByText('确认分发');
+    fireEvent.click(submitBtn);
+    expect(mockShowSnackbar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: '请至少选择一个测评量表',
+      })
+    );
+
+    // Add scale from catalog menu
+    await waitFor(() => {
+      expect(screen.getByText('添加')).toBeDefined();
+    });
+    const addBtn = screen.getByText('添加');
+    fireEvent.click(addBtn);
+    expect(screen.getByText('广泛性焦虑量表 (GAD-7)')).toBeDefined();
+
+    fireEvent.click(screen.getByText('广泛性焦虑量表 (GAD-7)'));
+    expect(screen.getByText('1 套')).toBeDefined();
+    expect(screen.getByText('广泛性焦虑量表 (GAD-7)')).toBeDefined();
+
+    // Submit successfully
+    fireEvent.click(submitBtn);
+    await waitFor(() => {
+      expect(mockShowSnackbar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('已成功'),
+        })
+      );
+      expect(mockOnClose).toHaveBeenCalled();
+    });
   });
 
   it('allows switching to Individual Student mode and picking a student', async () => {

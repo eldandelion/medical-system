@@ -1,18 +1,14 @@
 import React from 'react';
-import { AdminUserSummaryDto, AccountStatus } from '../../types/admin';
+import { useQuery } from '@tanstack/react-query';
+import { AdminUserSummaryDto, AdminUserDetailsDto, AccountStatus } from '../../types/admin';
 import { roleTranslations } from '../../utils/roleTranslations';
-import { SecondaryTabs } from '../common/Tabs';
-import { useDetails } from '../../contexts/DetailsContext';
-import { ScrollableDetailsLayout } from '../common/DetailsPanel';
+import { DetailsSection, MetricCard, ScrollableDetailsLayout } from '../common/DetailsPanel';
 import { UserGovernanceFooter } from './UserGovernanceFooter';
-
-export const USER_DETAILS_TABS = [
-  { id: 'overview', label: '基本信息', icon: 'account_circle' },
-  { id: 'security', label: '状态与权限', icon: 'admin_panel_settings' },
-];
+import { useAuth } from '../../contexts/AuthContext';
+import { fetchAdminUserDetails } from '../../api/admin';
 
 interface UserDetailsViewProps {
-  user: AdminUserSummaryDto;
+  user: AdminUserSummaryDto | AdminUserDetailsDto;
   activeTab?: string;
   onTabChange?: (tabId: string) => void;
   footer?: React.ReactNode;
@@ -20,13 +16,22 @@ interface UserDetailsViewProps {
 }
 
 export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
-  user,
-  activeTab = 'overview',
-  onTabChange,
+  user: initialUser,
   footer,
   onStatusUpdated
 }) => {
-  const { isFullScreen } = useDetails();
+  const { session } = useAuth();
+
+  const { data: userDetails } = useQuery<AdminUserDetailsDto>({
+    queryKey: ['/api/admin/users', initialUser?.id, session?.token],
+    queryFn: async () => {
+      return fetchAdminUserDetails(session?.token, initialUser.id);
+    },
+    enabled: !!initialUser?.id,
+    placeholderData: initialUser as AdminUserDetailsDto,
+  });
+
+  const user: AdminUserDetailsDto = userDetails || (initialUser as AdminUserDetailsDto);
 
   const getStatusBadge = (status: AccountStatus) => {
     switch (status) {
@@ -61,34 +66,44 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
     }
   };
 
+  const isStudent = user.role === 'STUDENT';
+  const hasDemographics = !!user.demographics || isStudent;
+  const affiliation = user.affiliation;
+  const demographics = user.demographics;
+
+  const employeeOrStudentId = user.employeeOrStudentId || affiliation?.identifier || `ID: #${user.id}`;
+  const departmentOrCollege = user.departmentOrCollege || affiliation?.departmentOrMajor || '系统全局';
+  const primaryOrganization = user.hospital || affiliation?.primaryOrganization || demographics?.school || '中南大学';
+  const contactPhone = user.contactNumber || demographics?.contactNumber || '未登记';
+  const userEmail = user.email || demographics?.email || '未登记';
+  const userAddress = user.homeAddress || demographics?.homeAddress || '未登记';
+
   return (
     <ScrollableDetailsLayout
       title={user.name}
       header={
         <div className="flex items-start gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] text-xl font-bold flex items-center justify-center shadow-xs shrink-0">
-            {user.name.charAt(0)}
+          <div className="w-16 h-16 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] text-2xl font-bold flex items-center justify-center shadow-xs shrink-0 animate-in fade-in zoom-in duration-300">
+            {user.name ? user.name.charAt(0) : '?'}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <h2 className="text-lg font-bold text-[var(--md-sys-color-on-surface)] truncate">{user.name}</h2>
-              <span className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface)] shrink-0">
+              <h2 className="text-xl font-bold text-[var(--md-sys-color-on-surface)] truncate">{user.name}</h2>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface)] shrink-0">
                 {roleTranslations[user.role] || user.role}
               </span>
             </div>
-            <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] font-mono truncate">{user.email}</p>
-            <div className="mt-2.5">{getStatusBadge(user.status)}</div>
+            <div className="flex items-center gap-x-2 gap-y-1 text-xs text-[var(--md-sys-color-on-surface-variant)] flex-wrap">
+              <span className="font-mono text-xs font-bold text-[var(--md-sys-color-primary)]">
+                {employeeOrStudentId}
+              </span>
+              <span className="opacity-40 shrink-0">•</span>
+              <span className="font-normal truncate">{departmentOrCollege}</span>
+              <span className="opacity-40 shrink-0">•</span>
+              {getStatusBadge(user.status)}
+            </div>
           </div>
         </div>
-      }
-      tabs={
-        !isFullScreen && onTabChange ? (
-          <SecondaryTabs
-            tabs={USER_DETAILS_TABS}
-            activeTab={activeTab}
-            onTabChange={onTabChange}
-          />
-        ) : undefined
       }
       footer={
         footer !== undefined ? (
@@ -98,72 +113,134 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
         ) : null
       }
     >
-      <div className="space-y-6">
-        {activeTab === 'overview' && (
-          <div className="space-y-4">
-            <div className="bg-[var(--md-sys-color-surface-container)] p-4 rounded-2xl border border-[var(--md-sys-color-outline-variant)] space-y-3">
-              <h3 className="text-xs font-semibold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-wider">
-                身份归属信息
-              </h3>
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div>
-                  <span className="text-[var(--md-sys-color-outline)] block mb-0.5">用户标识 ID</span>
-                  <span className="font-mono text-[var(--md-sys-color-on-surface)] font-medium">#{user.id}</span>
-                </div>
-                <div>
-                  <span className="text-[var(--md-sys-color-outline)] block mb-0.5">学号 / 工号</span>
-                  <span className="font-mono text-[var(--md-sys-color-on-surface)] font-medium">
-                    {user.employeeOrStudentId || '未分配'}
-                  </span>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-[var(--md-sys-color-outline)] block mb-0.5">学院 / 附属医院 / 科室</span>
-                  <span className="text-[var(--md-sys-color-on-surface)] font-medium">
-                    {user.hospital || user.departmentOrCollege || '系统全局'}
-                  </span>
-                </div>
-              </div>
+      <div className="flex flex-col gap-6">
+        {/* 基本特征 (Demographics) */}
+        {hasDemographics && (
+          <DetailsSection title="基本特征" className="border-t-0">
+            <div className="grid grid-cols-2 @[440px]:grid-cols-4 gap-3">
+              <MetricCard
+                label="性别"
+                value={
+                  demographics?.gender === 'MALE' ? '男' :
+                  demographics?.gender === 'FEMALE' ? '女' :
+                  demographics?.gender === 'OTHER' ? '其他' :
+                  demographics?.gender || '未设置'
+                }
+                icon="wc"
+                className="col-span-1"
+              />
+              <MetricCard
+                label="年龄"
+                value={demographics?.age != null ? `${demographics.age} 岁` : '未设置'}
+                icon="cake"
+                className="col-span-1"
+              />
+              <MetricCard
+                label="民族"
+                value={demographics?.ethnicity || '未设置'}
+                icon="public"
+                className="col-span-2"
+              />
+              <MetricCard
+                label="身份证号"
+                value={demographics?.idCardNumber || '未分配'}
+                icon="badge"
+                className="col-span-2 @[440px]:col-span-4"
+                copyable={!!demographics?.idCardNumber}
+              />
             </div>
-
-            {user.deletedAt && (
-              <div className="bg-[var(--md-sys-color-error-container)]/50 p-4 rounded-2xl border border-[var(--md-sys-color-error)]/30 text-xs text-[var(--md-sys-color-on-error-container)]">
-                <span className="font-semibold block mb-1">账号已于以下时间注销软删除：</span>
-                <span className="font-mono">{new Date(user.deletedAt).toLocaleString('zh-CN')}</span>
-              </div>
-            )}
-          </div>
+          </DetailsSection>
         )}
 
-        {activeTab === 'security' && (
-          <div className="space-y-4">
-            <div className="bg-[var(--md-sys-color-surface-container)] p-4 rounded-2xl border border-[var(--md-sys-color-outline-variant)] space-y-3">
-              <h3 className="text-xs font-semibold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-wider">
-                账号状态与权限治理
-              </h3>
-              <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
-                管理员可根据机构审核政策对用户账号进行状态变更与权限管理。相关治理操作可在底部操作栏直接执行并即时生效。
-              </p>
+        {/* 机构与归属 / 学籍 / 执业信息 */}
+        <DetailsSection
+          title={
+            isStudent
+              ? '学籍与培养信息'
+              : user.hospital
+              ? '定点医疗与科室信息'
+              : '机构与职务归属'
+          }
+          className="border-t-0"
+        >
+          <div className="grid grid-cols-2 @[440px]:grid-cols-4 gap-3">
+            <MetricCard
+              label={isStudent ? '学号' : '教工号 / 执业工号'}
+              value={employeeOrStudentId}
+              icon="numbers"
+              className="col-span-2"
+              copyable={true}
+            />
+            <MetricCard
+              label={isStudent ? '年级 / 培养层次' : '职务 / 职称'}
+              value={
+                isStudent
+                  ? affiliation?.enrollmentYear
+                    ? `${affiliation.enrollmentYear}级 (${affiliation?.titleOrDegree || '本科生'})`
+                    : affiliation?.titleOrDegree || '本科生'
+                  : affiliation?.titleOrDegree
+                  ? roleTranslations[affiliation.titleOrDegree] || affiliation.titleOrDegree
+                  : roleTranslations[user.role] || '在职人员'
+              }
+              icon={isStudent ? 'school' : 'badge'}
+              className="col-span-2"
+            />
+            <MetricCard
+              label={user.hospital ? '定点附属医院' : '所属学校 / 机构'}
+              value={primaryOrganization}
+              icon={user.hospital ? 'local_hospital' : 'account_balance'}
+              className="col-span-2"
+            />
+            <MetricCard
+              label={isStudent ? '就读专业 / 院系' : user.hospital ? '执业科室' : '所属院系 / 部门'}
+              value={departmentOrCollege}
+              icon={isStudent ? 'menu_book' : 'domain'}
+              className="col-span-2"
+            />
+          </div>
+        </DetailsSection>
 
-              <div className="grid grid-cols-2 gap-3 text-xs pt-1">
-                <div>
-                  <span className="text-[var(--md-sys-color-outline)] block mb-0.5">当前状态</span>
-                  <div>{getStatusBadge(user.status)}</div>
-                </div>
-                <div>
-                  <span className="text-[var(--md-sys-color-outline)] block mb-0.5">治理权限</span>
-                  <span className="text-[var(--md-sys-color-on-surface)] font-medium">
-                    {user.role === 'SYSTEM_ADMIN' ? '系统管理员（受保护）' : '可由管理员调度'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {user.deletedAt && (
-              <div className="bg-[var(--md-sys-color-error-container)]/50 p-4 rounded-2xl border border-[var(--md-sys-color-error)]/30 text-xs text-[var(--md-sys-color-on-error-container)]">
-                <span className="font-semibold block mb-1">账号已于以下时间注销软删除：</span>
-                <span className="font-mono">{new Date(user.deletedAt).toLocaleString('zh-CN')}</span>
-              </div>
+        {/* 联系方式 */}
+        <DetailsSection title="联系方式" className="border-t-0">
+          <div className="grid grid-cols-2 @[440px]:grid-cols-4 gap-3">
+            <MetricCard
+              label="联系电话"
+              value={contactPhone}
+              icon="phone_iphone"
+              className="col-span-2"
+              copyable={contactPhone !== '未登记'}
+            />
+            <MetricCard
+              label="电子邮箱"
+              value={userEmail}
+              icon="mail"
+              className="col-span-2"
+              copyable={userEmail !== '未登记'}
+            />
+            <MetricCard
+              label={isStudent ? '家庭住址' : '办公 / 常住地址'}
+              value={userAddress}
+              icon="home_pin"
+              className="col-span-2 @[440px]:col-span-4"
+              copyable={userAddress !== '未登记'}
+            />
+            {demographics?.emergencyContactName && (
+              <MetricCard
+                label="紧急联系人"
+                value={`${demographics.emergencyContactName} (${demographics.emergencyContactPhone || '未留电话'})`}
+                icon="contact_emergency"
+                className="col-span-2 @[440px]:col-span-4"
+                copyable={!!demographics.emergencyContactPhone}
+                copyValue={demographics.emergencyContactPhone ?? undefined}
+              />
             )}
+          </div>
+        </DetailsSection>
+
+        {user.deletedAt && (
+          <div className="bg-[var(--md-sys-color-error-container)]/50 p-4 rounded-2xl border border-[var(--md-sys-color-error)]/30 text-xs text-[var(--md-sys-color-on-error-container)]">
+            <span className="font-semibold block mb-1">账号已于以下时间注销软删除：</span>
+            <span className="font-mono">{new Date(user.deletedAt).toLocaleString('zh-CN')}</span>
           </div>
         )}
       </div>

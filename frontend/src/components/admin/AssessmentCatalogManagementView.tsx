@@ -47,7 +47,7 @@ export const AssessmentCatalogManagementView: React.FC = () => {
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
       {/* Segmented Button Navigation */}
-      <div className="px-6 pt-4 pb-2 shrink-0 flex justify-start">
+      <div className="px-6 pt-3 pb-1 shrink-0 flex justify-start">
         <SegmentedButton
           items={CATALOG_VIEW_SEGMENTS}
           selectedValue={activeTab}
@@ -56,8 +56,8 @@ export const AssessmentCatalogManagementView: React.FC = () => {
       </div>
 
       {activeTab === 'catalog' ? (
-        /* Catalog Grid — scrollable */
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-4 pb-20 custom-scrollbar">
+        /* Catalog Grid — scrollable portrait cards */
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-2 pb-20 custom-scrollbar">
           {isLoading ? (
             <div className="p-12 text-center text-sm text-[var(--md-sys-color-on-surface-variant)]">
               正在加载量表目录...
@@ -72,7 +72,7 @@ export const AssessmentCatalogManagementView: React.FC = () => {
               />
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="max-w-[800px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {catalog.map((item) => {
                 const isAvailable = item.isEnabled !== false;
                 const isBusy = isToggling && togglingCode === item.batteryCode;
@@ -81,25 +81,42 @@ export const AssessmentCatalogManagementView: React.FC = () => {
                 return (
                   <div
                     key={item.batteryCode}
-                    className={`flex flex-col justify-between p-4 rounded-2xl transition-all ${
+                    className={`group relative flex flex-col justify-between px-4 pt-3 pb-3.5 rounded-3xl transition-all duration-200 min-h-[280px] ${
                       isAvailable
-                        ? 'bg-[var(--md-sys-color-surface-container-low)]'
-                        : 'bg-[var(--md-sys-color-surface-container-lowest)]'
+                        ? 'bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container)]'
+                        : 'bg-[var(--md-sys-color-surface-container-lowest)] opacity-75'
                     }`}
                   >
-                    <div>
-                      {/* Top row: Subtitle + 3-dots Menu Button */}
-                      <div className="flex items-start justify-between min-h-[28px] mb-1">
-                        {item.subtitle ? (
-                          <p className={`text-xs font-semibold tracking-wide uppercase pt-1 ${isAvailable ? 'text-[var(--md-sys-color-primary)]' : 'text-[var(--md-sys-color-outline)]'}`}>
-                            {item.subtitle}
-                          </p>
-                        ) : <div />}
+                    <div className="flex flex-col flex-1">
+                      {/* Top row: Markers (Availability, Time, Questions) + 3-dots Menu Button */}
+                      <div className="flex items-center justify-between min-h-[24px] mb-1">
+                        <div className="flex items-center gap-1.5 min-w-0 text-[11px] font-medium">
+                          <span
+                            className={`inline-flex items-center gap-1 shrink-0 ${
+                              isAvailable ? 'text-[var(--md-sys-color-on-surface-variant)]' : 'text-[var(--md-sys-color-outline)]'
+                            }`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                isAvailable ? 'bg-[var(--md-sys-color-primary)]' : 'bg-[var(--md-sys-color-outline)]'
+                              }`}
+                            />
+                            {isAvailable ? '正常可用' : '已隐藏'}
+                          </span>
+                          <span className="opacity-30 shrink-0">·</span>
+                          <span className="text-[var(--md-sys-color-on-surface-variant)] opacity-75 tabular-nums truncate">
+                            {item.duration}
+                          </span>
+                          <span className="opacity-30 shrink-0">·</span>
+                          <span className="text-[var(--md-sys-color-on-surface-variant)] opacity-75 tabular-nums shrink-0">
+                            {item.questionCount} 题
+                          </span>
+                        </div>
 
-                        <div className="relative">
+                        <div className="relative shrink-0">
                           <md-icon-button
                             id={anchorId}
-                            className="scale-75 -mr-2 -mt-1 text-[var(--md-sys-color-on-surface-variant)]"
+                            className="scale-75 -mr-2 -my-1 text-[var(--md-sys-color-on-surface-variant)] cursor-pointer"
                             title="更多选项"
                             disabled={isBusy}
                             onClick={(e: React.MouseEvent) => {
@@ -150,48 +167,49 @@ export const AssessmentCatalogManagementView: React.FC = () => {
                       </div>
 
                       {/* Title */}
-                      <div className="mb-2.5">
-                        <h3 className={`text-base font-bold leading-6 ${isAvailable ? 'text-[var(--md-sys-color-on-surface)]' : 'text-[var(--md-sys-color-outline)]'}`}>
-                          {item.title}
-                        </h3>
-                      </div>
+                      <h3
+                        className={`text-[14px] font-bold leading-snug mb-1.5 ${
+                          isAvailable ? 'text-[var(--md-sys-color-on-surface)]' : 'text-[var(--md-sys-color-outline)]'
+                        }`}
+                      >
+                        {item.title}
+                      </h3>
 
-                      <p className={`text-sm line-clamp-3 mb-4 leading-relaxed ${isAvailable ? 'text-[var(--md-sys-color-on-surface-variant)]' : 'text-[var(--md-sys-color-outline)]'}`}>
+                      {/* Description */}
+                      <p
+                        className={`text-xs leading-relaxed flex-1 line-clamp-3 mb-3 ${
+                          isAvailable ? 'text-[var(--md-sys-color-on-surface-variant)]' : 'text-[var(--md-sys-color-outline)]'
+                        }`}
+                      >
                         {item.description || '暂无量表详细描述'}
                       </p>
                     </div>
 
-                    {/* Footer: combined meta pill + 2 action buttons (no separation line) */}
-                    <div className="flex items-center justify-between mt-auto gap-2">
-                      {/* Availability dot · duration · question count */}
-                      <span className={`inline-flex items-center gap-1.5 text-xs font-medium tabular-nums ${isAvailable ? 'text-[var(--md-sys-color-on-surface-variant)]' : 'text-[var(--md-sys-color-outline)]'}`}>
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                            isAvailable ? 'bg-[var(--md-sys-color-primary)]' : 'bg-[var(--md-sys-color-outline)]'
-                          }`}
-                        />
-                        {isAvailable ? '正常可用' : '已隐藏'}
-                        <span className="opacity-40">·</span>
-                        {item.duration}
-                        <span className="opacity-40">·</span>
-                        {item.questionCount} 题
-                      </span>
-
-                      {/* Action buttons: View Details (Text) + Assign (Primary) */}
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <TertiaryButton
-                          label="查看详情"
-                          onClick={() => setViewingScale(item)}
-                          className="h-8 px-2 text-xs"
-                        />
-                        <OutlinedButton
-                          icon="assignment_add"
-                          label="指派测评"
-                          onClick={() => handleOpenAssign(item)}
-                          disabled={!isAvailable}
-                          className="h-8 px-3 text-xs"
-                        />
-                      </div>
+                    {/* Actions: View Details (Outlined) + Assign (Outlined) */}
+                    <div className="flex items-center gap-1.5 pt-2">
+                      <OutlinedButton
+                        label="查看详情"
+                        onClick={() => setViewingScale(item)}
+                        className="flex-1 h-8 !px-1.5 text-xs justify-center"
+                        style={{
+                          '--md-outlined-button-leading-space': '8px',
+                          '--md-outlined-button-trailing-space': '8px',
+                        } as React.CSSProperties}
+                        noCollapse
+                      />
+                      <OutlinedButton
+                        icon="assignment_add"
+                        label="指派测评"
+                        onClick={() => handleOpenAssign(item)}
+                        disabled={!isAvailable}
+                        className="flex-1 h-8 !px-1.5 text-xs justify-center"
+                        iconSize="16px"
+                        style={{
+                          '--md-outlined-button-leading-space': '8px',
+                          '--md-outlined-button-trailing-space': '8px',
+                        } as React.CSSProperties}
+                        noCollapse
+                      />
                     </div>
                   </div>
                 );

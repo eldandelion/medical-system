@@ -1,9 +1,11 @@
 package com.medicalsystem.backend.service
 
+import com.medicalsystem.backend.dto.AdminUserDetailsDto
 import com.medicalsystem.backend.dto.AdminUserSummaryDto
 import com.medicalsystem.backend.entity.UserEntity
 import com.medicalsystem.backend.exception.ForbiddenException
 import com.medicalsystem.backend.exception.ResourceNotFoundException
+import com.medicalsystem.backend.mapper.UserDetailAssembler
 import com.medicalsystem.backend.model.AccountStatus
 import com.medicalsystem.backend.model.User
 import com.medicalsystem.backend.model.UserRole
@@ -20,7 +22,8 @@ class UserManagementService(
     private val teacherJpaRepository: TeacherJpaRepository,
     private val doctorRepository: DoctorRepository,
     private val headCounsellorJpaRepository: HeadCounsellorJpaRepository,
-    private val trialAdminJpaRepository: TrialAdminJpaRepository
+    private val trialAdminJpaRepository: TrialAdminJpaRepository,
+    private val userDetailAssembler: UserDetailAssembler
 ) {
 
     private fun validateAdmin(user: User) {
@@ -56,6 +59,16 @@ class UserManagementService(
         }
 
         return users.map { mapToSummary(it) }
+    }
+
+    @Transactional(readOnly = true)
+    fun getUserDetails(targetUserId: Long, adminUser: User): AdminUserDetailsDto {
+        validateAdmin(adminUser)
+
+        val userEntity = userJpaRepository.findById(targetUserId)
+            .orElseThrow { ResourceNotFoundException("User not found with id: $targetUserId") }
+
+        return userDetailAssembler.assemble(userEntity)
     }
 
     fun updateUserStatus(

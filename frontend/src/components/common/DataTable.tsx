@@ -5,6 +5,7 @@ export interface ColumnDefinition<T> {
   label: string;
   width?: string; // e.g., 'w-[40%]', 'flex-1', 'w-[40px]'
   render?: (item: T, isSelected?: boolean) => React.ReactNode;
+  overflowVisible?: boolean;
 }
 
 interface DataTableProps<T> {
@@ -56,7 +57,9 @@ export function DataTable<T extends { id?: string | number }>({
                   {columns.map((col, colIdx) => (
                     <div 
                       key={colIdx} 
-                      className={`${col.width || 'flex-1 min-w-0'} shrink-0 pr-4 last:pr-0 truncate ${
+                      className={`${col.width || 'flex-1 min-w-0'} shrink-0 pr-4 last:pr-0 ${
+                        col.overflowVisible ? 'overflow-visible' : 'truncate'
+                      } ${
                         isSelected ? 'text-[var(--md-sys-color-on-secondary-container)]' : ''
                       }`}
                     >

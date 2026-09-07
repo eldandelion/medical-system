@@ -3,6 +3,7 @@ import { useAdminUsers } from '../../hooks/useAdminUsers';
 import { AdminUserSummaryDto, AccountStatus } from '../../types/admin';
 import { roleTranslations } from '../../utils/roleTranslations';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
+import { ExpandableSearchBar } from '../common/ExpandableSearchBar';
 
 interface UserManagementViewProps {
   onSelectUser?: (user: AdminUserSummaryDto) => void;
@@ -175,9 +176,9 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       {header && header(isLoading)}
       <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
         {/* Top Filter Chips and Search Bar (Positioned directly under title) */}
-        <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4 px-6 mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
-          {/* Material Design 3 Filter Chips with Horizontal Scroll */}
-          <div className="w-full lg:flex-1 min-w-0 overflow-x-auto overflow-y-hidden no-scrollbar py-1 flex items-center">
+        <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4 px-6 mb-6 flex items-center">
+          {/* Material Design 3 Filter Chips and Search Bar with Horizontal Scroll */}
+          <div className="w-full min-w-0 overflow-x-auto overflow-y-hidden no-scrollbar py-1 flex items-center gap-2">
             <md-chip-set ref={chipSetRef} aria-label="用户角色与状态筛选" className="flex flex-nowrap shrink-0 items-center" style={{ display: 'inline-flex', flexWrap: 'nowrap', alignItems: 'center' }}>
               {TABS.map((tab) => {
                 const isSelected = activeTab === tab.id;
@@ -203,37 +204,13 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                 );
               })}
             </md-chip-set>
-          </div>
 
-          {/* Search Box */}
-          <div className="relative w-full lg:w-72 shrink-0">
-            <span
-              className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--md-sys-color-on-surface-variant)] pointer-events-none"
-              style={{ fontSize: '18px', width: '18px', height: '18px', lineHeight: '18px' }}
-            >
-              search
-            </span>
-            <input
-              type="text"
-              placeholder="搜索姓名、工号/学号、院系..."
+            {/* Search Box */}
+            <ExpandableSearchBar
               value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              className="w-full h-9 pl-10 pr-8 rounded-full text-xs bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] placeholder-[var(--md-sys-color-outline)] border border-transparent focus:border-[var(--md-sys-color-primary)] focus:bg-[var(--md-sys-color-surface)] focus:outline-none transition-all"
+              onChange={setSearchKeyword}
+              placeholder="搜索姓名、工号/学号、院系..."
             />
-            {searchKeyword && (
-              <button
-                type="button"
-                onClick={() => setSearchKeyword('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-on-surface)] p-0.5 rounded-full hover:bg-[var(--md-sys-color-surface-container-highest)] transition-colors flex items-center justify-center"
-              >
-                <span
-                  className="material-symbols-outlined block"
-                  style={{ fontSize: '16px', width: '16px', height: '16px', lineHeight: '16px' }}
-                >
-                  close
-                </span>
-              </button>
-            )}
           </div>
         </div>
 

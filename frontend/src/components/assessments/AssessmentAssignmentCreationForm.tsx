@@ -11,6 +11,8 @@ import { useAssessmentCatalogManagement } from '../../hooks/useAssessmentCatalog
 
 export interface AssessmentAssignmentCreationFormProps {
   initialScale?: AssessmentCatalogItemDto | null;
+  initialStudent?: Student | null;
+  initialTargetType?: TargetType;
   onClose: () => void;
 }
 
@@ -39,6 +41,8 @@ const CLASSES = ['全部班级', '1 班', '2 班', '3 班', '4 班'];
 
 export function AssessmentAssignmentCreationForm({
   initialScale,
+  initialStudent,
+  initialTargetType,
   onClose,
 }: AssessmentAssignmentCreationFormProps) {
   const { setHeaderActions, setOnCloseInterceptor } = useCreationOverlay();
@@ -47,13 +51,16 @@ export function AssessmentAssignmentCreationForm({
   const queryClient = useQueryClient();
   const { catalog } = useAssessmentCatalogManagement();
 
-  const [targetType, setTargetType] = React.useState<TargetType>('COHORT');
+  const defaultTarget = initialTargetType ?? (initialStudent ? 'INDIVIDUAL' : 'COHORT');
+  const [targetType, setTargetType] = React.useState<TargetType>(defaultTarget);
   const [selectedCollege, setSelectedCollege] = React.useState('全部学院');
   const [selectedMajor, setSelectedMajor] = React.useState('全部专业');
   const [selectedGrade, setSelectedGrade] = React.useState('全部年级');
   const [selectedClass, setSelectedClass] = React.useState('全部班级');
 
-  const [selectedStudentIds, setSelectedStudentIds] = React.useState<string[]>([]);
+  const [selectedStudentIds, setSelectedStudentIds] = React.useState<string[]>(
+    initialStudent ? [initialStudent.id] : []
+  );
   const [studentSearchTerm, setStudentSearchTerm] = React.useState('');
   const studentMenuRef = React.useRef<any>(null);
   const studentSearchAnchorRef = React.useRef<HTMLDivElement>(null);
@@ -155,10 +162,6 @@ export function AssessmentAssignmentCreationForm({
 
   // Remove a scale
   const handleRemoveScale = (code: string) => {
-    if (selectedBatteryCodes.length <= 1) {
-      showSnackbar({ message: '至少需要保留一个评定量表', duration: 2500 });
-      return;
-    }
     setSelectedBatteryCodes((prev) => prev.filter((c) => c !== code));
   };
 
@@ -167,7 +170,12 @@ export function AssessmentAssignmentCreationForm({
 
   // Selected student objects
   const selectedStudents = selectedStudentIds
-    .map((id) => students.find((s) => s.id === id))
+    .map((id) => {
+      const found = students.find((s) => s.id === id);
+      if (found) return found;
+      if (initialStudent && initialStudent.id === id) return initialStudent;
+      return null;
+    })
     .filter(Boolean) as Student[];
 
   // Available students for individual mode search
@@ -200,16 +208,41 @@ export function AssessmentAssignmentCreationForm({
     setSelectedStudentIds((prev) => prev.filter((sId) => sId !== id));
   };
 
+  // Baseline initial values
+  const baselineTargetType = initialTargetType ?? (initialStudent ? 'INDIVIDUAL' : 'COHORT');
+  const baselineStudentIds = React.useMemo(() => (initialStudent ? [initialStudent.id] : []), [initialStudent]);
+  const baselineBatteryCodes = React.useMemo(() => (initialScale ? [initialScale.batteryCode as string] : []), [initialScale]);
+
   // Dirty state tracking for close warning
   const isDirty = React.useMemo(() => {
-    return (
-      selectedBatteryCodes.length > (initialScale ? 1 : 0) ||
-      selectedStudentIds.length > 0 ||
-      !!remarks ||
+    const targetTypeChanged = targetType !== baselineTargetType;
+    const studentsChanged =
+      selectedStudentIds.length !== baselineStudentIds.length ||
+      selectedStudentIds.some((id) => !baselineStudentIds.includes(id));
+    const scalesChanged =
+      selectedBatteryCodes.length !== baselineBatteryCodes.length ||
+      selectedBatteryCodes.some((code) => !baselineBatteryCodes.includes(code));
+    const remarksChanged = !!remarks.trim();
+    const cohortChanged =
       selectedCollege !== '全部学院' ||
-      selectedGrade !== '全部年级'
-    );
-  }, [selectedBatteryCodes, initialScale, selectedStudentIds, remarks, selectedCollege, selectedGrade]);
+      selectedMajor !== '全部专业' ||
+      selectedGrade !== '全部年级' ||
+      selectedClass !== '全部班级';
+
+    return targetTypeChanged || studentsChanged || scalesChanged || remarksChanged || cohortChanged;
+  }, [
+    targetType,
+    baselineTargetType,
+    selectedStudentIds,
+    baselineStudentIds,
+    selectedBatteryCodes,
+    baselineBatteryCodes,
+    remarks,
+    selectedCollege,
+    selectedMajor,
+    selectedGrade,
+    selectedClass,
+  ]);
 
   const isDirtyRef = React.useRef(isDirty);
   React.useEffect(() => {
@@ -738,42 +771,51 @@ export function AssessmentAssignmentCreationForm({
             </div>
 
             {/* Selected Scales List */}
-            <div className="space-y-2">
-              {selectedScales.map((scale) => (
-                <div
-                  key={scale.batteryCode}
-                  className="p-3.5 rounded-xl border border-[var(--md-sys-color-outline-variant)] hover:bg-[var(--md-sys-color-surface-container-low)] transition-all flex items-center justify-between group"
-                >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] group-hover:bg-[var(--md-sys-color-primary-container)] group-hover:text-[var(--md-sys-color-on-primary-container)] transition-colors shrink-0">
-                      <span className="material-symbols-outlined text-[20px]">
-                        {getAssessmentIcon(scale.batteryCode)}
-                      </span>
-                    </div>
-                    <div className="flex flex-col min-w-0 truncate">
-                      <span className="text-xs font-semibold text-[var(--md-sys-color-on-surface)] truncate">
-                        {scale.title}
-                      </span>
-                      <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] opacity-80 tabular-nums">
-                        {scale.questionCount} 题 · {scale.duration}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveScale(scale.batteryCode)}
-                    disabled={isSubmitting || selectedBatteryCodes.length <= 1}
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-on-surface)] hover:bg-[var(--md-sys-color-surface-container-highest)] transition-colors disabled:opacity-30 disabled:hover:text-[var(--md-sys-color-on-surface-variant)] cursor-pointer shrink-0 self-center"
-                    title={selectedBatteryCodes.length <= 1 ? '至少保留一个量表' : '移除该量表'}
+            {selectedScales.length === 0 ? (
+              <div className="p-6 rounded-2xl border border-dashed border-[var(--md-sys-color-outline-variant)] text-center text-xs text-[var(--md-sys-color-on-surface-variant)] flex flex-col items-center justify-center gap-1.5 bg-[var(--md-sys-color-surface-container-low)]">
+                <span className="material-symbols-outlined text-[24px] text-[var(--md-sys-color-outline)]">
+                  playlist_add
+                </span>
+                <span>暂未添加测评量表，请点击右上角「添加」选择量表</span>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {selectedScales.map((scale) => (
+                  <div
+                    key={scale.batteryCode}
+                    className="p-3.5 rounded-xl border border-[var(--md-sys-color-outline-variant)] hover:bg-[var(--md-sys-color-surface-container-low)] transition-all flex items-center justify-between group"
                   >
-                    <span className="material-symbols-outlined text-[18px] leading-none flex items-center justify-center">
-                      close
-                    </span>
-                  </button>
-                </div>
-              ))}
-            </div>
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="w-10 h-10 rounded-full bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] group-hover:bg-[var(--md-sys-color-primary-container)] group-hover:text-[var(--md-sys-color-on-primary-container)] transition-colors shrink-0">
+                        <span className="material-symbols-outlined text-[20px]">
+                          {getAssessmentIcon(scale.batteryCode)}
+                        </span>
+                      </div>
+                      <div className="flex flex-col min-w-0 truncate">
+                        <span className="text-xs font-semibold text-[var(--md-sys-color-on-surface)] truncate">
+                          {scale.title}
+                        </span>
+                        <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] opacity-80 tabular-nums">
+                          {scale.questionCount} 题 · {scale.duration}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveScale(scale.batteryCode)}
+                      disabled={isSubmitting}
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-on-surface)] hover:bg-[var(--md-sys-color-surface-container-highest)] transition-colors cursor-pointer shrink-0 self-center"
+                      title="移除该量表"
+                    >
+                      <span className="material-symbols-outlined text-[18px] leading-none flex items-center justify-center">
+                        close
+                      </span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Battery Summary */}
             <div className="flex items-center justify-between px-1 text-xs text-[var(--md-sys-color-on-surface-variant)] tabular-nums">
