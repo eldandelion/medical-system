@@ -29,11 +29,14 @@ describe('RegisterBasicInfo Component', () => {
 
     expect(screen.getByText('CSU')).toBeDefined();
     expect(screen.getByText('基本信息')).toBeDefined();
-    expect(screen.getByText('输入您的姓名和性别')).toBeDefined();
+    expect(screen.getByText('输入您的姓名、身份证号和性别')).toBeDefined();
     expect(screen.queryByText('教师')).toBeNull();
 
     const nameField = document.querySelector('md-outlined-text-field[label="姓名"]');
     expect(nameField).toBeDefined();
+
+    const idCardField = document.querySelector('md-outlined-text-field[label="身份证号"]');
+    expect(idCardField).toBeDefined();
 
     const genderSelect = document.querySelector('md-outlined-select[label="性别"]');
     expect(genderSelect).toBeDefined();
@@ -49,7 +52,7 @@ describe('RegisterBasicInfo Component', () => {
     expect(screen.getByText('下一步')).toBeDefined();
   });
 
-  it('shows validation errors when name or gender are not provided', () => {
+  it('shows validation errors when name, idCard, or gender are not provided', () => {
     const onProceedMock = vi.fn();
     render(
       <RegisterBasicInfo
@@ -63,11 +66,12 @@ describe('RegisterBasicInfo Component', () => {
     fireEvent.click(nextButton);
 
     expect(screen.getByText('请输入姓名')).toBeDefined();
+    expect(screen.getByText('请输入身份证号')).toBeDefined();
     expect(screen.getByText('请选择性别')).toBeDefined();
     expect(onProceedMock).not.toHaveBeenCalled();
   });
 
-  it('submits correctly when valid name and gender are provided', () => {
+  it('submits correctly when valid name, ID card, and gender are provided', () => {
     const onProceedMock = vi.fn();
     render(
       <RegisterBasicInfo
@@ -80,6 +84,9 @@ describe('RegisterBasicInfo Component', () => {
     const nameField = document.querySelector('md-outlined-text-field[label="姓名"]') as HTMLElement;
     setMdInputValue(nameField, '王医生');
 
+    const idCardField = document.querySelector('md-outlined-text-field[label="身份证号"]') as HTMLElement;
+    setMdInputValue(idCardField, '110101199001011237');
+
     const genderSelect = document.querySelector('md-outlined-select[label="性别"]') as HTMLElement;
     setMdSelectValue(genderSelect, '男');
 
@@ -89,7 +96,55 @@ describe('RegisterBasicInfo Component', () => {
     expect(onProceedMock).toHaveBeenCalledWith({
       name: '王医生',
       gender: '男',
+      idCardNumber: '110101199001011237',
     });
+  });
+
+  it('auto-extracts birth date and gender when typing a valid 18-digit ID card', () => {
+    const onAutoFillMock = vi.fn();
+    render(
+      <RegisterBasicInfo
+        role="teacher"
+        onBack={() => {}}
+        onProceed={() => {}}
+        onAutoFillDemographics={onAutoFillMock}
+      />
+    );
+
+    const idCardField = document.querySelector('md-outlined-text-field[label="身份证号"]') as HTMLElement;
+    setMdInputValue(idCardField, '110101199001011237');
+
+    expect(onAutoFillMock).toHaveBeenCalledWith({
+      birthDate: '1990-01-01',
+      gender: '男',
+    });
+    expect(screen.getByText('已自动识别：男性，出生于 1990-01-01')).toBeDefined();
+  });
+
+  it('shows validation error when ID card checksum is invalid', () => {
+    const onProceedMock = vi.fn();
+    render(
+      <RegisterBasicInfo
+        role="teacher"
+        onBack={() => {}}
+        onProceed={onProceedMock}
+      />
+    );
+
+    const nameField = document.querySelector('md-outlined-text-field[label="姓名"]') as HTMLElement;
+    setMdInputValue(nameField, '张老师');
+
+    const idCardField = document.querySelector('md-outlined-text-field[label="身份证号"]') as HTMLElement;
+    setMdInputValue(idCardField, '110101199001011234'); // Check digit is 7, not 4
+
+    const genderSelect = document.querySelector('md-outlined-select[label="性别"]') as HTMLElement;
+    setMdSelectValue(genderSelect, '男');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(screen.getByText('身份证号校验码不正确')).toBeDefined();
+    expect(onProceedMock).not.toHaveBeenCalled();
   });
 
   it('shows validation error when name is only one character', () => {
@@ -104,6 +159,9 @@ describe('RegisterBasicInfo Component', () => {
 
     const nameField = document.querySelector('md-outlined-text-field[label="姓名"]') as HTMLElement;
     setMdInputValue(nameField, '张');
+
+    const idCardField = document.querySelector('md-outlined-text-field[label="身份证号"]') as HTMLElement;
+    setMdInputValue(idCardField, '110101199001011237');
 
     const genderSelect = document.querySelector('md-outlined-select[label="性别"]') as HTMLElement;
     setMdSelectValue(genderSelect, '男');
@@ -128,6 +186,9 @@ describe('RegisterBasicInfo Component', () => {
     const nameField = document.querySelector('md-outlined-text-field[label="姓名"]') as HTMLElement;
     setMdInputValue(nameField, '张三123');
 
+    const idCardField = document.querySelector('md-outlined-text-field[label="身份证号"]') as HTMLElement;
+    setMdInputValue(idCardField, '110101199001011237');
+
     const genderSelect = document.querySelector('md-outlined-select[label="性别"]') as HTMLElement;
     setMdSelectValue(genderSelect, '男');
 
@@ -150,6 +211,9 @@ describe('RegisterBasicInfo Component', () => {
 
     const nameField = document.querySelector('md-outlined-text-field[label="姓名"]') as HTMLElement;
     setMdInputValue(nameField, 'Zhang San');
+
+    const idCardField = document.querySelector('md-outlined-text-field[label="身份证号"]') as HTMLElement;
+    setMdInputValue(idCardField, '110101199001011237');
 
     const genderSelect = document.querySelector('md-outlined-select[label="性别"]') as HTMLElement;
     setMdSelectValue(genderSelect, '男');
@@ -174,6 +238,9 @@ describe('RegisterBasicInfo Component', () => {
     const nameField = document.querySelector('md-outlined-text-field[label="姓名"]') as HTMLElement;
     setMdInputValue(nameField, '买买提·吐尔逊');
 
+    const idCardField = document.querySelector('md-outlined-text-field[label="身份证号"]') as HTMLElement;
+    setMdInputValue(idCardField, '110101199001011237');
+
     const genderSelect = document.querySelector('md-outlined-select[label="性别"]') as HTMLElement;
     setMdSelectValue(genderSelect, '男');
 
@@ -183,6 +250,7 @@ describe('RegisterBasicInfo Component', () => {
     expect(onProceedMock).toHaveBeenCalledWith({
       name: '买买提·吐尔逊',
       gender: '男',
+      idCardNumber: '110101199001011237',
     });
   });
 

@@ -1,9 +1,11 @@
 import * as React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { AccountMenu } from './AccountMenu';
 import { LoginOverlay } from '../auth/LoginOverlay';
 import { useTheme } from '../../contexts/ThemeContext';
 import { GlobalSearch } from './GlobalSearch';
 import { useAuth, type Role } from '../../contexts/AuthContext';
+import { UserProfileDto } from '../../types';
 
 interface HeaderProps {
   searchPlaceholder?: string;
@@ -26,6 +28,29 @@ export function Header({ searchPlaceholder, onProfileClick }: HeaderProps) {
   const [isRoleMenuOpen, setIsRoleMenuOpen] = React.useState(false);
   const [isLoginOpen, setIsLoginOpen] = React.useState(false);
   const { theme, setTheme } = useTheme();
+
+  const { data: userProfile } = useQuery<UserProfileDto | null>({
+    queryKey: ['/api/user/profile', session?.token],
+    queryFn: async () => {
+      try {
+        const res = await fetch(`${import.meta.env.BASE_URL}api/user/profile`.replace('//api', '/api'), {
+          headers: {
+            'Authorization': `Bearer ${session?.token || ''}`,
+          },
+        });
+        if (!res.ok) return null;
+        return res.json();
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!session?.token,
+    retry: false,
+  });
+
+  const displayAvatarInitial = userProfile?.avatarInitial || userProfile?.name?.charAt(0) || '李';
+  const displayAvatarBg = userProfile?.avatarBg || '#E47035';
+  const displayTitle = userProfile?.name ? `${userProfile.name} 的账号` : '个人账号';
 
   const currentRoleOption = ROLE_OPTIONS.find(o => o.role === session.role) ?? ROLE_OPTIONS[0];
 
@@ -141,11 +166,12 @@ export function Header({ searchPlaceholder, onProfileClick }: HeaderProps) {
         {/* User Profile & Account Menu */}
         <div className="relative flex items-center w-10 h-10 justify-center mx-1">
           <div
-            className="w-8 h-8 rounded-full bg-[#E47035] text-white flex items-center justify-center text-sm font-medium cursor-pointer shadow-sm hover:opacity-90 ring-2 ring-transparent hover:ring-[var(--md-sys-color-outline-variant)] transition-all shrink-0"
+            className="w-8 h-8 rounded-full text-white flex items-center justify-center text-sm font-medium cursor-pointer shadow-sm hover:opacity-90 ring-2 ring-transparent hover:ring-[var(--md-sys-color-outline-variant)] transition-all shrink-0"
+            style={{ backgroundColor: displayAvatarBg }}
             onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
-            title="Google Account"
+            title={displayTitle}
           >
-            D
+            {displayAvatarInitial}
           </div>
 
           <AccountMenu
@@ -156,6 +182,11 @@ export function Header({ searchPlaceholder, onProfileClick }: HeaderProps) {
               setIsAccountMenuOpen(false);
               setIsLoginOpen(true);
             }}
+            onLogout={() => {
+              setIsAccountMenuOpen(false);
+              setIsLoginOpen(true);
+            }}
+            userProfile={userProfile}
           />
         </div>
       </div>

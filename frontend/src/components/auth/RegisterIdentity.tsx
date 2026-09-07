@@ -1,46 +1,35 @@
 import * as React from 'react';
 import { motion } from 'motion/react';
-import { PrimaryButton, TertiaryButton } from '../common/Buttons';
+import { PrimaryButton, SecondaryButton, TertiaryButton } from '../common/Buttons';
 import { CsuLogo } from './LoginOverlay';
 import {
-  validateChineseIdCard,
   validateEmail,
   validateOtp,
   isDisposableEmail,
-  extractDobAndGenderFromIdCard,
 } from './validationUtils';
 import { authApi } from '../../api/auth';
 
 export interface RegisterIdentityData {
-  idCardNumber: string;
   email: string;
   emailOtp: string;
 }
 
 export interface RegisterIdentityProps {
   initialData?: Partial<RegisterIdentityData>;
-  expectedBirthDate?: string;
-  expectedGender?: string;
   onBack: () => void;
   onProceed: (data: RegisterIdentityData) => void;
-  onAutoFillDemographics?: (data: { birthDate: string; gender: string }) => void;
   isLoading?: boolean;
 }
 
 export function RegisterIdentity({
   initialData,
-  expectedBirthDate,
-  expectedGender,
   onBack,
   onProceed,
-  onAutoFillDemographics,
   isLoading = false,
 }: RegisterIdentityProps) {
-  const [idCardNumber, setIdCardNumber] = React.useState(initialData?.idCardNumber || '');
   const [email, setEmail] = React.useState(initialData?.email || '');
   const [emailOtp, setEmailOtp] = React.useState(initialData?.emailOtp || '');
 
-  const [idCardError, setIdCardError] = React.useState('');
   const [emailError, setEmailError] = React.useState('');
   const [otpError, setOtpError] = React.useState('');
 
@@ -56,25 +45,6 @@ export function RegisterIdentity({
     }, 1000);
     return () => clearInterval(timer);
   }, [cooldown]);
-
-  // Handle ID Card input changes & auto-extraction
-  const handleIdCardInput = (e: React.SyntheticEvent) => {
-    const target = e.target as HTMLInputElement;
-    const upperValue = target.value.toUpperCase();
-    setIdCardNumber(upperValue);
-    if (idCardError) setIdCardError('');
-
-    // Attempt auto-extraction if 18 chars
-    if (upperValue.length === 18) {
-      const extracted = extractDobAndGenderFromIdCard(upperValue);
-      if (extracted && onAutoFillDemographics) {
-        onAutoFillDemographics({
-          birthDate: extracted.birthDate,
-          gender: extracted.gender,
-        });
-      }
-    }
-  };
 
   const handleSendOtp = async () => {
     const trimmedEmail = email.trim();
@@ -109,14 +79,6 @@ export function RegisterIdentity({
 
     let hasError = false;
 
-    const idCardValidation = validateChineseIdCard(idCardNumber, expectedBirthDate, expectedGender);
-    if (!idCardValidation.isValid) {
-      setIdCardError(idCardValidation.error || '请输入有效的身份证号');
-      hasError = true;
-    } else {
-      setIdCardError('');
-    }
-
     const emailValidation = validateEmail(email);
     if (!emailValidation.isValid) {
       setEmailError(emailValidation.error || '请输入有效的电子邮箱');
@@ -141,18 +103,10 @@ export function RegisterIdentity({
     }
 
     onProceed({
-      idCardNumber: idCardNumber.trim().toUpperCase(),
       email: email.trim(),
       emailOtp: emailOtp.trim(),
     });
   };
-
-  const extractedInfo = React.useMemo(() => {
-    if (idCardNumber.length === 18) {
-      return extractDobAndGenderFromIdCard(idCardNumber);
-    }
-    return null;
-  }, [idCardNumber]);
 
   return (
     <motion.div
@@ -173,12 +127,12 @@ export function RegisterIdentity({
             身份认证
           </h1>
           <p className="text-[15px] sm:text-[16px] leading-[24px] text-[var(--md-sys-color-on-surface-variant)] mt-2.5 font-normal">
-            校验您的身份证件并完成工作邮箱验证
+            验证您的工作电子邮箱
           </p>
         </div>
       </div>
 
-      {/* Right Column: ID Card & Email/OTP Inputs */}
+      {/* Right Column: Email & OTP Inputs */}
       <div className="flex flex-col justify-between h-full">
         {/* Alignment spacer on desktop */}
         <div className="hidden md:flex h-[32px] items-center" />
@@ -189,27 +143,6 @@ export function RegisterIdentity({
             className="flex flex-col justify-between h-full space-y-5"
           >
             <div className="space-y-4">
-              {/* ID Card Number Input */}
-              <div>
-                <md-outlined-text-field
-                  label="身份证号"
-                  maxLength={18}
-                  value={idCardNumber}
-                  className="w-full"
-                  error={!!idCardError || undefined}
-                  error-text={idCardError || undefined}
-                  onInput={handleIdCardInput}
-                >
-                  {idCardError && <span slot="error-text">{idCardError}</span>}
-                </md-outlined-text-field>
-                {!idCardError && extractedInfo && (
-                  <div className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 pt-1">
-                    <span className="material-symbols-outlined text-[16px]">verified</span>
-                    <span>已自动识别：{extractedInfo.gender}性，出生于 {extractedInfo.birthDate}</span>
-                  </div>
-                )}
-              </div>
-
               {/* Email Input */}
               <div>
                 <md-outlined-text-field
@@ -232,8 +165,8 @@ export function RegisterIdentity({
 
               {/* OTP Verification Code + Send Code Button */}
               <div>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1">
+                <div className="flex items-start gap-3">
+                  <div className="flex-1 min-w-0">
                     <md-outlined-text-field
                       label="邮箱验证码"
                       maxLength={6}
@@ -241,6 +174,14 @@ export function RegisterIdentity({
                       className="w-full"
                       error={!!otpError || undefined}
                       error-text={otpError || undefined}
+                      supporting-text={
+                        !otpError && otpSentSuccess
+                          ? '验证码已发送至您的邮箱，5分钟内有效'
+                          : undefined
+                      }
+                      style={{
+                        '--md-outlined-text-field-supporting-text-color': 'var(--md-sys-color-primary)',
+                      } as React.CSSProperties}
                       onInput={(e: React.SyntheticEvent) => {
                         const target = e.target as HTMLInputElement;
                         setEmailOtp(target.value);
@@ -248,31 +189,31 @@ export function RegisterIdentity({
                       }}
                     >
                       {otpError && <span slot="error-text">{otpError}</span>}
+                      {!otpError && otpSentSuccess && (
+                        <span slot="supporting-text" className="text-[var(--md-sys-color-primary)]">
+                          验证码已发送至您的邮箱，5分钟内有效
+                        </span>
+                      )}
                     </md-outlined-text-field>
                   </div>
-                  <button
-                    type="button"
+                  <SecondaryButton
+                    label={
+                      isSendingOtp
+                        ? '正在发送...'
+                        : cooldown > 0
+                        ? `${cooldown} 秒后重试`
+                        : '获取验证码'
+                    }
                     onClick={handleSendOtp}
                     disabled={isSendingOtp || cooldown > 0 || !email.trim()}
-                    className={`h-[54px] px-4 rounded-xl text-sm font-medium transition-all shrink-0 select-none ${
-                      cooldown > 0 || isSendingOtp || !email.trim()
-                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed border border-slate-200 dark:border-slate-700'
-                        : 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 border border-indigo-200 dark:border-indigo-800'
-                    }`}
-                  >
-                    {isSendingOtp
-                      ? '正在发送...'
-                      : cooldown > 0
-                      ? `${cooldown} 秒后重试`
-                      : '获取验证码'}
-                  </button>
+                    noCollapse
+                    className="h-[56px] shrink-0"
+                    style={{
+                      '--md-filled-tonal-button-container-height': '56px',
+                      '--md-filled-tonal-button-container-shape': '12px',
+                    } as React.CSSProperties}
+                  />
                 </div>
-                {!otpError && otpSentSuccess && (
-                  <div className="text-xs text-indigo-600 dark:text-indigo-400 flex items-center gap-1 pt-1">
-                    <span className="material-symbols-outlined text-[16px]">mail</span>
-                    <span>验证码已发送至您的邮箱，5分钟内有效</span>
-                  </div>
-                )}
               </div>
             </div>
 

@@ -34,7 +34,12 @@ export interface LoginOverlayProps {
   initialIdentifier?: string;
   initialView?: AuthView;
   onRoleSelect?: (role: RegisterRole) => void;
-  onBasicInfoSubmit?: (data: { role?: RegisterRole | null; name: string; gender: string }) => void;
+  onBasicInfoSubmit?: (data: {
+    role?: RegisterRole | null;
+    name: string;
+    gender: string;
+    idCardNumber: string;
+  }) => void;
   onDemographicsSubmit?: (data: {
     role?: RegisterRole | null;
     name: string;
@@ -373,13 +378,28 @@ export function LoginOverlay({
                 role={selectedRole}
                 initialName={formData.name}
                 initialGender={formData.gender}
+                initialIdCardNumber={formData.idCardNumber}
+                onAutoFillDemographics={(extracted) => {
+                  const parts = extracted.birthDate.split('-');
+                  updateFormData({
+                    birthYear: parts[0],
+                    birthMonth: String(parseInt(parts[1], 10)),
+                    birthDay: String(parseInt(parts[2], 10)),
+                    gender: extracted.gender,
+                  });
+                }}
                 onBack={() => setView('register-role-select')}
                 onProceed={(data) => {
-                  updateFormData({ name: data.name, gender: data.gender });
+                  updateFormData({
+                    name: data.name,
+                    gender: data.gender,
+                    idCardNumber: data.idCardNumber,
+                  });
                   onBasicInfoSubmit?.({
                     role: selectedRole,
                     name: data.name,
                     gender: data.gender,
+                    idCardNumber: data.idCardNumber,
                   });
                   setView('register-demographics');
                 }}
@@ -445,31 +465,12 @@ export function LoginOverlay({
             ) : view === 'register-identity' ? (
               <RegisterIdentity
                 initialData={{
-                  idCardNumber: formData.idCardNumber,
                   email: formData.email,
                   emailOtp: formData.emailOtp,
-                }}
-                expectedBirthDate={
-                  formData.birthYear && formData.birthMonth && formData.birthDay
-                    ? `${formData.birthYear}-${String(formData.birthMonth).padStart(2, '0')}-${String(formData.birthDay).padStart(2, '0')}`
-                    : undefined
-                }
-                expectedGender={formData.gender || undefined}
-                onAutoFillDemographics={(extracted) => {
-                  if (!formData.birthYear || !formData.gender) {
-                    const parts = extracted.birthDate.split('-');
-                    updateFormData({
-                      birthYear: formData.birthYear || parts[0],
-                      birthMonth: formData.birthMonth || String(parseInt(parts[1], 10)),
-                      birthDay: formData.birthDay || String(parseInt(parts[2], 10)),
-                      gender: formData.gender || extracted.gender,
-                    });
-                  }
                 }}
                 onBack={() => setView('register-affiliation')}
                 onProceed={(data) => {
                   updateFormData({
-                    idCardNumber: data.idCardNumber,
                     email: data.email,
                     emailOtp: data.emailOtp,
                   });
@@ -477,6 +478,7 @@ export function LoginOverlay({
                     role: selectedRole,
                     name: formData.name,
                     gender: formData.gender,
+                    idCardNumber: formData.idCardNumber,
                     ...data,
                   });
                   setView('register-password');
