@@ -27,8 +27,8 @@ data class SchoolDepartmentDto(
     val id: Long,
     val name: String,
     val schoolId: Long,
-    val schoolName: String,
-    val status: ReferenceDataStatus,
+    val schoolName: String = "",
+    val status: ReferenceDataStatus = ReferenceDataStatus.ACTIVE,
     val staffCount: Long = 0
 )
 
@@ -37,7 +37,7 @@ data class AdminHospitalDto(
     val name: String,
     val address: String? = null,
     val contactPhone: String? = null,
-    val status: ReferenceDataStatus,
+    val status: ReferenceDataStatus = ReferenceDataStatus.ACTIVE,
     val departmentCount: Long = 0,
     val activeReferralCount: Long = 0
 )
@@ -46,31 +46,38 @@ data class HospitalDepartmentDto(
     val id: Long,
     val name: String,
     val hospitalId: Long,
-    val hospitalName: String,
-    val status: ReferenceDataStatus,
+    val hospitalName: String = "",
+    val status: ReferenceDataStatus = ReferenceDataStatus.ACTIVE,
     val doctorCount: Long = 0
 )
 
 data class EthnicityDto(
     val id: Long,
     val name: String,
-    val status: ReferenceDataStatus,
+    val status: ReferenceDataStatus = ReferenceDataStatus.ACTIVE,
     val studentCount: Long = 0
 )
 
 data class DegreeLevelDto(
     val id: Long,
     val name: String,
-    val status: ReferenceDataStatus,
+    val status: ReferenceDataStatus = ReferenceDataStatus.ACTIVE,
     val studentCount: Long = 0
 )
 
 data class SchoolDto(
     val id: Long,
     val name: String,
-    val status: ReferenceDataStatus,
+    val status: ReferenceDataStatus = ReferenceDataStatus.ACTIVE,
     val departmentCount: Long = 0,
     val studentCount: Long = 0
+)
+
+data class HospitalSummaryDto(
+    val id: Long,
+    val name: String,
+    val address: String? = null,
+    val contactPhone: String? = null
 )
 
 // Create & Update Requests
