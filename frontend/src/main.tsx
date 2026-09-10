@@ -48,18 +48,25 @@ import '@material/web/tabs/primary-tab.js';
 import '@material/web/tabs/secondary-tab.js';
 
 async function enableMocking() {
-  const { worker } = await import('./mocks/browser');
-  return worker.start({
-    onUnhandledRequest: 'bypass',
-    serviceWorker: {
-      url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
-    },
-  });
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+    return;
+  }
+  try {
+    const { worker } = await import('./mocks/browser');
+    await worker.start({
+      onUnhandledRequest: 'bypass',
+      serviceWorker: {
+        url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
+      },
+    });
+  } catch (err) {
+    console.warn('MSW worker failed to start:', err);
+  }
 }
 
 import { AuthProvider } from './contexts/AuthContext';
 
-enableMocking().then(() => {
+enableMocking().finally(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>

@@ -21,6 +21,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy the built assets from the builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
+RUN ln -sf /usr/share/nginx/html /usr/share/nginx/html/medical-system
 
 # Expose port 80
 EXPOSE 80
