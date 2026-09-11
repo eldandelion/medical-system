@@ -22,12 +22,12 @@ export default defineConfig(({ mode }) => {
             hmr: process.env.DISABLE_HMR !== 'true',
             proxy: {
                 '/medical-system/api': {
-                    target: `http://localhost:${backendPort}`,
+                    target: `http://127.0.0.1:${backendPort}`,
                     changeOrigin: true,
                     rewrite: (path) => path.replace(/^\/medical-system\/api/, '/api'),
                 },
                 '^/api': {
-                    target: `http://localhost:${backendPort}`,
+                    target: `http://127.0.0.1:${backendPort}`,
                     changeOrigin: true,
                 },
             },
