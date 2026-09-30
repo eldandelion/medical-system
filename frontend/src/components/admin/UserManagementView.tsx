@@ -5,6 +5,7 @@ import { roleTranslations } from '../../utils/roleTranslations';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { ExpandableSearchBar } from '../common/ExpandableSearchBar';
 import { StatusBadge } from '../common/StatusBadge';
+import { AvatarBadge } from '../common/AvatarBadge';
 
 interface UserManagementViewProps {
   onSelectUser?: (user: AdminUserSummaryDto) => void;
@@ -52,13 +53,14 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
     return users.filter((u) => u.status === 'PENDING_APPROVAL').length;
   }, [users]);
 
-  const getStatusBadge = (status: AccountStatus) => {
+  const getStatusBadge = (status: AccountStatus, isSelected?: boolean) => {
     switch (status) {
       case 'ACTIVE':
         return (
           <StatusBadge
             dotColorClass="bg-[var(--md-sys-color-secondary-container)]"
             label="已启用"
+            isSelected={isSelected}
           />
         );
       case 'PENDING_APPROVAL':
@@ -66,6 +68,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
           <StatusBadge
             dotColorClass="bg-[var(--md-sys-color-tertiary-container)]"
             label="待审核"
+            isSelected={isSelected}
           />
         );
       case 'DISABLED':
@@ -73,6 +76,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
           <StatusBadge
             dotColorClass="bg-[var(--md-sys-color-surface-container-high)]"
             label="已禁用"
+            isSelected={isSelected}
           />
         );
       case 'DELETED':
@@ -80,6 +84,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
           <StatusBadge
             dotColorClass="bg-[var(--md-sys-color-error-container)]"
             label="已注销"
+            isSelected={isSelected}
           />
         );
     }
@@ -90,11 +95,9 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       key: 'name',
       label: '用户',
       width: 'w-[32%]',
-      render: (user) => (
+      render: (user, isSelected) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[13px] font-medium shrink-0 uppercase">
-            {user.name.charAt(0)}
-          </div>
+          <AvatarBadge name={user.name} isSelected={isSelected} size="sm" className="uppercase" />
           <div className="flex flex-col min-w-0">
             <span className="text-[14px] font-medium truncate">{user.name}</span>
             <span className="text-[12px] opacity-70 truncate">{user.email}</span>
@@ -130,7 +133,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       key: 'status',
       label: '状态',
       width: 'w-[14%]',
-      render: (user) => getStatusBadge(user.status)
+      render: (user, isSelected) => getStatusBadge(user.status, isSelected)
     }
   ];
 

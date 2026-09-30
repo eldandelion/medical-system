@@ -7,6 +7,7 @@ import { enrichReferralStatus } from '../../utils/referralUtils';
 import { formatDateToChinese } from '../../utils/dateUtils';
 import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS, RISK_LEVEL_DOT_STYLES, STATUS_STYLES, STATUS_LABELS, STATUS_DOT_STYLES, REFERRAL_TYPE_LABELS } from '../../config/styleConstants';
 import { StatusBadge } from '../common/StatusBadge';
+import { AvatarBadge } from '../common/AvatarBadge';
 
 import { Referral } from '../../types';
 
@@ -31,12 +32,10 @@ const columns: ColumnDefinition<Referral>[] = [
     key: 'studentName',
     label: '学生',
     width: 'w-[25%]',
-    render: (item) => (
+    render: (item, isSelected) => (
       <div className="flex items-center gap-3">
         <div className="relative shrink-0">
-          <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-xs font-medium">
-            {item.studentName.charAt(0)}
-          </div>
+          <AvatarBadge name={item.studentName} isSelected={isSelected} size="sm" />
           {item.status === 'AWAITING_REVIEW' && (
             <div className="absolute -left-3.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[var(--md-sys-color-error)] shadow-[0_0_8px_rgba(179,38,30,0.4)]" />
           )}
@@ -75,11 +74,12 @@ const columns: ColumnDefinition<Referral>[] = [
     key: 'riskLevel',
     label: '风险等级',
     width: 'w-[15%]',
-    render: (item) => (
+    render: (item, isSelected) => (
       <div className="flex items-center">
         <StatusBadge
           dotColorClass={RISK_LEVEL_DOT_STYLES[item.riskLevel] || RISK_LEVEL_DOT_STYLES.LOW}
           label={RISK_LEVEL_LABELS[item.riskLevel] || item.riskLevel}
+          isSelected={isSelected}
         />
       </div>
     )
@@ -88,13 +88,14 @@ const columns: ColumnDefinition<Referral>[] = [
     key: 'status',
     label: '状态',
     width: 'w-[15%]',
-    render: (item) => {
+    render: (item, isSelected) => {
       const displayStatus = item.displayStatus || item.status;
 
       return (
         <StatusBadge
           dotColorClass={STATUS_DOT_STYLES[displayStatus] || STATUS_DOT_STYLES.default}
           label={STATUS_LABELS[displayStatus] || displayStatus}
+          isSelected={isSelected}
         />
       );
     }

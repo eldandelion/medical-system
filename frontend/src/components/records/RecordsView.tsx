@@ -78,7 +78,7 @@ export function RecordsView({ onRecordSelect, selectedRecordId, header }: Record
       key: 'status',
       label: '状态',
       width: 'w-[20%]',
-      render: (item) => {
+      render: (item, isSelected) => {
         const displayStatus = item.displayStatus || item.status;
         const label = STATUS_LABELS[displayStatus] || displayStatus;
         return (
@@ -86,6 +86,7 @@ export function RecordsView({ onRecordSelect, selectedRecordId, header }: Record
             <StatusBadge
               dotColorClass={STATUS_DOT_STYLES[displayStatus] || STATUS_DOT_STYLES.default}
               label={label}
+              isSelected={isSelected}
             />
           </div>
         );

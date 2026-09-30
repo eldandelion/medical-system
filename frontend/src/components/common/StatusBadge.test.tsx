@@ -11,12 +11,31 @@ describe('StatusBadge Component', () => {
     expect(screen.getByText('已批准')).toBeDefined();
     const badge = container.querySelector('span');
     expect(badge?.className).toContain('border');
-    expect(badge?.className).toContain('bg-transparent');
+    expect(badge?.className).toContain('bg-[var(--md-sys-color-surface)]');
     expect(badge?.className).toContain('text-[var(--md-sys-color-on-surface)]');
 
     const dot = container.querySelector('span > span:first-child');
     expect(dot?.className).toContain('rounded-full');
     expect(dot?.className).toContain('bg-[var(--md-sys-color-primary-container)]');
+  });
+
+  it('applies high-contrast outline and shadow when isSelected is true', () => {
+    const { container } = render(
+      <StatusBadge label="待审批" dotColorClass="bg-yellow-500" isSelected={true} />
+    );
+
+    const badge = container.querySelector('span');
+    expect(badge?.className).toContain('border-[var(--md-sys-color-outline)]');
+    expect(badge?.className).toContain('shadow-xs');
+  });
+
+  it('includes group variant classes for automatic row selection styling', () => {
+    const { container } = render(
+      <StatusBadge label="已完成" dotColorClass="bg-green-500" />
+    );
+
+    const badge = container.querySelector('span');
+    expect(badge?.className).toContain('group-[.bg-\\[var\\(--md-sys-color-secondary-container\\)\\]]:border-[var(--md-sys-color-outline)]');
   });
 
   it('supports children as content', () => {

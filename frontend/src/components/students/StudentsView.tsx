@@ -5,6 +5,7 @@ import { FilterChipSet } from '../common/FilterChip';
 import { ExpandableSearchBar } from '../common/ExpandableSearchBar';
 import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS, RISK_LEVEL_DOT_STYLES } from '../../config/styleConstants';
 import { StatusBadge } from '../common/StatusBadge';
+import { AvatarBadge } from '../common/AvatarBadge';
 import { DEGREE_LEVEL_LABELS, ACADEMIC_YEAR_LABELS } from '../../config/referralConstants';
 import { useAuth } from '../../contexts/AuthContext';
 import { SecondaryButton } from '../common/Buttons';
@@ -64,11 +65,9 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
       key: 'name',
       label: '学生姓名',
       width: 'w-[40%]',
-      render: (item) => (
+      render: (item, isSelected) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-xs font-medium shrink-0">
-            {item.name.charAt(0)}
-          </div>
+          <AvatarBadge name={item.name} isSelected={isSelected} size="sm" />
           <div className="flex flex-col">
             <span className="text-[14px] font-medium">{item.name}</span>
             <span className="text-[12px] opacity-70">学号: {item.studentNumber}</span>
@@ -100,13 +99,13 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
       key: 'riskLevel',
       label: '风险',
       width: 'w-[15%]',
-      render: (item) => {
+      render: (item, isSelected) => {
         const risk = item.riskLevel || 'LOW';
         const dotColor = RISK_LEVEL_DOT_STYLES[risk] || RISK_LEVEL_DOT_STYLES.Low;
         const label = RISK_LEVEL_LABELS[risk] || '低';
-        
+
         return (
-          <StatusBadge dotColorClass={dotColor} label={label} />
+          <StatusBadge dotColorClass={dotColor} label={label} isSelected={isSelected} />
         );
       }
     }

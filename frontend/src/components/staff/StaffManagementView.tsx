@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { StatusBadge } from '../common/StatusBadge';
+import { AvatarBadge } from '../common/AvatarBadge';
 
 interface Counselor {
   id: string;
@@ -57,11 +58,9 @@ export function StaffManagementView({ onStaffSelect, selectedStaffId }: StaffMan
       key: 'name',
       label: '咨询师',
       width: 'w-[35%]',
-      render: (item) => (
+      render: (item, isSelected) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[13px] font-medium shrink-0 uppercase">
-            {item.name.charAt(0)}
-          </div>
+          <AvatarBadge name={item.name} isSelected={isSelected} size="sm" className="uppercase" />
           <div className="flex flex-col">
             <span className="text-[14px] font-medium">{item.name}</span>
             <span className="text-[12px] opacity-70">工号: {item.employeeId}</span>
@@ -85,8 +84,8 @@ export function StaffManagementView({ onStaffSelect, selectedStaffId }: StaffMan
         <div className="flex flex-col">
           <span className="text-[14px] font-medium">{item.activeCaseload} 个活跃转诊</span>
           <div className="w-24 h-1.5 bg-[var(--md-sys-color-surface-container-highest)] rounded-full mt-1.5 overflow-hidden">
-             <div 
-               className="h-full bg-[var(--md-sys-color-primary)] opacity-60" 
+             <div
+               className="h-full bg-[var(--md-sys-color-primary)] opacity-60"
                style={{ width: `${Math.min(100, (item.activeCaseload / 25) * 100)}%` }}
              ></div>
           </div>
@@ -97,16 +96,17 @@ export function StaffManagementView({ onStaffSelect, selectedStaffId }: StaffMan
       key: 'status',
       label: '状态',
       width: 'w-[120px]',
-      render: (item) => {
+      render: (item, isSelected) => {
         const isActive = item.status === 'Active';
-        const dotColor = isActive 
-          ? 'bg-[var(--md-sys-color-primary-container)]' 
+        const dotColor = isActive
+          ? 'bg-[var(--md-sys-color-primary-container)]'
           : 'bg-[var(--md-sys-color-surface-container-highest)]';
         const label = item.status === 'Active' ? '活跃' : item.status === 'Inactive' ? '非活跃' : '暂停';
         return (
           <StatusBadge
             dotColorClass={dotColor}
             label={label}
+            isSelected={isSelected}
           />
         );
       }
