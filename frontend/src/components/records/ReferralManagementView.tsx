@@ -5,7 +5,8 @@ import { FilterChipSet } from '../common/FilterChip';
 import { useAuth } from '../../contexts/AuthContext';
 import { enrichReferralStatus } from '../../utils/referralUtils';
 import { formatDateToChinese } from '../../utils/dateUtils';
-import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS, STATUS_STYLES, STATUS_LABELS, REFERRAL_TYPE_LABELS } from '../../config/styleConstants';
+import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS, RISK_LEVEL_DOT_STYLES, STATUS_STYLES, STATUS_LABELS, STATUS_DOT_STYLES, REFERRAL_TYPE_LABELS } from '../../config/styleConstants';
+import { StatusBadge } from '../common/StatusBadge';
 
 import { Referral } from '../../types';
 
@@ -76,9 +77,10 @@ const columns: ColumnDefinition<Referral>[] = [
     width: 'w-[15%]',
     render: (item) => (
       <div className="flex items-center">
-        <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider ${RISK_LEVEL_STYLES[item.riskLevel]}`}>
-          {RISK_LEVEL_LABELS[item.riskLevel] || item.riskLevel}
-        </span>
+        <StatusBadge
+          dotColorClass={RISK_LEVEL_DOT_STYLES[item.riskLevel] || RISK_LEVEL_DOT_STYLES.LOW}
+          label={RISK_LEVEL_LABELS[item.riskLevel] || item.riskLevel}
+        />
       </div>
     )
   },
@@ -90,9 +92,10 @@ const columns: ColumnDefinition<Referral>[] = [
       const displayStatus = item.displayStatus || item.status;
 
       return (
-        <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${STATUS_STYLES[displayStatus] || STATUS_STYLES.default}`}>
-          {STATUS_LABELS[displayStatus] || displayStatus}
-        </span>
+        <StatusBadge
+          dotColorClass={STATUS_DOT_STYLES[displayStatus] || STATUS_DOT_STYLES.default}
+          label={STATUS_LABELS[displayStatus] || displayStatus}
+        />
       );
     }
   }

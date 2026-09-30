@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { ReferenceCategory, ReferenceImportRowDto, REFERENCE_CATEGORIES } from '../../types/references';
+import { StatusBadge } from '../common/StatusBadge';
 
 interface EssentialBulkImportPreviewTableProps {
   category: ReferenceCategory;
@@ -16,25 +17,26 @@ export function EssentialBulkImportPreviewTable({
     switch (status) {
       case 'READY':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[12px] font-medium bg-[#dcfce7] text-[#15803d] dark:bg-[#14532d] dark:text-[#86efac]">
-            就绪 (待导入)
-          </span>
+          <StatusBadge
+            dotColorClass="bg-[#dcfce7] dark:bg-[#14532d]"
+            label="就绪 (待导入)"
+          />
         );
       case 'DUPLICATE':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[12px] font-medium bg-[#fef3c7] text-[#b45309] dark:bg-[#78350f] dark:text-[#fde68a]">
-            已存在 (重复)
-          </span>
+          <StatusBadge
+            dotColorClass="bg-[#fef3c7] dark:bg-[#78350f]"
+            label="已存在 (重复)"
+          />
         );
       case 'INVALID':
       default:
         return (
-          <span
-            className="inline-flex items-center px-2 py-0.5 rounded-full text-[12px] font-medium bg-[#fee2e2] text-[#b91c1c] dark:bg-[#7f1d1d] dark:text-[#fca5a5]"
+          <StatusBadge
+            dotColorClass="bg-[#fee2e2] dark:bg-[#7f1d1d]"
             title={errorCode || '格式异常'}
-          >
-            异常 ({errorCode || '校验失败'})
-          </span>
+            label={`异常 (${errorCode || '校验失败'})`}
+          />
         );
     }
   };

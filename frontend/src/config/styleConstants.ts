@@ -4,6 +4,15 @@ export const RISK_LEVEL_STYLES: Record<string, string> = {
   LOW: 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]',
 };
 
+export const RISK_LEVEL_DOT_STYLES: Record<string, string> = {
+  HIGH: 'bg-[var(--md-sys-color-error-container)]',
+  MEDIUM: 'bg-[var(--md-sys-color-tertiary-container)]',
+  LOW: 'bg-[var(--md-sys-color-secondary-container)]',
+  High: 'bg-[var(--md-sys-color-error-container)]',
+  Medium: 'bg-[var(--md-sys-color-tertiary-container)]',
+  Low: 'bg-[var(--md-sys-color-secondary-container)]',
+};
+
 export const RISK_LEVEL_LABELS: Record<string, string> = {
   HIGH: '高',
   MEDIUM: '中',
@@ -26,6 +35,24 @@ export const STATUS_STYLES: Record<string, string> = {
   WAITING_FOR_SCHEDULING: 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]',
   WAITING_FOR_APPOINTMENT: 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]',
   default: 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]'
+};
+
+export const STATUS_DOT_STYLES: Record<string, string> = {
+  APPROVED: 'bg-[var(--md-sys-color-primary-container)]',
+  AWAITING_APPROVAL: 'bg-[var(--md-sys-color-secondary-container)]',
+  AWAITING_REVIEW: 'bg-[var(--md-sys-color-secondary-container)]',
+  AWAITING_TRIAGE: 'bg-[var(--md-sys-color-secondary-container)]',
+  NEEDS_REASSIGNMENT: 'bg-[var(--md-sys-color-error-container)]',
+  ERROR: 'bg-[var(--md-sys-color-error-container)]',
+  PENDING: 'bg-[var(--md-sys-color-tertiary-container)]',
+  CLOSED: 'bg-[var(--md-sys-color-secondary-container)]',
+  DRAFT: 'bg-[var(--md-sys-color-surface-container-high)]',
+  RECALLED: 'bg-[var(--md-sys-color-surface-container-highest)]',
+  REJECTED: 'bg-[var(--md-sys-color-error-container)]',
+  AWAITING_FEEDBACK_APPROVAL: 'bg-[var(--md-sys-color-tertiary-container)]',
+  WAITING_FOR_SCHEDULING: 'bg-[var(--md-sys-color-secondary-container)]',
+  WAITING_FOR_APPOINTMENT: 'bg-[var(--md-sys-color-primary-container)]',
+  default: 'bg-[var(--md-sys-color-surface-variant)]'
 };
 
 export const STATUS_LABELS: Record<string, string> = {

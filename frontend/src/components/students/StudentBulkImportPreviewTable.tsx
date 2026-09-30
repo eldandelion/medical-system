@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { StudentImportRow, StudentImportFieldError } from '../../types/studentImport';
+import { StatusBadge } from '../common/StatusBadge';
 
 interface StudentBulkImportPreviewTableProps {
   rows: StudentImportRow[];
@@ -139,25 +140,25 @@ export function StudentBulkImportPreviewTable({ rows }: StudentBulkImportPreview
                 </td>
                 <td className="py-2.5 px-3">
                   {row.status === 'READY' && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium bg-[#dcfce7] text-[#15803d] dark:bg-[#14532d] dark:text-[#86efac]">
-                      <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check</span>
-                      待导入
-                    </span>
+                    <StatusBadge
+                      dotColorClass="bg-[#dcfce7] dark:bg-[#14532d]"
+                      label="待导入"
+                    />
                   )}
                   {row.status === 'DUPLICATE' && (
                     <div className="flex flex-col gap-1">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium bg-[#fef3c7] text-[#b45309] dark:bg-[#78350f] dark:text-[#fde68a] w-fit">
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>warning</span>
-                        已存在 (重复)
-                      </span>
+                      <StatusBadge
+                        dotColorClass="bg-[#fef3c7] dark:bg-[#78350f]"
+                        label="已存在 (重复)"
+                      />
                     </div>
                   )}
                   {row.status === 'INVALID' && (
                     <div className="flex flex-col gap-1 py-0.5">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium bg-[#fee2e2] text-[#b91c1c] dark:bg-[#7f1d1d] dark:text-[#fca5a5] w-fit">
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
-                        格式异常 ({row.errors.length})
-                      </span>
+                      <StatusBadge
+                        dotColorClass="bg-[#fee2e2] dark:bg-[#7f1d1d]"
+                        label={`格式异常 (${row.errors.length})`}
+                      />
                       <div className="text-[11px] text-[var(--md-sys-color-error)] space-y-0.5">
                         {row.errors.map((err, i) => (
                           <div key={i} className="flex items-center gap-1">

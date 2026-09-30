@@ -2,7 +2,8 @@ import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { RecordHeader } from './RecordHeader';
-import { STATUS_STYLES, STATUS_LABELS, REFERRAL_TYPE_LABELS } from '../../config/styleConstants';
+import { STATUS_STYLES, STATUS_LABELS, STATUS_DOT_STYLES, REFERRAL_TYPE_LABELS } from '../../config/styleConstants';
+import { StatusBadge } from '../common/StatusBadge';
 
 import { enrichReferralStatus } from '../../utils/referralUtils';
 
@@ -77,15 +78,15 @@ export function RecordsView({ onRecordSelect, selectedRecordId, header }: Record
       key: 'status',
       label: '状态',
       width: 'w-[20%]',
-      render: (item, isSelected) => {
+      render: (item) => {
         const displayStatus = item.displayStatus || item.status;
-        const style = STATUS_STYLES[displayStatus] || STATUS_STYLES.default;
         const label = STATUS_LABELS[displayStatus] || displayStatus;
         return (
           <div className="flex items-center">
-            <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${style}`}>
-              {label}
-            </span>
+            <StatusBadge
+              dotColorClass={STATUS_DOT_STYLES[displayStatus] || STATUS_DOT_STYLES.default}
+              label={label}
+            />
           </div>
         );
       }

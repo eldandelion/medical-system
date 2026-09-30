@@ -4,6 +4,7 @@ import { AdminUserSummaryDto, AccountStatus } from '../../types/admin';
 import { roleTranslations } from '../../utils/roleTranslations';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { ExpandableSearchBar } from '../common/ExpandableSearchBar';
+import { StatusBadge } from '../common/StatusBadge';
 
 interface UserManagementViewProps {
   onSelectUser?: (user: AdminUserSummaryDto) => void;
@@ -55,27 +56,31 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
     switch (status) {
       case 'ACTIVE':
         return (
-          <span className="px-3 py-1 rounded-full text-[12px] font-bold tracking-[0.5px] bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]">
-            已启用
-          </span>
+          <StatusBadge
+            dotColorClass="bg-[var(--md-sys-color-secondary-container)]"
+            label="已启用"
+          />
         );
       case 'PENDING_APPROVAL':
         return (
-          <span className="px-3 py-1 rounded-full text-[12px] font-bold tracking-[0.5px] bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]">
-            待审核
-          </span>
+          <StatusBadge
+            dotColorClass="bg-[var(--md-sys-color-tertiary-container)]"
+            label="待审核"
+          />
         );
       case 'DISABLED':
         return (
-          <span className="px-3 py-1 rounded-full text-[12px] font-bold tracking-[0.5px] bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]">
-            已禁用
-          </span>
+          <StatusBadge
+            dotColorClass="bg-[var(--md-sys-color-surface-container-high)]"
+            label="已禁用"
+          />
         );
       case 'DELETED':
         return (
-          <span className="px-3 py-1 rounded-full text-[12px] font-bold tracking-[0.5px] bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
-            已注销
-          </span>
+          <StatusBadge
+            dotColorClass="bg-[var(--md-sys-color-error-container)]"
+            label="已注销"
+          />
         );
     }
   };

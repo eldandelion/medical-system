@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { FilterChipSet } from '../common/FilterChip';
 import { ExpandableSearchBar } from '../common/ExpandableSearchBar';
-import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS } from '../../config/styleConstants';
+import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS, RISK_LEVEL_DOT_STYLES } from '../../config/styleConstants';
+import { StatusBadge } from '../common/StatusBadge';
 import { DEGREE_LEVEL_LABELS, ACADEMIC_YEAR_LABELS } from '../../config/referralConstants';
 import { useAuth } from '../../contexts/AuthContext';
 import { SecondaryButton } from '../common/Buttons';
@@ -101,13 +102,11 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
       width: 'w-[15%]',
       render: (item) => {
         const risk = item.riskLevel || 'LOW';
-        const style = RISK_LEVEL_STYLES[risk] || RISK_LEVEL_STYLES.Low;
+        const dotColor = RISK_LEVEL_DOT_STYLES[risk] || RISK_LEVEL_DOT_STYLES.Low;
         const label = RISK_LEVEL_LABELS[risk] || '低';
         
         return (
-          <span className={`px-3 py-1 rounded-full text-[12px] font-bold tracking-[0.5px] uppercase ${style}`}>
-            {label}
-          </span>
+          <StatusBadge dotColorClass={dotColor} label={label} />
         );
       }
     }

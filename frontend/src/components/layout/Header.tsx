@@ -105,12 +105,6 @@ export function Header({ searchPlaceholder, onProfileClick }: HeaderProps) {
 
       {/* Right Action Icons */}
       <div className="flex items-center ml-2">
-        <div className="mx-1 flex items-center">
-          <md-icon-button aria-label="Help">
-            <md-icon>help</md-icon>
-          </md-icon-button>
-        </div>
-
         {/* Settings Menu */}
         <div className="relative flex items-center mx-1">
           <md-icon-button

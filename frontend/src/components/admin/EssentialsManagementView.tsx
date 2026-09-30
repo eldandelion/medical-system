@@ -14,6 +14,7 @@ import { SplitButton } from '../common/Buttons';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { ExpandableSearchBar } from '../common/ExpandableSearchBar';
 import { FilterChip } from '../common/FilterChip';
+import { StatusBadge } from '../common/StatusBadge';
 import { EssentialEditDialog } from './EssentialEditDialog';
 import { EssentialDeleteConfirmDialog } from './EssentialDeleteConfirmDialog';
 import { EssentialBulkImportDialog } from './EssentialBulkImportDialog';
@@ -208,13 +209,15 @@ export function EssentialsManagementView() {
         width: 'w-28',
         render: (item) =>
           item.status === 'ACTIVE' ? (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[12px] font-medium bg-[#dcfce7] text-[#15803d] dark:bg-[#14532d] dark:text-[#86efac]">
-              正常可用
-            </span>
+            <StatusBadge
+              dotColorClass="bg-[#dcfce7] dark:bg-[#14532d]"
+              label="正常可用"
+            />
           ) : (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[12px] font-medium bg-[#fef3c7] text-[#b45309] dark:bg-[#78350f] dark:text-[#fde68a]">
-              已停用
-            </span>
+            <StatusBadge
+              dotColorClass="bg-[#fef3c7] dark:bg-[#78350f]"
+              label="已停用"
+            />
           ),
       },
       {

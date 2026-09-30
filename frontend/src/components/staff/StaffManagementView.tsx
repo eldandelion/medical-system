@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
+import { StatusBadge } from '../common/StatusBadge';
 
 interface Counselor {
   id: string;
@@ -98,14 +99,15 @@ export function StaffManagementView({ onStaffSelect, selectedStaffId }: StaffMan
       width: 'w-[120px]',
       render: (item) => {
         const isActive = item.status === 'Active';
+        const dotColor = isActive 
+          ? 'bg-[var(--md-sys-color-primary-container)]' 
+          : 'bg-[var(--md-sys-color-surface-container-highest)]';
+        const label = item.status === 'Active' ? '活跃' : item.status === 'Inactive' ? '非活跃' : '暂停';
         return (
-          <span className={`px-3 py-1 rounded-full text-[12px] font-medium ${
-            isActive 
-              ? 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]' 
-              : 'bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface-variant)]'
-          }`}>
-            {item.status === 'Active' ? '活跃' : item.status === 'Inactive' ? '非活跃' : '暂停'}
-          </span>
+          <StatusBadge
+            dotColorClass={dotColor}
+            label={label}
+          />
         );
       }
     }

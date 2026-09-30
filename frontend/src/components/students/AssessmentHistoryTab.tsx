@@ -3,6 +3,7 @@ import { useAssessmentHistory, useRevokeAssignment } from '../../hooks/useAssess
 import { useAuth } from '../../contexts/AuthContext';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 import { DataTable } from '../common/DataTable';
+import { StatusBadge } from '../common/StatusBadge';
 import { AssessmentAssignmentHistoryDto, AssessmentCatalogItemDto } from '../../types';
 import { getAssessmentName } from '../../constants/assessmentDictionary';
 
@@ -51,12 +52,12 @@ const AssessmentHistoryTab: React.FC<AssessmentHistoryTabProps> = ({ studentId }
 
   const getStatusDisplay = (status: string) => {
     switch (status) {
-      case 'COMPLETED': return { label: '已完成', className: 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]' };
-      case 'PENDING': return { label: '待测评', className: 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]' };
-      case 'IN_PROGRESS': return { label: '进行中', className: 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]' };
-      case 'REVOKED': return { label: '已撤销', className: 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]' };
-      case 'EXPIRED': return { label: '已过期', className: 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]' };
-      default: return { label: status, className: 'bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]' };
+      case 'COMPLETED': return { label: '已完成', dotColor: 'bg-[var(--md-sys-color-primary-container)]' };
+      case 'PENDING': return { label: '待测评', dotColor: 'bg-[var(--md-sys-color-tertiary-container)]' };
+      case 'IN_PROGRESS': return { label: '进行中', dotColor: 'bg-[var(--md-sys-color-secondary-container)]' };
+      case 'REVOKED': return { label: '已撤销', dotColor: 'bg-[var(--md-sys-color-surface-variant)]' };
+      case 'EXPIRED': return { label: '已过期', dotColor: 'bg-[var(--md-sys-color-error-container)]' };
+      default: return { label: status, dotColor: 'bg-[var(--md-sys-color-surface-variant)]' };
     }
   };
   
@@ -83,9 +84,7 @@ const AssessmentHistoryTab: React.FC<AssessmentHistoryTabProps> = ({ studentId }
       render: (item: AssessmentAssignmentHistoryDto) => {
         const statusInfo = getStatusDisplay(item.status);
         return (
-          <span className={`px-2 py-0.5 inline-flex text-xs font-semibold rounded-full ${statusInfo.className}`}>
-            {statusInfo.label}
-          </span>
+          <StatusBadge dotColorClass={statusInfo.dotColor} label={statusInfo.label} />
         );
       }
     },
