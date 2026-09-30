@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'motion/react';
-import { DetailsSection, DetailItem, MetricCard, ScrollableDetailsLayout } from '../common/DetailsPanel';
+import { DetailsSection, ScrollableDetailsLayout } from '../common/DetailsPanel';
+import { GroupedInfoList, GroupedInfoItemProps } from '../common/GroupedInfoList';
 import { OutlinedButton } from '../common/Buttons';
 import { ActionFooter } from '../common/ActionFooter';
 import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS } from '../../config/styleConstants';
@@ -13,6 +14,7 @@ import { PsychometricsTabContent } from '../assessments/PsychometricsTabContent'
 import { AssessmentAssignmentCreationForm } from '../assessments/AssessmentAssignmentCreationForm';
 import { ReferralCreationForm } from '../records/ReferralCreationForm';
 import { Student } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
 import AssessmentHistoryTab from './AssessmentHistoryTab';
 
 interface StudentDetailsViewProps {
@@ -37,7 +39,112 @@ export const STUDENT_DETAILS_TABS = [
   { id: StudentDetailsTabs.HISTORY, label: '档案记录', icon: 'history_edu' },
 ];
 
-import { useAuth } from '../../contexts/AuthContext';
+function getStudentDemographicItems(student: Student): GroupedInfoItemProps[] {
+  const demographics = student.demographics;
+  const genderMap: Record<string, string> = {
+    MALE: '男',
+    FEMALE: '女',
+    OTHER: '其他',
+  };
+
+  return [
+    {
+      id: 'gender',
+      icon: 'wc',
+      label: '性别',
+      value: demographics?.gender ? (genderMap[demographics.gender] || demographics.gender) : undefined,
+    },
+    {
+      id: 'age',
+      icon: 'cake',
+      label: '年龄',
+      value: demographics?.age !== undefined && demographics?.age !== null ? `${demographics.age} 岁` : undefined,
+    },
+    {
+      id: 'ethnicity',
+      icon: 'public',
+      label: '民族',
+      value: demographics?.ethnicity,
+    },
+    {
+      id: 'idCardNumber',
+      icon: 'badge',
+      label: '身份证号',
+      value: demographics?.idCardNumber,
+      copyable: Boolean(demographics?.idCardNumber),
+    },
+  ];
+}
+
+function getStudentAcademicItems(student: Student): GroupedInfoItemProps[] {
+  return [
+    {
+      id: 'studentNumber',
+      icon: 'numbers',
+      label: '学号',
+      value: student.studentNumber,
+      copyable: Boolean(student.studentNumber),
+    },
+    {
+      id: 'year',
+      icon: 'school',
+      label: '年级',
+      value: student.year ? (ACADEMIC_YEAR_LABELS[student.year] || student.year) : undefined,
+    },
+    {
+      id: 'school',
+      icon: 'account_balance',
+      label: '学校',
+      value: student.demographics?.school,
+    },
+    {
+      id: 'major',
+      icon: 'menu_book',
+      label: '就读专业',
+      value: student.major,
+    },
+  ];
+}
+
+function getStudentContactItems(student: Student): GroupedInfoItemProps[] {
+  const demographics = student.demographics;
+  const emergencyDisplay =
+    demographics?.emergencyContactName || demographics?.emergencyContactPhone
+      ? `${demographics?.emergencyContactName || '未登记'} (${demographics?.emergencyContactPhone || '未登记'})`
+      : undefined;
+
+  return [
+    {
+      id: 'contactNumber',
+      icon: 'phone_iphone',
+      label: '联系电话',
+      value: demographics?.contactNumber,
+      copyable: Boolean(demographics?.contactNumber),
+    },
+    {
+      id: 'email',
+      icon: 'mail',
+      label: '电子邮箱',
+      value: demographics?.email,
+      copyable: Boolean(demographics?.email),
+    },
+    {
+      id: 'homeAddress',
+      icon: 'home_pin',
+      label: '家庭住址',
+      value: demographics?.homeAddress,
+      copyable: Boolean(demographics?.homeAddress),
+    },
+    {
+      id: 'emergencyContact',
+      icon: 'contact_emergency',
+      label: '紧急联系人',
+      value: emergencyDisplay,
+      copyable: Boolean(demographics?.emergencyContactPhone),
+      copyValue: demographics?.emergencyContactPhone,
+    },
+  ];
+}
 
 export function StudentDetailsView({ student: initialStudent, hideHeader, activeTab: propsActiveTab, onTabChange, footer }: StudentDetailsViewProps) {
   const { session } = useAuth();
@@ -69,6 +176,10 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
   const student = studentData || initialStudent;
 
   if (!student) return null;
+
+  const demographicItems = getStudentDemographicItems(student);
+  const academicItems = getStudentAcademicItems(student);
+  const contactItems = getStudentContactItems(student);
 
   return (
     <ScrollableDetailsLayout
@@ -149,42 +260,17 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
               >
                 {/* 基本特征 */}
                 <DetailsSection title="基本特征" className="border-t-0">
-                  <div className="grid grid-cols-2 @[440px]:grid-cols-4 gap-3">
-                    <MetricCard 
-                      label="性别" 
-                      value={
-                        student.demographics?.gender === 'MALE' ? '男' :
-                        student.demographics?.gender === 'FEMALE' ? '女' :
-                        student.demographics?.gender === 'OTHER' ? '其他' :
-                        student.demographics?.gender || 'N/A'
-                      } 
-                      icon="wc" 
-                      className="col-span-1" 
-                    />
-                    <MetricCard label="年龄" value={student.demographics?.age?.toString() || 'N/A'} icon="cake" className="col-span-1" />
-                    <MetricCard label="民族" value={student.demographics?.ethnicity || 'N/A'} icon="public" className="col-span-2" />
-                    <MetricCard label="身份证号" value={student.demographics?.idCardNumber || 'N/A'} icon="badge" className="col-span-2 @[440px]:col-span-4" copyable={true} />
-                  </div>
+                  <GroupedInfoList items={demographicItems} fallbackText="N/A" />
                 </DetailsSection>
 
                 {/* 学籍信息 */}
                 <DetailsSection title="学籍信息" className="border-t-0">
-                  <div className="grid grid-cols-2 @[440px]:grid-cols-4 gap-3">
-                    <MetricCard label="学号" value={student.studentNumber || 'N/A'} icon="numbers" className="col-span-2" copyable={true} />
-                    <MetricCard label="年级" value={student.year ? (ACADEMIC_YEAR_LABELS[student.year] || student.year) : 'N/A'} icon="school" className="col-span-2" />
-                    <MetricCard label="学校" value={student.demographics?.school || 'N/A'} icon="account_balance" className="col-span-2" />
-                    <MetricCard label="就读专业" value={student.major || 'N/A'} icon="menu_book" className="col-span-2" />
-                  </div>
+                  <GroupedInfoList items={academicItems} fallbackText="N/A" />
                 </DetailsSection>
 
                 {/* 联系方式 */}
                 <DetailsSection title="联系方式" className="border-t-0">
-                  <div className="grid grid-cols-2 @[440px]:grid-cols-4 gap-3">
-                    <MetricCard label="联系电话" value={student.demographics?.contactNumber || 'N/A'} icon="phone_iphone" className="col-span-2" copyable={true} />
-                    <MetricCard label="电子邮箱" value={student.demographics?.email || 'N/A'} icon="mail" className="col-span-2" copyable={true} />
-                    <MetricCard label="家庭住址" value={student.demographics?.homeAddress || 'N/A'} icon="home_pin" className="col-span-2 @[440px]:col-span-4" copyable={true} />
-                    <MetricCard label="紧急联系人" value={`${student.demographics?.emergencyContactName || 'N/A'} (${student.demographics?.emergencyContactPhone || 'N/A'})`} icon="contact_emergency" className="col-span-2 @[440px]:col-span-4" copyable={true} copyValue={student.demographics?.emergencyContactPhone} />
-                  </div>
+                  <GroupedInfoList items={contactItems} fallbackText="N/A" />
                 </DetailsSection>
 
                 {student.referralReason && (
