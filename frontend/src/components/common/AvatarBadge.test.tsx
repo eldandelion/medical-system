@@ -13,11 +13,12 @@ describe('AvatarBadge Component', () => {
     expect(screen.getByText('?')).toBeDefined();
   });
 
-  it('applies default primary-container styling when unselected', () => {
+  it('applies default primary-container styling and anti-cutoff margin when unselected', () => {
     const { container } = render(<AvatarBadge name="李雷" />);
     const avatar = container.querySelector('div');
     expect(avatar?.className).toContain('bg-[var(--md-sys-color-primary-container)]');
     expect(avatar?.className).toContain('text-[var(--md-sys-color-on-primary-container)]');
+    expect(avatar?.className).toContain('m-0.5');
   });
 
   it('applies elevated high-contrast primary styling and ring when isSelected is true', () => {

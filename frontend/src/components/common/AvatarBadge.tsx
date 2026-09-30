@@ -36,7 +36,7 @@ export function AvatarBadge({
       <img
         src={avatarUrl}
         alt={name}
-        className={`${sizeClass} rounded-full object-cover shrink-0 ring-1 ring-[var(--md-sys-color-outline-variant)] ${
+        className={`${sizeClass} rounded-full object-cover shrink-0 m-0.5 ring-1 ring-[var(--md-sys-color-outline-variant)] ${
           isSelected
             ? 'ring-2 ring-[var(--md-sys-color-surface)] shadow-xs'
             : 'group-[.bg-\\[var\\(--md-sys-color-secondary-container\\)\\]]:ring-2 group-[.bg-\\[var\\(--md-sys-color-secondary-container\\)\\]]:ring-[var(--md-sys-color-surface)] group-[.bg-\\[var\\(--md-sys-color-secondary-container\\)\\]]:shadow-xs'
@@ -47,7 +47,7 @@ export function AvatarBadge({
 
   return (
     <div
-      className={`${sizeClass} rounded-full flex items-center justify-center font-medium shrink-0 transition-all duration-150 ${
+      className={`${sizeClass} rounded-full flex items-center justify-center font-medium shrink-0 m-0.5 transition-all duration-150 ${
         isSelected
           ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] ring-2 ring-[var(--md-sys-color-surface)] shadow-xs font-semibold'
           : 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] ring-1 ring-black/5 dark:ring-white/10 group-[.bg-\\[var\\(--md-sys-color-secondary-container\\)\\]]:bg-[var(--md-sys-color-primary)] group-[.bg-\\[var\\(--md-sys-color-secondary-container\\)\\]]:text-[var(--md-sys-color-on-primary)] group-[.bg-\\[var\\(--md-sys-color-secondary-container\\)\\]]:ring-2 group-[.bg-\\[var\\(--md-sys-color-secondary-container\\)\\]]:ring-[var(--md-sys-color-surface)] group-[.bg-\\[var\\(--md-sys-color-secondary-container\\)\\]]:shadow-xs group-[.bg-\\[var\\(--md-sys-color-secondary-container\\)\\]]:font-semibold'

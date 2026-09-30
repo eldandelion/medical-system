@@ -58,6 +58,7 @@ export function StaffManagementView({ onStaffSelect, selectedStaffId }: StaffMan
       key: 'name',
       label: '咨询师',
       width: 'w-[35%]',
+      overflowVisible: true,
       render: (item, isSelected) => (
         <div className="flex items-center gap-3">
           <AvatarBadge name={item.name} isSelected={isSelected} size="sm" className="uppercase" />

@@ -32,6 +32,7 @@ const columns: ColumnDefinition<Referral>[] = [
     key: 'studentName',
     label: '学生',
     width: 'w-[25%]',
+    overflowVisible: true,
     render: (item, isSelected) => (
       <div className="flex items-center gap-3">
         <div className="relative shrink-0">

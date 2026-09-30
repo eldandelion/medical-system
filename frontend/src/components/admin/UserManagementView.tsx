@@ -95,6 +95,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       key: 'name',
       label: '用户',
       width: 'w-[32%]',
+      overflowVisible: true,
       render: (user, isSelected) => (
         <div className="flex items-center gap-3">
           <AvatarBadge name={user.name} isSelected={isSelected} size="sm" className="uppercase" />

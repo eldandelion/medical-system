@@ -65,6 +65,7 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header }: Stu
       key: 'name',
       label: '学生姓名',
       width: 'w-[40%]',
+      overflowVisible: true,
       render: (item, isSelected) => (
         <div className="flex items-center gap-3">
           <AvatarBadge name={item.name} isSelected={isSelected} size="sm" />
