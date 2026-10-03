@@ -2,7 +2,8 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AdminUserSummaryDto, AdminUserDetailsDto, AccountStatus } from '../../types/admin';
 import { roleTranslations } from '../../utils/roleTranslations';
-import { DetailsSection, MetricCard, ScrollableDetailsLayout } from '../common/DetailsPanel';
+import { DetailsSection, ScrollableDetailsLayout } from '../common/DetailsPanel';
+import { GroupedInfoList } from '../common/GroupedInfoList';
 import { UserGovernanceFooter } from './UserGovernanceFooter';
 import { useAuth } from '../../contexts/AuthContext';
 import { fetchAdminUserDetails } from '../../api/admin';
@@ -117,38 +118,39 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
         {/* 基本特征 (Demographics) */}
         {hasDemographics && (
           <DetailsSection title="基本特征" className="border-t-0">
-            <div className="grid grid-cols-2 @[440px]:grid-cols-4 gap-3">
-              <MetricCard
-                label="性别"
-                value={
-                  demographics?.gender === 'MALE' ? '男' :
-                  demographics?.gender === 'FEMALE' ? '女' :
-                  demographics?.gender === 'OTHER' ? '其他' :
-                  demographics?.gender || '未设置'
+            <GroupedInfoList
+              fallbackText="未设置"
+              items={[
+                {
+                  id: 'gender',
+                  icon: 'wc',
+                  label: '性别',
+                  value: demographics?.gender === 'MALE' ? '男' :
+                         demographics?.gender === 'FEMALE' ? '女' :
+                         demographics?.gender === 'OTHER' ? '其他' :
+                         demographics?.gender
+                },
+                {
+                  id: 'age',
+                  icon: 'cake',
+                  label: '年龄',
+                  value: demographics?.age != null ? `${demographics.age} 岁` : undefined
+                },
+                {
+                  id: 'ethnicity',
+                  icon: 'public',
+                  label: '民族',
+                  value: demographics?.ethnicity
+                },
+                {
+                  id: 'idCardNumber',
+                  icon: 'badge',
+                  label: '身份证号',
+                  value: demographics?.idCardNumber,
+                  copyable: !!demographics?.idCardNumber
                 }
-                icon="wc"
-                className="col-span-1"
-              />
-              <MetricCard
-                label="年龄"
-                value={demographics?.age != null ? `${demographics.age} 岁` : '未设置'}
-                icon="cake"
-                className="col-span-1"
-              />
-              <MetricCard
-                label="民族"
-                value={demographics?.ethnicity || '未设置'}
-                icon="public"
-                className="col-span-2"
-              />
-              <MetricCard
-                label="身份证号"
-                value={demographics?.idCardNumber || '未分配'}
-                icon="badge"
-                className="col-span-2 @[440px]:col-span-4"
-                copyable={!!demographics?.idCardNumber}
-              />
-            </div>
+              ]}
+            />
           </DetailsSection>
         )}
 
@@ -163,78 +165,80 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
           }
           className="border-t-0"
         >
-          <div className="grid grid-cols-2 @[440px]:grid-cols-4 gap-3">
-            <MetricCard
-              label={isStudent ? '学号' : '教工号 / 执业工号'}
-              value={employeeOrStudentId}
-              icon="numbers"
-              className="col-span-2"
-              copyable={true}
-            />
-            <MetricCard
-              label={isStudent ? '年级 / 培养层次' : '职务 / 职称'}
-              value={
-                isStudent
+          <GroupedInfoList
+            fallbackText="未设置"
+            items={[
+              {
+                id: 'identifier',
+                icon: 'numbers',
+                label: isStudent ? '学号' : '教工号 / 执业工号',
+                value: employeeOrStudentId,
+                copyable: true
+              },
+              {
+                id: 'titleOrDegree',
+                icon: isStudent ? 'school' : 'badge',
+                label: isStudent ? '年级 / 培养层次' : '职务 / 职称',
+                value: isStudent
                   ? affiliation?.enrollmentYear
                     ? `${affiliation.enrollmentYear}级 (${affiliation?.titleOrDegree || '本科生'})`
                     : affiliation?.titleOrDegree || '本科生'
                   : affiliation?.titleOrDegree
                   ? roleTranslations[affiliation.titleOrDegree] || affiliation.titleOrDegree
                   : roleTranslations[user.role] || '在职人员'
+              },
+              {
+                id: 'organization',
+                icon: user.hospital ? 'local_hospital' : 'account_balance',
+                label: user.hospital ? '定点附属医院' : '所属学校 / 机构',
+                value: primaryOrganization
+              },
+              {
+                id: 'department',
+                icon: isStudent ? 'menu_book' : 'domain',
+                label: isStudent ? '就读专业 / 院系' : user.hospital ? '执业科室' : '所属院系 / 部门',
+                value: departmentOrCollege
               }
-              icon={isStudent ? 'school' : 'badge'}
-              className="col-span-2"
-            />
-            <MetricCard
-              label={user.hospital ? '定点附属医院' : '所属学校 / 机构'}
-              value={primaryOrganization}
-              icon={user.hospital ? 'local_hospital' : 'account_balance'}
-              className="col-span-2"
-            />
-            <MetricCard
-              label={isStudent ? '就读专业 / 院系' : user.hospital ? '执业科室' : '所属院系 / 部门'}
-              value={departmentOrCollege}
-              icon={isStudent ? 'menu_book' : 'domain'}
-              className="col-span-2"
-            />
-          </div>
+            ]}
+          />
         </DetailsSection>
 
         {/* 联系方式 */}
         <DetailsSection title="联系方式" className="border-t-0">
-          <div className="grid grid-cols-2 @[440px]:grid-cols-4 gap-3">
-            <MetricCard
-              label="联系电话"
-              value={contactPhone}
-              icon="phone_iphone"
-              className="col-span-2"
-              copyable={contactPhone !== '未登记'}
-            />
-            <MetricCard
-              label="电子邮箱"
-              value={userEmail}
-              icon="mail"
-              className="col-span-2"
-              copyable={userEmail !== '未登记'}
-            />
-            <MetricCard
-              label={isStudent ? '家庭住址' : '办公 / 常住地址'}
-              value={userAddress}
-              icon="home_pin"
-              className="col-span-2 @[440px]:col-span-4"
-              copyable={userAddress !== '未登记'}
-            />
-            {demographics?.emergencyContactName && (
-              <MetricCard
-                label="紧急联系人"
-                value={`${demographics.emergencyContactName} (${demographics.emergencyContactPhone || '未留电话'})`}
-                icon="contact_emergency"
-                className="col-span-2 @[440px]:col-span-4"
-                copyable={!!demographics.emergencyContactPhone}
-                copyValue={demographics.emergencyContactPhone ?? undefined}
-              />
-            )}
-          </div>
+          <GroupedInfoList
+            fallbackText="未登记"
+            items={[
+              {
+                id: 'contactPhone',
+                icon: 'phone_iphone',
+                label: '联系电话',
+                value: contactPhone !== '未登记' ? contactPhone : undefined,
+                copyable: contactPhone !== '未登记'
+              },
+              {
+                id: 'userEmail',
+                icon: 'mail',
+                label: '电子邮箱',
+                value: userEmail !== '未登记' ? userEmail : undefined,
+                copyable: userEmail !== '未登记'
+              },
+              {
+                id: 'userAddress',
+                icon: 'home_pin',
+                label: isStudent ? '家庭住址' : '办公 / 常住地址',
+                value: userAddress !== '未登记' ? userAddress : undefined,
+                copyable: userAddress !== '未登记'
+              },
+              ...(demographics?.emergencyContactName ? [{
+                id: 'emergencyContact',
+                icon: 'contact_emergency',
+                label: '紧急联系人',
+                value: `${demographics.emergencyContactName} (${demographics.emergencyContactPhone || '未留电话'})`,
+                copyable: !!demographics.emergencyContactPhone,
+                copyValue: demographics.emergencyContactPhone ?? undefined
+              }] : [])
+            ]}
+          />
         </DetailsSection>
 
         {user.deletedAt && (
