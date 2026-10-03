@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { DetailsSection, MetricCard } from '../common/DetailsPanel';
+import { DetailsSection } from '../common/DetailsPanel';
+import { GroupedInfoList } from '../common/GroupedInfoList';
 import { AttachmentList, Attachment } from '../common/AttachmentList';
 import { Quote } from 'lucide-react';
 import { STATUS_STYLES, STATUS_LABELS } from '../../config/styleConstants';
@@ -43,73 +44,83 @@ export function ReferralOverviewTab({ referral, referralDetails, onNavigateToTra
         <div className="flex flex-col gap-3">
           {/* 3-Column Metrics Grid */}
           {referralDetails.triageInfo && (
-            <div className="grid grid-cols-2 @[440px]:grid-cols-3 gap-3">
-              <MetricCard
-                label="是否初诊"
-                icon="person_add"
-                value={referralDetails.triageInfo.isFirstVisit ? "是" : "否"}
-                valueClassName={referralDetails.triageInfo.isFirstVisit 
-                  ? "text-sm leading-5 font-semibold text-[var(--md-sys-color-on-surface)]" 
-                  : "text-sm leading-5 font-semibold text-[var(--md-sys-color-on-surface-variant)] opacity-70"}
-              />
-
-              <MetricCard
-                label="是否服药"
-                icon="medication"
-                value={referralDetails.triageInfo.isMedicated ? "是" : "否"}
-                valueClassName={referralDetails.triageInfo.isMedicated 
-                  ? "text-sm leading-5 font-semibold text-[var(--md-sys-color-on-surface)]" 
-                  : "text-sm leading-5 font-semibold text-[var(--md-sys-color-on-surface-variant)] opacity-70"}
-              />
-
-              <MetricCard
-                label="心理治疗"
-                icon="monitoring"
-                value={referralDetails.triageInfo.priorTherapy || "无"}
-                valueClassName={referralDetails.triageInfo.priorTherapy === '无' 
-                  ? "text-sm leading-5 font-semibold text-[var(--md-sys-color-on-surface-variant)] opacity-70" 
-                  : "text-sm leading-5 font-semibold text-[var(--md-sys-color-on-surface)] truncate"}
-              />
-            </div>
+            <GroupedInfoList
+              items={[
+                {
+                  id: 'firstVisit',
+                  icon: 'person_add',
+                  label: '是否初诊',
+                  value: referralDetails.triageInfo.isFirstVisit ? '是' : '否',
+                  valueClassName: referralDetails.triageInfo.isFirstVisit 
+                    ? 'text-[var(--md-sys-color-on-surface)]' 
+                    : 'text-[var(--md-sys-color-on-surface-variant)] opacity-70'
+                },
+                {
+                  id: 'medicated',
+                  icon: 'medication',
+                  label: '是否服药',
+                  value: referralDetails.triageInfo.isMedicated ? '是' : '否',
+                  valueClassName: referralDetails.triageInfo.isMedicated 
+                    ? 'text-[var(--md-sys-color-on-surface)]' 
+                    : 'text-[var(--md-sys-color-on-surface-variant)] opacity-70'
+                },
+                {
+                  id: 'priorTherapy',
+                  icon: 'monitoring',
+                  label: '心理治疗',
+                  value: referralDetails.triageInfo.priorTherapy || '无',
+                  valueClassName: referralDetails.triageInfo.priorTherapy === '无' 
+                    ? 'text-[var(--md-sys-color-on-surface-variant)] opacity-70' 
+                    : 'text-[var(--md-sys-color-on-surface)] truncate'
+                }
+              ]}
+              layout="horizontal"
+            />
           )}
 
           {/* 3-Column Risk Grid */}
           {referralDetails.riskAssessment && (
-            <div className="grid grid-cols-2 @[440px]:grid-cols-3 gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <MetricCard
-                label="自杀意念"
-                icon="psychology"
-                className={referralDetails.riskAssessment.ideation ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]" : ""}
-                iconClassName={referralDetails.riskAssessment.ideation ? "text-[var(--md-sys-color-on-error-container)]" : "text-[var(--md-sys-color-on-surface-variant)]"}
-                labelClassName={referralDetails.riskAssessment.ideation ? "text-[var(--md-sys-color-on-error-container)] opacity-90" : "text-[var(--md-sys-color-on-surface-variant)]"}
-                value={referralDetails.riskAssessment.ideation ? "是" : "否"}
-                valueClassName={referralDetails.riskAssessment.ideation 
-                  ? "text-sm leading-5 font-bold text-[var(--md-sys-color-on-error-container)]" 
-                  : "text-sm leading-5 font-semibold text-[var(--md-sys-color-on-surface-variant)] opacity-70"}
-              />
-
-              <MetricCard
-                label="自杀企图"
-                icon="personal_injury"
-                className={referralDetails.riskAssessment.attempt ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]" : ""}
-                iconClassName={referralDetails.riskAssessment.attempt ? "text-[var(--md-sys-color-on-error-container)]" : "text-[var(--md-sys-color-on-surface-variant)]"}
-                labelClassName={referralDetails.riskAssessment.attempt ? "text-[var(--md-sys-color-on-error-container)] opacity-90" : "text-[var(--md-sys-color-on-surface-variant)]"}
-                value={referralDetails.riskAssessment.attempt ? "是" : "否"}
-                valueClassName={referralDetails.riskAssessment.attempt 
-                  ? "text-sm leading-5 font-bold text-[var(--md-sys-color-on-error-container)]" 
-                  : "text-sm leading-5 font-semibold text-[var(--md-sys-color-on-surface-variant)] opacity-70"}
-              />
-
-              <MetricCard
-                label="自残行为"
-                icon="healing"
-                className={referralDetails.riskAssessment.selfHarm ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]" : ""}
-                iconClassName={referralDetails.riskAssessment.selfHarm ? "text-[var(--md-sys-color-on-error-container)]" : "text-[var(--md-sys-color-on-surface-variant)]"}
-                labelClassName={referralDetails.riskAssessment.selfHarm ? "text-[var(--md-sys-color-on-error-container)] opacity-90" : "text-[var(--md-sys-color-on-surface-variant)]"}
-                value={referralDetails.riskAssessment.selfHarm ? "是" : "否"}
-                valueClassName={referralDetails.riskAssessment.selfHarm 
-                  ? "text-sm leading-5 font-bold text-[var(--md-sys-color-on-error-container)]" 
-                  : "text-sm leading-5 font-semibold text-[var(--md-sys-color-on-surface-variant)] opacity-70"}
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <GroupedInfoList
+                items={[
+                  {
+                    id: 'ideation',
+                    icon: 'psychology',
+                    label: '自杀意念',
+                    value: referralDetails.riskAssessment.ideation ? '是' : '否',
+                    className: referralDetails.riskAssessment.ideation ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]' : '',
+                    iconClassName: referralDetails.riskAssessment.ideation ? 'text-[var(--md-sys-color-on-error-container)]' : 'text-[var(--md-sys-color-on-surface-variant)]',
+                    labelClassName: referralDetails.riskAssessment.ideation ? 'text-[var(--md-sys-color-on-error-container)] opacity-90' : 'text-[var(--md-sys-color-on-surface-variant)]',
+                    valueClassName: referralDetails.riskAssessment.ideation 
+                      ? 'font-bold text-[var(--md-sys-color-on-error-container)]' 
+                      : 'text-[var(--md-sys-color-on-surface-variant)] opacity-70'
+                  },
+                  {
+                    id: 'attempt',
+                    icon: 'personal_injury',
+                    label: '自杀企图',
+                    value: referralDetails.riskAssessment.attempt ? '是' : '否',
+                    className: referralDetails.riskAssessment.attempt ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]' : '',
+                    iconClassName: referralDetails.riskAssessment.attempt ? 'text-[var(--md-sys-color-on-error-container)]' : 'text-[var(--md-sys-color-on-surface-variant)]',
+                    labelClassName: referralDetails.riskAssessment.attempt ? 'text-[var(--md-sys-color-on-error-container)] opacity-90' : 'text-[var(--md-sys-color-on-surface-variant)]',
+                    valueClassName: referralDetails.riskAssessment.attempt 
+                      ? 'font-bold text-[var(--md-sys-color-on-error-container)]' 
+                      : 'text-[var(--md-sys-color-on-surface-variant)] opacity-70'
+                  },
+                  {
+                    id: 'selfHarm',
+                    icon: 'healing',
+                    label: '自残行为',
+                    value: referralDetails.riskAssessment.selfHarm ? '是' : '否',
+                    className: referralDetails.riskAssessment.selfHarm ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]' : '',
+                    iconClassName: referralDetails.riskAssessment.selfHarm ? 'text-[var(--md-sys-color-on-error-container)]' : 'text-[var(--md-sys-color-on-surface-variant)]',
+                    labelClassName: referralDetails.riskAssessment.selfHarm ? 'text-[var(--md-sys-color-on-error-container)] opacity-90' : 'text-[var(--md-sys-color-on-surface-variant)]',
+                    valueClassName: referralDetails.riskAssessment.selfHarm 
+                      ? 'font-bold text-[var(--md-sys-color-on-error-container)]' 
+                      : 'text-[var(--md-sys-color-on-surface-variant)] opacity-70'
+                  }
+                ]}
+                layout="horizontal"
               />
             </div>
           )}
