@@ -170,7 +170,7 @@ describe('UserDetailsView Component', () => {
 
     renderComponent(teacherUser);
 
-    const copyButtons = screen.getAllByTitle('复制');
+    const copyButtons = screen.queryAllByTitle(/复制.*/);
     expect(copyButtons.length).toBeGreaterThan(0);
 
     fireEvent.click(copyButtons[0]);
