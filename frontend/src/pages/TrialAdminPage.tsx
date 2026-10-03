@@ -19,6 +19,7 @@ import { TertiaryFab } from '../components/common/Buttons';
 import { queryClient } from '../utils/queryClient';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigation } from '../contexts/NavigationContext';
 import { useTrialAdminProfileSummary } from '../hooks/useProfileSummary';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { roleTranslations } from '../utils/roleTranslations';
@@ -48,8 +49,20 @@ export function TrialAdminPage() {
   const [activePage, setActivePage] = React.useState<TrialAdminPageName>(TrialAdminTabs.DASHBOARD);
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
-  
+
   const { session } = useAuth();
+  const { lastEvent } = useNavigation();
+
+  React.useEffect(() => {
+    if (!lastEvent) return;
+    const tabMatch = Object.values(TrialAdminTabs).find(
+      (t) => t.toLowerCase() === lastEvent.tab.toLowerCase()
+    );
+    if (tabMatch) {
+      setActivePage(tabMatch);
+      setSelectedItem(null);
+    }
+  }, [lastEvent]);
   const { data: profileSummaryData, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useTrialAdminProfileSummary(session?.token);
 
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardResponseDto<TrialAdminMetricsDto>>({

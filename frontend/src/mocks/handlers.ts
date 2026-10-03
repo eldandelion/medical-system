@@ -2298,6 +2298,102 @@ export const handlers = [
     }
     return new HttpResponse(null, { status: 204 });
   }),
+
+  // Global Search Handler
+  http.get(api('/api/search'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not fetch real search results, falling back to mock", e);
+      }
+    }
+
+    const url = new URL(request.url);
+    const q = (url.searchParams.get('q') || '').trim().toLowerCase();
+    const limit = parseInt(url.searchParams.get('limit') || '5', 10);
+    const authHeader = request.headers.get('Authorization') || '';
+
+    if (!q) {
+      return HttpResponse.json({ query: '', students: [], referrals: [], assessments: [] });
+    }
+
+    // Role-adaptive filtering for mock
+    let students = [...mockStudentsDb];
+    let referrals = [...mockReferralsDb];
+
+    const isStudent = authHeader.includes('student');
+    const isTeacher = authHeader.includes('teacher');
+    const isDoctor = authHeader.includes('doctor');
+
+    if (isStudent) {
+      students = students.filter(s => s.id === '10' || s.name.includes('张伟'));
+      referrals = referrals.filter(r => r.studentId === 10 && r.status !== 'DRAFT' && r.status !== 'RECALLED');
+    } else if (isTeacher) {
+      students = students.filter(s => ['1', '2', '10'].includes(s.id) || s.major === '计算机科学');
+      referrals = referrals.filter(r => ['1', '2', '3'].includes(r.id) || ['1', '2'].includes(String(r.studentId)));
+    } else if (isDoctor) {
+      students = students.filter(s => ['1', '3'].includes(s.id));
+      referrals = referrals.filter(r => r.status === 'WAITING_FOR_APPOINTMENT' || r.status === 'WAITING_FOR_SCHEDULING');
+    }
+
+    const matchedStudents = students
+      .filter(s => s.name.toLowerCase().includes(q) || s.studentNumber?.toLowerCase().includes(q) || s.major?.toLowerCase().includes(q))
+      .slice(0, limit)
+      .map(s => ({
+        id: Number(s.id),
+        studentNumber: s.studentNumber || `STU-${s.id}`,
+        name: s.name,
+        majorName: s.major,
+        collegeName: '计算机科学与技术学院',
+        enrollmentDate: '2026-09-01',
+        riskLevel: isStudent ? null : (s.riskLevel as any || null),
+      }));
+
+    const matchedReferrals = referrals
+      .filter(r => r.title.toLowerCase().includes(q) || r.description?.toLowerCase().includes(q) || r.studentName?.toLowerCase().includes(q))
+      .slice(0, limit)
+      .map(r => ({
+        id: String(r.id),
+        studentId: Number(r.studentId || 1),
+        studentName: r.studentName || '李同学',
+        studentNumber: r.studentNumber || 'STU-001',
+        title: r.title,
+        descriptionSnippet: (r.description || '').slice(0, 100),
+        status: r.status,
+        type: r.type || 'INITIAL',
+        createdAt: r.date || '2026-10-01T12:00:00',
+        destinationHospitalName: (r as any).extendedData?.destination?.hospital || '中央大学医学中心',
+        destinationDoctorName: (r as any).extendedData?.destination?.doctor || '李医生',
+        riskLevel: isStudent ? null : (r.riskLevel as any || null),
+      }));
+
+    const matchedAssessments = mockAssessmentCatalog
+      .filter(c => c.title.toLowerCase().includes(q) || c.batteryCode.toLowerCase().includes(q) || c.subtitle?.toLowerCase().includes(q))
+      .slice(0, limit)
+      .map(c => ({
+        id: c.batteryCode,
+        resultType: 'CATALOG' as const,
+        batteryCode: c.batteryCode,
+        title: c.title,
+        subtitle: c.subtitle,
+        status: null,
+        assignedByName: null,
+        dueDate: null,
+        duration: c.duration,
+      }));
+
+    return HttpResponse.json({
+      query: q,
+      students: matchedStudents,
+      referrals: matchedReferrals,
+      assessments: matchedAssessments,
+    });
+  }),
 ];
 
 export const mockProfilesDb: Record<string, UserProfileDto> = {

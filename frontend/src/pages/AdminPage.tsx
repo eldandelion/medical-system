@@ -25,6 +25,7 @@ import { TertiaryFab } from '../components/common/Buttons';
 import { useAdminDashboard } from '../hooks/useAdminDashboard';
 import { useAdminProfileSummary } from '../hooks/useProfileSummary';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigation } from '../contexts/NavigationContext';
 import { useNotifications } from '../hooks/useNotifications';
 import { roleTranslations } from '../utils/roleTranslations';
 import { ADMIN_METRICS_CONFIG } from '../config/dashboardConfig';
@@ -62,6 +63,18 @@ export function AdminPage() {
 
   const { session } = useAuth();
   const { unreadCount } = useNotifications(session?.token);
+  const { lastEvent } = useNavigation();
+
+  React.useEffect(() => {
+    if (!lastEvent) return;
+    const tabMatch = Object.values(AdminTabs).find(
+      (t) => t.toLowerCase() === lastEvent.tab.toLowerCase()
+    );
+    if (tabMatch) {
+      setActivePage(tabMatch);
+      setSelectedItem(null);
+    }
+  }, [lastEvent]);
   const { data: profileSummaryData, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useAdminProfileSummary(session?.token);
   const { data: dashboardData, isLoading: dashboardLoading } = useAdminDashboard();
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();

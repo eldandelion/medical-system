@@ -26,6 +26,7 @@ import { queryClient } from '../utils/queryClient';
 import { useQuery } from '@tanstack/react-query';
 import { useHeadCouncillorProfileSummary } from '../hooks/useProfileSummary';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigation } from '../contexts/NavigationContext';
 import { useNotifications } from '../hooks/useNotifications';
 
 import { HEAD_COUNCILLOR_METRICS_CONFIG } from '../config/dashboardConfig';
@@ -60,6 +61,18 @@ export function HeadCouncillorPage() {
   const [refreshKey, setRefreshKey] = React.useState(0);
   const { session } = useAuth();
   const { unreadCount } = useNotifications(session?.token);
+  const { lastEvent } = useNavigation();
+
+  React.useEffect(() => {
+    if (!lastEvent) return;
+    const tabMatch = Object.values(HeadCouncillorTabs).find(
+      (t) => t.toLowerCase() === lastEvent.tab.toLowerCase()
+    );
+    if (tabMatch) {
+      setActivePage(tabMatch);
+      setSelectedItem(null);
+    }
+  }, [lastEvent]);
   
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardResponseDto<HeadCouncillorMetricsDto>>({
     queryKey: ['/api/dashboard/head-councillor'],

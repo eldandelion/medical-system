@@ -24,6 +24,7 @@ import { queryClient } from '../utils/queryClient';
 import { useQuery } from '@tanstack/react-query';
 import { useTeacherProfileSummary } from '../hooks/useProfileSummary';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigation } from '../contexts/NavigationContext';
 import { useNotifications } from '../hooks/useNotifications';
 import { enrichReferralStatus } from '../utils/referralUtils';
 import { Referral, DashboardResponseDto, TeacherMetricsDto } from '../types';
@@ -57,6 +58,18 @@ export function TeacherPage() {
   const [refreshKey, setRefreshKey] = React.useState(0);
   const { session } = useAuth();
   const { unreadCount } = useNotifications(session?.token);
+  const { lastEvent } = useNavigation();
+
+  React.useEffect(() => {
+    if (!lastEvent) return;
+    const tabMatch = Object.values(TeacherTabs).find(
+      (t) => t.toLowerCase() === lastEvent.tab.toLowerCase()
+    );
+    if (tabMatch) {
+      setActivePage(tabMatch);
+      setSelectedItem(null);
+    }
+  }, [lastEvent]);
 
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardResponseDto<TeacherMetricsDto>>({
     queryKey: ['/api/dashboard/teacher'],

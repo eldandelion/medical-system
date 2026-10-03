@@ -1,101 +1,48 @@
 import * as React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { SearchItem } from './SearchItem';
+import { useGlobalSearch } from '../../contexts/GlobalSearchContext';
 
 interface GlobalSearchProps {
   placeholder?: string;
 }
 
-export function GlobalSearch({ placeholder = "Search students and referrals" }: GlobalSearchProps) {
-  const [isSearchFocused, setIsSearchFocused] = React.useState(false);
-  const searchRef = React.useRef<HTMLDivElement>(null);
+export function GlobalSearch({ placeholder = "搜索学生、转诊或测评量表..." }: GlobalSearchProps) {
+  const { openSearch } = useGlobalSearch();
+  const [isMac, setIsMac] = React.useState(true);
 
-  // Handle click outside to close search
   React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setIsSearchFocused(false);
-      }
-    };
-    if (isSearchFocused) {
-      document.addEventListener('mousedown', handleClickOutside);
+    if (typeof navigator !== 'undefined') {
+      setIsMac(navigator.platform.toUpperCase().includes('MAC'));
     }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isSearchFocused]);
-
-  // Handle escape key
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsSearchFocused(false);
-    };
-    if (isSearchFocused) {
-      window.addEventListener('keydown', handleKeyDown);
-    }
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isSearchFocused]);
+  }, []);
 
   return (
-    <div ref={searchRef} className="flex-1 max-w-2xl relative h-12">
-      {/* Backdrop overlay */}
-      <AnimatePresence>
-        {isSearchFocused && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-black/10"
-            onClick={() => setIsSearchFocused(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Base Search Bar (Always visible) */}
-      <div
-        className="w-full bg-[var(--md-sys-color-surface-container-low)] text-[var(--md-sys-color-on-surface)] rounded-full h-12 px-4 flex items-center gap-3 cursor-text hover:bg-[var(--md-sys-color-surface-container)] transition-colors group shadow-sm"
-        onClick={() => setIsSearchFocused(true)}
-      >
-        <span className="material-symbols-outlined text-[var(--md-sys-color-on-surface-variant)] group-hover:text-[var(--md-sys-color-primary)] transition-colors">search</span>
-        <span className="text-[var(--md-sys-color-on-surface-variant)] text-sm font-light select-none">{placeholder}</span>
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label="全局搜索 (快捷键 ⌘K)"
+      onClick={() => openSearch()}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openSearch();
+        }
+      }}
+      className="flex-1 max-w-2xl bg-[var(--md-sys-color-surface-container-low)] text-[var(--md-sys-color-on-surface)] rounded-full h-12 px-4 flex items-center justify-between cursor-pointer hover:bg-[var(--md-sys-color-surface-container)] transition-colors group shadow-sm border border-transparent hover:border-[var(--md-sys-color-outline-variant)]/40"
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <span className="material-symbols-outlined text-[var(--md-sys-color-on-surface-variant)] group-hover:text-[var(--md-sys-color-primary)] transition-colors text-xl shrink-0">
+          search
+        </span>
+        <span className="text-[var(--md-sys-color-on-surface-variant)] text-sm font-light select-none truncate">
+          {placeholder}
+        </span>
       </div>
 
-      {/* Expanded Overlay Panel */}
-      <AnimatePresence>
-        {isSearchFocused && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute top-0 left-0 right-0 z-50 bg-[var(--md-sys-color-surface-container-high)] shadow-2xl rounded-[24px] overflow-hidden flex flex-col"
-          >
-            {/* Search Input Bar */}
-            <div className="h-12 px-4 flex items-center gap-3 shrink-0">
-              <span className="material-symbols-outlined text-[var(--md-sys-color-primary)]">search</span>
-              <input
-                autoFocus
-                type="text"
-                placeholder={placeholder}
-                className="bg-transparent outline-none border-none ring-0 flex-1 placeholder:text-[var(--md-sys-color-on-surface-variant)] text-[var(--md-sys-color-on-surface)] text-sm placeholder:font-light font-light"
-              />
-              <md-icon-button className="scale-75" onClick={(e: any) => { e.stopPropagation(); setIsSearchFocused(false); }}>
-                <md-icon>close</md-icon>
-              </md-icon-button>
-            </div>
-
-            {/* Suggestions Panel with Divider */}
-            <div className="flex flex-col overflow-hidden">
-              <div className="h-[1px] w-full bg-[var(--md-sys-color-outline-variant)] opacity-30 mx-0" />
-              <div className="flex flex-col py-1">
-                <SearchItem icon="history" label="Recent assessments" />
-                <div className="h-[1px] w-full bg-[var(--md-sys-color-outline-variant)] opacity-20 my-1" />
-                <SearchItem icon="clinical_notes" label="焦虑与惊恐发作评估" />
-                <SearchItem icon="forum" label="药物管理（SSRI 调整）" />
-                <SearchItem icon="quiz" label="年度身心健康状况评估" />
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="flex items-center gap-1.5 shrink-0 ml-2">
+        <kbd className="px-2 py-0.5 text-[11px] font-mono rounded-md bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface-variant)] border border-[var(--md-sys-color-outline-variant)]/40 shadow-xs select-none">
+          {isMac ? '⌘K' : 'Ctrl+K'}
+        </kbd>
+      </div>
     </div>
   );
 }

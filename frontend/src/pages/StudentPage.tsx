@@ -18,6 +18,7 @@ import { RecordDetailsView } from '../components/records/RecordDetailsView';
 import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { STUDENT_METRICS_CONFIG } from '../config/dashboardConfig';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigation } from '../contexts/NavigationContext';
 import { useNotifications } from '../hooks/useNotifications';
 import { DashboardResponseDto, StudentMetricsDto } from '../types';
 
@@ -45,6 +46,18 @@ export function StudentPage() {
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
   const { session } = useAuth();
   const { unreadCount } = useNotifications(session?.token);
+  const { lastEvent } = useNavigation();
+
+  React.useEffect(() => {
+    if (!lastEvent) return;
+    const tabMatch = Object.values(StudentTabs).find(
+      (t) => t.toLowerCase() === lastEvent.tab.toLowerCase()
+    );
+    if (tabMatch) {
+      setActivePage(tabMatch);
+      setSelectedRecord(null);
+    }
+  }, [lastEvent]);
   
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardResponseDto<StudentMetricsDto>>({
     queryKey: ['/api/dashboard/student'],

@@ -14,7 +14,7 @@ interface AuthContextProps {
   setRole: (role: Role) => void;
 }
 
-const AuthContext = React.createContext<AuthContextProps | undefined>(undefined);
+export const AuthContext = React.createContext<AuthContextProps | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = React.useState<UserSession>({

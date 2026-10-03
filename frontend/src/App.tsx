@@ -9,6 +9,9 @@ import { CreationOverlayProvider } from './contexts/CreationContext';
 import { CreationRoot } from './components/creation-overlay/CreationRoot';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { SnackbarProvider } from './contexts/SnackbarContext';
+import { NavigationProvider } from './contexts/NavigationContext';
+import { GlobalSearchProvider } from './contexts/GlobalSearchContext';
+import { CommandPalette } from './components/search/CommandPalette';
 import { useAuth } from './contexts/AuthContext';
 
 export default function App() {
@@ -18,28 +21,31 @@ export default function App() {
   return (
     <ThemeProvider>
       <SnackbarProvider>
-        <CreationOverlayProvider>
-          <div className="relative w-full h-full">
-        {role === 'student' ? (
-          <StudentPage />
-        ) : role === 'teacher' ? (
-          <TeacherPage />
-        ) : role === 'head-councillor' ? (
-          <HeadCouncillorPage />
-        ) : role === 'trial-admin' ? (
-          <TrialAdminPage />
-        ) : role === 'doctor' ? (
-          <DoctorPage />
-        ) : (
-          <AdminPage />
-        )}
-        
+        <NavigationProvider>
+          <GlobalSearchProvider>
+            <CreationOverlayProvider>
+              <div className="relative w-full h-full">
+                {role === 'student' ? (
+                  <StudentPage />
+                ) : role === 'teacher' ? (
+                  <TeacherPage />
+                ) : role === 'head-councillor' ? (
+                  <HeadCouncillorPage />
+                ) : role === 'trial-admin' ? (
+                  <TrialAdminPage />
+                ) : role === 'doctor' ? (
+                  <DoctorPage />
+                ) : (
+                  <AdminPage />
+                )}
 
-
-        <CreationRoot />
-      </div>
-    </CreationOverlayProvider>
-   </SnackbarProvider>
-  </ThemeProvider>
+                <CreationRoot />
+                <CommandPalette />
+              </div>
+            </CreationOverlayProvider>
+          </GlobalSearchProvider>
+        </NavigationProvider>
+      </SnackbarProvider>
+    </ThemeProvider>
   );
 }

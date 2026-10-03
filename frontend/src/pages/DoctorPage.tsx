@@ -21,6 +21,7 @@ import { queryClient } from '../utils/queryClient';
 import { useQuery } from '@tanstack/react-query';
 import { DOCTOR_METRICS_CONFIG } from '../config/dashboardConfig';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigation } from '../contexts/NavigationContext';
 import { useDoctorProfileSummary } from '../hooks/useProfileSummary';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { ReferralDetailsView } from '../components/records/ReferralDetailsView';
@@ -48,6 +49,18 @@ export function DoctorPage() {
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
   const { session } = useAuth();
+  const { lastEvent } = useNavigation();
+
+  React.useEffect(() => {
+    if (!lastEvent) return;
+    const tabMatch = Object.values(DoctorTabs).find(
+      (t) => t.toLowerCase() === lastEvent.tab.toLowerCase()
+    );
+    if (tabMatch) {
+      setActivePage(tabMatch);
+      setSelectedItem(null);
+    }
+  }, [lastEvent]);
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardResponseDto<DoctorMetricsDto>>({
     queryKey: ['/api/dashboard/doctor'],
     queryFn: async () => {
