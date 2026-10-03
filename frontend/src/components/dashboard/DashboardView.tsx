@@ -52,7 +52,7 @@ export function DashboardView({
   rightWidget
 }: DashboardViewProps) {
   return (
-    <div className="w-full h-full p-6 bg-[var(--md-sys-color-surface)] overflow-y-auto">
+    <div className="w-full h-full pt-4 pb-6 px-6 bg-[var(--md-sys-color-surface)] overflow-y-auto">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 pb-12">
         {/* Profile Card Widget */}
         <div className="md:col-span-4 flex flex-col h-full">

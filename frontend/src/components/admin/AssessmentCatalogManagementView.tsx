@@ -45,9 +45,9 @@ export const AssessmentCatalogManagementView: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+    <div className="w-full h-full flex flex-col pt-5 overflow-hidden relative">
       {/* Segmented Button Navigation */}
-      <div className="px-6 pt-3 pb-1 shrink-0 flex justify-start">
+      <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-5 pt-5 px-6 mb-6 flex items-center justify-start">
         <SegmentedButton
           items={CATALOG_VIEW_SEGMENTS}
           selectedValue={activeTab}
@@ -57,7 +57,7 @@ export const AssessmentCatalogManagementView: React.FC = () => {
 
       {activeTab === 'catalog' ? (
         /* Catalog Grid — scrollable portrait cards */
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-2 pb-20 custom-scrollbar">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-20 custom-scrollbar">
           {isLoading ? (
             <div className="p-12 text-center text-sm text-[var(--md-sys-color-on-surface-variant)]">
               正在加载量表目录...

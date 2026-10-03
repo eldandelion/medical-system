@@ -183,11 +183,11 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
   return (
     <>
       {header && header(isLoading)}
-      <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
+      <div className="w-full h-full flex flex-col pt-5 overflow-hidden relative">
         {/* Top Filter Chips and Search Bar (Positioned directly under title) */}
-        <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4 px-6 mb-6 flex items-center">
+        <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-5 pt-5 px-6 mb-6 flex items-center">
           {/* Material Design 3 Filter Chips and Search Bar with Horizontal Scroll */}
-          <div className="w-full min-w-0 overflow-x-auto overflow-y-hidden no-scrollbar py-1 flex items-center gap-2">
+          <div className="w-full min-w-0 overflow-x-auto overflow-y-hidden no-scrollbar flex items-center gap-2">
             <md-chip-set ref={chipSetRef} aria-label="用户角色与状态筛选" className="flex flex-nowrap shrink-0 items-center" style={{ display: 'inline-flex', flexWrap: 'nowrap', alignItems: 'center' }}>
               {TABS.map((tab) => {
                 const isSelected = activeTab === tab.id;
@@ -224,7 +224,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 min-h-0 flex flex-col relative mt-2">
+        <div className="flex-1 min-h-0 flex flex-col relative">
           {isLoading && users.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
               {/* @ts-ignore */}

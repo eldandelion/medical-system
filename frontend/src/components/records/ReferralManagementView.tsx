@@ -157,9 +157,10 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, h
   return (
     <>
       {header && header(loading)}
-      <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
-        <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4">
+      <div className="w-full h-full flex flex-col pt-5 overflow-hidden relative">
+        <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-5 pt-5 px-6 mb-6 flex items-center gap-4">
           <FilterChipSet
+            className="flex flex-wrap items-center gap-2 relative z-20"
             initialFilters={activeFilters}
             onFilterChange={setActiveFilters}
             chips={[
@@ -171,6 +172,7 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, h
           />
         </div>
         
+        <div className="flex-1 min-h-0 flex flex-col relative">
         {isError ? (
           <div className="flex-1 flex flex-col items-center justify-center min-h-[200px] text-[var(--md-sys-color-error)]">
             <span className="material-symbols-outlined text-4xl mb-2">error</span>
@@ -181,10 +183,9 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, h
             <md-circular-progress indeterminate></md-circular-progress>
           </div>
         ) : (
-          <div className="flex-1 min-h-0 flex flex-col relative">
-            <DataTable columns={columns} data={processedReferrals} onRowClick={onReferralSelect} selectedId={selectedReferralId} />
-          </div>
+          <DataTable columns={columns} data={processedReferrals} onRowClick={onReferralSelect} selectedId={selectedReferralId} />
         )}
+        </div>
       </div>
     </>
   );

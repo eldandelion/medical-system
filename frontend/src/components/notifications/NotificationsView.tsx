@@ -106,7 +106,7 @@ export function NotificationsView({ onViewReferral, onViewRecords }: Notificatio
   }
 
   return (
-    <div className="flex-1 flex flex-col items-stretch overflow-y-auto px-6 md:px-12 lg:px-24 pb-20 pt-8">
+    <div className="flex-1 flex flex-col items-stretch overflow-y-auto px-6 md:px-12 lg:px-24 pb-20 pt-4">
       <div className="max-w-3xl w-full flex flex-col mx-auto">
         <h3 className="text-[12px] font-medium tracking-wide text-[var(--md-sys-color-on-surface-variant)] mb-4 uppercase">
           所有通知
