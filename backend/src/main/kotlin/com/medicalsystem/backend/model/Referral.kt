@@ -142,6 +142,7 @@ class Referral(
                     actions.addAll(listOf(ReferralAction.ACKNOWLEDGE_FEEDBACK, ReferralAction.REQUEST_FEEDBACK_REVISION, ReferralAction.CANCEL_REFERRAL))
                 } else if (status != ReferralStatus.CLOSED && status != ReferralStatus.REJECTED && status != ReferralStatus.RECALLED) {
                     actions.add(ReferralAction.CANCEL_REFERRAL)
+                    actions.add(ReferralAction.FORCE_ARCHIVE)
                 }
             }
             else -> {}
@@ -249,7 +250,7 @@ class Referral(
     fun forceArchive(actorId: Long, reason: String) {
         this.steps.filter { it.status == com.medicalsystem.backend.model.ReferralStepStatus.ACTIVE }.forEach {
             it.status = com.medicalsystem.backend.model.ReferralStepStatus.COMPLETED
-            it.reason = "【系统管理员强制归档】: $reason"
+            it.reason = reason
         }
         
         val oldStatus = this.status

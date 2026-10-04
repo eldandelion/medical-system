@@ -184,4 +184,82 @@ describe('useReferralActions', () => {
     expect(result.current.state.scheduleDateTime).toBe('');
     expect(mockShowSnackbar).toHaveBeenCalledWith({ message: '预约已排期', duration: 3000 });
   });
+
+  it('should handle approve action without hospitalId', async () => {
+    const { result } = renderHook(() => useReferralActions({ referralId: '123' }), { wrapper });
+    await act(async () => {
+      await result.current.actions.handleApprove();
+    });
+    expect(mockShowSnackbar).toHaveBeenCalledWith({ message: '请选择医院', duration: 3000 });
+  });
+
+  it('should handle assign action without doctorId', async () => {
+    const { result } = renderHook(() => useReferralActions({ referralId: '123' }), { wrapper });
+    await act(async () => {
+      await result.current.actions.handleAssign();
+    });
+    expect(mockShowSnackbar).toHaveBeenCalledWith({ message: '请选择医生', duration: 3000 });
+  });
+
+  it('should handle successful recall action', async () => {
+    (global.fetch as any).mockResolvedValue({ ok: true });
+    const { result } = renderHook(() => useReferralActions({ referralId: '123' }), { wrapper });
+    await act(async () => { await result.current.actions.handleRecall(); });
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/referrals/123/recall'), expect.objectContaining({ method: 'POST' }));
+    expect(result.current.state.isRecallDialogOpen).toBe(false);
+  });
+
+  it('should handle successful delete action', async () => {
+    (global.fetch as any).mockResolvedValue({ ok: true });
+    const { result } = renderHook(() => useReferralActions({ referralId: '123' }), { wrapper });
+    await act(async () => { await result.current.actions.handleDelete(); });
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/referrals/123'), expect.objectContaining({ method: 'DELETE' }));
+    expect(result.current.state.isDeleteDialogOpen).toBe(false);
+  });
+
+  it('should handle successful report problem action', async () => {
+    (global.fetch as any).mockResolvedValue({ ok: true });
+    const { result } = renderHook(() => useReferralActions({ referralId: '123' }), { wrapper });
+    act(() => { result.current.state.setReportProblemReason('issue'); });
+    await act(async () => { await result.current.actions.handleReportProblem(); });
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/referrals/123/report-problem'), expect.objectContaining({ method: 'POST' }));
+    expect(result.current.state.isReportProblemDialogOpen).toBe(false);
+    expect(result.current.state.reportProblemReason).toBe('');
+  });
+
+  it('should handle successful acknowledge feedback action', async () => {
+    (global.fetch as any).mockResolvedValue({ ok: true });
+    const { result } = renderHook(() => useReferralActions({ referralId: '123' }), { wrapper });
+    await act(async () => { await result.current.actions.handleAcknowledgeFeedback(); });
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/referrals/123/acknowledge-feedback'), expect.objectContaining({ method: 'POST' }));
+    expect(result.current.state.isAcknowledgeDialogOpen).toBe(false);
+  });
+
+  it('should handle successful cancel action', async () => {
+    (global.fetch as any).mockResolvedValue({ ok: true });
+    const { result } = renderHook(() => useReferralActions({ referralId: '123' }), { wrapper });
+    act(() => { result.current.state.setCancelReason('done'); });
+    await act(async () => { await result.current.actions.handleCancel(); });
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/referrals/123/cancel'), expect.objectContaining({ method: 'POST' }));
+    expect(result.current.state.isCancelDialogOpen).toBe(false);
+    expect(result.current.state.cancelReason).toBe('');
+  });
+
+  it('should handle force archive action without reason', async () => {
+    const { result } = renderHook(() => useReferralActions({ referralId: '123' }), { wrapper });
+    act(() => { result.current.state.setForceArchiveReason('   '); });
+    await act(async () => { await result.current.actions.handleForceArchive(); });
+    expect(result.current.state.actionError).toBe('强制归档必须提供原因说明');
+  });
+
+  it('should handle successful force archive action', async () => {
+    (global.fetch as any).mockResolvedValue({ ok: true });
+    const { result } = renderHook(() => useReferralActions({ referralId: '123' }), { wrapper });
+    act(() => { result.current.state.setForceArchiveReason('forced'); });
+    await act(async () => { await result.current.actions.handleForceArchive(); });
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/referrals/123/force-archive'), expect.objectContaining({ method: 'POST' }));
+    expect(result.current.state.isForceArchiveDialogOpen).toBe(false);
+    expect(result.current.state.forceArchiveReason).toBe('');
+  });
+
 });

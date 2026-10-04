@@ -50,10 +50,10 @@ const mockComputeAvailableActions = (referral: Referral, authHeader: string): Re
     else if (status === 'WAITING_FOR_APPOINTMENT') actions.push('write_feedback', 'report_problem');
   } else if (authHeader.includes('admin')) {
     if (status === 'DRAFT') actions.push('recreate', 'delete_draft');
-    else if (status === 'AWAITING_REVIEW') actions.push('approve_referral', 'reject_referral', 'cancel_referral');
-    else if (status === 'AWAITING_TRIAGE') actions.push('assign_doctor', 'reject_referral', 'cancel_referral');
-    else if (status === 'AWAITING_FEEDBACK_APPROVAL') actions.push('acknowledge_feedback', 'cancel_referral');
-    else if (status !== 'CLOSED' && status !== 'REJECTED' && status !== 'RECALLED') actions.push('cancel_referral');
+    else if (status === 'AWAITING_REVIEW') actions.push('approve_referral', 'reject_referral', 'cancel_referral', 'force_archive');
+    else if (status === 'AWAITING_TRIAGE') actions.push('assign_doctor', 'reject_referral', 'cancel_referral', 'force_archive');
+    else if (status === 'AWAITING_FEEDBACK_APPROVAL') actions.push('acknowledge_feedback', 'cancel_referral', 'force_archive');
+    else if (status !== 'CLOSED' && status !== 'REJECTED' && status !== 'RECALLED') actions.push('cancel_referral', 'force_archive');
   }
   
   return actions;
@@ -1655,6 +1655,27 @@ export const handlers = [
         }
       } catch (e) {
         console.warn("Could not cancel referral on real backend, falling back to mock", e);
+      }
+    }
+    const { id } = params;
+    const referral = mockReferralsDb.find((r) => r.id === id);
+    if (!referral) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    referral.status = 'CLOSED';
+    return HttpResponse.json(referral);
+  }),
+
+  http.post(api('/api/referrals/:id/force-archive'), async ({ request, params }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (e) {
+        console.warn("Could not force archive referral on real backend, falling back to mock", e);
       }
     }
     const { id } = params;
