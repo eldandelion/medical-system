@@ -1,5 +1,6 @@
+import { useSnackbar } from "../contexts/SnackbarContext";
 import * as React from 'react';
-import { Sidebar } from '../components/layout/Sidebar';
+import { queryClient } from "../utils/queryClient";import { Sidebar } from '../components/layout/Sidebar';
 import { Header } from '../components/layout/Header';
 import { MainContent } from '../components/layout/MainContent';
 import { NavItem } from '../components/layout/NavItem';
@@ -47,6 +48,7 @@ export function StudentPage() {
   const { session } = useAuth();
   const { unreadCount } = useNotifications(session?.token);
   const { lastEvent } = useNavigation();
+  const { showSnackbar } = useSnackbar();
 
   React.useEffect(() => {
     if (!lastEvent) return;
@@ -54,10 +56,48 @@ export function StudentPage() {
       (t) => t.toLowerCase() === lastEvent.tab.toLowerCase()
     );
     if (tabMatch) {
-      setActivePage(tabMatch);
-      setSelectedRecord(null);
+      setActivePage(tabMatch as StudentTab);
+      
+      if (lastEvent.entityId && tabMatch === StudentTabs.MY_RECORDS) {
+        let isMounted = true;
+        const fetchEntity = async () => {
+          try {
+            const endpoint = `/api/referrals/${lastEvent.entityId}`;
+            const queryKey = [endpoint, lastEvent.entityId, 'details'];
+            const data = await queryClient.fetchQuery<Record<string, unknown>>({
+              queryKey,
+              queryFn: async ({ signal }) => {
+                const url = `${import.meta.env.BASE_URL}${endpoint.substring(1)}`.replace('//api', '/api');
+                const res = await fetch(url, {
+                  signal,
+                  headers: { 'Authorization': `Bearer ${session?.token || ''}` }
+                });
+                if (!res.ok) throw new Error('Failed to fetch record');
+                return res.json();
+              }
+            });
+            
+            if (isMounted) {
+              setSelectedRecord(data.baseInfo ? data.baseInfo : data);
+            }
+          } catch (e: unknown) {
+            if (isMounted) {
+              if (e instanceof Error && e.name === 'AbortError') return;
+              console.error('Error fetching record', e);
+              showSnackbar({ message: '无法加载数据详情，请重试' });
+              setSelectedRecord(null);
+            }
+          }
+        };
+        fetchEntity();
+        return () => {
+          isMounted = false;
+        };
+      } else {
+        setSelectedRecord(null);
+      }
     }
-  }, [lastEvent]);
+  }, [lastEvent, session?.token, showSnackbar]);
   
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardResponseDto<StudentMetricsDto>>({
     queryKey: ['/api/dashboard/student'],

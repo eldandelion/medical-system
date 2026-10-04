@@ -1,3 +1,4 @@
+import { useSnackbar } from "../contexts/SnackbarContext";
 import * as React from 'react';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Header } from '../components/layout/Header';
@@ -48,8 +49,10 @@ export function DoctorPage() {
   const [activePage, setActivePage] = React.useState<DoctorPageName>(DoctorTabs.DASHBOARD);
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState('overview');
   const { session } = useAuth();
   const { lastEvent } = useNavigation();
+  const { showSnackbar } = useSnackbar();
 
   React.useEffect(() => {
     if (!lastEvent) return;
@@ -57,10 +60,49 @@ export function DoctorPage() {
       (t) => t.toLowerCase() === lastEvent.tab.toLowerCase()
     );
     if (tabMatch) {
-      setActivePage(tabMatch);
-      setSelectedItem(null);
+      setActivePage(tabMatch as DoctorPageName);
+      
+      if (lastEvent.entityId && tabMatch === DoctorTabs.REFERRAL_MANAGEMENT) {
+        let isMounted = true;
+        const fetchEntity = async () => {
+          try {
+            const endpoint = `/api/referrals/${lastEvent.entityId}`;
+            const queryKey = [endpoint, lastEvent.entityId, 'details'];
+            const data = await queryClient.fetchQuery<Record<string, unknown>>({
+              queryKey,
+              queryFn: async ({ signal }) => {
+                const url = `${import.meta.env.BASE_URL}${endpoint.substring(1)}`.replace('//api', '/api');
+                const res = await fetch(url, {
+                  signal,
+                  headers: { 'Authorization': `Bearer ${session?.token || ''}` }
+                });
+                if (!res.ok) throw new Error('Failed to fetch referral for selection');
+                return res.json();
+              }
+            });
+            
+            if (isMounted) {
+              setActiveTab('overview');
+              setSelectedItem(data.baseInfo ? data.baseInfo : data);
+            }
+          } catch (e: unknown) {
+            if (isMounted) {
+              if (e instanceof Error && e.name === 'AbortError') return;
+              console.error('Error fetching referral', e);
+              showSnackbar({ message: '无法加载数据详情，请重试' });
+              setSelectedItem(null);
+            }
+          }
+        };
+        fetchEntity();
+        return () => {
+          isMounted = false;
+        };
+      } else {
+        setSelectedItem(null);
+      }
     }
-  }, [lastEvent]);
+  }, [lastEvent, session?.token, showSnackbar]);
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardResponseDto<DoctorMetricsDto>>({
     queryKey: ['/api/dashboard/doctor'],
     queryFn: async () => {
@@ -86,7 +128,6 @@ export function DoctorPage() {
     setSelectedItem(null);
   };
 
-  const [activeTab, setActiveTab] = React.useState('overview');
 
   // Define tabs configuration for different detail views
   const getTabsForPage = () => {

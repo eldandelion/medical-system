@@ -1,3 +1,4 @@
+import { useSnackbar } from "../contexts/SnackbarContext";
 import * as React from 'react';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Header } from '../components/layout/Header';
@@ -64,6 +65,7 @@ export function AdminPage() {
   const { session } = useAuth();
   const { unreadCount } = useNotifications(session?.token);
   const { lastEvent } = useNavigation();
+  const { showSnackbar } = useSnackbar();
 
   React.useEffect(() => {
     if (!lastEvent) return;
@@ -71,10 +73,59 @@ export function AdminPage() {
       (t) => t.toLowerCase() === lastEvent.tab.toLowerCase()
     );
     if (tabMatch) {
-      setActivePage(tabMatch);
-      setSelectedItem(null);
+      setActivePage(tabMatch as AdminPageName);
+      
+      if (lastEvent.entityId) {
+        let isMounted = true;
+        const fetchEntity = async () => {
+          try {
+            let endpoint = '';
+            if (tabMatch === AdminTabs.USERS) {
+              endpoint = `/api/users/${lastEvent.entityId}`;
+            } else if (tabMatch === AdminTabs.ASSESSMENTS) {
+              endpoint = `/api/assessments/${lastEvent.entityId}`;
+            }
+            
+            if (endpoint) {
+              const queryKey = [endpoint, lastEvent.entityId, 'details'];
+              const data = await queryClient.fetchQuery<Record<string, unknown>>({
+                queryKey,
+                queryFn: async ({ signal }) => {
+                  const url = `${import.meta.env.BASE_URL}${endpoint.substring(1)}`.replace('//api', '/api');
+                  const res = await fetch(url, {
+                    signal,
+                    headers: { 'Authorization': `Bearer ${session?.token || ''}` }
+                  });
+                  if (!res.ok) throw new Error('Failed to fetch entity for selection');
+                  return res.json();
+                }
+              });
+              
+              if (isMounted) {
+                setActiveTab('overview');
+                setSelectedItem(data.baseInfo ? data.baseInfo : data);
+              }
+            } else {
+              if (isMounted) setSelectedItem(null);
+            }
+          } catch (e: unknown) {
+            if (isMounted) {
+              if (e instanceof Error && e.name === 'AbortError') return;
+              console.error('Error fetching entity', e);
+              showSnackbar({ message: '无法加载数据详情，请重试' });
+              setSelectedItem(null);
+            }
+          }
+        };
+        fetchEntity();
+        return () => {
+          isMounted = false;
+        };
+      } else {
+        setSelectedItem(null);
+      }
     }
-  }, [lastEvent]);
+  }, [lastEvent, session?.token, showSnackbar]);
   const { data: profileSummaryData, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useAdminProfileSummary(session?.token);
   const { data: dashboardData, isLoading: dashboardLoading } = useAdminDashboard();
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();

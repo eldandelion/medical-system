@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useStudentBulkImport } from '../useStudentBulkImport';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -92,7 +92,7 @@ describe('useStudentBulkImport', () => {
       expect.stringContaining('/api/students/import/preview'),
       expect.objectContaining({ method: 'POST' })
     );
-    expect(result.current.previewData).toEqual(mockData);
+    await waitFor(() => expect(result.current.previewData).toEqual(mockData));
   });
 
   it('should handle failed preview', async () => {
@@ -125,14 +125,14 @@ describe('useStudentBulkImport', () => {
     const { result } = renderHook(() => useStudentBulkImport(), { wrapper });
     
     await act(async () => {
-      await result.current.commitImport({ token: 'test-token', overrides: {} });
+      await result.current.commitImport({ rows: [], overwriteDuplicates: false });
     });
 
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/students/import/commit'),
       expect.objectContaining({ method: 'POST' })
     );
-    expect(result.current.commitData).toEqual(mockData);
+    await waitFor(() => expect(result.current.commitData).toEqual(mockData));
     expect(queryClient.invalidateQueries).toHaveBeenCalled();
   });
 
@@ -146,7 +146,7 @@ describe('useStudentBulkImport', () => {
     
     await act(async () => {
       try {
-        await result.current.commitImport({ token: 'test-token', overrides: {} });
+        await result.current.commitImport({ rows: [], overwriteDuplicates: false });
       } catch (e) {}
     });
 
