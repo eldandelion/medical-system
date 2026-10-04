@@ -22,6 +22,8 @@ object ReferralActionPolicy {
             ReferralStatus.AWAITING_FEEDBACK_APPROVAL,
             ReferralStatus.NEEDS_REASSIGNMENT
         )
+        // FORCE_ARCHIVE is conditionally allowed for SYSTEM_ADMIN on active statuses inside Referral.kt
+
         else -> emptyList()
     }
 }

@@ -126,4 +126,15 @@ class ReferralController(
         val currentUser = user ?: throw ForbiddenException("Authorized user not found")
         return referralService.cancelReferralByAdmin(id, dto, currentUser)
     }
+
+    @PostMapping("/{id}/force-archive")
+    @io.swagger.v3.oas.annotations.Operation(summary = "管理员强制归档", description = "系统管理员强制终止并归档异常转诊流程")
+        fun forceArchiveReferral(
+        @PathVariable id: Long,
+        @jakarta.validation.Valid @RequestBody request: com.medicalsystem.backend.dto.AdminArchiveReferralDto,
+        @com.medicalsystem.backend.security.CurrentUser user: com.medicalsystem.backend.model.User
+    ): org.springframework.http.ResponseEntity<com.medicalsystem.backend.dto.ReferralDto> {
+        val result = referralService.forceArchiveReferral(id, request, user)
+        return org.springframework.http.ResponseEntity.ok(result)
+    }
 }

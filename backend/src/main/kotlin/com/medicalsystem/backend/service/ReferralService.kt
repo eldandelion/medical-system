@@ -298,4 +298,17 @@ class ReferralService(
         referral.clearDomainEvents()
         return saved
     }
+
+    @Transactional
+    fun forceArchiveReferral(id: Long, dto: com.medicalsystem.backend.dto.AdminArchiveReferralDto, user: User): ReferralDto {
+        val referral = referralRepository.findByIdAndVisibleTo(id, user)
+            .orElseThrow { com.medicalsystem.backend.exception.ResourceNotFoundException("Referral with ID $id not found") }
+
+        if (!referral.getAllowedActions(user).contains(com.medicalsystem.backend.model.ReferralAction.FORCE_ARCHIVE)) {
+            throw com.medicalsystem.backend.exception.ValidationException("User not authorized to force archive this referral")
+        }
+
+        referral.forceArchive(actorId = user.id, reason = dto.reason)
+        return mapToDto(saveAndPublishEvents(referral))
+    }
 }

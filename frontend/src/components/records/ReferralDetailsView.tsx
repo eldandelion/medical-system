@@ -379,6 +379,52 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
         </div>
       </GenericDialog>
 
+      
+      {/* Force Archive Dialog */}
+      <GenericDialog
+        open={state.isForceArchiveDialogOpen}
+        onClose={() => state.setIsForceArchiveDialogOpen(false)}
+        title="强制归档转诊申请"
+        actions={
+          <>
+            <TertiaryButton label="取消" onClick={() => state.setIsForceArchiveDialogOpen(false)} />
+            <DestructiveButton 
+              label="确认强制归档" 
+              icon="archive"
+              onClick={actions.handleForceArchive}
+              disabled={!state.forceArchiveReason.trim() || !!state.actionError}
+            />
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
+            请提供强制归档的原因。此操作将终止当前的转诊流程，并将其作为历史记录保存。此原因将被永久记录在案。
+          </p>
+          {state.actionError && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10, height: 0 }} 
+              animate={{ opacity: 1, y: 0, height: 'auto' }} 
+              className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-4 rounded-xl flex items-center gap-3 mt-2 shadow-sm"
+            >
+              <span className="material-symbols-outlined text-[var(--md-sys-color-on-error-container)] shrink-0">error_outline</span>
+              <span className="text-[14px] font-medium leading-relaxed tracking-wide">
+                {state.actionError}
+              </span>
+            </motion.div>
+          )}
+          <div className="flex flex-col gap-1 mt-2 relative">
+            <textarea
+              id="forceArchiveReason"
+              placeholder="请输入归档原因（必填）..."
+              className="w-full bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)] border-none rounded-xl p-4 min-h-[120px] resize-y focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)] focus:bg-[var(--md-sys-color-surface)] transition-all text-[15px] placeholder:text-[var(--md-sys-color-on-surface-variant)] placeholder:opacity-60"
+              value={state.forceArchiveReason}
+              onChange={(e: any) => state.setForceArchiveReason(e.target.value)}
+            />
+          </div>
+        </div>
+      </GenericDialog>
+
       {/* Delete Draft Dialog */}
       <GenericDialog
         open={state.isDeleteDialogOpen}

@@ -245,4 +245,25 @@ class Referral(
             throw com.medicalsystem.backend.exception.ResourceNotFoundException("Attachment with fileId $fileId does not belong to referral $id")
         }
     }
+
+    fun forceArchive(actorId: Long, reason: String) {
+        this.steps.filter { it.status == com.medicalsystem.backend.model.ReferralStepStatus.ACTIVE }.forEach {
+            it.status = com.medicalsystem.backend.model.ReferralStepStatus.COMPLETED
+            it.reason = "【系统管理员强制归档】: $reason"
+        }
+        
+        val oldStatus = this.status
+        this.status = com.medicalsystem.backend.model.ReferralStatus.CLOSED
+        
+        if (oldStatus != com.medicalsystem.backend.model.ReferralStatus.CLOSED && this.id != null) {
+            registerEvent(
+                com.medicalsystem.backend.event.ReferralStatusChangedEvent(
+                    referralId = this.id,
+                    studentId = this.studentId,
+                    oldStatus = oldStatus,
+                    newStatus = com.medicalsystem.backend.model.ReferralStatus.CLOSED
+                )
+            )
+        }
+    }
 }

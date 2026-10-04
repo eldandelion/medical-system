@@ -22,9 +22,11 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
   const [isReportProblemDialogOpen, setIsReportProblemDialogOpen] = useState(false);
   const [isAcknowledgeDialogOpen, setIsAcknowledgeDialogOpen] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [isForceArchiveDialogOpen, setIsForceArchiveDialogOpen] = useState(false);
   
   const [reportProblemReason, setReportProblemReason] = useState('');
   const [cancelReason, setCancelReason] = useState('');
+  const [forceArchiveReason, setForceArchiveReason] = useState('');
   
   const [rejectionReason, setRejectionReason] = useState('');
   const [selectedHospitalId, setSelectedHospitalId] = useState('');
@@ -45,7 +47,8 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
     SCHEDULE: { success: '预约已排期', error: '预约排期失败，请稍后重试' },
     REPORT_PROBLEM: { success: '问题已报告', error: '报告失败，请稍后重试' },
     ACKNOWLEDGE: { success: '反馈已确认，转诊已结案', error: '操作失败，请稍后重试' },
-    CANCEL: { success: '转诊已终止', error: '终止失败，请稍后重试' }
+    CANCEL: { success: '转诊已终止', error: '终止失败，请稍后重试' },
+    FORCE_ARCHIVE: { success: '转诊已强制归档', error: '归档失败，请重试' }
   };
 
   const mutation = useMutation({
@@ -182,6 +185,18 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
     }
   };
 
+  const handleForceArchive = async () => {
+    if (!forceArchiveReason.trim()) {
+      setActionError('强制归档必须提供原因说明');
+      return;
+    }
+    const success = await executeAction('/force-archive', 'POST', ACTION_MESSAGES.FORCE_ARCHIVE.success, ACTION_MESSAGES.FORCE_ARCHIVE.error, { reason: forceArchiveReason });
+    if (success) {
+      setIsForceArchiveDialogOpen(false);
+      setForceArchiveReason('');
+    }
+  };
+
   return {
     state: {
       isRejectionDialogOpen, setIsRejectionDialogOpen,
@@ -193,8 +208,10 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
       isReportProblemDialogOpen, setIsReportProblemDialogOpen,
       isAcknowledgeDialogOpen, setIsAcknowledgeDialogOpen,
       isCancelDialogOpen, setIsCancelDialogOpen,
+      isForceArchiveDialogOpen, setIsForceArchiveDialogOpen,
       reportProblemReason, setReportProblemReason,
       cancelReason, setCancelReason,
+      forceArchiveReason, setForceArchiveReason,
       rejectionReason, setRejectionReason,
       scheduleDateTime, setScheduleDateTime,
       selectedDoctorId, setSelectedDoctorId,
@@ -212,6 +229,7 @@ export function useReferralActions({ referralId, onUpdate }: UseReferralActionsP
       handleReportProblem,
       handleAcknowledgeFeedback,
       handleCancel,
+      handleForceArchive,
     }
   };
 }

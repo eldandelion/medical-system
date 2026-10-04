@@ -23,6 +23,7 @@ interface ReferralActionFooterProps {
     setIsSchedulingDialogOpen: (v: boolean) => void;
     setIsReportProblemDialogOpen?: (v: boolean) => void;
     setIsAcknowledgeDialogOpen?: (v: boolean) => void;
+    setIsForceArchiveDialogOpen?: (v: boolean) => void;
     isActionCompleted?: boolean;
   };
 }
@@ -73,6 +74,9 @@ export const ReferralActionFooter: React.FC<ReferralActionFooterProps> = ({
               return <OutlinedButton key={action} icon="check" label="批准转诊" onClick={() => state.setIsApprovalDialogOpen(true)} />;
             case 'reject_referral':
               return <OutlinedButton key={action} icon="close" label="拒绝申请" onClick={() => state.setIsRejectionDialogOpen(true)} />;
+                        case 'force_archive':
+            
+              return <OutlinedButton key={action} icon="archive" label="强制归档" onClick={() => state.setIsForceArchiveDialogOpen?.(true)} />;
             case 'recall_referral':
               return <OutlinedButton key={action} icon="undo" label="撤回申请" onClick={() => state.setIsRecallDialogOpen(true)} />;
             case 'assign_doctor':

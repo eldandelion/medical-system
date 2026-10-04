@@ -25,7 +25,8 @@ export type ReferralAction =
   | 'report_problem'
   | 'acknowledge_feedback'
   | 'reassign_doctor'
-  | 'cancel_referral';
+  | 'cancel_referral'
+  | 'force_archive';
 
 export interface Referral {
   id: string;
