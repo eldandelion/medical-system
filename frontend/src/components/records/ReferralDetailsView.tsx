@@ -414,13 +414,16 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
             </motion.div>
           )}
           <div className="flex flex-col gap-1 mt-2 relative">
-            <textarea
+            {/* @ts-ignore */}
+            <md-outlined-text-field
               id="forceArchiveReason"
-              placeholder="请输入归档原因（必填）..."
-              className="w-full bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)] border-none rounded-xl p-4 min-h-[120px] resize-y focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)] focus:bg-[var(--md-sys-color-surface)] transition-all text-[15px] placeholder:text-[var(--md-sys-color-on-surface-variant)] placeholder:opacity-60"
+              type="textarea"
+              rows={4}
+              label="请输入归档原因（必填）"
               value={state.forceArchiveReason}
-              onChange={(e: any) => state.setForceArchiveReason(e.target.value)}
-            />
+              onInput={(e: any) => state.setForceArchiveReason(e.target.value)}
+              class="w-full"
+            ></md-outlined-text-field>
           </div>
         </div>
       </GenericDialog>
