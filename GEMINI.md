@@ -20,6 +20,7 @@ The University Medical Screening System is a full-stack platform managing studen
 - **Framework & Core**: React 19, TypeScript 5.8 (Target ES2022, bundler module resolution)
 - **Build Tool & Dev Server**: Vite 6 (`@vitejs/plugin-react`)
 - **Styling**: Tailwind CSS 4 (`@tailwindcss/vite`), Material Design 3 Web Components (`@material/web`), Roboto fonts, Material Symbols
+  - **CRITICAL UI RULE**: Never use standard native HTML `<input>`, `<textarea>`, or `<select>` elements for forms or dialogs. You MUST strictly use Material Design 3 Web Components (e.g., `<md-outlined-text-field>`, `<md-filled-text-field>`, `<md-checkbox>`, `<md-menu>`) for all user input fields across the system.
 - **State & Data Fetching**: TanStack React Query 5 (`staleTime: 5m`, 3 retries), React Context API
 - **Animations & Icons**: Motion (Framer Motion), Lucide React
 - **API Mocking**: Mock Service Worker (MSW 2) in development/testing with backend fallback
