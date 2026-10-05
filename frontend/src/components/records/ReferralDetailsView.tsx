@@ -422,7 +422,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
               label="请输入归档原因（必填）"
               value={state.forceArchiveReason}
               onInput={(e: any) => state.setForceArchiveReason(e.target.value)}
-              class="w-full"
+              className="w-full"
             ></md-outlined-text-field>
           </div>
         </div>
