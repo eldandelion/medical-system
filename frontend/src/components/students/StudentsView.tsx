@@ -18,13 +18,21 @@ interface StudentsViewProps {
   onStudentSelect?: (student: Student) => void;
   selectedStudentId?: string;
   header?: (loading?: boolean) => React.ReactNode;
+  resetToken?: number;
 }
 
-export function StudentsView({ onStudentSelect, selectedStudentId, header }: StudentsViewProps) {
+export function StudentsView({ onStudentSelect, selectedStudentId, header, resetToken }: StudentsViewProps) {
   const { session } = useAuth();
   const [isImportOpen, setIsImportOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [activeFilters, setActiveFilters] = React.useState<Record<string, string>>({});
+  
+  React.useEffect(() => {
+    if (resetToken) {
+      setSearchQuery('');
+      setActiveFilters({});
+    }
+  }, [resetToken]);
   
   const { data: studentsData, isLoading: loading } = useQuery<StudentDto[]>({
     queryKey: ['/api/students', session.token],

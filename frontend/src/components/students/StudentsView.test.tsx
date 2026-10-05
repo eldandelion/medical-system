@@ -176,6 +176,39 @@ describe('StudentsView Component', () => {
     expect(screen.getByText('张三')).toBeDefined();
     expect(screen.getByText('李四')).toBeDefined();
   });
+
+  it('resets search query and active filters when resetToken changes', async () => {
+    mockUseAuth.mockReturnValue({
+      session: { user: { role: 'TEACHER' }, token: 'mock-token' }
+    });
+
+    const { rerender } = render(
+      <QueryClientProvider client={queryClient}>
+        <SnackbarProvider>
+          <StudentsView />
+        </SnackbarProvider>
+      </QueryClientProvider>
+    );
+    
+    const searchExpandBtn = screen.getByRole('button', { name: '展开搜索' });
+    fireEvent.click(searchExpandBtn);
+
+    const input = screen.getByPlaceholderText('搜索学生姓名、学号、专业...');
+    fireEvent.change(input, { target: { value: 'Alice' } });
+    expect((input as HTMLInputElement).value).toBe('Alice');
+
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <SnackbarProvider>
+          <StudentsView resetToken={Date.now()} />
+        </SnackbarProvider>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      expect((input as HTMLInputElement).value).toBe('');
+    });
+  });
 });
 
 

@@ -225,7 +225,7 @@ export function TeacherPage() {
           </>
         );
       case TeacherTabs.STUDENTS:
-        return <StudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} header={(loading) => <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} isLoading={loading} />} />;
+        return <StudentsView resetToken={lastEvent?.timestamp} onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} header={(loading) => <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} isLoading={loading} />} />;
       case TeacherTabs.ASSESSMENTS:
         return (
           <>
@@ -234,7 +234,7 @@ export function TeacherPage() {
           </>
         );
       case TeacherTabs.REFERRAL_MANAGEMENT:
-        return <ReferralManagementView onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} header={(loading) => <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} isLoading={loading} />} />;
+        return <ReferralManagementView resetToken={lastEvent?.timestamp} onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} header={(loading) => <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} isLoading={loading} />} />;
       case TeacherTabs.SECURITY:
         return (
           <>

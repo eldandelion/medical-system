@@ -238,6 +238,7 @@ export function AdminPage() {
           <>
             <CanvasHeader title={ADMIN_TAB_TITLES[activePage]} />
             <ReferralManagementView
+              resetToken={lastEvent?.timestamp}
               onReferralSelect={(ref) => setSelectedItem(ref)}
               selectedReferralId={selectedItem?.id}
               userRole="head-councillor"
@@ -258,6 +259,7 @@ export function AdminPage() {
           <>
             <CanvasHeader title={ADMIN_TAB_TITLES[activePage]} />
             <StudentsView
+              resetToken={lastEvent?.timestamp}
               onStudentSelect={(stu) => setSelectedItem(stu)}
               selectedStudentId={selectedItem?.id}
             />

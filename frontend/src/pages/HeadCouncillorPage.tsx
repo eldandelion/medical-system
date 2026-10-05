@@ -206,12 +206,12 @@ export function HeadCouncillorPage() {
           </>
         );
       case HeadCouncillorTabs.STUDENTS:
-        return <StudentsView onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} header={(loading) => <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage]} isLoading={loading} />} />;
+        return <StudentsView resetToken={lastEvent?.timestamp} onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} header={(loading) => <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage]} isLoading={loading} />} />;
       case HeadCouncillorTabs.STAFF:
         return (
           <>
             <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage]} />
-            <StaffManagementView onStaffSelect={setSelectedItem} selectedStaffId={selectedItem?.id} />
+            <StaffManagementView resetToken={lastEvent?.timestamp} onStaffSelect={setSelectedItem} selectedStaffId={selectedItem?.id} />
           </>
         );
       case HeadCouncillorTabs.ASSESSMENTS:
@@ -222,7 +222,7 @@ export function HeadCouncillorPage() {
           </>
         );
       case HeadCouncillorTabs.REFERRAL_MANAGEMENT:
-        return <ReferralManagementView key={`rmv-${refreshKey}`} onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} header={(loading) => <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage]} isLoading={loading} />} />;
+        return <ReferralManagementView resetToken={lastEvent?.timestamp} key={`rmv-${refreshKey}`} onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} header={(loading) => <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage]} isLoading={loading} />} />;
       case HeadCouncillorTabs.SECURITY:
         return (
           <>

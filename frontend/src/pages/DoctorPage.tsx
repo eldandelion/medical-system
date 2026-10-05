@@ -174,7 +174,7 @@ export function DoctorPage() {
           </>
         );
       case DoctorTabs.REFERRAL_MANAGEMENT:
-        return <ReferralManagementView userRole="doctor" onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} header={(loading) => <CanvasHeader title={DOCTOR_TAB_TITLES[activePage]} isLoading={loading} />} />;
+        return <ReferralManagementView resetToken={lastEvent?.timestamp} userRole="doctor" onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} header={(loading) => <CanvasHeader title={DOCTOR_TAB_TITLES[activePage]} isLoading={loading} />} />;
       case DoctorTabs.SECURITY:
         return (
           <>

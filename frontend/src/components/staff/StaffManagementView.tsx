@@ -15,9 +15,16 @@ interface Counselor {
 interface StaffManagementViewProps {
   onStaffSelect?: (staff: Counselor) => void;
   selectedStaffId?: string;
+  resetToken?: number;
 }
 
-export function StaffManagementView({ onStaffSelect, selectedStaffId }: StaffManagementViewProps) {
+export function StaffManagementView({ onStaffSelect, selectedStaffId, resetToken }: StaffManagementViewProps) {
+  React.useEffect(() => {
+    if (resetToken) {
+      // Stub for future filters (e.g. setSearchQuery(''))
+    }
+  }, [resetToken]);
+
   const counselors: Counselor[] = [
     {
       id: 'c1',

@@ -25,6 +25,7 @@ interface ReferralManagementViewProps {
   selectedReferralId?: string;
   header?: (loading: boolean) => React.ReactNode;
   userRole?: 'student' | 'teacher' | 'head-councillor' | 'trial-admin' | 'doctor';
+  resetToken?: number;
 }
 
 const columns: ColumnDefinition<Referral>[] = [
@@ -103,11 +104,11 @@ const columns: ColumnDefinition<Referral>[] = [
   }
 ];
 
-export function ReferralManagementView({ onReferralSelect, selectedReferralId, header, userRole }: ReferralManagementViewProps) {
+export function ReferralManagementView({ onReferralSelect, selectedReferralId, header, userRole, resetToken }: ReferralManagementViewProps) {
   const { session } = useAuth();
 
   const { data: referralsData, isLoading: loading, isError } = useQuery<Referral[]>({
-    queryKey: ['/api/referrals'],
+    queryKey: ['/api/referrals', session.token],
     queryFn: async () => {
       const apiUrl = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/api/referrals`;
       const res = await fetch(apiUrl, {
@@ -125,6 +126,14 @@ export function ReferralManagementView({ onReferralSelect, selectedReferralId, h
   const [activeFilters, setActiveFilters] = React.useState<Record<string, string>>({
     '时间': '从新到旧'
   });
+
+  React.useEffect(() => {
+    if (resetToken) {
+      setActiveFilters({
+        '时间': '从新到旧'
+      });
+    }
+  }, [resetToken]);
 
   const processedReferrals = React.useMemo(() => {
     let filtered = referrals.filter(r => {

@@ -166,11 +166,11 @@ export function TrialAdminPage() {
         return (
           <>
             <CanvasHeader title={TRIAL_ADMIN_TAB_TITLES[activePage]} />
-            <StaffManagementView onStaffSelect={setSelectedItem} selectedStaffId={selectedItem?.id} />
+            <StaffManagementView resetToken={lastEvent?.timestamp} onStaffSelect={setSelectedItem} selectedStaffId={selectedItem?.id} />
           </>
         );
       case TrialAdminTabs.REFERRAL_MANAGEMENT:
-        return <ReferralManagementView userRole="trial-admin" onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} header={(loading) => <CanvasHeader title={TRIAL_ADMIN_TAB_TITLES[activePage]} isLoading={loading} />} />;
+        return <ReferralManagementView resetToken={lastEvent?.timestamp} userRole="trial-admin" onReferralSelect={setSelectedItem} selectedReferralId={selectedItem?.id} header={(loading) => <CanvasHeader title={TRIAL_ADMIN_TAB_TITLES[activePage]} isLoading={loading} />} />;
       case TrialAdminTabs.SECURITY:
         return (
           <>
