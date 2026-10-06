@@ -132,4 +132,15 @@ class DashboardControllerTest {
         assertEquals(7L, response.body?.metrics?.referralsCount)
         assertEquals(1L, response.body?.metrics?.notificationsCount)
     }
+
+    @Test
+    fun `getRecentActivity returns feed response`() {
+        val mockUser = User(id = 5L, name = "Dr. House", email = EmailAddress("house@univ.edu.cn"), role = UserRole.DOCTOR)
+        val dto = DashboardActivityFeedDto(emptyList())
+        `when`(dashboardService.getRecentActivity(mockUser)).thenReturn(dto)
+
+        val response = dashboardController.getRecentActivity(mockUser)
+        assertEquals(200, response.statusCode.value())
+        assertEquals(0, response.body?.activities?.size)
+    }
 }

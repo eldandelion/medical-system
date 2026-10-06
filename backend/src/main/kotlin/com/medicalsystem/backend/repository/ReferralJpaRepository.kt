@@ -20,4 +20,6 @@ interface ReferralJpaRepository : JpaRepository<ReferralEntity, Long>, JpaSpecif
 
     fun countByDestinationHospitalId(hospitalId: Long): Long
     fun countByDestinationDepartmentId(departmentId: Long): Long
+
+    fun findTop5ByStatusInOrderByCreatedAtDesc(statuses: List<com.medicalsystem.backend.model.ReferralStatus>): List<ReferralEntity>
 }

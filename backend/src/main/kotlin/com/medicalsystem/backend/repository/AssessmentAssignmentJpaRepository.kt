@@ -29,4 +29,6 @@ interface AssessmentAssignmentJpaRepository : JpaRepository<AssessmentAssignment
     ): List<AssessmentAssignmentEntity>
 
     fun countByStatus(status: AssessmentStatus): Long
+    fun findTop5ByStudentIdAndStatusOrderByAssignedAtDesc(studentId: Long, status: AssessmentStatus): List<AssessmentAssignmentEntity>
+    fun findTop5ByStatusOrderByAssignedAtDesc(status: AssessmentStatus): List<AssessmentAssignmentEntity>
 }

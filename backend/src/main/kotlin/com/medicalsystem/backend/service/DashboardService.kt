@@ -25,7 +25,9 @@ class DashboardService(
     private val notificationRepository: NotificationRepository,
     private val referralRepository: ReferralRepository,
     private val userJpaRepository: com.medicalsystem.backend.repository.UserJpaRepository,
-    private val assessmentAssignmentRepository: com.medicalsystem.backend.repository.AssessmentAssignmentJpaRepository
+    private val assessmentAssignmentRepository: com.medicalsystem.backend.repository.AssessmentAssignmentJpaRepository,
+    private val referralJpaRepository: com.medicalsystem.backend.repository.ReferralJpaRepository,
+    private val notificationJpaRepository: com.medicalsystem.backend.repository.NotificationJpaRepository
 ) {
 
     private fun validateRole(user: User, expectedRole: UserRole) {
@@ -177,5 +179,100 @@ class DashboardService(
                 completedAssessmentsCount = completedAssessmentsCount
             )
         )
+    }
+
+    fun getRecentActivity(user: User): DashboardActivityFeedDto {
+        val activities = mutableListOf<DashboardActivityDto>()
+        
+        when (user.role) {
+            UserRole.STUDENT -> {
+                val notifications = notificationJpaRepository.findTop5ByUserIdAndIsReadFalseOrderByCreatedAtDesc(user.id)
+                val assessments = assessmentAssignmentRepository.findTop5ByStudentIdAndStatusOrderByAssignedAtDesc(user.id, com.medicalsystem.backend.model.AssessmentStatus.PENDING)
+                
+                activities.addAll(notifications.map {
+                    DashboardActivityDto(
+                        id = "notif-${it.id}",
+                        type = ActivityType.UNREAD_NOTIFICATION,
+                        timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
+                        referenceId = it.id!!,
+                        referenceName = it.messageCode.name
+                    )
+                })
+                
+                activities.addAll(assessments.map {
+                    DashboardActivityDto(
+                        id = "assess-${it.id}",
+                        type = ActivityType.ASSESSMENT_PENDING_COMPLETION,
+                        timestamp = it.assignedAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
+                        referenceId = it.id!!,
+                        referenceName = it.batteryCode
+                    )
+                })
+            }
+            UserRole.TEACHER -> {
+                // Fetch unread notifications
+                val notifications = notificationJpaRepository.findTop5ByUserIdAndIsReadFalseOrderByCreatedAtDesc(user.id)
+                activities.addAll(notifications.map {
+                    DashboardActivityDto(
+                        id = "notif-${it.id}",
+                        type = ActivityType.UNREAD_NOTIFICATION,
+                        timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
+                        referenceId = it.id!!,
+                        referenceName = it.messageCode.name
+                    )
+                })
+            }
+            UserRole.HEAD_COUNSELLOR -> {
+                val referrals = referralJpaRepository.findTop5ByStatusInOrderByCreatedAtDesc(listOf(com.medicalsystem.backend.model.ReferralStatus.AWAITING_TRIAGE))
+                activities.addAll(referrals.map {
+                    DashboardActivityDto(
+                        id = "ref-${it.id}",
+                        type = ActivityType.REFERRAL_PENDING_TRIAGE,
+                        timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
+                        referenceId = it.id!!,
+                        referenceName = it.title
+                    )
+                })
+            }
+            UserRole.TRIAL_ADMIN -> {
+                val referrals = referralJpaRepository.findTop5ByStatusInOrderByCreatedAtDesc(listOf(com.medicalsystem.backend.model.ReferralStatus.WAITING_FOR_SCHEDULING))
+                activities.addAll(referrals.map {
+                    DashboardActivityDto(
+                        id = "ref-${it.id}",
+                        type = ActivityType.REFERRAL_PENDING_SCHEDULING,
+                        timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
+                        referenceId = it.id!!,
+                        referenceName = it.title
+                    )
+                })
+            }
+            UserRole.DOCTOR -> {
+                val referrals = referralJpaRepository.findTop5ByStatusInOrderByCreatedAtDesc(listOf(com.medicalsystem.backend.model.ReferralStatus.WAITING_FOR_APPOINTMENT, com.medicalsystem.backend.model.ReferralStatus.AWAITING_FEEDBACK_APPROVAL))
+                activities.addAll(referrals.map {
+                    DashboardActivityDto(
+                        id = "ref-${it.id}",
+                        type = ActivityType.REFERRAL_PENDING_FEEDBACK,
+                        timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
+                        referenceId = it.id!!,
+                        referenceName = it.title
+                    )
+                })
+            }
+            UserRole.SYSTEM_ADMIN -> {
+                val users = userJpaRepository.findTop5ByStatusOrderByIdDesc(com.medicalsystem.backend.model.AccountStatus.PENDING_APPROVAL)
+                activities.addAll(users.map {
+                    DashboardActivityDto(
+                        id = "user-${it.id}",
+                        type = ActivityType.USER_APPROVAL_PENDING,
+                        timestamp = (it.deletedAt ?: java.time.Instant.now()),
+                        referenceId = it.id,
+                        referenceName = it.name
+                    )
+                })
+            }
+        }
+        
+        activities.sortByDescending { it.timestamp }
+        return DashboardActivityFeedDto(activities.take(5))
     }
 }

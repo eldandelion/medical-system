@@ -63,6 +63,12 @@ class DashboardServiceTest {
     @Mock
     private lateinit var assessmentAssignmentRepository: com.medicalsystem.backend.repository.AssessmentAssignmentJpaRepository
 
+    @Mock
+    private lateinit var referralJpaRepository: com.medicalsystem.backend.repository.ReferralJpaRepository
+
+    @Mock
+    private lateinit var notificationJpaRepository: com.medicalsystem.backend.repository.NotificationJpaRepository
+
     private lateinit var dashboardService: DashboardService
 
     @org.junit.jupiter.api.BeforeEach
@@ -81,7 +87,9 @@ class DashboardServiceTest {
             notificationRepository,
             referralRepository,
             userJpaRepository,
-            assessmentAssignmentRepository
+            assessmentAssignmentRepository,
+            referralJpaRepository,
+            notificationJpaRepository
         )
     }
 
@@ -266,5 +274,15 @@ class DashboardServiceTest {
         assertEquals(1L, result.metrics.pendingApprovalsCount)
         assertEquals(4L, result.metrics.activeReferralsCount)
         assertEquals(25L, result.metrics.completedAssessmentsCount)
+    }
+
+    @Test
+    fun `getRecentActivity for STUDENT returns pending assessments and notifications`() {
+        val mockUser = User(id = 1L, name = "John Doe", email = EmailAddress("john@univ.edu.cn"), role = UserRole.STUDENT)
+        `when`(notificationJpaRepository.findTop5ByUserIdAndIsReadFalseOrderByCreatedAtDesc(1L)).thenReturn(emptyList())
+        `when`(assessmentAssignmentRepository.findTop5ByStudentIdAndStatusOrderByAssignedAtDesc(1L, AssessmentStatus.PENDING)).thenReturn(emptyList())
+
+        val result = dashboardService.getRecentActivity(mockUser)
+        assertEquals(0, result.activities.size)
     }
 }

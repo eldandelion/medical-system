@@ -215,3 +215,39 @@ export const mockDashboardDb: Record<string, DashboardData> = {
     ]
   }
 };
+
+import { DashboardActivityFeedDto, ActivityType } from '../../api/dashboard';
+
+export const mockDashboardActivities: Record<string, DashboardActivityFeedDto> = {
+  student: {
+    activities: [
+      { id: 'assess-1', type: 'ASSESSMENT_PENDING_COMPLETION', timestamp: new Date().toISOString(), referenceId: 1, referenceName: '期中自我测评' },
+      { id: 'notif-1', type: 'UNREAD_NOTIFICATION', timestamp: new Date(Date.now() - 86400000).toISOString(), referenceId: 2, referenceName: 'SYSTEM_ALERT' }
+    ]
+  },
+  teacher: {
+    activities: [
+      { id: 'notif-2', type: 'UNREAD_NOTIFICATION', timestamp: new Date(Date.now() - 3600000).toISOString(), referenceId: 3, referenceName: 'STUDENT_RISK' }
+    ]
+  },
+  'head-councillor': {
+    activities: [
+      { id: 'ref-1', type: 'REFERRAL_PENDING_TRIAGE', timestamp: new Date(Date.now() - 7200000).toISOString(), referenceId: 4, referenceName: '转诊申请 - 高风险' }
+    ]
+  },
+  'trial-admin': {
+    activities: [
+      { id: 'ref-2', type: 'REFERRAL_PENDING_SCHEDULING', timestamp: new Date(Date.now() - 3600000).toISOString(), referenceId: 5, referenceName: '转诊申请 - 中风险' }
+    ]
+  },
+  doctor: {
+    activities: [
+      { id: 'ref-3', type: 'REFERRAL_PENDING_FEEDBACK', timestamp: new Date(Date.now() - 1800000).toISOString(), referenceId: 6, referenceName: '转诊报告需出具' }
+    ]
+  },
+  admin: {
+    activities: [
+      { id: 'user-1', type: 'USER_APPROVAL_PENDING', timestamp: new Date(Date.now() - 600000).toISOString(), referenceId: 7, referenceName: '赵老师' }
+    ]
+  }
+};

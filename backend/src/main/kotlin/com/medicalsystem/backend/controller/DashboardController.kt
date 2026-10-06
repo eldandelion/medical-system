@@ -61,4 +61,8 @@ class DashboardController(
     @GetMapping("/admin")
     fun getAdminDashboard(@CurrentUser user: User): ResponseEntity<DashboardResponseDto<AdminMetricsDto>> =
         ResponseEntity.ok(dashboardService.getAdminDashboard(user))
+
+    @GetMapping("/activity")
+    fun getRecentActivity(@CurrentUser user: User): ResponseEntity<DashboardActivityFeedDto> =
+        ResponseEntity.ok(dashboardService.getRecentActivity(user))
 }

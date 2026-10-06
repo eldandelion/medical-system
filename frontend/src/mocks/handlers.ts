@@ -795,7 +795,36 @@ export const handlers = [
 
     return HttpResponse.json(result);
   }),
+  http.get(api('/api/dashboard/activity'), async ({ request }) => {
+    // Attempt to fetch from real backend first
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+      } catch (error) {
+        console.warn('Real backend /api/dashboard/activity failed, falling back to mock');
+      }
+    }
 
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader) {
+      return HttpResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    // Naively extract role from mock token for MSW
+    const tokenParts = authHeader.replace('Bearer ', '').split('-');
+    const role = tokenParts[0] || 'student';
+    
+    const { mockDashboardActivities } = await import('./data/dashboard');
+    const data = mockDashboardActivities[role];
+    if (data) {
+      return HttpResponse.json(data);
+    }
+    return HttpResponse.json({ activities: [] });
+  }),
 
   http.get(api('/api/dashboard/:role'), async ({ params, request }) => {
     await delay(MOCK_DELAY_MS);

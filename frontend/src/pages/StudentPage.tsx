@@ -21,6 +21,7 @@ import { STUDENT_METRICS_CONFIG } from '../config/dashboardConfig';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useNotifications } from '../hooks/useNotifications';
+import { useDashboardActivity } from '../hooks/useDashboardActivity';
 import { DashboardResponseDto, StudentMetricsDto } from '../types';
 
 export const StudentTabs = {
@@ -113,6 +114,8 @@ export function StudentPage() {
     enabled: activePage === StudentTabs.DASHBOARD && !!session?.token
   });
 
+  const { data: activityData } = useDashboardActivity();
+
   const { data: profileSummaryData, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useStudentProfileSummary(session?.token);
 
 
@@ -178,8 +181,14 @@ export function StudentPage() {
                 containerColorClass: metric.containerColorClass,
                 onClick: () => handlePageChange(metric.targetPage as StudentTab)
               }))}
-              activityTitle={dashboardData.activityTitle}
-              activities={dashboardData.activities ?? []}
+              activityTitle="近期动态"
+              activities={activityData?.activities?.map(a => ({
+                id: a.id,
+                title: a.referenceName || '',
+                timestamp: new Date(a.timestamp).toLocaleString(),
+                statusText: (a.type === 'UNREAD_NOTIFICATION' ? '未读' : '待处理'),
+                statusType: (a.type === 'UNREAD_NOTIFICATION' ? 'info' : 'error') as any
+              })) ?? []}
             />
         </>) : null;
       default:
