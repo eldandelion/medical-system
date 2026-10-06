@@ -23,7 +23,8 @@ class UserManagementService(
     private val doctorRepository: DoctorRepository,
     private val headCounsellorJpaRepository: HeadCounsellorJpaRepository,
     private val trialAdminJpaRepository: TrialAdminJpaRepository,
-    private val userDetailAssembler: UserDetailAssembler
+    private val userDetailAssembler: UserDetailAssembler,
+    private val emailSenderPort: com.medicalsystem.backend.port.EmailSenderPort
 ) {
 
     private fun validateAdmin(user: User) {
@@ -82,11 +83,22 @@ class UserManagementService(
         val userEntity = userJpaRepository.findById(targetUserId)
             .orElseThrow { ResourceNotFoundException("User not found with id: $targetUserId") }
 
+        val oldStatus = userEntity.status
         userEntity.status = newStatus
+
         if (newStatus == AccountStatus.DELETED) {
             userEntity.deletedAt = Instant.now()
+            userEntity.rejectionReason = reason
+            if (oldStatus == AccountStatus.PENDING_APPROVAL) {
+                emailSenderPort.sendAccountRejection(userEntity.email, reason ?: "")
+            }
         } else if (userEntity.deletedAt != null && newStatus == AccountStatus.ACTIVE) {
             userEntity.deletedAt = null
+            userEntity.rejectionReason = null
+        }
+        
+        if (newStatus == AccountStatus.ACTIVE && oldStatus == AccountStatus.PENDING_APPROVAL) {
+            emailSenderPort.sendAccountApproval(userEntity.email)
         }
 
         val saved = userJpaRepository.save(userEntity)

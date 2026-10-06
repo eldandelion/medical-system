@@ -25,5 +25,8 @@ class UserEntity(
     var status: AccountStatus = AccountStatus.ACTIVE,
 
     @Column(name = "deleted_at")
-    var deletedAt: Instant? = null
+    var deletedAt: Instant? = null,
+
+    @Column(name = "rejection_reason", length = 255)
+    var rejectionReason: String? = null
 )

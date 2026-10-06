@@ -18,7 +18,8 @@ data class VerifyIdentifierResponse(
     val isAccountActive: Boolean = true,
     val status: AccountStatus? = null,
     val maskedIdentifier: String? = null,
-    val role: UserRole? = null
+    val role: UserRole? = null,
+    val rejectionReason: String? = null
 )
 
 data class SendEmailOtpRequest(

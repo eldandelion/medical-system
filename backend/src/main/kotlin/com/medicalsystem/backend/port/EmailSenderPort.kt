@@ -5,4 +5,6 @@ import com.medicalsystem.backend.model.OtpCode
 
 interface EmailSenderPort {
     fun sendOtpVerification(recipient: EmailAddress, code: OtpCode, expiresInMinutes: Long)
+    fun sendAccountApproval(recipient: EmailAddress)
+    fun sendAccountRejection(recipient: EmailAddress, reason: String)
 }

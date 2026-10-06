@@ -65,4 +65,64 @@ class SmtpEmailSender(
             )
         }
     }
+    @Async("mailTaskExecutor")
+    override fun sendAccountApproval(recipient: EmailAddress) {
+        val mailSender = mailSenderProvider.ifAvailable
+        if (mailSender != null && fromAddress.isNotBlank()) {
+            try {
+                logger.info("Dispatching approval email to {}", recipient.value)
+                val message = SimpleMailMessage().apply {
+                    from = fromAddress
+                    setTo(recipient.value)
+                    subject = "【中南大学医疗筛查系统】账号审核通过"
+                    text = """
+                        尊敬的用户：
+
+                        您好！您在【中南大学医疗筛查与转诊系统】的教职工账号注册申请已通过审核。
+                        您现在可以登录系统了。
+
+                        --------------------------------------------------
+                        中南大学学生心理健康教育与咨询中心 / 医疗筛查平台
+                    """.trimIndent()
+                }
+                mailSender.send(message)
+            } catch (ex: Exception) {
+                logger.error("Failed to deliver email to {}: {}", recipient.value, ex.message)
+            }
+        } else {
+            logger.info("[DEV EMAIL DISPATCH] Account Approved Email to {}", recipient.value)
+        }
+    }
+
+    @Async("mailTaskExecutor")
+    override fun sendAccountRejection(recipient: EmailAddress, reason: String) {
+        val displayReason = if (reason.isNotBlank()) reason else "未提供具体原因，请联系管理员了解详情"
+        val mailSender = mailSenderProvider.ifAvailable
+        if (mailSender != null && fromAddress.isNotBlank()) {
+            try {
+                logger.info("Dispatching rejection email to {}", recipient.value)
+                val message = SimpleMailMessage().apply {
+                    from = fromAddress
+                    setTo(recipient.value)
+                    subject = "【中南大学医疗筛查系统】账号审核被拒绝"
+                    text = """
+                        尊敬的用户：
+
+                        您好！您在【中南大学医疗筛查与转诊系统】的教职工账号注册申请被拒绝。
+                        拒绝原因：$displayReason
+
+                        如有疑问，请联系系统管理员。
+
+                        --------------------------------------------------
+                        中南大学学生心理健康教育与咨询中心 / 医疗筛查平台
+                    """.trimIndent()
+                }
+                mailSender.send(message)
+            } catch (ex: Exception) {
+                logger.error("Failed to deliver email to {}: {}", recipient.value, ex.message)
+            }
+        } else {
+            logger.info("[DEV EMAIL DISPATCH] Account Rejected Email to {}. Reason: {}", recipient.value, reason)
+        }
+    }
 }

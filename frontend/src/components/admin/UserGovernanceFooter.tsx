@@ -23,6 +23,7 @@ export const UserGovernanceFooter: React.FC<UserGovernanceFooterProps> = ({
   const [isApproveDetailsOpen, setIsApproveDetailsOpen] = useState(false);
   const [isDisableDetailsOpen, setIsDisableDetailsOpen] = useState(false);
   const [isDeleteDetailsOpen, setIsDeleteDetailsOpen] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
 
   const handleStatusChange = async (newStatus: AccountStatus) => {
     try {
@@ -396,6 +397,7 @@ export const UserGovernanceFooter: React.FC<UserGovernanceFooterProps> = ({
               onClick={() => {
                 setIsDeleteDialogOpen(false);
                 setIsDeleteDetailsOpen(false);
+                setRejectionReason('');
               }}
               disabled={isUpdating}
             />
@@ -413,9 +415,25 @@ export const UserGovernanceFooter: React.FC<UserGovernanceFooterProps> = ({
               onClick={async () => {
                 setIsDeleteDialogOpen(false);
                 setIsDeleteDetailsOpen(false);
-                await handleStatusChange('DELETED');
+                
+                try {
+                  if (user.status === 'PENDING_APPROVAL') {
+                    await updateStatus({
+                      userId: user.id,
+                      request: {
+                        status: 'DELETED',
+                        reason: rejectionReason || undefined
+                      }
+                    });
+                    onStatusUpdated?.('DELETED');
+                  } else {
+                    await handleStatusChange('DELETED');
+                  }
+                } finally {
+                  setRejectionReason('');
+                }
               }}
-              disabled={isUpdating}
+              disabled={isUpdating || (user.status === 'PENDING_APPROVAL' && !rejectionReason.trim())}
             />
           </>
         }
@@ -434,6 +452,20 @@ export const UserGovernanceFooter: React.FC<UserGovernanceFooterProps> = ({
               <div>归属单位：<span className="text-[var(--md-sys-color-on-surface)]">{affiliation}</span></div>
             </div>
           </div>
+          
+          {user.status === 'PENDING_APPROVAL' && (
+            <div className="mt-4 mb-2">
+              <md-outlined-text-field
+                label="拒绝原因 (必填)"
+                value={rejectionReason}
+                maxLength={255}
+                className="w-full"
+                onInput={(e: React.SyntheticEvent) => {
+                  setRejectionReason((e.target as HTMLInputElement).value);
+                }}
+              />
+            </div>
+          )}
 
           {/* Collapsible Action Consequences */}
           <div className="space-y-2">

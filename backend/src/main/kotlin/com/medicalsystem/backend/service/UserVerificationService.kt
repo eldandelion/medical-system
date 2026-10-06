@@ -37,7 +37,7 @@ class UserVerificationService(
             resolveByIdNumber(rawInput)
         }
 
-        if (userEntity == null || userEntity.deletedAt != null) {
+        if (userEntity == null) {
             return VerifyIdentifierResponse(exists = false)
         }
 
@@ -49,7 +49,8 @@ class UserVerificationService(
             isAccountActive = isActive,
             status = userEntity.status,
             maskedIdentifier = masked,
-            role = userEntity.role
+            role = userEntity.role,
+            rejectionReason = userEntity.rejectionReason
         )
     }
 

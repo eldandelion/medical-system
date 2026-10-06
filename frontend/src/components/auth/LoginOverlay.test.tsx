@@ -60,6 +60,12 @@ beforeEach(() => {
           json: async () => ({ exists: true, isAccountActive: false, status: 'PENDING_APPROVAL', maskedIdentifier: raw }),
         };
       }
+      if (raw === 'rejected_user@univ.edu.cn') {
+        return {
+          ok: true,
+          json: async () => ({ exists: true, isAccountActive: false, status: 'DELETED', maskedIdentifier: raw, rejectionReason: 'ID Invalid' }),
+        };
+      }
       if (
         raw === 'testuser@example.com' ||
         raw === '2021001' ||
@@ -244,6 +250,20 @@ describe('LoginOverlay Component', () => {
     fireEvent.click(nextButton);
 
     expect(await screen.findByText('该账号已被停用或注销，请联系管理员')).toBeDefined();
+    expect(screen.getByText('登录')).toBeDefined();
+    expect(screen.queryByText('欢迎')).toBeNull();
+  });
+
+  it('displays rejection reason and stays on Step 1 when a rejected account is submitted', async () => {
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+
+    const emailField = document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]') as HTMLElement;
+    setMdInputValue(emailField, 'rejected_user@univ.edu.cn');
+
+    const nextButton = screen.getByText('下一步');
+    fireEvent.click(nextButton);
+
+    expect(await screen.findByText('您的注册申请已被拒绝：ID Invalid')).toBeDefined();
     expect(screen.getByText('登录')).toBeDefined();
     expect(screen.queryByText('欢迎')).toBeNull();
   });

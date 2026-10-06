@@ -2,6 +2,7 @@ package com.medicalsystem.backend.dto
 
 import com.medicalsystem.backend.model.AccountStatus
 import com.medicalsystem.backend.model.UserRole
+import jakarta.validation.constraints.Size
 import java.time.Instant
 
 data class AdminUserSummaryDto(
@@ -42,6 +43,7 @@ data class AdminUserDetailsDto(
 
 data class UpdateAccountStatusRequest(
     val status: AccountStatus,
+    @field:Size(max = 255, message = "Reason cannot exceed 255 characters")
     val reason: String? = null
 )
 

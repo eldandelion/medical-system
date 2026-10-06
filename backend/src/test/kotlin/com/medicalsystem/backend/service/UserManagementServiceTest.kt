@@ -42,6 +42,9 @@ class UserManagementServiceTest {
     @Mock
     private lateinit var userDetailAssembler: com.medicalsystem.backend.mapper.UserDetailAssembler
 
+    @Mock
+    private lateinit var emailSenderPort: com.medicalsystem.backend.port.EmailSenderPort
+
     @InjectMocks
     private lateinit var userManagementService: UserManagementService
 
@@ -86,18 +89,28 @@ class UserManagementServiceTest {
     }
 
     @Test
-    fun `updateUserStatus modifies status and manages deletedAt timestamp`() {
-        val userEntity = UserEntity(id = 10L, name = "Zhang", email = EmailAddress("zhang@univ.edu.cn"), role = UserRole.TEACHER, status = AccountStatus.ACTIVE)
+    fun `updateUserStatus to DELETED sets deletedAt and rejectionReason and sends email`() {
+        val userEntity = UserEntity(id = 10L, name = "Zhang", email = EmailAddress("zhang@univ.edu.cn"), role = UserRole.TEACHER, status = AccountStatus.PENDING_APPROVAL)
         `when`(userJpaRepository.findById(10L)).thenReturn(Optional.of(userEntity))
         `when`(userJpaRepository.save(userEntity)).thenReturn(userEntity)
 
-        val deletedResult = userManagementService.updateUserStatus(10L, AccountStatus.DELETED, null, adminUser)
+        val deletedResult = userManagementService.updateUserStatus(10L, AccountStatus.DELETED, "Not a valid ID", adminUser)
         assertEquals(AccountStatus.DELETED, deletedResult.status)
         assertNotNull(userEntity.deletedAt)
+        assertEquals("Not a valid ID", userEntity.rejectionReason)
+        org.mockito.Mockito.verify(emailSenderPort).sendAccountRejection(EmailAddress("zhang@univ.edu.cn"), "Not a valid ID")
+    }
+
+    @Test
+    fun `updateUserStatus to ACTIVE removes deletedAt and sends approval email`() {
+        val userEntity = UserEntity(id = 10L, name = "Zhang", email = EmailAddress("zhang@univ.edu.cn"), role = UserRole.TEACHER, status = AccountStatus.PENDING_APPROVAL)
+        `when`(userJpaRepository.findById(10L)).thenReturn(Optional.of(userEntity))
+        `when`(userJpaRepository.save(userEntity)).thenReturn(userEntity)
 
         val activeResult = userManagementService.updateUserStatus(10L, AccountStatus.ACTIVE, null, adminUser)
         assertEquals(AccountStatus.ACTIVE, activeResult.status)
         assertNull(userEntity.deletedAt)
+        org.mockito.Mockito.verify(emailSenderPort).sendAccountApproval(EmailAddress("zhang@univ.edu.cn"))
     }
 
     @Test

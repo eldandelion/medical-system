@@ -122,11 +122,28 @@ describe('UserGovernanceFooter', () => {
     });
 
     // 3. Reject opens confirmation dialog
+    mockUpdateStatus.mockClear();
     fireEvent.click(rejectBtn);
     expect(screen.getByText('确认拒绝并注销申请？')).toBeDefined();
+    
+    // Type rejection reason
+    const reasonInput = document.querySelector('md-outlined-text-field[label="拒绝原因 (必填)"]') as HTMLElement;
+    expect(reasonInput).toBeDefined();
+    
+    // Cannot submit without reason
     const confirmRejectBtn = screen.getByText('确认拒绝');
+    expect(confirmRejectBtn.closest('md-text-button, md-filled-button, md-outlined-button')?.hasAttribute('disabled')).toBe(true);
+    
+    // Fill reason and submit
+    (reasonInput as any).value = 'Missing documents';
+    fireEvent(reasonInput, new Event('input', { bubbles: true }));
+    
+    expect(confirmRejectBtn.closest('md-text-button, md-filled-button, md-outlined-button')?.hasAttribute('disabled')).toBe(false);
     fireEvent.click(confirmRejectBtn);
-    expect(mockDeleteUser).toHaveBeenCalledWith(101);
+    expect(mockUpdateStatus).toHaveBeenCalledWith({
+      userId: 101,
+      request: { status: 'DELETED', reason: 'Missing documents' },
+    });
   });
 
   it('renders enable/delete actions when user status is DISABLED', async () => {

@@ -218,6 +218,7 @@ export function LoginOverlay({
         accountActive?: boolean;
         status?: 'PENDING_APPROVAL' | 'ACTIVE' | 'DISABLED' | 'DELETED';
         maskedIdentifier?: string;
+        rejectionReason?: string;
       };
 
       const isAccountActive = data.isAccountActive ?? data.accountActive ?? (data.status ? data.status === 'ACTIVE' : true);
@@ -233,7 +234,11 @@ export function LoginOverlay({
       }
 
       if (isAccountActive === false || data.status === 'DISABLED' || data.status === 'DELETED') {
-        setIdentifierError('该账号已被停用或注销，请联系管理员');
+        if (data.status === 'DELETED' && data.rejectionReason) {
+          setIdentifierError(`您的注册申请已被拒绝：${data.rejectionReason}`);
+        } else {
+          setIdentifierError('该账号已被停用或注销，请联系管理员');
+        }
         return;
       }
 

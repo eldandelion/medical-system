@@ -228,20 +228,24 @@ class UserVerificationServiceTest {
     }
 
     @Test
-    fun `verifyIdentifier with soft deleted user returns exists false`() {
+    fun `verifyIdentifier with rejected user returns exists true with status and rejectionReason`() {
         val user = UserEntity(
             id = 1L,
             name = "李明",
             email = EmailAddress("liming@univ.edu.cn"),
             role = UserRole.STUDENT,
             status = AccountStatus.DELETED,
-            deletedAt = Instant.now()
+            deletedAt = Instant.now(),
+            rejectionReason = "Not a valid student ID"
         )
         `when`(userJpaRepository.findAll()).thenReturn(listOf(user))
 
         val result = userVerificationService.verifyIdentifier(VerifyIdentifierRequest("liming@univ.edu.cn"))
 
-        assertFalse(result.exists)
+        assertTrue(result.exists)
+        assertFalse(result.isAccountActive)
+        assertEquals(AccountStatus.DELETED, result.status)
+        assertEquals("Not a valid student ID", result.rejectionReason)
     }
 
     @Test
