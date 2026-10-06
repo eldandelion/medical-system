@@ -23,7 +23,7 @@ import { useNavigation } from '../contexts/NavigationContext';
 import { useNotifications } from '../hooks/useNotifications';
 import { useDashboardActivity } from '../hooks/useDashboardActivity';
 import { DashboardResponseDto, StudentMetricsDto } from '../types';
-
+import { mapActivityTypeToUI } from '../utils/activityMapper';
 export const StudentTabs = {
   DASHBOARD: 'Dashboard',
   NOTIFICATIONS: 'Notifications',
@@ -182,13 +182,16 @@ export function StudentPage() {
                 onClick: () => handlePageChange(metric.targetPage as StudentTab)
               }))}
               activityTitle="近期动态"
-              activities={activityData?.activities?.map(a => ({
-                id: a.id,
-                title: a.referenceName || '',
-                timestamp: new Date(a.timestamp).toLocaleString(),
-                statusText: (a.type === 'UNREAD_NOTIFICATION' ? '未读' : '待处理'),
-                statusType: (a.type === 'UNREAD_NOTIFICATION' ? 'info' : 'error') as any
-              })) ?? []}
+              activities={activityData?.activities?.map(a => {
+                const ui = mapActivityTypeToUI(a);
+                return {
+                  id: ui.id,
+                  title: ui.title,
+                  timestamp: new Date(ui.timestamp).toLocaleString(),
+                  statusText: ui.statusText,
+                  statusType: ui.statusType
+                };
+              }) ?? []}
             />
         </>) : null;
       default:

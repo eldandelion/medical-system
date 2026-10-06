@@ -149,43 +149,30 @@ export function InteractiveStatusList({ items = [], onRowClick }: InteractiveSta
   }
 
   return (
-    <div className="flex flex-col gap-1">
-      {items.map((item, idx) => {
-        const isFirst = idx === 0;
-        const isLast = idx === items.length - 1;
-        const radiusClass = items.length === 1 
-          ? 'rounded-[16px]' 
-          : isFirst 
-            ? 'rounded-t-[16px] rounded-b-[4px]' 
-            : isLast 
-              ? 'rounded-t-[4px] rounded-b-[16px]' 
-              : 'rounded-[4px]';
-
-        return (
-          <div 
-            key={item.id}
-            onClick={() => onRowClick?.(item)}
-            className={`bg-[var(--md-sys-color-surface-container-low)] overflow-hidden flex items-center justify-between p-4 cursor-pointer hover:bg-[var(--md-sys-color-secondary-container)] hover:text-[var(--md-sys-color-on-secondary-container)] transition-colors group ${radiusClass}`}
-          >
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[16px] leading-[24px] tracking-[0.5px] font-normal transition-colors">{item.title}</span>
-              <span className="text-[14px] leading-[20px] tracking-[0.25px] font-normal opacity-70 transition-colors">{item.timestamp}</span>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              {(() => {
-                const chipColor = item.statusType ? STATUS_CHIP_COLORS[item.statusType] : 'surface-variant';
-                return (
-                  <span className={`px-3 py-1 rounded-full text-[14px] leading-[20px] tracking-[0.1px] font-medium bg-[var(--md-sys-color-${chipColor})] text-[var(--md-sys-color-on-${chipColor})]`}>
-                    {item.statusText}
-                  </span>
-                );
-              })()}
-              <span className="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
-            </div>
-          </div>
-        );
-      })}
+    <div className="bg-[var(--md-sys-color-surface-container-low)] rounded-[16px] overflow-hidden">
+      <md-list style={{ backgroundColor: 'transparent' } as any}>
+        {items.map((item) => {
+          const chipColor = item.statusType ? STATUS_CHIP_COLORS[item.statusType] : 'surface-variant';
+          return (
+            <md-list-item 
+              key={item.id}
+              type="button"
+              onClick={() => onRowClick?.(item)}
+              className="group hover:bg-[var(--md-sys-color-secondary-container)] hover:text-[var(--md-sys-color-on-secondary-container)] transition-colors"
+            >
+              <div slot="headline" className="text-[16px] leading-[24px] tracking-[0.5px] font-normal transition-colors">{item.title}</div>
+              <div slot="supporting-text" className="text-[14px] leading-[20px] tracking-[0.25px] font-normal opacity-70 transition-colors">{item.timestamp}</div>
+              
+              <div slot="end" className="flex items-center gap-4">
+                <span className={`px-3 py-1 rounded-full text-[14px] leading-[20px] tracking-[0.1px] font-medium bg-[var(--md-sys-color-${chipColor})] text-[var(--md-sys-color-on-${chipColor})]`}>
+                  {item.statusText}
+                </span>
+                <span className="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+              </div>
+            </md-list-item>
+          );
+        })}
+      </md-list>
     </div>
   );
 }

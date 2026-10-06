@@ -27,7 +27,8 @@ class DashboardService(
     private val userJpaRepository: com.medicalsystem.backend.repository.UserJpaRepository,
     private val assessmentAssignmentRepository: com.medicalsystem.backend.repository.AssessmentAssignmentJpaRepository,
     private val referralJpaRepository: com.medicalsystem.backend.repository.ReferralJpaRepository,
-    private val notificationJpaRepository: com.medicalsystem.backend.repository.NotificationJpaRepository
+    private val notificationJpaRepository: com.medicalsystem.backend.repository.NotificationJpaRepository,
+    private val entityManager: jakarta.persistence.EntityManager
 ) {
 
     private fun validateRole(user: User, expectedRole: UserRole) {
@@ -186,18 +187,21 @@ class DashboardService(
         
         when (user.role) {
             UserRole.STUDENT -> {
-                val notifications = notificationJpaRepository.findTop5ByUserIdAndIsReadFalseOrderByCreatedAtDesc(user.id)
-                val assessments = assessmentAssignmentRepository.findTop5ByStudentIdAndStatusOrderByAssignedAtDesc(user.id, com.medicalsystem.backend.model.AssessmentStatus.PENDING)
+                val spec = ReferralJpaSpecification.fromVisibilityCriteria(com.medicalsystem.backend.model.VisibilityCriteria.BySubject(user.id, listOf(com.medicalsystem.backend.model.ReferralStatus.DRAFT)))
+                val pageable = org.springframework.data.domain.PageRequest.of(0, 5, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"))
+                val referrals = referralJpaRepository.findAll(spec, pageable).content
                 
-                activities.addAll(notifications.map {
+                activities.addAll(referrals.map {
                     DashboardActivityDto(
-                        id = "notif-${it.id}",
-                        type = ActivityType.UNREAD_NOTIFICATION,
+                        id = "ref-${it.id}",
+                        type = ActivityType.REFERRAL_STATUS_UPDATED,
                         timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
                         referenceId = it.id!!,
-                        referenceName = it.messageCode.name
+                        referenceName = it.title
                     )
                 })
+
+                val assessments = assessmentAssignmentRepository.findTop5ByStudentIdAndStatusOrderByAssignedAtDesc(user.id, com.medicalsystem.backend.model.AssessmentStatus.PENDING)
                 
                 activities.addAll(assessments.map {
                     DashboardActivityDto(
@@ -210,15 +214,33 @@ class DashboardService(
                 })
             }
             UserRole.TEACHER -> {
-                // Fetch unread notifications
-                val notifications = notificationJpaRepository.findTop5ByUserIdAndIsReadFalseOrderByCreatedAtDesc(user.id)
-                activities.addAll(notifications.map {
+                val spec = ReferralJpaSpecification.fromVisibilityCriteria(com.medicalsystem.backend.model.VisibilityCriteria.ForTeacher(user.id, emptyList()))
+                val pageable = org.springframework.data.domain.PageRequest.of(0, 5, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"))
+                val referrals = referralJpaRepository.findAll(spec, pageable).content
+                
+                activities.addAll(referrals.map {
                     DashboardActivityDto(
-                        id = "notif-${it.id}",
-                        type = ActivityType.UNREAD_NOTIFICATION,
+                        id = "ref-${it.id}",
+                        type = ActivityType.REFERRAL_STATUS_UPDATED,
                         timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
                         referenceId = it.id!!,
-                        referenceName = it.messageCode.name
+                        referenceName = it.title
+                    )
+                })
+
+                val highRisk = entityManager.createQuery("SELECT n FROM NotificationEntity n WHERE n.userId = :userId AND n.messageCode = :code ORDER BY n.createdAt DESC", com.medicalsystem.backend.entity.NotificationEntity::class.java)
+                    .setParameter("userId", user.id)
+                    .setParameter("code", com.medicalsystem.backend.model.NotificationMessageCode.ASSESSMENT_COMPLETED_TEACHER)
+                    .setMaxResults(5)
+                    .resultList
+
+                activities.addAll(highRisk.map {
+                    DashboardActivityDto(
+                        id = "notif-${it.id}",
+                        type = ActivityType.HIGH_RISK_ASSESSMENT_SUBMITTED,
+                        timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
+                        referenceId = it.id!!,
+                        referenceName = null
                     )
                 })
             }
@@ -233,6 +255,33 @@ class DashboardService(
                         referenceName = it.title
                     )
                 })
+                
+                val highRisk = entityManager.createQuery("SELECT n FROM NotificationEntity n WHERE n.userId = :userId AND n.messageCode = :code ORDER BY n.createdAt DESC", com.medicalsystem.backend.entity.NotificationEntity::class.java)
+                    .setParameter("userId", user.id)
+                    .setParameter("code", com.medicalsystem.backend.model.NotificationMessageCode.ASSESSMENT_HIGH_RISK_ALERT_HC)
+                    .setMaxResults(5)
+                    .resultList
+
+                activities.addAll(highRisk.map {
+                    DashboardActivityDto(
+                        id = "notif-hr-${it.id}",
+                        type = ActivityType.HIGH_RISK_ASSESSMENT_SUBMITTED,
+                        timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
+                        referenceId = it.id!!,
+                        referenceName = null
+                    )
+                })
+                
+                val unreadSys = notificationJpaRepository.findTop5ByUserIdAndIsReadFalseOrderByCreatedAtDesc(user.id).filter { it.messageCode != com.medicalsystem.backend.model.NotificationMessageCode.ASSESSMENT_HIGH_RISK_ALERT_HC }
+                activities.addAll(unreadSys.map {
+                    DashboardActivityDto(
+                        id = "notif-sys-${it.id}",
+                        type = ActivityType.SYSTEM_NOTIFICATION,
+                        timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
+                        referenceId = it.id!!,
+                        referenceName = null
+                    )
+                })
             }
             UserRole.TRIAL_ADMIN -> {
                 val referrals = referralJpaRepository.findTop5ByStatusInOrderByCreatedAtDesc(listOf(com.medicalsystem.backend.model.ReferralStatus.WAITING_FOR_SCHEDULING))
@@ -243,6 +292,17 @@ class DashboardService(
                         timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
                         referenceId = it.id!!,
                         referenceName = it.title
+                    )
+                })
+                
+                val unread = notificationJpaRepository.findTop5ByUserIdAndIsReadFalseOrderByCreatedAtDesc(user.id)
+                activities.addAll(unread.map {
+                    DashboardActivityDto(
+                        id = "notif-${it.id}",
+                        type = ActivityType.UNREAD_NOTIFICATION,
+                        timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
+                        referenceId = it.id!!,
+                        referenceName = null
                     )
                 })
             }
@@ -257,6 +317,17 @@ class DashboardService(
                         referenceName = it.title
                     )
                 })
+                
+                val unread = notificationJpaRepository.findTop5ByUserIdAndIsReadFalseOrderByCreatedAtDesc(user.id)
+                activities.addAll(unread.map {
+                    DashboardActivityDto(
+                        id = "notif-${it.id}",
+                        type = ActivityType.UNREAD_NOTIFICATION,
+                        timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
+                        referenceId = it.id!!,
+                        referenceName = null
+                    )
+                })
             }
             UserRole.SYSTEM_ADMIN -> {
                 val users = userJpaRepository.findTop5ByStatusOrderByIdDesc(com.medicalsystem.backend.model.AccountStatus.PENDING_APPROVAL)
@@ -264,7 +335,7 @@ class DashboardService(
                     DashboardActivityDto(
                         id = "user-${it.id}",
                         type = ActivityType.USER_APPROVAL_PENDING,
-                        timestamp = (it.deletedAt ?: java.time.Instant.now()),
+                        timestamp = java.time.Instant.now(),
                         referenceId = it.id,
                         referenceName = it.name
                     )

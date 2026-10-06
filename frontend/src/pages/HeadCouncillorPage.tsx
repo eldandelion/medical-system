@@ -32,6 +32,8 @@ import { useNotifications } from '../hooks/useNotifications';
 
 import { HEAD_COUNCILLOR_METRICS_CONFIG } from '../config/dashboardConfig';
 import { DashboardResponseDto, HeadCouncillorMetricsDto } from '../types';
+import { useDashboardActivity } from '../hooks/useDashboardActivity';
+import { mapActivityTypeToUI } from '../utils/activityMapper';
 
 export const HeadCouncillorTabs = {
   DASHBOARD: 'Dashboard',
@@ -139,6 +141,7 @@ export function HeadCouncillorPage() {
     },
     enabled: activePage === HeadCouncillorTabs.DASHBOARD && !!session?.token
   });
+  const { data: activityData } = useDashboardActivity();
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
   const { data: profileSummaryData, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useHeadCouncillorProfileSummary(session?.token);
 
@@ -266,8 +269,17 @@ export function HeadCouncillorPage() {
               containerColorClass: metric.containerColorClass,
               onClick: () => handlePageChange(metric.targetPage as HeadCouncillorPageName)
             }))}
-            activityTitle={dashboardData.activityTitle}
-            activities={dashboardData.activities ?? []}
+            activityTitle="近期动态"
+            activities={activityData?.activities?.map(a => {
+              const ui = mapActivityTypeToUI(a);
+              return {
+                id: ui.id,
+                title: ui.title,
+                timestamp: new Date(ui.timestamp).toLocaleString(),
+                statusText: ui.statusText,
+                statusType: ui.statusType
+              };
+            }) ?? []}
           />
         </>) : null;
       default:

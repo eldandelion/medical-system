@@ -1,106 +1,82 @@
+# Implementation Plan: Recent Activity Feature (Dashboard)
+
 ## Overview
-This plan implements the "近期动态" (Recent Activity) feature on the Dashboard. It aggregates pending tasks and recent system events into a single timeline feed of up to 5 items, customized per user role, completely avoiding presentation strings in the backend and relying purely on typed enums.
+Implement the complete "近期动态" (Recent Activity) feature across the Dashboard for all roles. The plan involves strictly aligning the backend API with the `architecture.md` specification, extracting magic strings into a centralized frontend UI mapper, and populating the data efficiently per role.
 
 ## Requirements
-- Expose `GET /api/dashboard/activity` returning `DashboardActivityFeedDto` with a maximum of 5 recent activities.
-- Enforce strict typing with `ActivityType` enum.
-- Implement role-specific activity aggregation in `DashboardService`.
-- Frontend maps backend DTOs to localized `ActivityItem` configurations for presentation.
+- Synchronize `ActivityType` enum with the exact specification in `architecture.md`.
+- Implement data aggregation in `DashboardService.kt` for each of the 6 roles, sorting activities by `timestamp` descending.
+- Utilize a centralized mapper in the frontend to translate `ActivityType` into localized Material Design UI components without relying on backend strings.
+- Pass the mapped activities into `DashboardView` across all role pages.
 
 ## Architecture Changes
-- **DTOs**: `DashboardActivityDto.kt` defining `ActivityType` and the response wrapper.
-- **Service**: `DashboardService.kt` orchestrating role-based lookups from multiple repositories.
-- **Repositories**: Addition of `findTop5...` optimized query methods in relevant JPA repositories.
-- **Frontend API**: `frontend/src/api/dashboard.ts` and React Query hook `useDashboardActivity.ts`.
-- **UI Views**: Dashboard page components connected to the unified API.
+- Backend DTO: `DashboardActivityDto.kt` needs `ActivityType` updated.
+- Backend Service: `DashboardService.kt` requires querying multiple repositories and assembling the lists per role.
+- Frontend Config/Utils: `src/utils/activityMapper.ts` (new) will encapsulate the conversion of `ActivityType` to localized UI details.
+- Frontend UI: Update `*Page.tsx` dashboards to use the centralized UI mapper instead of inline formatting.
 
 ## Implementation Steps
 
-### Phase 1: Backend Domain & Data Access
-1. **Create Activity DTOs** (File: backend/src/main/kotlin/com/medicalsystem/backend/dto/DashboardActivityDto.kt)
-   - Action: Define `ActivityType` enum and `DashboardActivityDto`, `DashboardActivityFeedDto`.
-   - Why: Establishes the API contract with strict enum typings, adhering to the 'no magic strings' backend rule.
+### Phase 1: Backend DTO & Service Synchronization (3 files)
+1. **Update ActivityType Enum** (File: `backend/src/main/kotlin/com/medicalsystem/backend/dto/DashboardActivityDto.kt`)
+   - Action: Update `ActivityType` enum to match the 10 values exactly as outlined in `architecture.md` (e.g. `REFERRAL_STATUS_UPDATED`, `HIGH_RISK_ASSESSMENT_SUBMITTED`, etc.).
+   - Why: Ensures contract parity between architecture, backend, and frontend.
    - Dependencies: None
    - Risk: Low
 
-2. **Update JPA Repositories** (Files: backend/src/main/kotlin/com/medicalsystem/backend/repository/ReferralJpaRepository.kt, backend/src/main/kotlin/com/medicalsystem/backend/repository/NotificationJpaRepository.kt, backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentAssignmentJpaRepository.kt, backend/src/main/kotlin/com/medicalsystem/backend/repository/UserJpaRepository.kt)
-   - Action: Add role-specific, paginated, and timestamp-sorted queries (e.g., `findTop5ByStatusOrderByCreatedAtDesc`).
-   - Why: Ensures performant data access fetching only the required 5 records directly from the database level.
-   - Dependencies: None
-   - Risk: Medium (verify JPQL/Criteria queries with test data)
+2. **Implement Role Aggregation Logic** (File: `backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt`)
+   - Action: In `getRecentActivity(user)`, query appropriate repositories (`notificationJpaRepository`, `assessmentAssignmentRepository`, `referralJpaRepository`) according to the queries specified in `architecture.md` for each role. Note: For `HIGH_RISK_ASSESSMENT_SUBMITTED`, query `notificationJpaRepository` for relevant `NotificationMessageCode` (like `ASSESSMENT_COMPLETED_TEACHER` or `ASSESSMENT_HIGH_RISK_ALERT_HC`). Merge, sort by timestamp DESC, and limit to top 5.
+   - Why: Core feature requirement to populate dashboard feed.
+   - Dependencies: Step 1
+   - Risk: Medium (complex querying and mapping required)
 
-### Phase 2: Backend Logic & Endpoints
-3. **Implement Service Logic & Tests** (Files: backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt, backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt)
-   - Action: Update `getRecentActivity(user: User)` to query the required repositories based on `user.role`, aggregate into a list, sort by timestamp descending, and return the top 5 `DashboardActivityDto` items. Implement TDD test cases for each role scenario.
-   - Why: Core business logic to fulfill the cross-domain dashboard feed.
-   - Dependencies: Steps 1 & 2
-   - Risk: Medium
-
-4. **Expose Activity Endpoint & Tests** (Files: backend/src/main/kotlin/com/medicalsystem/backend/controller/DashboardController.kt, backend/src/test/kotlin/com/medicalsystem/backend/controller/DashboardControllerTest.kt)
-   - Action: Add `GET /api/dashboard/activity` route utilizing `DashboardService`.
-   - Why: Exposes the aggregated feed to the frontend.
-   - Dependencies: Step 3
+3. **Add Service Tests** (File: `backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt`)
+   - Action: Add/update unit test cases validating the aggregation and correct return of top 5 activities for a subset of roles (e.g., Student and Teacher).
+   - Why: Regression prevention.
+   - Dependencies: Step 2
    - Risk: Low
 
-### Phase 3: Frontend API & Hooks
-5. **Implement API Client and Mock Data** (Files: frontend/src/api/dashboard.ts, frontend/src/mocks/handlers.ts, frontend/src/mocks/data/dashboard.ts)
-   - Action: Add `fetchRecentActivity(token: string)`. Add corresponding MSW endpoint that returns typed mock data representing `DashboardActivityFeedDto`.
-   - Why: Sets up real fetching capability along with resilient fallback mocking for UI development.
-   - Dependencies: Phase 2 API definition
+### Phase 2: Frontend Data Contract & UI Mapping (3 files)
+4. **Update Frontend API Contract** (File: `frontend/src/api/dashboard.ts`)
+   - Action: Update `ActivityType` type to match the new backend enum exactly.
+   - Why: Resolves TypeScript compilation checks.
+   - Dependencies: Step 1
    - Risk: Low
 
-6. **Create Query Hook** (File: frontend/src/hooks/useDashboardActivity.ts)
-   - Action: Create a React Query hook `useDashboardActivity` scoping the `queryKey` natively by `session.token`.
-   - Why: Implements data fetching, auto-refetching, and respects authentication state.
-   - Dependencies: Step 5
+5. **Update MSW Mocks** (File: `frontend/src/mocks/data/dashboard.ts`)
+   - Action: Ensure `mockDashboardActivities` includes appropriate dummy data matching the newly updated `ActivityType` enum across different roles.
+   - Why: Required to support offline/local development without backend connectivity.
+   - Dependencies: Step 4
    - Risk: Low
 
-### Phase 4: Frontend UI Integration
-7. **Integrate Hook into Dashboards** (Files: frontend/src/pages/AdminPage.tsx, frontend/src/pages/DoctorPage.tsx, frontend/src/pages/HeadCouncillorPage.tsx, frontend/src/pages/StudentPage.tsx, frontend/src/pages/TeacherPage.tsx, frontend/src/pages/TrialAdminPage.tsx)
-   - Action: Call `useDashboardActivity()`, map `DashboardActivityDto` to `ActivityItem` arrays (applying localization mappings mapped to `ActivityType`), and pass to `DashboardView` via the `activities` prop.
-   - Why: Connects the raw domain enum payload to the user-facing localized Web Components UI.
+6. **Create Activity UI Mapper** (File: `frontend/src/utils/activityMapper.ts`)
+   - Action: Create and export a function `mapActivityTypeToUI(activity: DashboardActivityDto)` returning an object with `{ title: string, statusText: string, statusType: ActivityStatusType }`. Map all 10 `ActivityType` enum values to localized text strings that align with Material Design specs (e.g. error, info, neutral).
+   - Why: Replaces hardcoded UI text logic in the view pages and enforces localization without relying on backend presentation strings.
+   - Dependencies: Step 4
+   - Risk: Low
+
+### Phase 3: Connect Frontend Views (6 files)
+7. **Integrate Mapper into Dashboards** (Files: `frontend/src/pages/StudentPage.tsx`, `frontend/src/pages/TeacherPage.tsx`, `frontend/src/pages/HeadCouncillorPage.tsx`, `frontend/src/pages/TrialAdminPage.tsx`, `frontend/src/pages/DoctorPage.tsx`, `frontend/src/pages/AdminPage.tsx`)
+   - Action: Import `mapActivityTypeToUI` and replace the inline `activities` `.map()` logic passed to `DashboardView` with this new function.
+   - Why: Rollout mapped changes across all role dashboards and keeps code DRY.
    - Dependencies: Step 6
-   - Risk: Medium (ensure no layout breakage occurs if data is empty or loading)
+   - Risk: Low
 
 ## Testing Strategy
-- Unit tests: `DashboardServiceTest.kt` for asserting role-aggregation accuracy, `DashboardControllerTest.kt` for mapping and access controls.
-- Integration tests: `frontend/src/hooks/useDashboardActivity.test.ts` (if applicable) for ensuring correct `session.token` behavior.
-- E2E tests: Page load validations checking that `ActivityItem` displays correctly.
-
-## Risks & Mitigations
-- **Risk**: Returning disparate domain structures across different roles causes unparseable payloads.
-  - Mitigation: Strict adherence to `DashboardActivityDto` and limiting mapping logic strictly to the frontend enum resolvers.
-- **Risk**: Inefficient queries pulling large datasets into memory before trimming to 5.
-  - Mitigation: Ensure `findTop5...` directly leverages database layer limits.
-
-## Success Criteria
-- [ ] Backend exposes `GET /api/dashboard/activity` without magic strings.
-- [ ] Each role sees specifically tailored dashboard items matching their workflow.
-- [ ] Mock environment robustly serves frontend needs when backend is inactive.
-- [ ] Frontend successfully displays dynamic activity titles, relative times, and icons mapping to backend `ActivityType`.
+- Unit Tests: Test the logic of `DashboardService.getRecentActivity` ensuring max 5 items are fetched, sorted properly, and mapped correctly from repository entities.
+- Typescript Check: Ensure no compilation errors (`npm run lint` / `tsc --noEmit`) post mapper integration.
+- MSW Verification: Render the React components with MSW providing the updated mock datasets.
 
 ## Writable Files
-```text
-Backend:
-- backend/src/main/kotlin/com/medicalsystem/backend/dto/DashboardActivityDto.kt
-- backend/src/main/kotlin/com/medicalsystem/backend/controller/DashboardController.kt
-- backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt
-- backend/src/main/kotlin/com/medicalsystem/backend/repository/ReferralJpaRepository.kt
-- backend/src/main/kotlin/com/medicalsystem/backend/repository/NotificationJpaRepository.kt
-- backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentAssignmentJpaRepository.kt
-- backend/src/main/kotlin/com/medicalsystem/backend/repository/UserJpaRepository.kt
-- backend/src/test/kotlin/com/medicalsystem/backend/controller/DashboardControllerTest.kt
-- backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt
-
-Frontend:
-- frontend/src/api/dashboard.ts
-- frontend/src/hooks/useDashboardActivity.ts
-- frontend/src/pages/AdminPage.tsx
-- frontend/src/pages/DoctorPage.tsx
-- frontend/src/pages/HeadCouncillorPage.tsx
-- frontend/src/pages/StudentPage.tsx
-- frontend/src/pages/TeacherPage.tsx
-- frontend/src/pages/TrialAdminPage.tsx
-- frontend/src/mocks/handlers.ts
-- frontend/src/mocks/data/dashboard.ts
-```
+- `backend/src/main/kotlin/com/medicalsystem/backend/dto/DashboardActivityDto.kt`
+- `backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt`
+- `backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt`
+- `frontend/src/api/dashboard.ts`
+- `frontend/src/mocks/data/dashboard.ts`
+- `frontend/src/utils/activityMapper.ts`
+- `frontend/src/pages/StudentPage.tsx`
+- `frontend/src/pages/TeacherPage.tsx`
+- `frontend/src/pages/HeadCouncillorPage.tsx`
+- `frontend/src/pages/TrialAdminPage.tsx`
+- `frontend/src/pages/DoctorPage.tsx`
+- `frontend/src/pages/AdminPage.tsx`

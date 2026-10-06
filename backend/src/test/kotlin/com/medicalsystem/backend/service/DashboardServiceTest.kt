@@ -69,6 +69,9 @@ class DashboardServiceTest {
     @Mock
     private lateinit var notificationJpaRepository: com.medicalsystem.backend.repository.NotificationJpaRepository
 
+    @Mock
+    private lateinit var entityManager: jakarta.persistence.EntityManager
+
     private lateinit var dashboardService: DashboardService
 
     @org.junit.jupiter.api.BeforeEach
@@ -89,7 +92,8 @@ class DashboardServiceTest {
             userJpaRepository,
             assessmentAssignmentRepository,
             referralJpaRepository,
-            notificationJpaRepository
+            notificationJpaRepository,
+            entityManager
         )
     }
 
@@ -277,10 +281,35 @@ class DashboardServiceTest {
     }
 
     @Test
-    fun `getRecentActivity for STUDENT returns pending assessments and notifications`() {
+    fun `getRecentActivity for STUDENT returns pending assessments and referrals`() {
         val mockUser = User(id = 1L, name = "John Doe", email = EmailAddress("john@univ.edu.cn"), role = UserRole.STUDENT)
-        `when`(notificationJpaRepository.findTop5ByUserIdAndIsReadFalseOrderByCreatedAtDesc(1L)).thenReturn(emptyList())
-        `when`(assessmentAssignmentRepository.findTop5ByStudentIdAndStatusOrderByAssignedAtDesc(1L, AssessmentStatus.PENDING)).thenReturn(emptyList())
+        
+        val spec = org.mockito.kotlin.any<org.springframework.data.jpa.domain.Specification<com.medicalsystem.backend.entity.ReferralEntity>>()
+        val pageable = org.mockito.kotlin.any<org.springframework.data.domain.Pageable>()
+        val page = org.springframework.data.domain.PageImpl<com.medicalsystem.backend.entity.ReferralEntity>(emptyList())
+        
+        `when`(referralJpaRepository.findAll(spec, pageable)).thenReturn(page)
+        `when`(assessmentAssignmentRepository.findTop5ByStudentIdAndStatusOrderByAssignedAtDesc(1L, com.medicalsystem.backend.model.AssessmentStatus.PENDING)).thenReturn(emptyList())
+
+        val result = dashboardService.getRecentActivity(mockUser)
+        assertEquals(0, result.activities.size)
+    }
+
+    @Test
+    fun `getRecentActivity for TEACHER returns notifications and referrals`() {
+        val mockUser = User(id = 2L, name = "Jane Smith", email = EmailAddress("jane@univ.edu.cn"), role = UserRole.TEACHER)
+        
+        val spec = org.mockito.kotlin.any<org.springframework.data.jpa.domain.Specification<com.medicalsystem.backend.entity.ReferralEntity>>()
+        val pageable = org.mockito.kotlin.any<org.springframework.data.domain.Pageable>()
+        val page = org.springframework.data.domain.PageImpl<com.medicalsystem.backend.entity.ReferralEntity>(emptyList())
+        
+        `when`(referralJpaRepository.findAll(spec, pageable)).thenReturn(page)
+        
+        val query = org.mockito.Mockito.mock(jakarta.persistence.TypedQuery::class.java) as jakarta.persistence.TypedQuery<com.medicalsystem.backend.entity.NotificationEntity>
+        `when`(entityManager.createQuery(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.eq(com.medicalsystem.backend.entity.NotificationEntity::class.java))).thenReturn(query)
+        `when`(query.setParameter(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(query)
+        `when`(query.setMaxResults(org.mockito.ArgumentMatchers.anyInt())).thenReturn(query)
+        `when`(query.resultList).thenReturn(emptyList())
 
         val result = dashboardService.getRecentActivity(mockUser)
         assertEquals(0, result.activities.size)

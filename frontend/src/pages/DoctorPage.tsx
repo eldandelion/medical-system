@@ -28,6 +28,8 @@ import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { ReferralDetailsView } from '../components/records/ReferralDetailsView';
 import { roleTranslations } from '../utils/roleTranslations';
 import { DashboardResponseDto, DoctorMetricsDto } from '../types';
+import { useDashboardActivity } from '../hooks/useDashboardActivity';
+import { mapActivityTypeToUI } from '../utils/activityMapper';
 
 export const DoctorTabs = {
   DASHBOARD: 'Dashboard',
@@ -119,6 +121,8 @@ export function DoctorPage() {
   
   const { data: profileSummaryData, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useDoctorProfileSummary(session?.token);
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
+  const { data: activityData } = useDashboardActivity();
+
 
 
 
@@ -218,8 +222,17 @@ export function DoctorPage() {
               containerColorClass: metric.containerColorClass,
               onClick: () => handlePageChange(metric.targetPage as DoctorPageName)
             }))}
-            activityTitle={dashboardData.activityTitle}
-            activities={dashboardData.activities ?? []}
+            activityTitle="近期动态"
+            activities={activityData?.activities?.map(a => {
+              const ui = mapActivityTypeToUI(a);
+              return {
+                id: ui.id,
+                title: ui.title,
+                timestamp: new Date(ui.timestamp).toLocaleString(),
+                statusText: ui.statusText,
+                statusType: ui.statusType
+              };
+            }) ?? []}
             rightWidget={<DashboardCalendarWidget doctorId={String(profileSummaryData?.employeeId || '1')} />}
           />
         </>) : null;

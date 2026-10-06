@@ -31,6 +31,8 @@ import { useNotifications } from '../hooks/useNotifications';
 import { roleTranslations } from '../utils/roleTranslations';
 import { ADMIN_METRICS_CONFIG } from '../config/dashboardConfig';
 import { queryClient } from '../utils/queryClient';
+import { useDashboardActivity } from '../hooks/useDashboardActivity';
+import { mapActivityTypeToUI } from '../utils/activityMapper';
 
 export const AdminTabs = {
   DASHBOARD: 'Dashboard',
@@ -129,6 +131,8 @@ export function AdminPage() {
   const { data: profileSummaryData, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useAdminProfileSummary(session?.token);
   const { data: dashboardData, isLoading: dashboardLoading } = useAdminDashboard();
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
+  const { data: activityData } = useDashboardActivity();
+
 
   const handlePageChange = (page: AdminPageName) => {
     setActivePage(page);

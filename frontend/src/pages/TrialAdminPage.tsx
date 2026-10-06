@@ -27,6 +27,8 @@ import { roleTranslations } from '../utils/roleTranslations';
 
 import { TRIAL_ADMIN_METRICS_CONFIG } from '../config/dashboardConfig';
 import { DashboardResponseDto, TrialAdminMetricsDto } from '../types';
+import { useDashboardActivity } from '../hooks/useDashboardActivity';
+import { mapActivityTypeToUI } from '../utils/activityMapper';
 
 export const TrialAdminTabs = {
   DASHBOARD: 'Dashboard',
@@ -121,6 +123,8 @@ export function TrialAdminPage() {
     enabled: activePage === TrialAdminTabs.DASHBOARD && !!session?.token
   });
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
+  const { data: activityData } = useDashboardActivity();
+
 
 
 
@@ -214,8 +218,17 @@ export function TrialAdminPage() {
               containerColorClass: metric.containerColorClass,
               onClick: () => handlePageChange(metric.targetPage as TrialAdminPageName)
             }))}
-            activityTitle={dashboardData.activityTitle}
-            activities={dashboardData.activities ?? []}
+            activityTitle="近期动态"
+            activities={activityData?.activities?.map(a => {
+              const ui = mapActivityTypeToUI(a);
+              return {
+                id: ui.id,
+                title: ui.title,
+                timestamp: new Date(ui.timestamp).toLocaleString(),
+                statusText: ui.statusText,
+                statusType: ui.statusType
+              };
+            }) ?? []}
           />
         </>) : null;
       default:

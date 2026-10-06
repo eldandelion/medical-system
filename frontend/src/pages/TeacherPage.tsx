@@ -29,6 +29,8 @@ import { useNavigation } from '../contexts/NavigationContext';
 import { useNotifications } from '../hooks/useNotifications';
 import { enrichReferralStatus } from '../utils/referralUtils';
 import { Referral, DashboardResponseDto, TeacherMetricsDto } from '../types';
+import { useDashboardActivity } from '../hooks/useDashboardActivity';
+import { mapActivityTypeToUI } from '../utils/activityMapper';
 
 import { TEACHER_METRICS_CONFIG } from '../config/dashboardConfig';
 
@@ -138,6 +140,7 @@ export function TeacherPage() {
   });
   
   const { data: profileSummaryData, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useTeacherProfileSummary(session?.token);
+  const { data: activityData } = useDashboardActivity();
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
 
 
@@ -278,8 +281,17 @@ export function TeacherPage() {
               containerColorClass: metric.containerColorClass,
               onClick: () => handlePageChange(metric.targetPage as TeacherPageName)
             }))}
-            activityTitle={dashboardData.activityTitle}
-            activities={dashboardData.activities ?? []}
+            activityTitle="近期动态"
+            activities={activityData?.activities?.map(a => {
+              const ui = mapActivityTypeToUI(a);
+              return {
+                id: ui.id,
+                title: ui.title,
+                timestamp: new Date(ui.timestamp).toLocaleString(),
+                statusText: ui.statusText,
+                statusType: ui.statusType
+              };
+            }) ?? []}
           />
         </>) : null;
       default:
