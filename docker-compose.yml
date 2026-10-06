@@ -66,6 +66,7 @@ services:
       - MINIO_ROOT_PASSWORD=miniopassword
       - MINIO_SERVER_URL=http://${EXTERNAL_IP:-47.117.156.53}:9000
       - MINIO_BROWSER_REDIRECT_URL=http://${EXTERNAL_IP:-47.117.156.53}:9001
+      - MINIO_API_CORS_ALLOW_ORIGIN=*
     volumes:
       - minio-data:/data
     networks:
