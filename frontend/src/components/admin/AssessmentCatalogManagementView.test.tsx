@@ -68,20 +68,23 @@ describe('AssessmentCatalogManagementView', () => {
     cleanup();
   });
 
-  it('renders scale catalog items and action buttons', () => {
+  it('renders scale catalog items and table columns', () => {
     render(<AssessmentCatalogManagementView />);
 
     expect(screen.getByText('抑郁症筛查量表 (PHQ-9)')).toBeDefined();
     expect(screen.getByText('广泛性焦虑量表 (GAD-7)')).toBeDefined();
-    expect(screen.getAllByText('查看详情').length).toBe(2);
-    expect(screen.getAllByText('指派测评').length).toBe(2);
+    expect(screen.getByText('量表名称')).toBeDefined();
+    expect(screen.getByText('题目数量')).toBeDefined();
+    expect(screen.getByText('预估用时')).toBeDefined();
+    expect(screen.getByText('状态')).toBeDefined();
+    expect(document.querySelectorAll('md-icon-button[aria-label="指派测评"]').length).toBe(2);
   });
 
-  it('opens full-screen details view when clicking 查看详情', () => {
+  it('opens full-screen details view when clicking on a row', () => {
     render(<AssessmentCatalogManagementView />);
 
-    const viewBtns = screen.getAllByText('查看详情');
-    fireEvent.click(viewBtns[0]);
+    const rowItem = screen.getByText('抑郁症筛查量表 (PHQ-9)');
+    fireEvent.click(rowItem);
 
     // Full screen view is opened
     expect(screen.getByText('量表题目明细与临床常模配置')).toBeDefined();
@@ -92,10 +95,10 @@ describe('AssessmentCatalogManagementView', () => {
     expect(screen.queryByText('量表题目明细与临床常模配置')).toBeNull();
   });
 
-  it('opens creation overlay when clicking 指派测评 on an available scale', () => {
+  it('opens creation overlay when clicking 指派测评 icon on an available scale', () => {
     render(<AssessmentCatalogManagementView />);
 
-    const assignBtns = screen.getAllByText('指派测评');
+    const assignBtns = document.querySelectorAll('md-icon-button[aria-label="指派测评"]');
     fireEvent.click(assignBtns[0]);
 
     expect(mockOpenCreation).toHaveBeenCalledWith(
@@ -108,18 +111,12 @@ describe('AssessmentCatalogManagementView', () => {
     );
   });
 
-  it('opens md-menu and triggers confirmation dialog when clicking 隐藏量表 on available scale', () => {
+  it('triggers confirmation dialog when clicking 隐藏量表 icon on available scale', () => {
     render(<AssessmentCatalogManagementView />);
 
-    const moreButtons = document.querySelectorAll('md-icon-button');
-    // First more button belongs to PHQ-9 (available)
-    const phq9MoreBtn = moreButtons[0];
-    fireEvent.click(phq9MoreBtn);
-
-    // Menu item is displayed
-    const hideMenuItem = screen.getByText('隐藏量表');
-    expect(hideMenuItem).toBeDefined();
-    fireEvent.click(hideMenuItem);
+    const hideBtns = document.querySelectorAll('md-icon-button[aria-label="隐藏量表"]');
+    const phq9HideBtn = hideBtns[0];
+    fireEvent.click(phq9HideBtn);
 
     // Dialog is opened
     expect(screen.getByText('确认隐藏测评量表？')).toBeDefined();
@@ -143,12 +140,9 @@ describe('AssessmentCatalogManagementView', () => {
   it('executes hide scale action when confirmed in dialog', async () => {
     render(<AssessmentCatalogManagementView />);
 
-    const moreButtons = document.querySelectorAll('md-icon-button');
-    const phq9MoreBtn = moreButtons[0];
-    fireEvent.click(phq9MoreBtn);
-
-    const hideMenuItem = screen.getByText('隐藏量表');
-    fireEvent.click(hideMenuItem);
+    const hideBtns = document.querySelectorAll('md-icon-button[aria-label="隐藏量表"]');
+    const phq9HideBtn = hideBtns[0];
+    fireEvent.click(phq9HideBtn);
 
     const confirmBtn = screen.getByText('确认隐藏');
     fireEvent.click(confirmBtn);
@@ -159,17 +153,12 @@ describe('AssessmentCatalogManagementView', () => {
     });
   });
 
-  it('opens md-menu and directly enables scale when clicking 启用上线 on hidden scale', () => {
+  it('directly enables scale when clicking 启用上线 icon on hidden scale', () => {
     render(<AssessmentCatalogManagementView />);
 
-    const moreButtons = document.querySelectorAll('md-icon-button');
-    // Second more button belongs to GAD-7 (hidden)
-    const gad7MoreBtn = moreButtons[1];
-    fireEvent.click(gad7MoreBtn);
-
-    const enableMenuItem = screen.getByText('启用上线');
-    expect(enableMenuItem).toBeDefined();
-    fireEvent.click(enableMenuItem);
+    const enableBtns = document.querySelectorAll('md-icon-button[aria-label="启用上线"]');
+    const gad7EnableBtn = enableBtns[0];
+    fireEvent.click(gad7EnableBtn);
 
     // Confirmation dialog should NOT be shown
     expect(screen.queryByText('确认隐藏测评量表？')).toBeNull();
@@ -196,29 +185,20 @@ describe('AssessmentCatalogManagementView', () => {
 
   it('renders segmented button with text-only labels', () => {
     render(<AssessmentCatalogManagementView />);
-
     expect(screen.getByText('量表列表')).toBeDefined();
     expect(screen.getByText('指派历史')).toBeDefined();
   });
 
-  it('switches between catalog card grid and empty history placeholder view via segmented button', () => {
+  it('switches between catalog table and empty history placeholder view via segmented button', () => {
     render(<AssessmentCatalogManagementView />);
-
-    // Initially on catalog view
     expect(screen.getByText('抑郁症筛查量表 (PHQ-9)')).toBeDefined();
     expect(screen.queryByText('暂无指派历史')).toBeNull();
 
-    // Click history segment
     fireEvent.click(screen.getByText('指派历史'));
-
-    // History view is shown, catalog cards are hidden
     expect(screen.getByText('暂无指派历史')).toBeDefined();
     expect(screen.queryByText('抑郁症筛查量表 (PHQ-9)')).toBeNull();
 
-    // Click catalog segment
     fireEvent.click(screen.getByText('量表列表'));
-
-    // Catalog cards are restored
     expect(screen.getByText('抑郁症筛查量表 (PHQ-9)')).toBeDefined();
     expect(screen.queryByText('暂无指派历史')).toBeNull();
   });
