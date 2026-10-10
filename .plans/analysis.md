@@ -1,18 +1,18 @@
-# Root Cause Analysis: Assessment History Tab Row Highlighting Bug
+# Root Cause Analysis: Assessment History Row Flickering
 
 ## Root Cause
-In `DispatchHistoryTab.tsx`, the `DataTable` component uses `getRowId={(row) => String(row.studentId || row.studentNumber)}` and compares it to `selectedId={selectedStudentId}` to determine which rows are highlighted. Since a single student can have multiple participation records (e.g. they were assigned multiple assessments over time), all records belonging to the clicked student evaluate to the same row ID. Consequently, when a user clicks any record, `selectedStudentId` is set in the parent `AdminPage`, causing every row associated with that student to highlight simultaneously instead of just the clicked row.
+The flickering of the selected row color is caused by a combination of state batching issues, cascading re-renders, and conflicting CSS transitions:
+
+1. **Cascading Re-renders in `AdminPage`**: When a record is clicked, `AssessmentCatalogManagementView` calls `onStudentSelect(student)`, which triggers `setSelectedItem(student)` and `setActiveTab('details')` in `AdminPage`. However, `'details'` is not a valid tab in `STUDENT_DETAILS_TABS`. This triggers a `useEffect` in `AdminPage` that immediately resets `activeTab` to `'overview'`, causing a secondary, immediate cascading re-render.
+2. **CSS Transition Conflict**: The `DataTable` rows use `transition-colors` with a conditional class switch (removing `hover:bg-surface-variant` and applying `bg-secondary-container`). The rapid successive re-renders from the `AdminPage` tab correction disrupt the browser's CSS transition engine, causing it to visibly flash or restart the animation.
+3. **Effect-driven Selection Clearing**: The `useEffect` in `AssessmentCatalogManagementView` clears `selectedRecordId` if `!selectedStudentId`. If the `AdminPage` state updates result in `selectedItem` being momentarily perceived as empty or unmounted during the tab switch/details panel transition, this effect fires and explicitly sets `selectedRecordId` to `null` for a split second, unselecting the row before it recovers.
 
 ## Proposed Fix Strategy
-1. **Uniquely Identify Rows:** Update `DispatchHistoryTab.tsx` so that `DataTable` uses a unique identifier for each row, specifically `getRowId={(row) => String(row.assignmentId)}` (or fallback to `row.id` if available).
-2. **Track Selected Record:** Introduce a `selectedRecordId` state in `AssessmentCatalogManagementView`. 
-3. **Update Callback Signatures:** Modify `DispatchHistoryTabProps.onSelect` to pass back the clicked `record` (`ParticipationRecordDto`) alongside the `student` object.
-4. **Synchronize Highlight with Panel:** When a row is clicked, `AssessmentCatalogManagementView` will set `selectedRecordId` to the record's `assignmentId` and pass it to `DispatchHistoryTab` as `selectedId`. To ensure the highlight clears when the user closes the side panel, add a `useEffect` in `AssessmentCatalogManagementView` that listens to the `selectedStudentId` prop from `AdminPage`; if `selectedStudentId` is falsy, reset `selectedRecordId` to `null`.
+1. **Fix AdminPage Tab Logic**: Modify `AdminPage.tsx` so that `setActiveTab('overview')` (or the first valid tab) is set directly when a student is selected, rather than setting it to `'details'` and relying on a `useEffect` to correct it. This eliminates the cascading double-render.
+2. **Adjust DataTable CSS**: Remove `transition-colors` from the `DataTable` row, or apply it selectively so that the transition to the `isSelected` state is instantaneous (preventing animation from the hover background color).
+3. **Refine Selection Clearing**: Update the `useEffect` in `AssessmentCatalogManagementView` to ensure `selectedRecordId` is only cleared when the user explicitly closes the details panel (e.g., when `selectedStudentId` is truly nullified by the close action), safeguarding against transient undefined states.
 
 ## Affected Components
-- `frontend/src/components/assessments/DispatchHistoryTab.tsx`: 
-  - Update `DispatchHistoryTabProps` to include `selectedRecordId` and change `onSelect` signature to include the record.
-  - Update `DataTable` props: `selectedId={selectedRecordId}` and `getRowId={(row) => String(row.assignmentId)}`.
-- `frontend/src/components/admin/AssessmentCatalogManagementView.tsx`: 
-  - Add `selectedRecordId` state and effect to clear it when `selectedStudentId` is unset.
-  - Pass the new props and update the `onSelect` handler for `DispatchHistoryTab`.
+- `frontend/src/pages/AdminPage.tsx`
+- `frontend/src/components/admin/AssessmentCatalogManagementView.tsx`
+- `frontend/src/components/common/DataTable.tsx`

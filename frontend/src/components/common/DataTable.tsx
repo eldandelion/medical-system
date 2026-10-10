@@ -51,10 +51,10 @@ export function DataTable<T extends { id?: string | number }>({
                 <div 
                   key={rowIdx}
                   onClick={() => onRowClick?.(item)}
-                  className={`flex items-center px-6 py-3.5 border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 cursor-pointer transition-colors group min-w-full w-full ${
+                  className={`flex items-center px-6 py-3.5 border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 cursor-pointer group min-w-full w-full ${
                     isSelected 
                       ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]' 
-                      : 'hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)]'
+                      : 'transition-colors hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)]'
                   }`}
                 >
                   {columns.map((col, colIdx) => (

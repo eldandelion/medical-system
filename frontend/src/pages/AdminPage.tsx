@@ -258,7 +258,7 @@ export function AdminPage() {
             <AssessmentCatalogManagementView 
               onStudentSelect={(student) => {
                 setSelectedItem(student);
-                setActiveTab('details');
+                setActiveTab('overview');
               }}
               selectedStudentId={selectedItem?.id}
             />
