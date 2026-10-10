@@ -1,108 +1,79 @@
-# Recent Activity Feature Architecture
+# Architecture Design: Fix Missing Dispatch History
 
-## 1. Overview
-This document outlines the design for the "近期动态" (Recent Activity) feature on the Dashboard. It aggregates pending tasks and recent system events into a single timeline feed of up to 5 items, customized per user role.
+## 1. Context and Problem
+The system currently experiences a bug where dispatch history fails to load or resolve correctly, particularly due to missing backend dispatch tracking for batch assignments and the frontend's inability to resolve the 'latest' alias in the dispatch history view.
 
-## 2. API Contract & DTOs
-We will expose a unified endpoint: `GET /api/dashboard/activity`
+## 2. System Boundaries & Affected Components
 
-### DTOs
-To comply with the rule against magic/presentation strings in the backend, the API will return strictly typed enums and identifiers. The frontend will localize these into display strings.
+### 2.1 Backend Domain & Persistence Layer
+We need to formalize dispatches as a Domain Aggregate Root.
+- **New Aggregate**: `AssessmentDispatch`
+- **Updated Aggregate**: `AssessmentAssignment` (must reference its parent dispatch)
 
+**Affected Files (Backend):**
+- `backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentAssignment.kt`
+  - *Change*: Add `dispatchId: Long?`
+- `backend/src/main/kotlin/com/medicalsystem/backend/entity/AssessmentAssignmentEntity.kt`
+  - *Change*: Add `@Column(name = "dispatch_id") val dispatchId: Long?`
+- `backend/src/main/kotlin/com/medicalsystem/backend/mapper/AssessmentAssignmentMapper.kt`
+  - *Change*: Map the new `dispatchId` between the entity and the domain model.
+- `backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentDispatch.kt` (NEW)
+  - *Change*: Define the Aggregate Root containing dispatch details (id, timestamp, createdBy, etc.)
+- `backend/src/main/kotlin/com/medicalsystem/backend/entity/AssessmentDispatchEntity.kt` (NEW)
+  - *Change*: JPA entity mapped to the `assessment_dispatches` table.
+- `backend/src/main/kotlin/com/medicalsystem/backend/mapper/AssessmentDispatchMapper.kt` (NEW)
+- `backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentDispatchRepository.kt` (NEW)
+- `backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentDispatchJpaRepository.kt` (NEW)
+- `backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentDispatchRepositoryAdapter.kt` (NEW)
+
+### 2.2 Backend Service Layer
+Whenever a batch assignment occurs, the service must create and persist an `AssessmentDispatch`.
+- **Affected File**: `backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentService.kt`
+  - *Change*: Update assignment logic to instantiate an `AssessmentDispatch`, save it via its repository, and cascade the generated `dispatchId` to the newly created `AssessmentAssignment` entities.
+
+### 2.3 Frontend Presentation Layer
+The UI must handle the special routing alias 'latest' by resolving it to the concrete ID of the most recent dispatch once the list loads.
+- **Affected File**: `frontend/src/components/assessments/DispatchHistoryTab.tsx`
+  - *Change*: Implement a `useEffect` hook that detects if the requested dispatch ID is 'latest'. If so, it should select the first item from the fetched dispatch summary list and update the route/state with its actual ID.
+
+## 3. Data Migration & Historical Data Handling
+- **Constraint**: The `dispatch_id` on assignments must be nullable.
+- **Strategy**: We will actively ignore historical assignments with a NULL `dispatch_id` when querying dispatch history, as these were created before the dispatch tracking feature was introduced.
+
+## 4. Execution Plan
+1. Create the backend domain, entity, mapper, and repository interfaces for `AssessmentDispatch`.
+2. Update `AssessmentAssignment` and `AssessmentAssignmentEntity` to include `dispatchId`.
+3. Update `AssessmentService` batch logic to persist a dispatch and link assignments.
+4. Modify `DispatchHistoryTab.tsx` to handle the 'latest' string resolution.
+
+### 2.4 Domain Structure of AssessmentDispatch (DDD Addendum)
+Following DDD principles, `AssessmentDispatch` is an Aggregate Root referencing other aggregates by ID.
 ```kotlin
-enum class ActivityType {
-    // Referrals
-    REFERRAL_PENDING_TRIAGE,
-    REFERRAL_PENDING_SCHEDULING,
-    REFERRAL_PENDING_FEEDBACK,
-    REFERRAL_STATUS_UPDATED,
-    
-    // Assessments
-    ASSESSMENT_PENDING_COMPLETION,
-    HIGH_RISK_ASSESSMENT_SUBMITTED,
-    
-    // Approvals (Admin)
-    USER_APPROVAL_PENDING,
-    
-    // Notifications & Alerts
-    UNREAD_NOTIFICATION,
-    SYSTEM_NOTIFICATION,
-    HOSPITAL_CAPACITY_ALERT
-}
-
-data class DashboardActivityDto(
-    val id: String, // Unique string, e.g., "ref-123", "notif-45"
-    val type: ActivityType,
-    val timestamp: java.time.Instant,
-    val referenceId: Long, // ID of the underlying entity
-    val referenceName: String? // Optional contextual data (e.g., Student name or Assessment title)
-)
-
-data class DashboardActivityFeedDto(
-    val activities: List<DashboardActivityDto>
-)
-```
-
-## 3. Backend Implementation
-
-### Controller (`DashboardController.kt`)
-Add a new mapping:
-```kotlin
-@GetMapping("/activity")
-fun getRecentActivity(@CurrentUser user: User): ResponseEntity<DashboardActivityFeedDto> {
-    return ResponseEntity.ok(dashboardService.getRecentActivity(user))
-}
-```
-
-### Service (`DashboardService.kt`)
-The service will implement role-specific queries to gather activities.
-
-```kotlin
-fun getRecentActivity(user: User): DashboardActivityFeedDto {
-    val activities = mutableListOf<DashboardActivityDto>()
-    
-    when (user.role) {
-        UserRole.STUDENT -> {
-            // Fetch top status changes on their own referrals (REFERRAL_STATUS_UPDATED)
-            // Fetch top pending assigned assessments they need to complete (ASSESSMENT_PENDING_COMPLETION)
-        }
-        UserRole.TEACHER -> {
-            // Fetch top high-risk assessment submissions from assigned students (HIGH_RISK_ASSESSMENT_SUBMITTED)
-            // Fetch top referral status updates for assigned students (REFERRAL_STATUS_UPDATED)
-        }
-        UserRole.HEAD_COUNSELLOR -> {
-            // Fetch top referrals awaiting triage (REFERRAL_PENDING_TRIAGE)
-            // Fetch top high-risk assessment submissions (HIGH_RISK_ASSESSMENT_SUBMITTED)
-            // Fetch top system-wide unread notifications (SYSTEM_NOTIFICATION)
-        }
-        UserRole.TRIAL_ADMIN -> {
-            // Fetch top referrals waiting for scheduling (REFERRAL_PENDING_SCHEDULING)
-            // Fetch top unread notifications (UNREAD_NOTIFICATION)
-            // Fetch top hospital staff capacity alerts (HOSPITAL_CAPACITY_ALERT)
-        }
-        UserRole.DOCTOR -> {
-            // Fetch top referrals waiting for appointment/feedback (REFERRAL_PENDING_FEEDBACK)
-            // Fetch top important unread notifications (UNREAD_NOTIFICATION)
-        }
-        UserRole.SYSTEM_ADMIN -> {
-            // Fetch top user registrations pending approval (USER_APPROVAL_PENDING)
-        }
+data class AssessmentDispatch(
+    val id: Long? = null,
+    val batteryCode: BatteryId,
+    val dispatchedByUserId: Long,
+    val dispatchType: DispatchType,
+    val targetCohort: String? = null,
+    val dispatchedAt: LocalDateTime = LocalDateTime.now(),
+    val dueDate: LocalDate? = null,
+    var status: DispatchStatus = DispatchStatus.ACTIVE
+) : AggregateRoot() {
+    companion object {
+        fun createBatch(...) = AssessmentDispatch(...)
+        fun createForIndividuals(...) = AssessmentDispatch(...)
     }
-    
-    // Sort all fetched items by timestamp descending
-    activities.sortByDescending { it.timestamp }
-    
-    // Return top 5
-    return DashboardActivityFeedDto(activities.take(5))
 }
 ```
-**Data Access**: Existing repositories (e.g., `ReferralRepository`, `NotificationRepository`, `AssessmentAssignmentRepository`) will need custom queries (e.g., `findTop5By...OrderByCreatedAtDesc`) to efficiently fetch recent items without loading entire tables into memory. The aggregation strategy is to execute parallel or sequential queries for the required types for each role (fetching up to 5 each), merge them into the `activities` list, sort them by `timestamp` descending in memory, and slice the top 5 to return.
+- **Service Orchestration**: `AssessmentService` will first persist `AssessmentDispatch` to generate its ID, then pass that `dispatchId` to the factory methods of `AssessmentAssignment`.
 
-## 4. Frontend Integration
-### API Client
-- Create `DashboardActivityDto` interface mirroring the backend.
-- Create a `useDashboardActivity` React Query hook scoped by `session.token`.
-
-### Component Updates (`DashboardView.tsx`)
-- Map `DashboardActivityDto` to the UI's activity item format.
-- The frontend mapper will use `ActivityType` to generate the correct localized text using Material Design 3 Web Components without relying on backend magic strings.
+### 2.5 Dispatch History Endpoint & Filtering (Severity Tracking)
+To support the 'Dispatch History' tab requirements (paginated history and filtering by ResultSeverity):
+- **Domain & Persistence**: 
+  - Add `ResultSeverity` enum (`backend/src/main/kotlin/com/medicalsystem/backend/model/ResultSeverity.kt`).
+  - Update `AssessmentAssignment` and `AssessmentAssignmentEntity` to include `severity` (mapped to `severity_id` column using a converter in `EnumConverters.kt`).
+  - Introduce `ParticipationRecordSpecification` for filtering history queries.
+- **Service & Controller**: 
+  - Create `AssessmentDispatchService` and `AssessmentDispatchController` to serve GET `/api/assessments/dispatches/summary` and GET `/api/assessments/participation-records` via `AssessmentDispatchHistoryDtos.kt`.
+- **Frontend Types**: Update `ParticipationRecordDto` in `frontend/src/types/index.ts` to expose `severity`.
+- **Frontend Hooks**: Create `useAssessmentDispatchHistory.ts`.

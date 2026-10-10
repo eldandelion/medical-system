@@ -163,6 +163,7 @@ export function AdminPage() {
         }
         return [];
       case AdminTabs.STUDENTS:
+      case AdminTabs.ASSESSMENTS:
         return STUDENT_DETAILS_TABS;
       case AdminTabs.REFERRALS:
         return REFERRAL_DETAILS_TABS;
@@ -254,7 +255,13 @@ export function AdminPage() {
         return (
           <>
             <CanvasHeader title={ADMIN_TAB_TITLES[activePage]} />
-            <AssessmentCatalogManagementView />
+            <AssessmentCatalogManagementView 
+              onStudentSelect={(student) => {
+                setSelectedItem(student);
+                setActiveTab('details');
+              }}
+              selectedStudentId={selectedItem?.id}
+            />
           </>
         );
 
@@ -375,7 +382,7 @@ export function AdminPage() {
               title={
                 activePage === AdminTabs.USERS
                   ? selectedItem?.name || (selectedItem?.role === 'STUDENT' ? '学生详情' : '用户详情')
-                  : activePage === AdminTabs.STUDENTS
+                  : (activePage === AdminTabs.STUDENTS || activePage === AdminTabs.ASSESSMENTS)
                   ? selectedItem?.name || '学生详情'
                   : selectedItem?.title || (selectedItem?.type ? REFERRAL_TYPE_LABELS[selectedItem.type] : '转诊详情')
               }
@@ -384,7 +391,7 @@ export function AdminPage() {
                   ? selectedItem?.role === 'STUDENT'
                     ? selectedItem?.departmentOrCollege || selectedItem?.email || ''
                     : selectedItem?.email || selectedItem?.departmentOrCollege || ''
-                  : activePage === AdminTabs.STUDENTS
+                  : (activePage === AdminTabs.STUDENTS || activePage === AdminTabs.ASSESSMENTS)
                   ? selectedItem?.major || ''
                   : selectedItem?.studentName || ''
               }
@@ -400,7 +407,7 @@ export function AdminPage() {
                   ? selectedItem?.role === 'STUDENT'
                     ? 'person'
                     : 'manage_accounts'
-                  : activePage === AdminTabs.STUDENTS
+                  : (activePage === AdminTabs.STUDENTS || activePage === AdminTabs.ASSESSMENTS)
                   ? 'person'
                   : 'description'
               }
@@ -451,7 +458,7 @@ export function AdminPage() {
                       />
                     )
                   )}
-                  {activePage === AdminTabs.STUDENTS && (
+                  {(activePage === AdminTabs.STUDENTS || activePage === AdminTabs.ASSESSMENTS) && (
                     <StudentDetailsView
                       student={selectedItem}
                       activeTab={activeTab}

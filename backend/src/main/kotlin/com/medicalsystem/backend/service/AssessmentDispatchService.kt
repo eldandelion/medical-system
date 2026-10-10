@@ -41,10 +41,13 @@ class AssessmentDispatchService(
         return assignments.map { assignment ->
             ParticipationRecordDto(
                 assignmentId = assignment.id!!,
+                studentId = assignment.student.id!!,
                 studentName = assignment.student.name,
                 studentNumber = assignment.student.studentNumber,
                 status = assignment.status,
-                severity = assignment.severity
+                severity = assignment.severity,
+                assessmentName = assignment.batteryCode,
+                dispatchedAt = assignment.dispatch?.dispatchedAt ?: assignment.assignedAt
             )
         }
     }

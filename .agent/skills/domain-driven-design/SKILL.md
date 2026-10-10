@@ -72,7 +72,7 @@ See: [references/ubiquitous-language.md](references/ubiquitous-language.md)
 
 See: [references/bounded-contexts.md](references/bounded-contexts.md)
 
-### 3. Entities, Value Objects, and Aggregates
+### 3. Entities, Value Objects, and Aggregates 
 
 **Core concept:** Entities have identity that persists across state changes. Value Objects are defined entirely by their attributes and are immutable. Aggregates are clusters of entities and value objects with a single root entity that enforces consistency boundaries.
 

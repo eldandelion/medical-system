@@ -373,5 +373,7 @@ export interface ParticipationRecordDto {
   studentNumber: string;
   status: AssessmentStatus;
   severity: ResultSeverity;
+  assessmentName?: string;
+  dispatchedAt?: string;
 }
 

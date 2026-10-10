@@ -1,17 +1,22 @@
 import React, { useState } from 'react';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
-import { DetailsPanel } from '../common/DetailsPanel';
-import { StudentDetailsView } from '../students/StudentDetailsView';
 import { useAssessmentDispatches, useAssessmentDispatchHistory } from '../../hooks/useAssessmentDispatchHistory';
 import { ParticipationRecordDto, Student } from '../../types';
 import { FilterChip } from '../common/FilterChip';
 import { ExpandableSearchBar } from '../common/ExpandableSearchBar';
+import { AvatarBadge } from '../common/AvatarBadge';
+import { formatDateToChinese } from '../../utils/dateUtils';
+import { StatusBadge } from '../common/StatusBadge';
 
-export const DispatchHistoryTab: React.FC = () => {
+export interface DispatchHistoryTabProps {
+  onSelect?: (student: Student) => void;
+  selectedStudentId?: string;
+}
+
+export const DispatchHistoryTab: React.FC<DispatchHistoryTabProps> = ({ onSelect, selectedStudentId }) => {
   const [selectedDispatch, setSelectedDispatch] = useState<number | 'latest' | 'ALL'>('latest');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedSeverity, setSelectedSeverity] = useState<string>('ALL');
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [openChip, setOpenChip] = useState<string | null>(null);
 
   const { data: dispatches } = useAssessmentDispatches();
@@ -41,13 +46,62 @@ export const DispatchHistoryTab: React.FC = () => {
     ...(dispatches?.map(d => ({ label: `${d.batteryCode} (${new Date(d.dispatchedAt).toLocaleDateString()})`, value: d.id })) || [])
   ];
 
+  const translateStatus = (status: string) => {
+    const statusMap: Record<string, string> = {
+      'PENDING': '待完成',
+      'COMPLETED': '已完成',
+      'EXPIRED': '已过期',
+      'REVOKED': '已撤回'
+    };
+    return statusMap[status] || status;
+  };
+
   const columns: ColumnDefinition<ParticipationRecordDto>[] = [
-    { key: 'studentNumber', label: '学号', render: (item) => item.studentNumber },
-    { key: 'studentName', label: '姓名', render: (item) => item.studentName },
-    { key: 'status', label: '状态', render: (item) => item.status },
+    {
+      key: 'studentName',
+      label: '学生',
+      width: 'w-[25%]',
+      overflowVisible: true,
+      render: (item, isSelected) => (
+        <div className="flex items-center gap-3">
+          <div className="relative shrink-0">
+            <AvatarBadge name={item.studentName} isSelected={isSelected} size="sm" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[14px] font-medium">{item.studentName}</span>
+            <span className="text-[12px] opacity-70">学号: {item.studentNumber}</span>
+          </div>
+        </div>
+      )
+    },
+    { 
+      key: 'assessmentName', 
+      label: '量表名称', 
+      width: 'w-[20%]',
+      render: (item) => <span className="text-[14px] text-[var(--md-sys-color-on-surface)]">{item.assessmentName || '未知'}</span> 
+    },
+    { 
+      key: 'dispatchedAt', 
+      label: '分发时间', 
+      width: 'w-[20%]',
+      render: (item) => <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)]">{item.dispatchedAt ? formatDateToChinese(item.dispatchedAt) : '-'}</span> 
+    },
+    { 
+      key: 'status', 
+      label: '状态', 
+      width: 'w-[15%]',
+      render: (item, isSelected) => (
+        <StatusBadge
+          dotColorClass={item.status === 'COMPLETED' ? 'bg-green-500' : 'bg-orange-500'}
+          label={translateStatus(item.status)}
+          isSelected={isSelected}
+        />
+      )
+    },
     { 
       key: 'severity', 
       label: '预警等级', 
+      width: 'w-[15%]',
       render: (item) => (
         <span className={`px-2 py-1 rounded text-xs ${item.severity === 'HIGH' ? 'bg-red-100 text-red-800' : item.severity === 'MODERATE' ? 'bg-orange-100 text-orange-800' : item.severity === 'LOW' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
           {item.severity}
@@ -102,7 +156,8 @@ export const DispatchHistoryTab: React.FC = () => {
         <DataTable
           columns={columns}
           data={historyPage?.content || []}
-          onRowClick={(row) => setSelectedStudent({
+          selectedId={selectedStudentId}
+          onRowClick={(row) => onSelect?.({
             id: String(row.studentId || row.studentNumber),
             studentNumber: row.studentNumber,
             name: row.studentName,
@@ -111,15 +166,6 @@ export const DispatchHistoryTab: React.FC = () => {
           })}
         />
       </div>
-
-      <DetailsPanel
-        isOpen={!!selectedStudent}
-        onClose={() => setSelectedStudent(null)}
-        title="学生详情"
-        icon="person"
-      >
-        {selectedStudent && <StudentDetailsView student={selectedStudent} />}
-      </DetailsPanel>
     </div>
   );
 };

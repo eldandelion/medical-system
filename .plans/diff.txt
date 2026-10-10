@@ -1,0 +1,926 @@
+diff --git a/backend/src/main/kotlin/com/medicalsystem/backend/controller/AssessmentDispatchController.kt b/backend/src/main/kotlin/com/medicalsystem/backend/controller/AssessmentDispatchController.kt
+new file mode 100644
+index 0000000..386ed13
+--- /dev/null
++++ b/backend/src/main/kotlin/com/medicalsystem/backend/controller/AssessmentDispatchController.kt
+@@ -0,0 +1,34 @@
++package com.medicalsystem.backend.controller
++
++import com.medicalsystem.backend.dto.AssessmentDispatchSummaryDto
++import com.medicalsystem.backend.dto.ParticipationRecordDto
++import com.medicalsystem.backend.model.ResultSeverity
++import com.medicalsystem.backend.service.AssessmentDispatchService
++import org.springframework.data.domain.Page
++import org.springframework.data.domain.Pageable
++import org.springframework.http.ResponseEntity
++import org.springframework.web.bind.annotation.*
++
++@RestController
++@RequestMapping("/api/assessments")
++class AssessmentDispatchController(
++    private val assessmentDispatchService: AssessmentDispatchService
++) {
++    @GetMapping("/dispatches/summary")
++    fun getRecentDispatches(): ResponseEntity<List<AssessmentDispatchSummaryDto>> {
++        return ResponseEntity.ok(assessmentDispatchService.getDispatchSummaries())
++    }
++
++    @GetMapping("/participation-records")
++    fun getParticipationRecords(
++        @RequestParam(required = false) dispatchId: Long?,
++        @RequestParam(required = false) studentName: String?,
++        @RequestParam(required = false) studentNumber: String?,
++        @RequestParam(required = false) severity: ResultSeverity?,
++        pageable: Pageable
++    ): ResponseEntity<Page<ParticipationRecordDto>> {
++        return ResponseEntity.ok(
++            assessmentDispatchService.getParticipationRecords(dispatchId, studentName, studentNumber, severity, pageable)
++        )
++    }
++}
+diff --git a/backend/src/main/kotlin/com/medicalsystem/backend/converter/EnumConverters.kt b/backend/src/main/kotlin/com/medicalsystem/backend/converter/EnumConverters.kt
+index e06016e..f84b55a 100644
+--- a/backend/src/main/kotlin/com/medicalsystem/backend/converter/EnumConverters.kt
++++ b/backend/src/main/kotlin/com/medicalsystem/backend/converter/EnumConverters.kt
+@@ -103,3 +103,9 @@ class FileCategoryConverter : AttributeConverter<com.medicalsystem.backend.stora
+     override fun convertToDatabaseColumn(attribute: com.medicalsystem.backend.storage.domain.FileCategory?) = getIdFromEnum(attribute)
+     override fun convertToEntityAttribute(dbData: Int?) = getEnumFromId<com.medicalsystem.backend.storage.domain.FileCategory>(dbData)
+ }
++
++@Converter(autoApply = true)
++class ResultSeverityConverter : AttributeConverter<ResultSeverity, Int> {
++    override fun convertToDatabaseColumn(attribute: ResultSeverity?) = getIdFromEnum(attribute)
++    override fun convertToEntityAttribute(dbData: Int?) = getEnumFromId<ResultSeverity>(dbData)
++}
+diff --git a/backend/src/main/kotlin/com/medicalsystem/backend/dto/AssessmentDispatchHistoryDtos.kt b/backend/src/main/kotlin/com/medicalsystem/backend/dto/AssessmentDispatchHistoryDtos.kt
+new file mode 100644
+index 0000000..abafb3b
+--- /dev/null
++++ b/backend/src/main/kotlin/com/medicalsystem/backend/dto/AssessmentDispatchHistoryDtos.kt
+@@ -0,0 +1,20 @@
++package com.medicalsystem.backend.dto
++
++import com.medicalsystem.backend.model.AssessmentStatus
++import com.medicalsystem.backend.model.ResultSeverity
++import java.time.LocalDateTime
++
++data class AssessmentDispatchSummaryDto(
++    val id: Long,
++    val batteryCode: String,
++    val dispatchedAt: LocalDateTime,
++    val dispatchedByName: String
++)
++
++data class ParticipationRecordDto(
++    val assignmentId: Long,
++    val studentName: String,
++    val studentNumber: String,
++    val status: AssessmentStatus,
++    val severity: ResultSeverity
++)
+diff --git a/backend/src/main/kotlin/com/medicalsystem/backend/entity/AssessmentAssignmentEntity.kt b/backend/src/main/kotlin/com/medicalsystem/backend/entity/AssessmentAssignmentEntity.kt
+index 4630083..55afb67 100644
+--- a/backend/src/main/kotlin/com/medicalsystem/backend/entity/AssessmentAssignmentEntity.kt
++++ b/backend/src/main/kotlin/com/medicalsystem/backend/entity/AssessmentAssignmentEntity.kt
+@@ -46,5 +46,12 @@ class AssessmentAssignmentEntity(
+     var answersJson: String? = null,
+     
+     @Column(name = "revoked_at")
+-    var revokedAt: LocalDateTime? = null
++    var revokedAt: LocalDateTime? = null,
++
++    @ManyToOne(fetch = FetchType.LAZY)
++    @JoinColumn(name = "dispatch_id")
++    var dispatch: AssessmentDispatchEntity? = null,
++
++    @Column(name = "severity_id")
++    var severity: com.medicalsystem.backend.model.ResultSeverity = com.medicalsystem.backend.model.ResultSeverity.PENDING
+ )
+diff --git a/backend/src/main/kotlin/com/medicalsystem/backend/entity/AssessmentDispatchEntity.kt b/backend/src/main/kotlin/com/medicalsystem/backend/entity/AssessmentDispatchEntity.kt
+new file mode 100644
+index 0000000..eeae8a3
+--- /dev/null
++++ b/backend/src/main/kotlin/com/medicalsystem/backend/entity/AssessmentDispatchEntity.kt
+@@ -0,0 +1,35 @@
++package com.medicalsystem.backend.entity
++
++import jakarta.persistence.*
++import java.time.LocalDateTime
++
++@Entity
++@Table(name = "assessment_dispatches")
++class AssessmentDispatchEntity(
++    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
++    var id: Long? = null,
++
++    @Column(name = "battery_code", nullable = false)
++    var batteryCode: String,
++
++    @ManyToOne(fetch = FetchType.LAZY)
++    @JoinColumn(name = "dispatched_by_user_id", nullable = false)
++    var dispatchedByUser: UserEntity,
++
++    @Column(name = "dispatched_at", nullable = false)
++    var dispatchedAt: LocalDateTime = LocalDateTime.now(),
++    
++    @Column(name = "dispatch_type", nullable = false)
++    @Enumerated(EnumType.STRING)
++    var dispatchType: com.medicalsystem.backend.model.DispatchType = com.medicalsystem.backend.model.DispatchType.ROUTINE_SCREENING,
++
++    @Column(name = "target_cohort")
++    var targetCohort: String? = null,
++
++    @Column(name = "due_date")
++    var dueDate: java.time.LocalDate? = null,
++
++    @Column(nullable = false)
++    @Enumerated(EnumType.STRING)
++    var status: com.medicalsystem.backend.model.DispatchStatus = com.medicalsystem.backend.model.DispatchStatus.ACTIVE
++)
+diff --git a/backend/src/main/kotlin/com/medicalsystem/backend/mapper/AssessmentAssignmentMapper.kt b/backend/src/main/kotlin/com/medicalsystem/backend/mapper/AssessmentAssignmentMapper.kt
+index b2035d7..c4bf9d5 100644
+--- a/backend/src/main/kotlin/com/medicalsystem/backend/mapper/AssessmentAssignmentMapper.kt
++++ b/backend/src/main/kotlin/com/medicalsystem/backend/mapper/AssessmentAssignmentMapper.kt
+@@ -31,6 +31,7 @@ class AssessmentAssignmentMapper(
+             studentId = entity.student.id,
+             assignedByUserId = entity.assignedByUser.id,
+             batteryCode = BatteryId(entity.batteryCode),
++            dispatchId = entity.dispatch?.id,
+             status = entity.status,
+             assignedAt = entity.assignedAt,
+             completedAt = entity.completedAt,
+@@ -43,6 +44,7 @@ class AssessmentAssignmentMapper(
+     fun toEntity(model: AssessmentAssignment): AssessmentAssignmentEntity {
+         val studentRef = entityManager.getReference(StudentEntity::class.java, model.studentId)
+         val assignerRef = entityManager.getReference(UserEntity::class.java, model.assignedByUserId)
++        val dispatchRef = model.dispatchId?.let { entityManager.getReference(com.medicalsystem.backend.entity.AssessmentDispatchEntity::class.java, it) }
+ 
+         val answersStr = model.answers?.let {
+             objectMapper.writeValueAsString(it)
+@@ -58,7 +60,8 @@ class AssessmentAssignmentMapper(
+             completedAt = model.completedAt,
+             dueDate = model.dueDate,
+             answersJson = answersStr,
+-            revokedAt = model.revokedAt
++            revokedAt = model.revokedAt,
++            dispatch = dispatchRef
+         )
+         
+         return entity
+diff --git a/backend/src/main/kotlin/com/medicalsystem/backend/mapper/AssessmentDispatchMapper.kt b/backend/src/main/kotlin/com/medicalsystem/backend/mapper/AssessmentDispatchMapper.kt
+new file mode 100644
+index 0000000..773209e
+--- /dev/null
++++ b/backend/src/main/kotlin/com/medicalsystem/backend/mapper/AssessmentDispatchMapper.kt
+@@ -0,0 +1,41 @@
++package com.medicalsystem.backend.mapper
++
++import com.medicalsystem.backend.entity.AssessmentDispatchEntity
++import com.medicalsystem.backend.entity.UserEntity
++import com.medicalsystem.backend.model.AssessmentDispatch
++import com.medicalsystem.backend.model.BatteryId
++import jakarta.persistence.EntityManager
++import org.springframework.stereotype.Component
++
++@Component
++class AssessmentDispatchMapper(
++    private val entityManager: EntityManager
++) {
++    fun toModel(entity: AssessmentDispatchEntity): AssessmentDispatch {
++        return AssessmentDispatch(
++            id = entity.id,
++            batteryCode = BatteryId(entity.batteryCode),
++            dispatchedByUserId = entity.dispatchedByUser.id,
++            dispatchType = entity.dispatchType,
++            targetCohort = entity.targetCohort,
++            dispatchedAt = entity.dispatchedAt,
++            dueDate = entity.dueDate,
++            status = entity.status
++        )
++    }
++
++    fun toEntity(model: AssessmentDispatch): AssessmentDispatchEntity {
++        val dispatcherRef = entityManager.getReference(UserEntity::class.java, model.dispatchedByUserId)
++
++        return AssessmentDispatchEntity(
++            id = model.id,
++            batteryCode = model.batteryCode.value,
++            dispatchedByUser = dispatcherRef,
++            dispatchedAt = model.dispatchedAt,
++            dispatchType = model.dispatchType,
++            targetCohort = model.targetCohort,
++            dueDate = model.dueDate,
++            status = model.status
++        )
++    }
++}
+diff --git a/backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentAssignment.kt b/backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentAssignment.kt
+index 92e1c8c..5fe0877 100644
+--- a/backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentAssignment.kt
++++ b/backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentAssignment.kt
+@@ -12,6 +12,7 @@ data class AssessmentAssignment(
+     val studentId: Long,
+     val assignedByUserId: Long,
+     val batteryCode: BatteryId,
++    val dispatchId: Long? = null,
+     var status: AssessmentStatus = AssessmentStatus.PENDING,
+     val assignedAt: LocalDateTime = LocalDateTime.now(),
+     var completedAt: LocalDateTime? = null,
+diff --git a/backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentDispatch.kt b/backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentDispatch.kt
+new file mode 100644
+index 0000000..7e1fdd9
+--- /dev/null
++++ b/backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentDispatch.kt
+@@ -0,0 +1,71 @@
++package com.medicalsystem.backend.model
++
++import java.time.LocalDate
++import java.time.LocalDateTime
++
++data class AssessmentDispatch(
++    val id: Long? = null,
++    val batteryCode: BatteryId,
++    val dispatchedByUserId: Long,
++    val dispatchType: DispatchType,
++    val targetCohort: String? = null,
++    val dispatchedAt: LocalDateTime = LocalDateTime.now(),
++    val dueDate: LocalDate? = null,
++    var status: DispatchStatus = DispatchStatus.ACTIVE
++) : AggregateRoot() {
++
++    fun initDispatchedEvent(studentIds: List<Long>) {
++        // Event registration is omitted since AssessmentDispatchedEvent is not defined in the scope of writable files
++    }
++
++    fun revoke(revokerId: Long) {
++        if (this.dispatchedByUserId != revokerId) {
++            throw com.medicalsystem.backend.exception.ForbiddenException("Only the original dispatcher can revoke this dispatch batch")
++        }
++        this.status = DispatchStatus.REVOKED
++    }
++
++    companion object {
++        fun createBatch(
++            batteryCode: BatteryId,
++            dispatcherId: Long,
++            targetCohort: String,
++            dueDate: LocalDate? = null
++        ): AssessmentDispatch {
++            return AssessmentDispatch(
++                batteryCode = batteryCode,
++                dispatchedByUserId = dispatcherId,
++                dispatchType = DispatchType.ROUTINE_SCREENING,
++                targetCohort = targetCohort,
++                dueDate = dueDate
++            )
++        }
++
++        fun createForIndividuals(
++            batteryCode: BatteryId,
++            dispatcherId: Long,
++            dueDate: LocalDate? = null
++        ): AssessmentDispatch {
++            return AssessmentDispatch(
++                batteryCode = batteryCode,
++                dispatchedByUserId = dispatcherId,
++                dispatchType = DispatchType.ON_DEMAND,
++                targetCohort = null,
++                dueDate = dueDate
++            )
++        }
++    }
++}
++
++enum class DispatchType {
++    ROUTINE_SCREENING,
++    ON_DEMAND,
++    CLINICAL_TRIAL,
++    FOLLOW_UP
++}
++
++enum class DispatchStatus {
++    ACTIVE,
++    REVOKED,
++    COMPLETED
++}
+diff --git a/backend/src/main/kotlin/com/medicalsystem/backend/model/ResultSeverity.kt b/backend/src/main/kotlin/com/medicalsystem/backend/model/ResultSeverity.kt
+new file mode 100644
+index 0000000..32df09e
+--- /dev/null
++++ b/backend/src/main/kotlin/com/medicalsystem/backend/model/ResultSeverity.kt
+@@ -0,0 +1,8 @@
++package com.medicalsystem.backend.model
++
++enum class ResultSeverity {
++    LOW,
++    MODERATE,
++    HIGH,
++    PENDING
++}
+diff --git a/backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentAssignmentJpaRepository.kt b/backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentAssignmentJpaRepository.kt
+index e0969b3..075ce26 100644
+--- a/backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentAssignmentJpaRepository.kt
++++ b/backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentAssignmentJpaRepository.kt
+@@ -4,6 +4,8 @@ import com.medicalsystem.backend.entity.AssessmentAssignmentEntity
+ import com.medicalsystem.backend.model.AssessmentStatus
+ import org.springframework.data.domain.Page
+ import org.springframework.data.domain.Pageable
++import org.springframework.data.jpa.domain.Specification
++import org.springframework.data.jpa.repository.EntityGraph
+ import org.springframework.data.jpa.repository.JpaRepository
+ import org.springframework.data.jpa.repository.JpaSpecificationExecutor
+ import org.springframework.stereotype.Repository
+@@ -11,6 +13,9 @@ import java.util.Optional
+ 
+ @Repository
+ interface AssessmentAssignmentJpaRepository : JpaRepository<AssessmentAssignmentEntity, Long>, JpaSpecificationExecutor<AssessmentAssignmentEntity> {
++    @EntityGraph(attributePaths = ["student"])
++    override fun findAll(spec: Specification<AssessmentAssignmentEntity>, pageable: Pageable): Page<AssessmentAssignmentEntity>
++
+     fun findByStudentIdOrderByAssignedAtDesc(studentId: Long, pageable: Pageable): Page<AssessmentAssignmentEntity>
+     fun findByStudentId(studentId: Long): List<AssessmentAssignmentEntity>
+     fun findByStudentIdAndStatus(studentId: Long, status: AssessmentStatus): List<AssessmentAssignmentEntity>
+diff --git a/backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentDispatchJpaRepository.kt b/backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentDispatchJpaRepository.kt
+new file mode 100644
+index 0000000..cb4933a
+--- /dev/null
++++ b/backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentDispatchJpaRepository.kt
+@@ -0,0 +1,12 @@
++package com.medicalsystem.backend.repository
++
++import com.medicalsystem.backend.entity.AssessmentDispatchEntity
++import org.springframework.data.jpa.repository.JpaRepository
++import org.springframework.data.jpa.repository.EntityGraph
++import org.springframework.stereotype.Repository
++
++@Repository
++interface AssessmentDispatchJpaRepository : JpaRepository<AssessmentDispatchEntity, Long> {
++    @EntityGraph(attributePaths = ["dispatchedByUser"])
++    override fun findAll(): List<AssessmentDispatchEntity>
++}
+diff --git a/backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentDispatchRepository.kt b/backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentDispatchRepository.kt
+new file mode 100644
+index 0000000..0cc5280
+--- /dev/null
++++ b/backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentDispatchRepository.kt
+@@ -0,0 +1,9 @@
++package com.medicalsystem.backend.repository
++
++import com.medicalsystem.backend.model.AssessmentDispatch
++
++interface AssessmentDispatchRepository {
++    fun save(dispatch: AssessmentDispatch): AssessmentDispatch
++    fun findById(id: Long): AssessmentDispatch?
++    fun findAll(): List<AssessmentDispatch>
++}
+diff --git a/backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentDispatchRepositoryAdapter.kt b/backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentDispatchRepositoryAdapter.kt
+new file mode 100644
+index 0000000..3115227
+--- /dev/null
++++ b/backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentDispatchRepositoryAdapter.kt
+@@ -0,0 +1,26 @@
++package com.medicalsystem.backend.repository
++
++import com.medicalsystem.backend.mapper.AssessmentDispatchMapper
++import com.medicalsystem.backend.model.AssessmentDispatch
++import org.springframework.stereotype.Repository
++
++@Repository
++class AssessmentDispatchRepositoryAdapter(
++    private val jpaRepository: AssessmentDispatchJpaRepository,
++    private val mapper: AssessmentDispatchMapper
++) : AssessmentDispatchRepository {
++
++    override fun save(dispatch: AssessmentDispatch): AssessmentDispatch {
++        val entity = mapper.toEntity(dispatch)
++        val savedEntity = jpaRepository.save(entity)
++        return mapper.toModel(savedEntity)
++    }
++
++    override fun findById(id: Long): AssessmentDispatch? {
++        return jpaRepository.findById(id).map { mapper.toModel(it) }.orElse(null)
++    }
++
++    override fun findAll(): List<AssessmentDispatch> {
++        return jpaRepository.findAll().map { mapper.toModel(it) }
++    }
++}
+diff --git a/backend/src/main/kotlin/com/medicalsystem/backend/repository/ParticipationRecordSpecification.kt b/backend/src/main/kotlin/com/medicalsystem/backend/repository/ParticipationRecordSpecification.kt
+new file mode 100644
+index 0000000..d3eac35
+--- /dev/null
++++ b/backend/src/main/kotlin/com/medicalsystem/backend/repository/ParticipationRecordSpecification.kt
+@@ -0,0 +1,40 @@
++package com.medicalsystem.backend.repository
++
++import com.medicalsystem.backend.entity.AssessmentAssignmentEntity
++import com.medicalsystem.backend.entity.AssessmentDispatchEntity
++import com.medicalsystem.backend.entity.StudentEntity
++import com.medicalsystem.backend.model.ResultSeverity
++import jakarta.persistence.criteria.Predicate
++import org.springframework.data.jpa.domain.Specification
++
++object ParticipationRecordSpecification {
++    fun withFilters(
++        dispatchId: Long?,
++        studentName: String?,
++        studentNumber: String?,
++        severity: ResultSeverity?
++    ): Specification<AssessmentAssignmentEntity> {
++        return Specification { root, _, cb ->
++            val predicates = mutableListOf<Predicate>()
++            
++            dispatchId?.let {
++                predicates.add(cb.equal(root.get<AssessmentDispatchEntity>("dispatch").get<Long>("id"), it))
++            }
++            severity?.let {
++                predicates.add(cb.equal(root.get<ResultSeverity>("severity"), it))
++            }
++            
++            if (!studentName.isNullOrBlank() || !studentNumber.isNullOrBlank()) {
++                val studentJoin = root.join<AssessmentAssignmentEntity, StudentEntity>("student")
++                if (!studentName.isNullOrBlank()) {
++                    predicates.add(cb.like(studentJoin.get("name"), "%$studentName%"))
++                }
++                if (!studentNumber.isNullOrBlank()) {
++                    predicates.add(cb.like(studentJoin.get("studentNumber"), "%$studentNumber%"))
++                }
++            }
++            
++            cb.and(*predicates.toTypedArray())
++        }
++    }
++}
+diff --git a/backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentDispatchService.kt b/backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentDispatchService.kt
+new file mode 100644
+index 0000000..976f9eb
+--- /dev/null
++++ b/backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentDispatchService.kt
+@@ -0,0 +1,51 @@
++package com.medicalsystem.backend.service
++
++import com.medicalsystem.backend.dto.AssessmentDispatchSummaryDto
++import com.medicalsystem.backend.dto.ParticipationRecordDto
++import com.medicalsystem.backend.model.ResultSeverity
++import com.medicalsystem.backend.repository.AssessmentDispatchJpaRepository
++import com.medicalsystem.backend.repository.AssessmentAssignmentJpaRepository
++import com.medicalsystem.backend.repository.ParticipationRecordSpecification
++import org.springframework.data.domain.Page
++import org.springframework.data.domain.Pageable
++import org.springframework.stereotype.Service
++import org.springframework.transaction.annotation.Transactional
++
++@Service
++class AssessmentDispatchService(
++    private val dispatchRepository: AssessmentDispatchJpaRepository,
++    private val assignmentRepository: AssessmentAssignmentJpaRepository
++) {
++    @Transactional(readOnly = true)
++    fun getDispatchSummaries(): List<AssessmentDispatchSummaryDto> {
++        return dispatchRepository.findAll().map { dispatch ->
++            AssessmentDispatchSummaryDto(
++                id = dispatch.id!!,
++                batteryCode = dispatch.batteryCode,
++                dispatchedAt = dispatch.dispatchedAt,
++                dispatchedByName = dispatch.dispatchedByUser.name
++            )
++        }.sortedByDescending { it.dispatchedAt }
++    }
++
++    @Transactional(readOnly = true)
++    fun getParticipationRecords(
++        dispatchId: Long?,
++        studentName: String?,
++        studentNumber: String?,
++        severity: ResultSeverity?,
++        pageable: Pageable
++    ): Page<ParticipationRecordDto> {
++        val spec = ParticipationRecordSpecification.withFilters(dispatchId, studentName, studentNumber, severity)
++        val assignments = assignmentRepository.findAll(spec, pageable)
++        return assignments.map { assignment ->
++            ParticipationRecordDto(
++                assignmentId = assignment.id!!,
++                studentName = assignment.student.name,
++                studentNumber = assignment.student.studentNumber,
++                status = assignment.status,
++                severity = assignment.severity
++            )
++        }
++    }
++}
+diff --git a/backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentService.kt b/backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentService.kt
+index 7c217e8..94f1723 100644
+--- a/backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentService.kt
++++ b/backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentService.kt
+@@ -24,6 +24,7 @@ class AssessmentService(
+     private val userRepository: UserRepository,
+     private val scaleRepository: AssessmentScaleRepository,
+     private val scaleSettingRepository: com.medicalsystem.backend.repository.AssessmentScaleSettingJpaRepository,
++    private val dispatchRepository: com.medicalsystem.backend.repository.AssessmentDispatchRepository,
+     private val clock: Clock
+ ) {
+ 
+@@ -110,16 +111,25 @@ class AssessmentService(
+         request.batteryCodes.forEach { batteryCode ->
+             val existingPending = assignmentRepository.findPendingByStudentIdAndBatteryCode(student.id, batteryCode)
+             if (existingPending.isEmpty) {
++                val dispatch = AssessmentDispatch.createForIndividuals(
++                    batteryCode = BatteryId(batteryCode),
++                    dispatcherId = assigner.id,
++                    dueDate = request.dueDate
++                )
++                val savedDispatch = dispatchRepository.save(dispatch)
++
+                 val newAssignment = AssessmentAssignment(
+                     studentId = student.id,
+                     assignedByUserId = assigner.id,
+                     batteryCode = BatteryId(batteryCode),
++                    dispatchId = savedDispatch.id,
+                     status = AssessmentStatus.PENDING,
+                     assignedAt = LocalDateTime.now(clock),
+                     dueDate = request.dueDate
+                 )
+                 newAssignment.initAssignedEvent()
+                 assignmentRepository.save(newAssignment)
++                savedDispatch.initDispatchedEvent(listOf(student.id))
+                 assignedCount++
+             }
+         }
+@@ -158,22 +168,33 @@ class AssessmentService(
+         request.batteryCodes.forEach { batteryCode ->
+             val pendingAssignments = assignmentRepository.findPendingByStudentIdInAndBatteryCode(studentIds, batteryCode)
+             val studentsWithPending = pendingAssignments.map { it.studentId }.toSet()
++            val targetStudents = visibleStudents.filter { !studentsWithPending.contains(it.id) }
+             
+-            val toSave = visibleStudents.filter { !studentsWithPending.contains(it.id) }.map { student ->
+-                val assignment = AssessmentAssignment(
+-                    studentId = student.id,
+-                    assignedByUserId = assigner.id,
++            if (targetStudents.isNotEmpty()) {
++                val dispatch = AssessmentDispatch.createBatch(
+                     batteryCode = BatteryId(batteryCode),
+-                    status = AssessmentStatus.PENDING,
+-                    assignedAt = LocalDateTime.now(clock),
++                    dispatcherId = assigner.id,
++                    targetCohort = "Cohort (Major: ${request.majorId}, Year: ${request.academicYear})",
+                     dueDate = request.dueDate
+                 )
+-                assignment.initAssignedEvent()
+-                assignment
+-            }
+-            
+-            if (toSave.isNotEmpty()) {
++                val savedDispatch = dispatchRepository.save(dispatch)
++
++                val toSave = targetStudents.map { student ->
++                    val assignment = AssessmentAssignment(
++                        studentId = student.id,
++                        assignedByUserId = assigner.id,
++                        batteryCode = BatteryId(batteryCode),
++                        dispatchId = savedDispatch.id,
++                        status = AssessmentStatus.PENDING,
++                        assignedAt = LocalDateTime.now(clock),
++                        dueDate = request.dueDate
++                    )
++                    assignment.initAssignedEvent()
++                    assignment
++                }
++                
+                 assignmentRepository.saveAll(toSave)
++                savedDispatch.initDispatchedEvent(toSave.map { it.studentId })
+                 totalAssigned += toSave.size
+             }
+         }
+diff --git a/backend/src/test/kotlin/com/medicalsystem/backend/converter/EnumConvertersTest.kt b/backend/src/test/kotlin/com/medicalsystem/backend/converter/EnumConvertersTest.kt
+index 037e340..7df9d0a 100644
+--- a/backend/src/test/kotlin/com/medicalsystem/backend/converter/EnumConvertersTest.kt
++++ b/backend/src/test/kotlin/com/medicalsystem/backend/converter/EnumConvertersTest.kt
+@@ -21,4 +21,22 @@ class EnumConvertersTest {
+         assertEquals(null, converter.convertToEntityAttribute(null))
+         assertEquals(null, converter.convertToEntityAttribute(99))
+     }
++
++    @Test
++    fun `ResultSeverityConverter should convert to and from database column`() {
++        val converter = ResultSeverityConverter()
++        
++        assertEquals(1, converter.convertToDatabaseColumn(com.medicalsystem.backend.model.ResultSeverity.LOW))
++        assertEquals(2, converter.convertToDatabaseColumn(com.medicalsystem.backend.model.ResultSeverity.MODERATE))
++        assertEquals(3, converter.convertToDatabaseColumn(com.medicalsystem.backend.model.ResultSeverity.HIGH))
++        assertEquals(4, converter.convertToDatabaseColumn(com.medicalsystem.backend.model.ResultSeverity.PENDING))
++        assertEquals(null, converter.convertToDatabaseColumn(null))
++        
++        assertEquals(com.medicalsystem.backend.model.ResultSeverity.LOW, converter.convertToEntityAttribute(1))
++        assertEquals(com.medicalsystem.backend.model.ResultSeverity.MODERATE, converter.convertToEntityAttribute(2))
++        assertEquals(com.medicalsystem.backend.model.ResultSeverity.HIGH, converter.convertToEntityAttribute(3))
++        assertEquals(com.medicalsystem.backend.model.ResultSeverity.PENDING, converter.convertToEntityAttribute(4))
++        assertEquals(null, converter.convertToEntityAttribute(null))
++        assertEquals(null, converter.convertToEntityAttribute(99))
++    }
+ }
+diff --git a/backend/src/test/kotlin/com/medicalsystem/backend/repository/ParticipationRecordSpecificationTest.kt b/backend/src/test/kotlin/com/medicalsystem/backend/repository/ParticipationRecordSpecificationTest.kt
+new file mode 100644
+index 0000000..7025954
+--- /dev/null
++++ b/backend/src/test/kotlin/com/medicalsystem/backend/repository/ParticipationRecordSpecificationTest.kt
+@@ -0,0 +1,66 @@
++package com.medicalsystem.backend.repository
++
++import com.medicalsystem.backend.entity.AssessmentAssignmentEntity
++import com.medicalsystem.backend.entity.AssessmentDispatchEntity
++import com.medicalsystem.backend.entity.*
++import com.medicalsystem.backend.model.*
++import org.junit.jupiter.api.Assertions.assertEquals
++import org.junit.jupiter.api.Test
++import org.springframework.beans.factory.annotation.Autowired
++import org.springframework.boot.test.context.SpringBootTest
++import org.springframework.transaction.annotation.Transactional
++import jakarta.persistence.EntityManager
++import java.time.LocalDate
++
++@SpringBootTest
++@Transactional
++class ParticipationRecordSpecificationTest {
++
++    @Autowired
++    private lateinit var assignmentRepository: AssessmentAssignmentJpaRepository
++    
++    @Autowired
++    private lateinit var dispatchRepository: AssessmentDispatchJpaRepository
++    
++    @Autowired
++    private lateinit var entityManager: EntityManager
++
++    @Test
++    fun `should filter by dispatchId and severity`() {
++        val adminUser = UserEntity(name = "admin", email = EmailAddress("admin@test.com"), role = UserRole.TRIAL_ADMIN)
++        entityManager.persist(adminUser)
++        
++        val dispatch1 = AssessmentDispatchEntity(batteryCode = "PHQ-9", dispatchedByUser = adminUser)
++        entityManager.persist(dispatch1)
++        val dispatch2 = AssessmentDispatchEntity(batteryCode = "GAD-7", dispatchedByUser = adminUser)
++        entityManager.persist(dispatch2)
++        
++        val college = CollegeEntity(name = "CS")
++        entityManager.persist(college)
++        val major = MajorEntity(name = "Software", college = college)
++        entityManager.persist(major)
++
++        val studentUser = UserEntity(name = "s1", email = EmailAddress("s1@test.com"), role = UserRole.STUDENT)
++        entityManager.persist(studentUser)
++        
++        val student1 = StudentEntity(id = studentUser.id!!, studentNumber = "S001", name = "Alice", major = major, enrollmentDate = LocalDate.now())
++        entityManager.persist(student1)
++        
++        val a1 = AssessmentAssignmentEntity(student = student1, assignedByUser = adminUser, batteryCode = "PHQ-9", dispatch = dispatch1, severity = ResultSeverity.HIGH)
++        val a2 = AssessmentAssignmentEntity(student = student1, assignedByUser = adminUser, batteryCode = "GAD-7", dispatch = dispatch2, severity = ResultSeverity.HIGH)
++        val a3 = AssessmentAssignmentEntity(student = student1, assignedByUser = adminUser, batteryCode = "PHQ-9", dispatch = dispatch1, severity = ResultSeverity.LOW)
++        
++        assignmentRepository.save(a1)
++        assignmentRepository.save(a2)
++        assignmentRepository.save(a3)
++        
++        entityManager.flush()
++        
++        val spec = ParticipationRecordSpecification.withFilters(dispatch1.id, null, null, ResultSeverity.HIGH)
++        val results = assignmentRepository.findAll(spec)
++        
++        assertEquals(1, results.size)
++        assertEquals(dispatch1.id, results[0].dispatch?.id)
++        assertEquals(ResultSeverity.HIGH, results[0].severity)
++    }
++}
+diff --git a/backend/src/test/kotlin/com/medicalsystem/backend/service/AssessmentServiceTest.kt b/backend/src/test/kotlin/com/medicalsystem/backend/service/AssessmentServiceTest.kt
+index a5637a8..93663b3 100644
+--- a/backend/src/test/kotlin/com/medicalsystem/backend/service/AssessmentServiceTest.kt
++++ b/backend/src/test/kotlin/com/medicalsystem/backend/service/AssessmentServiceTest.kt
+@@ -44,6 +44,9 @@ class AssessmentServiceTest {
+     @Mock
+     private lateinit var scaleSettingRepository: com.medicalsystem.backend.repository.AssessmentScaleSettingJpaRepository
+ 
++    @Mock
++    private lateinit var dispatchRepository: com.medicalsystem.backend.repository.AssessmentDispatchRepository
++
+     private lateinit var clock: Clock
+     
+     private lateinit var assessmentService: AssessmentService
+@@ -129,6 +132,7 @@ class AssessmentServiceTest {
+             userRepository,
+             scaleRepository,
+             scaleSettingRepository,
++            dispatchRepository,
+             clock
+         )
+     }
+@@ -206,6 +210,10 @@ class AssessmentServiceTest {
+ 
+         `when`(studentRepository.findByIdAndVisibleTo(10L, teacherUser)).thenReturn(Optional.of(sampleStudent))
+         `when`(assignmentRepository.findPendingByStudentIdAndBatteryCode(10L, "MENTAL_HEALTH_ASSESSMENT")).thenReturn(Optional.empty())
++        `when`(dispatchRepository.save(any())).thenAnswer { invocation ->
++            val arg = invocation.arguments[0] as AssessmentDispatch
++            arg.copy(id = 99L)
++        }
+         `when`(assignmentRepository.save(any())).thenAnswer { invocation ->
+             val arg = invocation.arguments[0] as AssessmentAssignment
+             arg.copy(id = 55L)
+diff --git a/frontend/src/components/admin/AssessmentCatalogManagementView.tsx b/frontend/src/components/admin/AssessmentCatalogManagementView.tsx
+index 18e10d0..a695499 100644
+--- a/frontend/src/components/admin/AssessmentCatalogManagementView.tsx
++++ b/frontend/src/components/admin/AssessmentCatalogManagementView.tsx
+@@ -8,6 +8,7 @@ import { useCreationOverlay } from '../../contexts/CreationContext';
+ import { AssessmentAssignmentCreationForm } from '../assessments/AssessmentAssignmentCreationForm';
+ import { AssessmentScaleDetailsFullScreen } from '../assessments/AssessmentScaleDetailsFullScreen';
+ import { DataTable, ColumnDefinition } from '../common/DataTable';
++import { DispatchHistoryTab } from '../assessments/DispatchHistoryTab';
+ 
+ export const CATALOG_VIEW_SEGMENTS = [
+   { label: '量表列表', value: 'catalog' },
+@@ -180,11 +181,12 @@ export const AssessmentCatalogManagementView: React.FC = () => {
+         )}
+         </div>
+       ) : (
+-        <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-12 text-[var(--md-sys-color-on-surface-variant)]">
+-          <p className="text-sm">暂无指派历史</p>
++        <div className="flex-1 min-h-0 flex flex-col">
++          <DispatchHistoryTab />
+         </div>
+       )}
+ 
++
+       {/* Full-Screen Scale View */}
+       <AssessmentScaleDetailsFullScreen
+         isOpen={!!viewingScale}
+diff --git a/frontend/src/components/assessments/DispatchHistoryTab.test.tsx b/frontend/src/components/assessments/DispatchHistoryTab.test.tsx
+new file mode 100644
+index 0000000..dcb6347
+--- /dev/null
++++ b/frontend/src/components/assessments/DispatchHistoryTab.test.tsx
+@@ -0,0 +1,54 @@
++import { render, screen, waitFor } from '@testing-library/react';
++import { describe, it, expect, vi } from 'vitest';
++import { DispatchHistoryTab } from './DispatchHistoryTab';
++import * as dispatchHooks from '../../hooks/useAssessmentDispatchHistory';
++
++vi.mock('../../hooks/useAssessmentDispatchHistory');
++
++describe('DispatchHistoryTab', () => {
++  it('resolves "latest" to the ID of the first dispatch in the summary list', async () => {
++    const mockDispatches = [
++      { id: 99, batteryCode: 'PHQ-9', dispatchedAt: '2023-10-01T00:00:00Z' },
++      { id: 98, batteryCode: 'GAD-7', dispatchedAt: '2023-09-01T00:00:00Z' },
++    ];
++
++    const mockHistoryPage = {
++      content: [
++        {
++          studentId: 10,
++          studentNumber: 'STU001',
++          studentName: 'Alex',
++          status: 'PENDING',
++          severity: 'LOW'
++        }
++      ],
++      totalElements: 1,
++      totalPages: 1
++    };
++
++    // Setup mocks
++    const mockUseAssessmentDispatches = vi.spyOn(dispatchHooks, 'useAssessmentDispatches');
++    const mockUseAssessmentDispatchHistory = vi.spyOn(dispatchHooks, 'useAssessmentDispatchHistory');
++
++    mockUseAssessmentDispatches.mockReturnValue({
++      data: mockDispatches,
++      isLoading: false
++    } as any);
++
++    mockUseAssessmentDispatchHistory.mockReturnValue({
++      data: mockHistoryPage,
++      isLoading: false
++    } as any);
++
++    render(<DispatchHistoryTab />);
++
++    // After render, the useEffect should have fired and updated the selectedDispatch to 99
++    // Which means useAssessmentDispatchHistory should be called with dispatchId: 99
++    
++    await waitFor(() => {
++      expect(mockUseAssessmentDispatchHistory).toHaveBeenCalledWith(
++        expect.objectContaining({ dispatchId: 99 })
++      );
++    });
++  });
++});
+diff --git a/frontend/src/components/assessments/DispatchHistoryTab.tsx b/frontend/src/components/assessments/DispatchHistoryTab.tsx
+index 7ac3f28..8e35e27 100644
+--- a/frontend/src/components/assessments/DispatchHistoryTab.tsx
++++ b/frontend/src/components/assessments/DispatchHistoryTab.tsx
+@@ -21,6 +21,12 @@ export const DispatchHistoryTab: React.FC = () => {
+     severity: selectedSeverity
+   });
+ 
++  React.useEffect(() => {
++    if (selectedDispatch === 'latest' && dispatches && dispatches.length > 0) {
++      setSelectedDispatch(dispatches[0].id);
++    }
++  }, [selectedDispatch, dispatches]);
++
+   const severityOptions = [
+     { label: '全部等级', value: 'ALL' },
+     { label: '低风险', value: 'LOW' },
+diff --git a/frontend/src/hooks/useAssessmentDispatchHistory.ts b/frontend/src/hooks/useAssessmentDispatchHistory.ts
+new file mode 100644
+index 0000000..0d50e8f
+--- /dev/null
++++ b/frontend/src/hooks/useAssessmentDispatchHistory.ts
+@@ -0,0 +1,64 @@
++import { useQuery } from '@tanstack/react-query';
++import { useAuth } from '../contexts/AuthContext';
++import { AssessmentDispatchSummaryDto, ParticipationRecordDto } from '../types';
++
++export const useAssessmentDispatches = () => {
++  const { session } = useAuth();
++  
++  return useQuery({
++    queryKey: ['/api/assessments/dispatches/summary', session?.token],
++    queryFn: async () => {
++      if (!session?.token) throw new Error('No auth token');
++      
++      const response = await fetch('/api/assessments/dispatches/summary', {
++        headers: {
++          'Authorization': `Bearer ${session.token}`,
++          'Content-Type': 'application/json',
++        }
++      });
++      
++      if (!response.ok) {
++        throw new Error('Failed to fetch dispatch summaries');
++      }
++      
++      return response.json() as Promise<AssessmentDispatchSummaryDto[]>;
++    },
++    enabled: !!session?.token,
++  });
++};
++
++export const useAssessmentDispatchHistory = (filters: { dispatchId: number | 'latest' | 'ALL', search: string, severity: string }, page: number = 0, size: number = 20) => {
++  const { session } = useAuth();
++  
++  return useQuery({
++    queryKey: ['/api/assessments/participation-records', filters, page, size, session?.token],
++    queryFn: async () => {
++      if (!session?.token) throw new Error('No auth token');
++      if (filters.dispatchId === 'latest') return { content: [], totalElements: 0, totalPages: 0 }; // handled via UI fallback to actual ID
++      
++      const params = new URLSearchParams({
++        page: page.toString(),
++        size: size.toString()
++      });
++      
++      if (filters.dispatchId !== 'ALL') params.append('dispatchId', filters.dispatchId.toString());
++      if (filters.search) params.append('studentName', filters.search); // Search both for simplicity, or add studentNumber param if backend distinguishes
++      if (filters.severity !== 'ALL') params.append('severity', filters.severity);
++      
++      const response = await fetch(`/api/assessments/participation-records?${params.toString()}`, {
++        headers: {
++          'Authorization': `Bearer ${session.token}`,
++          'Content-Type': 'application/json',
++        }
++      });
++      
++      if (!response.ok) {
++        throw new Error('Failed to fetch participation records');
++      }
++      
++      // Assume paginated backend response matches Spring Page DTO
++      return response.json() as Promise<{ content: ParticipationRecordDto[], totalElements: number, totalPages: number }>;
++    },
++    enabled: !!session?.token && filters.dispatchId !== 'latest',
++  });
++};
+diff --git a/frontend/src/types/index.ts b/frontend/src/types/index.ts
+index 72e45ad..cc6faec 100644
+--- a/frontend/src/types/index.ts
++++ b/frontend/src/types/index.ts
+@@ -356,3 +356,22 @@ export interface UpdateUserProfileRequest {
+ 
+ export * from './studentImport';
+ 
++export type ResultSeverity = 'LOW' | 'MODERATE' | 'HIGH' | 'PENDING';
++
++export interface AssessmentDispatchSummaryDto {
++  id: number;
++  batteryCode: string;
++  dispatchedAt: string;
++  dispatchedByName: string;
++}
++
++export interface ParticipationRecordDto {
++  id?: number;
++  assignmentId: number;
++  studentId?: string | number;
++  studentName: string;
++  studentNumber: string;
++  status: AssessmentStatus;
++  severity: ResultSeverity;
++}
++

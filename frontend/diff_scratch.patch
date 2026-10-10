@@ -1,0 +1,1881 @@
+diff --git a/.agent/skills/interview-me/SKILL.md b/.agent/skills/interview-me/SKILL.md
+index de5e3af..5afa9b2 100644
+--- a/.agent/skills/interview-me/SKILL.md
++++ b/.agent/skills/interview-me/SKILL.md
+@@ -1,225 +1,101 @@
+ ---
+ name: interview-me
+-description: Extracts what the user actually wants instead of what they think they should want. Achieves this through one-question-at-a-time interview until ~95% confidence about the underlying intent. Use when an ask is underspecified ("build me X" without "for whom" or "why now"), when the user explicitly invokes ("interview me", "grill me", "are we sure?", "stress-test my thinking"), or when you catch yourself silently filling in ambiguous requirements before any plan, spec, or code exists.
++description: Extracts comprehensive, exhaustive requirements for a feature, eliminating all blind spots before planning or implementation. Uses subagent research for context, builds a detailed discussion blueprint, tracks knowledge gaps in a temporary file, and conducts a deep-dive interview with recommendations and guesses. Use when a user asks to build a feature and you need absolute clarity with zero guessing.
+ ---
+ 
+ # Interview Me
+ 
+ ## Overview
+ 
+-What people ask for and what they actually want are different things. They ask for "a dashboard" because that's what one asks for, not because a dashboard solves their problem. They say "make it faster" without a number to hit.
++What people ask for and what they actually want are often different, and high-level requirements frequently hide massive implementation complexities. A simple "search bar" involves UI/UX states, backend querying strategies, rate limiting, and accessibility. 
+ 
+-The cheapest moment to find this gap is before any plan, spec, or code exists. Once you've started building, switching costs are real, and the user will rationalize the wrong thing into a "good enough" thing. The misfit gets locked in.
+-
+-This skill closes the gap before it costs anything. The other Define-phase skills assume you already know roughly what you want: `idea-refine` generates variations from an idea, `spec-driven-development` writes the requirements down, `doubt-driven-development` stress-tests a plan after you've drafted one. Interview-me is the part before all of those, where you ask one question at a time, with your best guess attached, until you can predict what the user is going to say before they say it.
++The cheapest moment to resolve these details is before any plan, spec, or code exists. The `interview-me` skill is an exhaustive, curious, and deeply technical interview process designed to identify every blind spot, log every detail, and eliminate all guessing for downstream planning and implementation stages.
+ 
+ ## When to Use
+ 
+ Apply this skill when:
+-
+-- The ask is missing at least one of: **who** the user is, **why** they want it, what **success** looks like, what the binding **constraint** is
+-- The request is conventional rather than specific ("build me X", "make it faster") and you can't unpack the convention without guessing
+-- You're tempted to start with assumptions you haven't surfaced
+-- The user hasn't said which value they're optimizing for when two reasonable ones are in tension (simplicity vs. flexibility, cost vs. speed)
+-- The user explicitly invokes: "interview me", "grill me", "before we start, are we sure?", "stress-test my thinking"
+-
+-**When NOT to use:**
+-
+-- The ask is unambiguous and self-contained ("rename this variable", "fix this typo")
+-- The user has explicitly asked for speed over verification
+-- Pure information requests ("how does X work?", "what does this code do?")
+-- Mechanical operations (renames, formats, file moves)
+-- You already have ≥95% confidence; re-read the stop condition below before assuming you don't
++- The user asks to build a feature, component, or system.
++- You need to flesh out underspecified requirements across the entire stack (Frontend, Backend, Security, UX, Performance).
++- The user explicitly invokes: "interview me", "grill me", "are we sure?", "stress-test my thinking".
+ 
+ ## Loading Constraints
++This skill requires a live, responsive user. **Do not invoke in non-interactive contexts** like CI pipelines, scheduled runs, or autonomous loops. 
+ 
+-This skill needs a live, responsive user. **Do not invoke in non-interactive contexts** like CI pipelines, scheduled runs, `/loop`, or autonomous-loop. If you're in one of those and the ask is underspecified, flag that as a blocker for the user instead of guessing.
++---
+ 
+ ## The Process
+ 
+-### Step 1: Hypothesize, with a confidence number
+-
+-Before asking anything, write down your current best read of what the user wants in **one sentence**, plus an honest confidence number (0–100%):
+-
+-```
+-HYPOTHESIS: You want a way to answer "how are we doing?" in standup, and "dashboard" was the convention that came to mind.
+-CONFIDENCE: ~30% — missing: who it's for, what "metrics" means in context, and what success looks like
+-```
+-
+-The number forces honesty. If you wrote down a high number but can't actually predict the user's reactions to the next three questions you'd ask, the number is wrong. Start at the confidence level you can defend.
+-
+-When confidence is below ~70%, append a brief reason on the same line — what's still unresolved or missing. This tells the user exactly what the interview needs to surface, and prevents the number from being a vague signal.
+-
+-### Step 2: Ask one question at a time, each with a guess attached
+-
+-Format:
+-
+-```
+-Q: <one focused question>
+-GUESS: <your hypothesis for the answer, with the reasoning that produced it>
+-```
+-
+-Wait for the user to react before asking the next question.
+-
+-**Why one at a time, not a batch:**
+-
+-- The user can't react to your hypotheses if you bury them in a list
+-- Batches encourage skim-reading and surface answers
+-- The third question often depends on the answer to the first; asking them all at once locks in the wrong framing
+-- The user's energy for thinking carefully is finite; spend it one question at a time
+-
+-**Why attach a guess:**
+-
+-- The user reacts faster to a wrong guess than they generate an answer from scratch
+-- It commits you to a hypothesis you can be visibly wrong about, which keeps you honest
+-- It surfaces *your* assumptions, which is what the interview is meant to expose
+-
+-The risk here is a polite user agreeing with your guess to be agreeable. Mitigate by being visibly willing to be wrong, and occasionally guess in a direction you expect the user to push back on.
+-
+-### Step 3: Listen for "want vs. should want"
+-
+-The most dangerous answers are the ones where the user says what a thoughtful answer *sounds like* rather than what they actually want. Watch for:
+-
+-- Answers that pattern-match best-practice talk ("I want it to be scalable", "clean architecture") without specifics
+-- Answers that defer to convention ("the way most apps do it", "the standard approach")
+-- Phrases like "I should probably…", "I think I'm supposed to…", "good engineering practice says…"
+-- Buzzwords as goals — when "modern", "scalable", "robust" are the answer instead of a specific outcome
+-
+-When you hear these, the question to ask is:
+-
++### Step 1: Context Gathering (Subagent Research)
++Before you barrage the user with questions, check your own blind spots. 
++- If you are unsure about the existing codebase context, architectural patterns, or current UI conventions (e.g., existing color palettes, database schemas), **invoke a research subagent** (like `code-explorer` or `research`) to investigate the codebase.
++- You can also run research subagents *during* the interview if the user's answers introduce new, unfamiliar technical domains.
++
++### Step 2: Build the Discussion Blueprint
++Based on the initial request and codebase context, dynamically generate a comprehensive list of sections that **must be discussed**. The topics must be strictly relevant to the specific situation and feature requested. Present this blueprint to the user so they know what the interview will cover. 
++
++*For example, if the user asks for a full-stack search bar, your generated blueprint might look like:*
++1. **High-Level Intent & Scope:** Who is this for? What is the success metric?
++2. **Frontend & UX/UI Implementation:** Layout, containers, components, colors, typography, loading states, error states, empty states, and accessibility.
++3. **Backend & Data Layer:** API contracts, database schema changes, query optimization, caching strategies.
++4. **Security & Edge Cases:** Permissions, validation, rate limiting, potential race conditions, malicious inputs.
++5. **Optimization & Performance:** Latency budgets, bundle size impacts, pagination, lazy loading.
++
++*However, if the user asks for a database migration script, the blueprint would naturally exclude UI/UX entirely and focus heavily on data integrity, downtime windows, rollback procedures, and schema locks.*
++
++### Step 3: Initialize the Knowledge Gap Tracker
++Before asking the first question, you must explicitly identify the gaps in your understanding based on the blueprint.
++1. Create a temporary markdown file (e.g., `.plans/interview-gaps.md` or `.agent/interview-gaps.md`).
++2. List out absolutely everything you are unsure about, organized by the blueprint sections. Document every blind spot, ambiguity, and technical uncertainty.
++3. **Active Tracking:** As the interview progresses and the user answers your questions, actively update this file to mark gaps as resolved and fill in the details. This file serves as your master checklist to ensure no blind spots remain.
++
++### Step 4: Deep-Dive Interview (Section by Section)
++Do not ask 20 questions at once. Proceed section by section. For each topic in the blueprint:
++- Ask the relevant, in-depth questions to extract *everything* you need to know (referencing your Knowledge Gap Tracker).
++- **Crucial:** You MUST utilize the built-in `ask_question` tool to present these questions interactively.
++- **Recommendations as Options:** When using the `ask_question` tool, supply your **recommendations and educated guesses** as the selectable `options`. Prefix your primary recommendation with "(Recommended)". The tool automatically provides a write-in option, so the user can provide a custom answer if they disagree with your guesses.
++
++**Example Tool Usage:**
++- **question:** "[Frontend UI/UX] How should the search results be displayed while typing?"
++- **options:** 
++  - "(Recommended) Dropdown popover anchored to input field, 300ms debounce."
++  - "Inline expansion pushing content down."
++  - "Full-screen modal overlay."
++
++*Wait for the user to respond via the UI modal before asking the next question or moving to the next section.*
++
++### Step 5: Listen for "Want vs. Should Want"
++Watch out for vague buzzwords ("make it scalable", "clean UI"). When a user relies on convention instead of specifics, probe deeper:
+ > *"If you didn't have to justify this to anyone, what would you actually want?"*
+ 
+-That single question often does more work than the previous five.
+-
+-### Step 4: Restate intent in the user's own words
+-
+-When your confidence is high, write back what you now think the user wants. Keep it tight (5–8 lines), use their language where possible, and structure it so the user can confirm or correct line by line:
++### Step 6: The Comprehensive Restate & Intent Lock
++Once all sections of the blueprint have been discussed and all items in your Knowledge Gap Tracker are resolved, synthesize the findings into a highly detailed **Intent Lock** document. This is not just a high-level summary; it must log every detail discussed:
+ 
+ ```
+-Here's what I now think you want:
++Here is the fully resolved feature intent. Please confirm if we have 100% alignment:
+ 
+-- Outcome:      <one line>
+-- User:         <one line — who benefits>
+-- Why now:      <one line — what changed>
+-- Success:      <one line — how we know it worked>
+-- Constraint:   <one line — the binding limit>
+-- Out of scope: <one line — what we're explicitly not doing>
++1. High-Level Scope: ...
++2. Frontend Details: (e.g., button colors, outlines, debounce timing, error states)
++3. Backend Details: (e.g., specific API routes, DB indexing strategies)
++4. Security/Edge Cases: (e.g., max input length, SQLi prevention, role checks)
++5. Out of Scope: (e.g., explicitly what we are NOT building)
+ 
+-Yes / no / refine?
++Yes / No / Refine?
+ ```
+ 
+-Including "Out of scope" is non-negotiable. Half of misalignment is silent disagreement about what is *not* being built.
+-
+-### Step 5: Confirm — explicit yes, not "whatever you think"
+-
+-The gate is an explicit "yes." The following are **not** yes:
+-
+-- "Whatever you think is best." → The user is delegating, which means they don't have 95% confidence either. Re-ask with two concrete options framed as a choice.
+-- "Sounds good." → Ambiguous. Ask: "Anything you'd refine?" Silence isn't confirmation.
+-- "Sure, let's go." → Often a polite exit, not an endorsement. Same follow-up.
+-- Silence followed by "okay let's start." → The user has given up on the interview, not converged. Stop and ask whether you've missed something.
+-
++### Step 7: Confirm — Explicit Yes
++The gate to proceed to Planning or Implementation is an explicit "yes."
++- "Whatever you think is best" → Not a yes. Give them a forced choice.
++- "Sounds good" → Ask if they want to refine anything.
+ If they correct you, fold the correction in and restate. Loop until you get an explicit yes.
+ 
+-### The 95% Confidence Stop
+-
+-You're done when you can answer yes to this:
+-
+-> *Can I predict the user's reaction to the next three questions I would ask?*
+-
+-If yes, you have shared understanding. Stop interviewing and produce the restate. If no, you're not done; ask the next question.
+-
+-This is a checkable test, not a vibe. It also has a floor: if you've gone several rounds and still can't predict, that's information about the ask, not a reason to keep grinding. Stop and tell the user: "I've asked X questions and I still can't predict your reactions. Something foundational is missing. Want to step back?"
++---
+ 
+ ## Output
+-
+-The output of this skill is a **confirmed statement of intent**: the restate from Step 4, with an explicit yes from Step 5. That's the deliverable. Specs, plans, and task lists are downstream; they consume the intent this skill produces.
+-
+-If the user wants the intent to persist (a multi-session project, a handoff to another collaborator), offer to save it to `docs/intent/[topic].md`. Only save if they confirm.
+-
+-## Example
+-
+-A short before-and-after.
+-
+-**Without `interview-me`:**
+-
+-```
+-User:  build me a dashboard for our metrics
+-Agent: <starts proposing chart libraries and layouts>
+-```
+-
+-The agent has assumed: who it's for, what metrics, what "for our team" means, what success looks like. None of these are stated. Every assumption is a place the user can later say "that's not what I meant."
+-
+-**With `interview-me`:**
+-
+-```
+-User: build me a dashboard for our metrics
+-
+-Agent:
+-HYPOTHESIS: You want a way to answer "how are we doing?" in standup, and "dashboard" came to mind because that's the conventional answer.
+-CONFIDENCE: ~30% — missing: who it's for, what "metrics" are, and what success looks like
+-
+-Q:     When you say "how are we doing?", who's asking — you alone, the engineering team in standup, or up the chain (e.g., your manager, an exec, a board)?
+-GUESS: engineering team in standup, because "we" usually scopes that way and standups are where this question gets asked. If it's for execs the metrics and the framing change a lot.
+-
+-User: It's actually for me. I keep losing track of which experiments are running and what their early signal looks like.
+-
+-Agent:
+-Updated read: not a team dashboard at all. It's a personal experiment tracker. Confidence: ~60% — still missing: what "early signal" means and what done looks like.
+-
+-Q:     Is the gap that you don't know which experiments exist, or that you can't see their results in one place?
+-GUESS: the second one. You have a list of experiments somewhere, but their results live in five different tools, and reconciling them by hand is what you're tired of.
+-
+-User: First one actually. I literally don't have a list. They're spread across different docs.
+-
+-Agent: <continues>
+-```
+-
+-Two questions in, the agent has discovered the actual ask isn't "a dashboard." It's "a list." Different artifact, different scope, different work. The dashboard would have been wrong.
+-
+-## Interaction with Other Skills
+-
+-- **`idea-refine`**: downstream. If the confirmed intent is "I want X but I don't know how to scope it," hand off to `idea-refine` to generate variations against the now-explicit intent.
+-- **`spec-driven-development`**: downstream. If the confirmed intent is concrete ("I want X for Y users with Z success criteria"), hand off to `spec-driven-development` to write it down.
+-- **`planning-and-task-breakdown`**: two hops downstream of this skill (after the spec).
+-- **`doubt-driven-development`**: opposite end of the timeline. Interview-me is pre-decision intent extraction; doubt-driven is post-decision artifact review. Both catch divergence, but at different moments.
+-- **`source-driven-development`**: orthogonal. Interview-me clarifies what the user wants; SDD verifies framework facts. They don't compete.
+-
+-## Common Rationalizations
+-
+-| Rationalization | Reality |
+-|---|---|
+-| "The ask is clear enough" | If you can't write the user's desired outcome in one sentence right now, the ask isn't clear. Run Step 1 before deciding. |
+-| "Asking too many questions wastes their time" | Time wasted by 4–6 targeted questions is small. Time wasted by building the wrong thing is enormous, and the user is the one bearing that cost. |
+-| "I'll figure it out as I build" | Switching costs after code exists are 10x what they are now. Discovery during implementation is rework. |
+-| "They said 'whatever you think,' so I should just decide" | "Whatever you think" is delegation, not decision. Re-ask with two concrete options as a choice. |
+-| "I should give them several options to pick from" | Options work when the user knows what they want and is choosing between trade-offs. They don't know what they want yet. Listing options widens the search; asking narrows it. |
+-| "If I attach my guess, I'm leading them" | Leading is the point. Reacting is faster than generating from scratch. The risk is sycophancy, not leading; mitigate by being visibly willing to be wrong. |
+-| "We've talked enough, I get it" | Test it: can you predict their reaction to the next three questions? If not, you don't get it yet. |
+-| "The user said yes, we're done" | If the yes followed a vague restate or an open-ended "sounds good," the yes is hollow. Restate concretely and re-confirm. |
++The final output is the confirmed **Intent Lock** document. This artifact is handed off to the `architect` or `planner` (or used in the `/auto-ship` workflow), guaranteeing that downstream steps require **zero guessing**. The temporary gap tracker can be deleted or archived.
+ 
+ ## Red Flags
+-
+-- Three or more questions in a single message: that's batching, not interviewing
+-- A question without your hypothesis attached: that's surveying, not committing
+-- Accepting "whatever you think is best" as a terminal answer
+-- Producing a spec, plan, or task list before the user has explicitly confirmed your restate
+-- Questions framed as "what would be best practice?" instead of "what do you actually want?"
+-- The user gives a sophistication-signaling answer ("scalable", "clean", "modern") and you accept it without probing whether it's what they actually want
+-- Three or more rounds without your confidence visibly rising: you're asking the wrong questions, step back and reframe
+-- A confidence number below ~70% with no reason attached: the user can't help close the gap if they don't know what's missing
+-- Saving the intent doc before the user has confirmed (the doc itself implies a yes the user didn't give)
+-- Skipping the "Out of scope" line in the restate (silent disagreement about non-goals is half of misalignment)
+-
+-## Verification
+-
+-After applying interview-me:
+-
+-- [ ] An explicit hypothesis with a confidence number was stated in the first turn
+-- [ ] Every confidence number below ~70% was accompanied by a one-line reason (what's still unresolved or missing)
+-- [ ] Questions were asked one at a time, each with the agent's guess attached
+-- [ ] At least one "what would you actually want if you didn't have to justify it?" probe ran when the user gave a sophistication-signaling or convention-signaling answer
+-- [ ] A concrete restate (Outcome / User / Why now / Success / Constraint / Out of scope) was written back to the user
+-- [ ] The user confirmed the restate with an explicit yes (not "whatever you think," not "sounds good," not silence)
+-- [ ] At the stop point, the agent could predict reactions to the next three questions it would ask
+-- [ ] Any handoff to a downstream skill (`idea-refine`, `spec-driven-development`) was framed in terms of the confirmed intent, not the original underspecified ask
++- Failing to create and maintain the `.plans/interview-gaps.md` file before starting the interview.
++- Asking all questions for all sections in a single giant message (users will skim and skip).
++- Asking open-ended questions without providing a guess or recommendation.
++- Leaving UI details (like colors or states) ambiguous for the planning stage.
++- Proceeding to write code or architecture plans without the final explicit "Yes" on the Intent Lock.
+diff --git a/.git_log.txt b/.git_log.txt
+index b3694fd..09645c5 100644
+--- a/.git_log.txt
++++ b/.git_log.txt
+@@ -1,10 +1,10 @@
+-b01fdb3 feat: add sourceAssignmentId to PsychometricTest to track test origins
+-3b52d5a refactor: elevate PsychometricTest to a domain entity
+-1c4b9ae refactor: simplify assessment scoring and risk evaluation
+-b767a8c Migrate assessment catalog to static JSON files and refactor tests
+-a5ffa21 feat: migrate assessment catalog to dynamic database structure
+-15d0157 refactor: Decouple AssessmentService and enforce language-agnostic DTOs
+-908d80a docs: create on-demand context for Assessment UI and link it in GEMINI.md
+-b809eda feat: implement strict typed assessment api
+-c4e6e57 feat: implement student assessment assignment and questionnaire answering system
+-5d0f5a1 fix: correct doctor actionable referral policy and JPA criteria mapping
++418ccf3 refactor(frontend): port adaptive inset grouped list layout to triage and risk assessment markers
++0a80bdc test(frontend): update UserDetailsView tests to match dynamic copy button titles from GroupedInfoList
++73e7324 refactor(admin): port adaptive inset grouped list layout to UserDetailsView
++ab55ace fix(frontend): standardize layout gap between canvas header and content filter chips across admin views
++5982bb1 feat(search): implement role-adaptive global search and achieve 100% test coverage
++5e8fcbf fix(frontend): prevent avatar halo clipping by adding margin and setting overflowVisible on table columns
++81c8d36 fix(frontend): enhance outline contrast on selected status badges and add high-contrast avatar badge halo
++d1f982e feat(students): port adaptive inset grouped list for personal data in overview tab
++3320ae4 feat(frontend): standardize status badge and dot styling across tables and views
++946ab4f fix(frontend): target 127.0.0.1 in vite proxy to avoid node ipv6 connection refusal
+diff --git a/.git_ls_files.txt b/.git_ls_files.txt
+index 224ebb6..8be5451 100644
+--- a/.git_ls_files.txt
++++ b/.git_ls_files.txt
+@@ -1,8 +1,12 @@
++.agent/plans/student-bulk-import-csv.md
++.agent/plans/user-profile-db-integration.md
+ .agent/skills/api-and-interface-design/SKILL.md
++.agent/skills/architect-consultation/SKILL.md
+ .agent/skills/architect-plan-review/SKILL.md
+ .agent/skills/architect-plan-review/references/clean-code-evaluation-checklist.md
+ .agent/skills/architect-plan-review/references/ddd-evaluation-checklist.md
+ .agent/skills/browser-testing-with-devtools/SKILL.md
++.agent/skills/button-label-audit/SKILL.md
+ .agent/skills/ci-cd-and-automation/SKILL.md
+ .agent/skills/clean-code/SKILL.md
+ .agent/skills/code-review-and-quality/SKILL.md
+@@ -60,11 +64,48 @@
+ .agent/skills/source-driven-development/SKILL.md
+ .agent/skills/spec-driven-development/SKILL.md
+ .agent/skills/test-driven-development/SKILL.md
++.agent/skills/typography-decoration/SKILL.md
++.agent/skills/typography-decoration/references/editorial-and-expressive.md
++.agent/skills/typography-decoration/references/internationalization-and-language-height.md
++.agent/skills/typography-decoration/references/type-scale-matrix.md
++.agent/skills/typography-decoration/references/variable-fonts-and-axes.md
+ .agent/skills/using-agent-skills/SKILL.md
++.agents/plans/add-source-assignment-id-to-psychometric-test.md
++.agents/plans/admin-user-management-dynamic-details-view.md
++.agents/plans/assessment-auto-save.md
++.agents/plans/assessment-catalog-actions-and-assignment-form.md
++.agents/plans/assessment-frontend-fixes.md
++.agents/plans/assign-assessment.md
+ .agents/plans/dashboard-action-metrics.md
++.agents/plans/dynamic-referral-status-card.md
++.agents/plans/elevate-psychometric-test-to-entity.md
++.agents/plans/enforce-assessment-completion.md
++.agents/plans/feedback-file-storage-and-details-view.md
++.agents/plans/fix-referral-psychometrics-tab-loading.md
++.agents/plans/harden-student-name-validation.md
++.agents/plans/hardened-attachment-preview-and-download.md
++.agents/plans/implement-minio-object-storage.md
+ .agents/plans/medical-assessments-system.md
++.agents/plans/migrate-assessment-catalog-to-json.md
++.agents/plans/migrate-assessment-catalog.md
++.agents/plans/profile-personal-info-edit-subviews.md
++.agents/plans/refactor-assessment-dictionary.md
+ .agents/plans/refactor-assessment-service.md
++.agents/plans/refactor-scoring-and-risk.md
++.agents/plans/refactor-side-panel-and-metric-card-layout.md
++.agents/plans/referral-attachment-viewer-and-downloader.md
++.agents/plans/replace-grade-calculator-with-degree-level.md
++.agents/plans/responsive-canvas-overlay-details-panel.md
+ .agents/plans/robust-assessment-api.md
++.agents/plans/system-administrator-portal-and-governance.md
++.agents/plans/user-profile-db-integration.md
++.agents/ui_templates/Login Screen Step 1 Login.png
++.agents/ui_templates/Login Screen Step 2 Password.png
++.agents/ui_templates/Screenshot 2026-08-21 at 20.18.38.png
++.agents/ui_templates/Screenshot 2026-08-21 at 20.19.03.png
++.agents/ui_templates/Screenshot 2026-08-21 at 20.19.35.png
++.agents/ui_templates/Screenshot 2026-08-21 at 20.20.34.png
++.agents/ui_templates/Screenshot 2026-08-21 at 20.21.21.png
+ .ai/project-index.md
+ .ai/reference/assessment-ui.md
+ .ai/reference/backend-data.md
+@@ -72,6 +113,11 @@
+ .ai/reference/components.md
+ .ai/reference/frontend-api-state.md
+ .ai/reference/security-errors.md
++.env.example
++.git_files.txt
++.git_log.txt
++.git_ls_files.txt
++.git_status.txt
+ .github/workflows/deploy.yml
+ .gitignore
+ .idea/.gitignore
+@@ -80,6 +126,7 @@
+ .idea/misc.xml
+ .idea/modules.xml
+ .idea/vcs.xml
++.tree.txt
+ .vite/deps/_metadata.json
+ .vite/deps/package.json
+ GEMINI.md
+@@ -96,27 +143,42 @@ backend/mvnw.cmd
+ backend/pom.xml
+ backend/refactor_profiles.py
+ backend/src/main/kotlin/com/medicalsystem/backend/BackendApplication.kt
++backend/src/main/kotlin/com/medicalsystem/backend/config/AssessmentCatalogLoader.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/config/AsyncConfig.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/config/DataInitializer.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/config/JacksonConfig.kt
++backend/src/main/kotlin/com/medicalsystem/backend/config/MailAsyncConfig.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/config/WebMvcConfig.kt
++backend/src/main/kotlin/com/medicalsystem/backend/controller/AdminReferenceDataController.kt
++backend/src/main/kotlin/com/medicalsystem/backend/controller/AdminUserController.kt
++backend/src/main/kotlin/com/medicalsystem/backend/controller/AssessmentAssignmentController.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/controller/AssessmentController.kt
++backend/src/main/kotlin/com/medicalsystem/backend/controller/AuthController.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/controller/DashboardController.kt
++backend/src/main/kotlin/com/medicalsystem/backend/controller/DictionaryController.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/controller/DoctorController.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/controller/FeedbackController.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/controller/HospitalController.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/controller/NotificationController.kt
++backend/src/main/kotlin/com/medicalsystem/backend/controller/ReferenceDataImportController.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/controller/ReferralController.kt
++backend/src/main/kotlin/com/medicalsystem/backend/controller/SearchController.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/controller/StudentController.kt
+-backend/src/main/kotlin/com/medicalsystem/backend/converter/AssessmentEnumConverters.kt
++backend/src/main/kotlin/com/medicalsystem/backend/controller/StudentImportController.kt
++backend/src/main/kotlin/com/medicalsystem/backend/controller/UserProfileController.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/converter/EnumConverters.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/converter/NotificationActionTypeConverter.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/converter/NotificationMessageCodeConverter.kt
++backend/src/main/kotlin/com/medicalsystem/backend/converter/ReferenceDataStatusConverter.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/converter/ValueObjectConverters.kt
++backend/src/main/kotlin/com/medicalsystem/backend/dto/AdminUserDto.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/dto/ApproveReferralDto.kt
++backend/src/main/kotlin/com/medicalsystem/backend/dto/AssessmentAssignmentHistoryDto.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/dto/AssessmentDto.kt
++backend/src/main/kotlin/com/medicalsystem/backend/dto/AssignAssessmentRequestDto.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/dto/AssignDoctorDto.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/dto/AttachmentDto.kt
++backend/src/main/kotlin/com/medicalsystem/backend/dto/AuthDtos.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/dto/CreateReferralDto.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/dto/DashboardDto.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/dto/DemographicsDto.kt
+@@ -125,16 +187,22 @@ backend/src/main/kotlin/com/medicalsystem/backend/dto/FeedbackCreationRequest.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/dto/HospitalDto.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/dto/NotificationDto.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/dto/PsychometricsSummaryDto.kt
++backend/src/main/kotlin/com/medicalsystem/backend/dto/ReferenceDataDtos.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/dto/ReferralDetailsDto.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/dto/ReferralDto.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/dto/ReferralTrackingDto.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/dto/RejectReferralDto.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/dto/ScheduleAppointmentDto.kt
++backend/src/main/kotlin/com/medicalsystem/backend/dto/SearchDtos.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/dto/StudentDto.kt
++backend/src/main/kotlin/com/medicalsystem/backend/dto/StudentImportDto.kt
++backend/src/main/kotlin/com/medicalsystem/backend/dto/UserProfileDto.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/entity/AppointmentEntity.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/entity/AssessmentAssignmentEntity.kt
++backend/src/main/kotlin/com/medicalsystem/backend/entity/AssessmentScaleSettingEntity.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/entity/AttachmentEntity.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/entity/CollegeEntity.kt
++backend/src/main/kotlin/com/medicalsystem/backend/entity/DegreeLevelEntity.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/entity/DoctorEntity.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/entity/EthnicityEntity.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/entity/FeedbackAttachmentEntity.kt
+@@ -164,9 +232,13 @@ backend/src/main/kotlin/com/medicalsystem/backend/event/DomainEvent.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/event/DomainEventPublisher.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/event/Events.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/event/NotificationEventListener.kt
++backend/src/main/kotlin/com/medicalsystem/backend/event/OtpNotificationListener.kt
++backend/src/main/kotlin/com/medicalsystem/backend/event/ReferenceDataCascadeListener.kt
++backend/src/main/kotlin/com/medicalsystem/backend/event/ReferenceDataEvents.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/event/SpringDomainEventPublisher.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/event/StudentHealthProfileRiskListener.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/exception/AppError.kt
++backend/src/main/kotlin/com/medicalsystem/backend/exception/AssessmentCatalogInitializationException.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/exception/AssessmentValidationException.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/exception/ConflictException.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/exception/DomainExceptions.kt
+@@ -176,6 +248,7 @@ backend/src/main/kotlin/com/medicalsystem/backend/exception/NotFoundException.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/exception/ReferralStateException.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/exception/ResourceNotFoundException.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/exception/ValidationException.kt
++backend/src/main/kotlin/com/medicalsystem/backend/infrastructure/mail/SmtpEmailSender.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/mapper/AssessmentAssignmentMapper.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/mapper/AssessmentMapper.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/mapper/CollegeMapper.kt
+@@ -187,23 +260,25 @@ backend/src/main/kotlin/com/medicalsystem/backend/mapper/ReferralMapper.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/mapper/SchoolMapper.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/mapper/StudentHealthProfileMapper.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/mapper/StudentMapper.kt
++backend/src/main/kotlin/com/medicalsystem/backend/mapper/UserDetailAssembler.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/mapper/UserMapper.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/AcademicModels.kt
+-backend/src/main/kotlin/com/medicalsystem/backend/model/AcademicYear.kt
++backend/src/main/kotlin/com/medicalsystem/backend/model/AccountStatus.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/AggregateRoot.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/Appointment.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentAssignment.kt
+-backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentScaleCatalog.kt
+-backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentScaleType.kt
++backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentScale.kt
++backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentScaleRepository.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentScoringEngine.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentStatus.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/ClinicalModels.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/ClinicalStatusType.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/College.kt
+-backend/src/main/kotlin/com/medicalsystem/backend/model/CommonValueObjects.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/Demographics.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/DemographicsModels.kt
++backend/src/main/kotlin/com/medicalsystem/backend/model/DisposableEmailBlacklist.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/Doctor.kt
++backend/src/main/kotlin/com/medicalsystem/backend/model/DomainValueObjects.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/FeedbackAttachment.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/FileReference.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/FlagStatus.kt
+@@ -213,6 +288,9 @@ backend/src/main/kotlin/com/medicalsystem/backend/model/Major.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/Notification.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/NotificationActionType.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/NotificationMessageCode.kt
++backend/src/main/kotlin/com/medicalsystem/backend/model/PsychometricTest.kt
++backend/src/main/kotlin/com/medicalsystem/backend/model/PsychometricTestType.kt
++backend/src/main/kotlin/com/medicalsystem/backend/model/ReferenceDataStatus.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/Referral.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/ReferralAction.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/ReferralActionPolicy.kt
+@@ -235,21 +313,24 @@ backend/src/main/kotlin/com/medicalsystem/backend/model/StudentHealthProfile.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/StudentHealthProfileFactory.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/StudentVisibilityPolicy.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/Teacher.kt
+-backend/src/main/kotlin/com/medicalsystem/backend/model/TestResultName.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/TrialAdmin.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/User.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/model/UserRole.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/policy/LifecycleNotificationRoutingPolicy.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/policy/NotificationRoutingPolicy.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/policy/ReferralNotificationRoutingPolicy.kt
++backend/src/main/kotlin/com/medicalsystem/backend/port/EmailSenderPort.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/repository/AppointmentRepository.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentAssignmentJpaRepository.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentAssignmentRepository.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentAssignmentRepositoryAdapter.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentCohortSpecification.kt
++backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentScaleRepositoryAdapter.kt
++backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentScaleSettingJpaRepository.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/repository/CollegeJpaRepository.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/repository/CollegeRepository.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/repository/CollegeRepositoryAdapter.kt
++backend/src/main/kotlin/com/medicalsystem/backend/repository/DegreeLevelJpaRepository.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/repository/DoctorRepository.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/repository/EthnicityJpaRepository.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/repository/EthnicityRepository.kt
+@@ -275,6 +356,7 @@ backend/src/main/kotlin/com/medicalsystem/backend/repository/SchoolDepartmentRep
+ backend/src/main/kotlin/com/medicalsystem/backend/repository/SchoolJpaRepository.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/repository/SchoolRepository.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/repository/SchoolRepositoryAdapter.kt
++backend/src/main/kotlin/com/medicalsystem/backend/repository/SearchSpecifications.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/repository/StudentHealthProfileJpaRepository.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/repository/StudentHealthProfileRepository.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/repository/StudentHealthProfileRepositoryAdapter.kt
+@@ -290,31 +372,108 @@ backend/src/main/kotlin/com/medicalsystem/backend/security/CurrentUserArgumentRe
+ backend/src/main/kotlin/com/medicalsystem/backend/security/MockAuthenticationFilter.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/security/MockSecurityContextHolder.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/security/README.md
++backend/src/main/kotlin/com/medicalsystem/backend/service/AcademicReferenceService.kt
++backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentAssignmentService.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentService.kt
++backend/src/main/kotlin/com/medicalsystem/backend/service/ClinicalReferenceService.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt
++backend/src/main/kotlin/com/medicalsystem/backend/service/DemographicsReferenceService.kt
++backend/src/main/kotlin/com/medicalsystem/backend/service/DictionaryService.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/service/DoctorService.kt
++backend/src/main/kotlin/com/medicalsystem/backend/service/EmailOtpService.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/service/FeedbackService.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/service/HospitalService.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/service/NotificationService.kt
++backend/src/main/kotlin/com/medicalsystem/backend/service/ReferenceDataImportService.kt
++backend/src/main/kotlin/com/medicalsystem/backend/service/ReferenceDependencyAnalyzer.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/service/ReferralService.kt
++backend/src/main/kotlin/com/medicalsystem/backend/service/SearchService.kt
++backend/src/main/kotlin/com/medicalsystem/backend/service/StaffRegistrationService.kt
++backend/src/main/kotlin/com/medicalsystem/backend/service/StudentImportSchema.kt
++backend/src/main/kotlin/com/medicalsystem/backend/service/StudentImportService.kt
++backend/src/main/kotlin/com/medicalsystem/backend/service/StudentImportValidator.kt
++backend/src/main/kotlin/com/medicalsystem/backend/service/StudentRiskEvaluator.kt
+ backend/src/main/kotlin/com/medicalsystem/backend/service/StudentService.kt
+-backend/src/main/kotlin/com/medicalsystem/backend/util/AcademicYearCalculator.kt
++backend/src/main/kotlin/com/medicalsystem/backend/service/UserManagementService.kt
++backend/src/main/kotlin/com/medicalsystem/backend/service/UserProfileService.kt
++backend/src/main/kotlin/com/medicalsystem/backend/service/UserVerificationService.kt
++backend/src/main/kotlin/com/medicalsystem/backend/storage/adapter/MinioStorageAdapter.kt
++backend/src/main/kotlin/com/medicalsystem/backend/storage/config/MinioConfig.kt
++backend/src/main/kotlin/com/medicalsystem/backend/storage/config/SchedulerConfig.kt
++backend/src/main/kotlin/com/medicalsystem/backend/storage/controller/FileController.kt
++backend/src/main/kotlin/com/medicalsystem/backend/storage/domain/DownloadIntent.kt
++backend/src/main/kotlin/com/medicalsystem/backend/storage/domain/StorageEnums.kt
++backend/src/main/kotlin/com/medicalsystem/backend/storage/dto/StorageDtos.kt
++backend/src/main/kotlin/com/medicalsystem/backend/storage/entity/ShedlockEntity.kt
++backend/src/main/kotlin/com/medicalsystem/backend/storage/entity/UploadedFileEntity.kt
++backend/src/main/kotlin/com/medicalsystem/backend/storage/port/FileStoragePort.kt
++backend/src/main/kotlin/com/medicalsystem/backend/storage/repository/UploadedFileRepository.kt
++backend/src/main/kotlin/com/medicalsystem/backend/storage/scheduler/FileRetentionScheduler.kt
++backend/src/main/kotlin/com/medicalsystem/backend/storage/service/FileApplicationService.kt
++backend/src/main/kotlin/com/medicalsystem/backend/storage/service/FileValidationService.kt
++backend/src/main/kotlin/com/medicalsystem/backend/util/CsvStreamReader.kt
++backend/src/main/resources/application-h2.properties
+ backend/src/main/resources/application.properties
++backend/src/main/resources/assessments/adhd.json
++backend/src/main/resources/assessments/aggression.json
++backend/src/main/resources/assessments/apq_9_father.json
++backend/src/main/resources/assessments/apq_9_mother.json
++backend/src/main/resources/assessments/assessment_groups.json
++backend/src/main/resources/assessments/big_five.json
++backend/src/main/resources/assessments/brief_a.json
++backend/src/main/resources/assessments/childhood_ses.json
++backend/src/main/resources/assessments/childhood_trauma.json
++backend/src/main/resources/assessments/coping_styles.json
++backend/src/main/resources/assessments/eating_habits.json
++backend/src/main/resources/assessments/emotion_regulation.json
++backend/src/main/resources/assessments/gad_7.json
++backend/src/main/resources/assessments/game_addiction.json
++backend/src/main/resources/assessments/grit.json
++backend/src/main/resources/assessments/impulsivity.json
++backend/src/main/resources/assessments/life_events.json
++backend/src/main/resources/assessments/loneliness.json
++backend/src/main/resources/assessments/mobile_addiction.json
++backend/src/main/resources/assessments/nssi.json
++backend/src/main/resources/assessments/peer_relationship.json
++backend/src/main/resources/assessments/phq_9.json
++backend/src/main/resources/assessments/pq16.json
++backend/src/main/resources/assessments/procrastination.json
++backend/src/main/resources/assessments/psqi.json
++backend/src/main/resources/assessments/scl_90.json
++backend/src/main/resources/assessments/self_control.json
++backend/src/main/resources/assessments/shared_option_groups.json
++backend/src/main/resources/assessments/sleep_disorder.json
++backend/src/main/resources/assessments/social_support.json
++backend/src/main/resources/assessments/swls.json
++backend/src/main/resources/assessments/teacher_relationship.json
+ backend/src/test/kotlin/com/medicalsystem/backend/BackendApplicationTests.kt
++backend/src/test/kotlin/com/medicalsystem/backend/config/AssessmentCatalogLoaderTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/controller/AdminUserControllerTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/controller/AuthControllerTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/controller/DashboardControllerTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/controller/DictionaryControllerTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/controller/DoctorControllerCalendarTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/controller/FeedbackControllerTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/controller/HospitalControllerTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/controller/NotificationControllerTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/controller/ReferralControllerTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/controller/SearchControllerTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/controller/StudentControllerTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/controller/StudentImportControllerTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/controller/UserProfileControllerTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/converter/EnumConvertersTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/event/AssessmentCompletedListenerTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/event/NotificationEventListenerTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/event/OtpNotificationListenerTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/infrastructure/mail/SmtpEmailSenderTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/integration/StudentImportIntegrationTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/integration/UserProfileIntegrationTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/mapper/ReferralMapperTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/mapper/UserDetailAssemblerTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/mapper/UserMapperTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/model/AssessmentScoringEngineTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/model/DemographicsTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/model/DomainValueObjectsTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/model/ReferralActionPolicyTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/model/ReferralTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/model/ReferralVisibilityPolicyTest.kt
+@@ -325,21 +484,39 @@ backend/src/test/kotlin/com/medicalsystem/backend/repository/AppointmentEntityMa
+ backend/src/test/kotlin/com/medicalsystem/backend/repository/AppointmentRepositoryCalendarTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/repository/AssessmentRepositoryAdapterTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/repository/ReferralJpaSpecificationTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/repository/SearchSpecificationsTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/repository/StudentJpaSpecificationTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/repository/StudentRepositoryAdapterTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/repository/StudentRepositoryTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/repository/TrialAdminEntityTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/security/CurrentUserArgumentResolverTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/security/MockAuthenticationFilterTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/service/AcademicReferenceServiceTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/service/AssessmentServiceTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/service/DictionaryServiceTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/service/DoctorServiceCalendarTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/service/EmailOtpServiceTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/service/FeedbackServiceTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/service/HospitalServiceTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/service/NotificationServiceTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/service/ReferenceDataImportServiceTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/service/ReferenceDependencyAnalyzerTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/service/ReferralServiceTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/service/SearchServiceTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/service/StaffRegistrationServiceTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/service/StudentImportSchemaTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/service/StudentImportServiceTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/service/StudentImportValidatorTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/service/StudentRiskEvaluatorTest.kt
+ backend/src/test/kotlin/com/medicalsystem/backend/service/StudentServiceTest.kt
+-backend/src/test/kotlin/com/medicalsystem/backend/util/AcademicYearCalculatorTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/service/UserManagementServiceTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/service/UserProfileServiceTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/service/UserVerificationServiceTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/storage/FileApplicationServiceTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/storage/FileControllerTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/storage/FileValidationServiceTest.kt
++backend/src/test/kotlin/com/medicalsystem/backend/util/CsvStreamReaderTest.kt
+ backend/src/test/resources/application.properties
+ docker-compose.yml
+ docs/specs/complete-visibility-policy.md
+@@ -354,17 +531,66 @@ frontend/package.json
+ frontend/public/mockServiceWorker.js
+ frontend/rewrite_api.cjs
+ frontend/src/App.tsx
++frontend/src/api/admin.ts
++frontend/src/api/auth.ts
++frontend/src/api/client.test.ts
++frontend/src/api/client.ts
++frontend/src/api/dictionaries.ts
++frontend/src/api/files.ts
+ frontend/src/api/notifications.ts
++frontend/src/api/references.ts
++frontend/src/api/students.ts
++frontend/src/components/admin/AdminUserManagementDetails.test.tsx
++frontend/src/components/admin/AssessmentCatalogManagementView.test.tsx
++frontend/src/components/admin/AssessmentCatalogManagementView.tsx
++frontend/src/components/admin/EssentialBulkImportDialog.tsx
++frontend/src/components/admin/EssentialBulkImportPreviewTable.tsx
++frontend/src/components/admin/EssentialDeleteConfirmDialog.tsx
++frontend/src/components/admin/EssentialEditDialog.tsx
++frontend/src/components/admin/EssentialsManagementView.test.tsx
++frontend/src/components/admin/EssentialsManagementView.tsx
++frontend/src/components/admin/UserDetailsView.test.tsx
++frontend/src/components/admin/UserDetailsView.tsx
++frontend/src/components/admin/UserGovernanceFooter.test.tsx
++frontend/src/components/admin/UserGovernanceFooter.tsx
++frontend/src/components/admin/UserManagementView.test.tsx
++frontend/src/components/admin/UserManagementView.tsx
++frontend/src/components/assessments/AssessmentAssignmentCreationForm.test.tsx
++frontend/src/components/assessments/AssessmentAssignmentCreationForm.tsx
+ frontend/src/components/assessments/AssessmentCard.tsx
+ frontend/src/components/assessments/AssessmentData.ts
+ frontend/src/components/assessments/AssessmentDialog.tsx
++frontend/src/components/assessments/AssessmentFlow.test.tsx
+ frontend/src/components/assessments/AssessmentFlow.tsx
++frontend/src/components/assessments/AssessmentScaleDetailsFullScreen.test.tsx
++frontend/src/components/assessments/AssessmentScaleDetailsFullScreen.tsx
+ frontend/src/components/assessments/AssessmentsView.tsx
+-frontend/src/components/assessments/AssignQuestionnaireDialog.tsx
+ frontend/src/components/assessments/PsychometricsTabContent.tsx
++frontend/src/components/auth/LoginOverlay.test.tsx
++frontend/src/components/auth/LoginOverlay.tsx
++frontend/src/components/auth/RegisterAffiliation.test.tsx
++frontend/src/components/auth/RegisterAffiliation.tsx
++frontend/src/components/auth/RegisterBasicInfo.test.tsx
++frontend/src/components/auth/RegisterBasicInfo.tsx
++frontend/src/components/auth/RegisterDemographics.test.tsx
++frontend/src/components/auth/RegisterDemographics.tsx
++frontend/src/components/auth/RegisterIdentity.test.tsx
++frontend/src/components/auth/RegisterIdentity.tsx
++frontend/src/components/auth/RegisterPassword.test.tsx
++frontend/src/components/auth/RegisterPassword.tsx
++frontend/src/components/auth/RegisterRoleSelect.test.tsx
++frontend/src/components/auth/RegisterRoleSelect.tsx
++frontend/src/components/auth/RegisterStudentNotice.test.tsx
++frontend/src/components/auth/RegisterStudentNotice.tsx
++frontend/src/components/auth/RegisterSuccessView.tsx
++frontend/src/components/auth/useRegistrationDraft.ts
++frontend/src/components/auth/validationUtils.test.ts
++frontend/src/components/auth/validationUtils.ts
+ frontend/src/components/common/ActionFooter.tsx
+ frontend/src/components/common/AttachmentList.test.tsx
+ frontend/src/components/common/AttachmentList.tsx
++frontend/src/components/common/AvatarBadge.test.tsx
++frontend/src/components/common/AvatarBadge.tsx
+ frontend/src/components/common/Buttons.test.tsx
+ frontend/src/components/common/Buttons.tsx
+ frontend/src/components/common/DataTable.test.tsx
+@@ -375,16 +601,22 @@ frontend/src/components/common/DetailsPanel.test.tsx
+ frontend/src/components/common/DetailsPanel.tsx
+ frontend/src/components/common/DoctorScheduleCalendar.test.tsx
+ frontend/src/components/common/DoctorScheduleCalendar.tsx
++frontend/src/components/common/ExpandableSearchBar.test.tsx
++frontend/src/components/common/ExpandableSearchBar.tsx
+ frontend/src/components/common/FilterChip.test.tsx
+ frontend/src/components/common/FilterChip.tsx
+ frontend/src/components/common/FullScreenView.test.tsx
+ frontend/src/components/common/FullScreenView.tsx
+ frontend/src/components/common/GenericDialog.test.tsx
+ frontend/src/components/common/GenericDialog.tsx
++frontend/src/components/common/GroupedInfoList.test.tsx
++frontend/src/components/common/GroupedInfoList.tsx
+ frontend/src/components/common/MaterialChips.tsx
+ frontend/src/components/common/PsychometricTable.tsx
+ frontend/src/components/common/Snackbar.test.tsx
+ frontend/src/components/common/Snackbar.tsx
++frontend/src/components/common/StatusBadge.test.tsx
++frontend/src/components/common/StatusBadge.tsx
+ frontend/src/components/common/Tabs.test.tsx
+ frontend/src/components/common/Tabs.tsx
+ frontend/src/components/creation-overlay/CreationRoot.tsx
+@@ -397,8 +629,10 @@ frontend/src/components/dashboard/DashboardComponents.tsx
+ frontend/src/components/dashboard/DashboardView.tsx
+ frontend/src/components/layout/AccountMenu.tsx
+ frontend/src/components/layout/CanvasHeader.tsx
++frontend/src/components/layout/GlobalSearch.test.tsx
+ frontend/src/components/layout/GlobalSearch.tsx
+ frontend/src/components/layout/Header.tsx
++frontend/src/components/layout/MainContent.test.tsx
+ frontend/src/components/layout/MainContent.tsx
+ frontend/src/components/layout/NavItem.tsx
+ frontend/src/components/layout/SearchItem.tsx
+@@ -406,8 +640,20 @@ frontend/src/components/layout/Sidebar.tsx
+ frontend/src/components/notifications/NotificationItem.tsx
+ frontend/src/components/notifications/NotificationsView.tsx
+ frontend/src/components/notifications/UrgentAlert.tsx
++frontend/src/components/profile/ProfileAcademicView.tsx
++frontend/src/components/profile/ProfileAddressView.tsx
++frontend/src/components/profile/ProfileAvatarView.tsx
++frontend/src/components/profile/ProfileBirthdayView.tsx
++frontend/src/components/profile/ProfileContactView.tsx
++frontend/src/components/profile/ProfileDetailsView.test.tsx
+ frontend/src/components/profile/ProfileDetailsView.tsx
++frontend/src/components/profile/ProfileEmergencyContactView.tsx
++frontend/src/components/profile/ProfileGenderView.tsx
++frontend/src/components/profile/ProfileIdentityView.tsx
+ frontend/src/components/profile/ProfileListItem.tsx
++frontend/src/components/profile/ProfileNameView.tsx
++frontend/src/components/profile/ProfilePasswordView.tsx
++frontend/src/components/profile/ProfileSubViews.test.tsx
+ frontend/src/components/profile/ProfileView.tsx
+ frontend/src/components/records/FeedbackCreationForm.test.tsx
+ frontend/src/components/records/FeedbackCreationForm.tsx
+@@ -418,54 +664,99 @@ frontend/src/components/records/ReferralActionFooter.test.tsx
+ frontend/src/components/records/ReferralActionFooter.tsx
+ frontend/src/components/records/ReferralCreationForm.tsx
+ frontend/src/components/records/ReferralDetailsView.tsx
++frontend/src/components/records/ReferralFeedbackTab.test.tsx
+ frontend/src/components/records/ReferralFeedbackTab.tsx
+ frontend/src/components/records/ReferralManagementView.tsx
++frontend/src/components/records/ReferralOverviewTab.test.tsx
+ frontend/src/components/records/ReferralOverviewTab.tsx
++frontend/src/components/records/ReferralStatusCard.test.tsx
+ frontend/src/components/records/ReferralStatusCard.tsx
+ frontend/src/components/records/ReferralTracker.tsx
+ frontend/src/components/records/ReferralTrackerTab.tsx
++frontend/src/components/search/CommandPalette.test.tsx
++frontend/src/components/search/CommandPalette.tsx
+ frontend/src/components/security/SecurityConsentView.tsx
+ frontend/src/components/staff/StaffDetailsView.tsx
+ frontend/src/components/staff/StaffManagementView.tsx
++frontend/src/components/students/AssessmentHistoryTab.tsx
++frontend/src/components/students/StudentBulkImportDialog.test.tsx
++frontend/src/components/students/StudentBulkImportDialog.tsx
++frontend/src/components/students/StudentBulkImportPreviewTable.tsx
++frontend/src/components/students/StudentDetailsView.test.tsx
+ frontend/src/components/students/StudentDetailsView.tsx
++frontend/src/components/students/StudentsView.test.tsx
+ frontend/src/components/students/StudentsView.tsx
+ frontend/src/config/dashboardConfig.ts
+ frontend/src/config/layoutConstants.ts
+ frontend/src/config/referralConstants.ts
++frontend/src/config/searchActions.test.ts
++frontend/src/config/searchActions.ts
+ frontend/src/config/styleConstants.ts
++frontend/src/constants/assessmentDictionary.ts
+ frontend/src/contexts/AssessmentDialogContext.tsx
+ frontend/src/contexts/AuthContext.test.tsx
+ frontend/src/contexts/AuthContext.tsx
+ frontend/src/contexts/CreationContext.tsx
+ frontend/src/contexts/DetailsContext.tsx
++frontend/src/contexts/GlobalSearchContext.test.tsx
++frontend/src/contexts/GlobalSearchContext.tsx
++frontend/src/contexts/NavigationContext.tsx
+ frontend/src/contexts/SidebarContext.tsx
+ frontend/src/contexts/SnackbarContext.tsx
+ frontend/src/contexts/ThemeContext.tsx
++frontend/src/hooks/__tests__/useAffiliations.test.ts
++frontend/src/hooks/__tests__/useAssessmentPosition.test.ts
++frontend/src/hooks/__tests__/useEthnicities.test.ts
++frontend/src/hooks/__tests__/useMediaQuery.test.ts
++frontend/src/hooks/useAdminDashboard.ts
++frontend/src/hooks/useAdminUsers.ts
++frontend/src/hooks/useAffiliations.ts
++frontend/src/hooks/useAssessmentAssignments.ts
++frontend/src/hooks/useAssessmentCatalogManagement.ts
++frontend/src/hooks/useAssessmentPosition.ts
++frontend/src/hooks/useAttachmentActions.ts
++frontend/src/hooks/useEthnicities.ts
++frontend/src/hooks/useGlobalSearchQuery.test.tsx
++frontend/src/hooks/useGlobalSearchQuery.ts
++frontend/src/hooks/useMediaQuery.ts
+ frontend/src/hooks/useNotifications.ts
+ frontend/src/hooks/useProfileSummary.ts
++frontend/src/hooks/useRecordProgress.ts
++frontend/src/hooks/useReferenceBulkImport.ts
++frontend/src/hooks/useReferenceData.ts
+ frontend/src/hooks/useReferralActions.test.tsx
+ frontend/src/hooks/useReferralActions.ts
++frontend/src/hooks/useStudentBulkImport.ts
+ frontend/src/index.css
+ frontend/src/main.tsx
+ frontend/src/mocks/browser.ts
++frontend/src/mocks/data/admin.ts
+ frontend/src/mocks/data/assessments.ts
+ frontend/src/mocks/data/dashboard.ts
+ frontend/src/mocks/data/records.ts
++frontend/src/mocks/data/references.ts
+ frontend/src/mocks/data/referrals.ts
+ frontend/src/mocks/data/students.ts
+ frontend/src/mocks/db.ts
+ frontend/src/mocks/handlers.test.ts
+ frontend/src/mocks/handlers.ts
++frontend/src/pages/AdminPage.tsx
+ frontend/src/pages/DoctorPage.tsx
+ frontend/src/pages/HeadCouncillorPage.tsx
++frontend/src/pages/PageNavigation.test.tsx
+ frontend/src/pages/StudentPage.tsx
+ frontend/src/pages/TeacherPage.tsx
+ frontend/src/pages/TemplateScreen.tsx
+ frontend/src/pages/TrialAdminPage.tsx
++frontend/src/types/admin.ts
+ frontend/src/types/index.ts
+ frontend/src/types/material-web.d.ts
++frontend/src/types/references.ts
++frontend/src/types/search.ts
++frontend/src/types/studentImport.ts
+ frontend/src/utils/dateUtils.test.ts
+ frontend/src/utils/dateUtils.ts
++frontend/src/utils/fileType.ts
+ frontend/src/utils/queryClient.ts
+ frontend/src/utils/referralUtils.test.ts
+ frontend/src/utils/referralUtils.ts
+@@ -477,4 +768,7 @@ frontend/update_frontend_enums.mjs
+ frontend/vite.config.ts
+ metadata.json
+ screenshot.png
++scripts/dev.sh
+ test-metadata.js
++test_students_bulk_import.csv
++"\346\265\213\350\257\225\345\255\246\347\224\237\346\211\271\351\207\217\345\257\274\345\205\245\346\225\260\346\215\256\351\233\206.csv"
+diff --git a/.git_status.txt b/.git_status.txt
+index a4c5388..fe16e5e 100644
+--- a/.git_status.txt
++++ b/.git_status.txt
+@@ -1,12 +1,28 @@
+-On branch feature/medical-assessments-system
++On branch main
++Your branch is up to date with 'origin/main'.
++
+ Changes not staged for commit:
+   (use "git add <file>..." to update what will be committed)
+   (use "git restore <file>..." to discard changes in working directory)
+ 	modified:   .git_log.txt
++	modified:   .git_ls_files.txt
+ 	modified:   .git_status.txt
++	modified:   .tree.txt
++	modified:   backend/src/main/kotlin/com/medicalsystem/backend/controller/ReferralController.kt
++	modified:   backend/src/main/kotlin/com/medicalsystem/backend/model/Referral.kt
++	modified:   backend/src/main/kotlin/com/medicalsystem/backend/model/ReferralAction.kt
++	modified:   backend/src/main/kotlin/com/medicalsystem/backend/model/ReferralActionPolicy.kt
++	modified:   backend/src/main/kotlin/com/medicalsystem/backend/service/ReferralService.kt
++	modified:   backend/src/test/kotlin/com/medicalsystem/backend/model/ReferralActionPolicyTest.kt
++	modified:   frontend/src/components/records/ReferralActionFooter.tsx
++	modified:   frontend/src/components/records/ReferralDetailsView.tsx
++	modified:   frontend/src/hooks/useReferralActions.ts
++	modified:   frontend/src/types/index.ts
+ 
+ Untracked files:
+   (use "git add <file>..." to include in what will be committed)
+-	.git_files.txt
++	backend/src/main/kotlin/com/medicalsystem/backend/dto/AdminArchiveReferralDto.kt
++	patch_test.sh
++	update_userdetails.js
+ 
+ no changes added to commit (use "git add" and/or "git commit -a")
+diff --git a/.plans/architecture.md b/.plans/architecture.md
+index e4171b8..3dcf658 100644
+--- a/.plans/architecture.md
++++ b/.plans/architecture.md
+@@ -1,108 +1,20 @@
+-# Recent Activity Feature Architecture
+-
+-## 1. Overview
+-This document outlines the design for the "近期动态" (Recent Activity) feature on the Dashboard. It aggregates pending tasks and recent system events into a single timeline feed of up to 5 items, customized per user role.
+-
+-## 2. API Contract & DTOs
+-We will expose a unified endpoint: `GET /api/dashboard/activity`
+-
+-### DTOs
+-To comply with the rule against magic/presentation strings in the backend, the API will return strictly typed enums and identifiers. The frontend will localize these into display strings.
+-
+-```kotlin
+-enum class ActivityType {
+-    // Referrals
+-    REFERRAL_PENDING_TRIAGE,
+-    REFERRAL_PENDING_SCHEDULING,
+-    REFERRAL_PENDING_FEEDBACK,
+-    REFERRAL_STATUS_UPDATED,
+-    
+-    // Assessments
+-    ASSESSMENT_PENDING_COMPLETION,
+-    HIGH_RISK_ASSESSMENT_SUBMITTED,
+-    
+-    // Approvals (Admin)
+-    USER_APPROVAL_PENDING,
+-    
+-    // Notifications & Alerts
+-    UNREAD_NOTIFICATION,
+-    SYSTEM_NOTIFICATION,
+-    HOSPITAL_CAPACITY_ALERT
+-}
+-
+-data class DashboardActivityDto(
+-    val id: String, // Unique string, e.g., "ref-123", "notif-45"
+-    val type: ActivityType,
+-    val timestamp: java.time.Instant,
+-    val referenceId: Long, // ID of the underlying entity
+-    val referenceName: String? // Optional contextual data (e.g., Student name or Assessment title)
+-)
+-
+-data class DashboardActivityFeedDto(
+-    val activities: List<DashboardActivityDto>
+-)
+-```
+-
+-## 3. Backend Implementation
+-
+-### Controller (`DashboardController.kt`)
+-Add a new mapping:
+-```kotlin
+-@GetMapping("/activity")
+-fun getRecentActivity(@CurrentUser user: User): ResponseEntity<DashboardActivityFeedDto> {
+-    return ResponseEntity.ok(dashboardService.getRecentActivity(user))
+-}
+-```
+-
+-### Service (`DashboardService.kt`)
+-The service will implement role-specific queries to gather activities.
+-
+-```kotlin
+-fun getRecentActivity(user: User): DashboardActivityFeedDto {
+-    val activities = mutableListOf<DashboardActivityDto>()
+-    
+-    when (user.role) {
+-        UserRole.STUDENT -> {
+-            // Fetch top status changes on their own referrals (REFERRAL_STATUS_UPDATED)
+-            // Fetch top pending assigned assessments they need to complete (ASSESSMENT_PENDING_COMPLETION)
+-        }
+-        UserRole.TEACHER -> {
+-            // Fetch top high-risk assessment submissions from assigned students (HIGH_RISK_ASSESSMENT_SUBMITTED)
+-            // Fetch top referral status updates for assigned students (REFERRAL_STATUS_UPDATED)
+-        }
+-        UserRole.HEAD_COUNSELLOR -> {
+-            // Fetch top referrals awaiting triage (REFERRAL_PENDING_TRIAGE)
+-            // Fetch top high-risk assessment submissions (HIGH_RISK_ASSESSMENT_SUBMITTED)
+-            // Fetch top system-wide unread notifications (SYSTEM_NOTIFICATION)
+-        }
+-        UserRole.TRIAL_ADMIN -> {
+-            // Fetch top referrals waiting for scheduling (REFERRAL_PENDING_SCHEDULING)
+-            // Fetch top unread notifications (UNREAD_NOTIFICATION)
+-            // Fetch top hospital staff capacity alerts (HOSPITAL_CAPACITY_ALERT)
+-        }
+-        UserRole.DOCTOR -> {
+-            // Fetch top referrals waiting for appointment/feedback (REFERRAL_PENDING_FEEDBACK)
+-            // Fetch top important unread notifications (UNREAD_NOTIFICATION)
+-        }
+-        UserRole.SYSTEM_ADMIN -> {
+-            // Fetch top user registrations pending approval (USER_APPROVAL_PENDING)
+-        }
+-    }
+-    
+-    // Sort all fetched items by timestamp descending
+-    activities.sortByDescending { it.timestamp }
+-    
+-    // Return top 5
+-    return DashboardActivityFeedDto(activities.take(5))
+-}
+-```
+-**Data Access**: Existing repositories (e.g., `ReferralRepository`, `NotificationRepository`, `AssessmentAssignmentRepository`) will need custom queries (e.g., `findTop5By...OrderByCreatedAtDesc`) to efficiently fetch recent items without loading entire tables into memory. The aggregation strategy is to execute parallel or sequential queries for the required types for each role (fetching up to 5 each), merge them into the `activities` list, sort them by `timestamp` descending in memory, and slice the top 5 to return.
+-
+-## 4. Frontend Integration
+-### API Client
+-- Create `DashboardActivityDto` interface mirroring the backend.
+-- Create a `useDashboardActivity` React Query hook scoped by `session.token`.
+-
+-### Component Updates (`DashboardView.tsx`)
+-- Map `DashboardActivityDto` to the UI's activity item format.
+-- The frontend mapper will use `ActivityType` to generate the correct localized text using Material Design 3 Web Components without relying on backend magic strings.
++# Architecture & Domain Design: Assessment Scale Catalog UI Rework
++
++## Component Boundaries
++- **`AssessmentCatalogManagementView.tsx` (Container)**: Responsible for orchestrating the view, fetching `AssessmentCatalogItemDto[]` from `useAssessmentCatalogManagement`, and mapping it to the generic `DataTable`. It manages the side-effects like opening the details dialog.
++- **`DataTable.tsx` (Presenter)**: A generic, domain-agnostic table component that receives `columns` and `data`.
++
++## Data Mapping & Column Definition
++The table will consume `AssessmentCatalogItemDto` directly, ensuring no intermediate `any` types.
++Columns:
++1. **量表名称 (Title & Subtitle)**
++2. **题目数量 (Question Count)**
++3. **预估用时 (Duration)**
++4. **状态 (Status / isEnabled)**
++
++## Interactivity & DDD
++- **Clickable Rows**: The row click (`onRowClick`) will replace the "查看详情" button and open the details view using `openScaleFullScreen(item)`.
++- **Filtering**: The `SegmentedButton` or any local filtering will be removed per the requirements.
++
++## Writable Files
++- `frontend/src/components/admin/AssessmentCatalogManagementView.tsx`
+diff --git a/.plans/task.md b/.plans/task.md
+index c0e5ddd..5b6c85e 100644
+--- a/.plans/task.md
++++ b/.plans/task.md
+@@ -1,82 +1,12 @@
+-# Implementation Plan: Recent Activity Feature (Dashboard)
+-
+-## Overview
+-Implement the complete "近期动态" (Recent Activity) feature across the Dashboard for all roles. The plan involves strictly aligning the backend API with the `architecture.md` specification, extracting magic strings into a centralized frontend UI mapper, and populating the data efficiently per role.
+-
+-## Requirements
+-- Synchronize `ActivityType` enum with the exact specification in `architecture.md`.
+-- Implement data aggregation in `DashboardService.kt` for each of the 6 roles, sorting activities by `timestamp` descending.
+-- Utilize a centralized mapper in the frontend to translate `ActivityType` into localized Material Design UI components without relying on backend strings.
+-- Pass the mapped activities into `DashboardView` across all role pages.
+-
+-## Architecture Changes
+-- Backend DTO: `DashboardActivityDto.kt` needs `ActivityType` updated.
+-- Backend Service: `DashboardService.kt` requires querying multiple repositories and assembling the lists per role.
+-- Frontend Config/Utils: `src/utils/activityMapper.ts` (new) will encapsulate the conversion of `ActivityType` to localized UI details.
+-- Frontend UI: Update `*Page.tsx` dashboards to use the centralized UI mapper instead of inline formatting.
+-
+-## Implementation Steps
+-
+-### Phase 1: Backend DTO & Service Synchronization (3 files)
+-1. **Update ActivityType Enum** (File: `backend/src/main/kotlin/com/medicalsystem/backend/dto/DashboardActivityDto.kt`)
+-   - Action: Update `ActivityType` enum to match the 10 values exactly as outlined in `architecture.md` (e.g. `REFERRAL_STATUS_UPDATED`, `HIGH_RISK_ASSESSMENT_SUBMITTED`, etc.).
+-   - Why: Ensures contract parity between architecture, backend, and frontend.
+-   - Dependencies: None
+-   - Risk: Low
+-
+-2. **Implement Role Aggregation Logic** (File: `backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt`)
+-   - Action: In `getRecentActivity(user)`, query appropriate repositories (`notificationJpaRepository`, `assessmentAssignmentRepository`, `referralJpaRepository`) according to the queries specified in `architecture.md` for each role. Note: For `HIGH_RISK_ASSESSMENT_SUBMITTED`, query `notificationJpaRepository` for relevant `NotificationMessageCode` (like `ASSESSMENT_COMPLETED_TEACHER` or `ASSESSMENT_HIGH_RISK_ALERT_HC`). Merge, sort by timestamp DESC, and limit to top 5.
+-   - Why: Core feature requirement to populate dashboard feed.
+-   - Dependencies: Step 1
+-   - Risk: Medium (complex querying and mapping required)
+-
+-3. **Add Service Tests** (File: `backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt`)
+-   - Action: Add/update unit test cases validating the aggregation and correct return of top 5 activities for a subset of roles (e.g., Student and Teacher).
+-   - Why: Regression prevention.
+-   - Dependencies: Step 2
+-   - Risk: Low
+-
+-### Phase 2: Frontend Data Contract & UI Mapping (3 files)
+-4. **Update Frontend API Contract** (File: `frontend/src/api/dashboard.ts`)
+-   - Action: Update `ActivityType` type to match the new backend enum exactly.
+-   - Why: Resolves TypeScript compilation checks.
+-   - Dependencies: Step 1
+-   - Risk: Low
+-
+-5. **Update MSW Mocks** (File: `frontend/src/mocks/data/dashboard.ts`)
+-   - Action: Ensure `mockDashboardActivities` includes appropriate dummy data matching the newly updated `ActivityType` enum across different roles.
+-   - Why: Required to support offline/local development without backend connectivity.
+-   - Dependencies: Step 4
+-   - Risk: Low
+-
+-6. **Create Activity UI Mapper** (File: `frontend/src/utils/activityMapper.ts`)
+-   - Action: Create and export a function `mapActivityTypeToUI(activity: DashboardActivityDto)` returning an object with `{ title: string, statusText: string, statusType: ActivityStatusType }`. Map all 10 `ActivityType` enum values to localized text strings that align with Material Design specs (e.g. error, info, neutral).
+-   - Why: Replaces hardcoded UI text logic in the view pages and enforces localization without relying on backend presentation strings.
+-   - Dependencies: Step 4
+-   - Risk: Low
+-
+-### Phase 3: Connect Frontend Views (6 files)
+-7. **Integrate Mapper into Dashboards** (Files: `frontend/src/pages/StudentPage.tsx`, `frontend/src/pages/TeacherPage.tsx`, `frontend/src/pages/HeadCouncillorPage.tsx`, `frontend/src/pages/TrialAdminPage.tsx`, `frontend/src/pages/DoctorPage.tsx`, `frontend/src/pages/AdminPage.tsx`)
+-   - Action: Import `mapActivityTypeToUI` and replace the inline `activities` `.map()` logic passed to `DashboardView` with this new function.
+-   - Why: Rollout mapped changes across all role dashboards and keeps code DRY.
+-   - Dependencies: Step 6
+-   - Risk: Low
+-
+-## Testing Strategy
+-- Unit Tests: Test the logic of `DashboardService.getRecentActivity` ensuring max 5 items are fetched, sorted properly, and mapped correctly from repository entities.
+-- Typescript Check: Ensure no compilation errors (`npm run lint` / `tsc --noEmit`) post mapper integration.
+-- MSW Verification: Render the React components with MSW providing the updated mock datasets.
+-
+-## Writable Files
+-- `backend/src/main/kotlin/com/medicalsystem/backend/dto/DashboardActivityDto.kt`
+-- `backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt`
+-- `backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt`
+-- `frontend/src/api/dashboard.ts`
+-- `frontend/src/mocks/data/dashboard.ts`
+-- `frontend/src/utils/activityMapper.ts`
+-- `frontend/src/pages/StudentPage.tsx`
+-- `frontend/src/pages/TeacherPage.tsx`
+-- `frontend/src/pages/HeadCouncillorPage.tsx`
+-- `frontend/src/pages/TrialAdminPage.tsx`
+-- `frontend/src/pages/DoctorPage.tsx`
+-- `frontend/src/pages/AdminPage.tsx`
++# Execution Plan: Assessment Scale Catalog UI Rework
++
++## Task 1: Update AssessmentCatalogManagementView.tsx
++1. Import `DataTable` and `ColumnDefinition`.
++2. Define the `columns` array matching `AssessmentCatalogItemDto` (Title/Subtitle, Question Count, Duration, Status).
++3. Remove the existing card grid layout (`<div className="grid...">` and its contents).
++4. Remove the filtering logic (e.g., `SegmentedButton` if it exists).
++5. Replace the grid with `<DataTable columns={columns} data={catalog || []} onRowClick={(item) => openScaleFullScreen(item)} />`.
++6. Ensure the parent container uses `flex-1 overflow-hidden` to allow `DataTable` to scroll natively.
++
++## Task 2: Verify Tests
++1. Update `frontend/src/components/admin/AssessmentCatalogManagementView.test.tsx` to assert the presence of a table layout rather than the old card format, if necessary.
+diff --git a/.tree.txt b/.tree.txt
+index 297dec4..e69de29 100644
+--- a/.tree.txt
++++ b/.tree.txt
+@@ -1,210 +0,0 @@
+-.
+-./PRD.md
+-./.DS_Store
+-./frontend
+-./frontend/index.html
+-./frontend/update_frontend_enums.mjs
+-./frontend/dist
+-./frontend/test-puppeteer.ts
+-./frontend/Dockerfile
+-./frontend/node_modules
+-./frontend/public
+-./frontend/public/mockServiceWorker.js
+-./frontend/fix_syntax.cjs
+-./frontend/rewrite_api.cjs
+-./frontend/package-lock.json
+-./frontend/package.json
+-./frontend/tsconfig.json
+-./frontend/nginx.conf
+-./frontend/.env.example
+-./frontend/vite.config.ts
+-./frontend/coverage
+-./frontend/coverage/index.html
+-./frontend/coverage/contexts
+-./frontend/coverage/block-navigation.js
+-./frontend/coverage/clover.xml
+-./frontend/coverage/config
+-./frontend/coverage/utils
+-./frontend/coverage/prettify.js
+-./frontend/coverage/components
+-./frontend/coverage/favicon.png
+-./frontend/coverage/prettify.css
+-./frontend/coverage/hooks
+-./frontend/coverage/sorter.js
+-./frontend/coverage/base.css
+-./frontend/coverage/sort-arrow-sprite.png
+-./frontend/coverage/coverage-final.json
+-./frontend/src
+-./frontend/src/mocks
+-./frontend/src/App.tsx
+-./frontend/src/main.tsx
+-./frontend/src/types
+-./frontend/src/contexts
+-./frontend/src/config
+-./frontend/src/utils
+-./frontend/src/index.css
+-./frontend/src/components
+-./frontend/src/vite-env.d.ts
+-./frontend/src/hooks
+-./frontend/src/api
+-./frontend/src/pages
+-./dist
+-./.tree.txt
+-./.git_log.txt
+-./node_modules
+-./.agents
+-./.agents/plans
+-./.agents/plans/robust-assessment-api.md
+-./.agents/plans/dashboard-action-metrics.md
+-./.agents/plans/elevate-psychometric-test-to-entity.md
+-./.agents/plans/refactor-scoring-and-risk.md
+-./.agents/plans/refactor-assessment-service.md
+-./.agents/plans/medical-assessments-system.md
+-./.agents/plans/migrate-assessment-catalog.md
+-./.agents/plans/migrate-assessment-catalog-to-json.md
+-./.agents/plans/add-source-assignment-id-to-psychometric-test.md
+-./metadata.json
+-./screenshot.png
+-./.claude
+-./.claude/settings.local.json
+-./backend
+-./backend/mvnw.cmd
+-./backend/Dockerfile
+-./backend/target
+-./backend/target/test-classes
+-./backend/target/generated-sources
+-./backend/target/classes
+-./backend/target/jacoco.exec
+-./backend/target/maven-status
+-./backend/target/generated-test-sources
+-./backend/target/site
+-./backend/target/surefire-reports
+-./backend/fix_imports.py
+-./backend/pom.xml
+-./backend/HELP.md
+-./backend/fix_tests.py
+-./backend/.gitignore
+-./backend/.mvn
+-./backend/.mvn/wrapper
+-./backend/.gitattributes
+-./backend/refactor_profiles.py
+-./backend/mvnw
+-./backend/.idea
+-./backend/.idea/dataSources
+-./backend/.idea/dataSources.xml
+-./backend/.idea/dataSources.local.xml
+-./backend/.idea/encodings.xml
+-./backend/.idea/jarRepositories.xml
+-./backend/.idea/vcs.xml
+-./backend/.idea/.gitignore
+-./backend/.idea/workspace.xml
+-./backend/.idea/kotlinc.xml
+-./backend/.idea/misc.xml
+-./backend/.idea/compiler.xml
+-./backend/src
+-./backend/src/test
+-./backend/src/main
+-./docs
+-./docs/specs
+-./docs/specs/complete-visibility-policy.md
+-./docs/specs/referral-visibility-spec.md
+-./.git_ls_files.txt
+-./README.md
+-./.gitignore
+-./.github
+-./.github/workflows
+-./.github/workflows/deploy.yml
+-./.agent
+-./.agent/skills
+-./.agent/skills/idea-refine
+-./.agent/skills/clean-code
+-./.agent/skills/debugging-and-error-recovery
+-./.agent/skills/using-agent-skills
+-./.agent/skills/test-driven-development
+-./.agent/skills/planning-and-task-breakdown
+-./.agent/skills/incremental-implementation
+-./.agent/skills/api-and-interface-design
+-./.agent/skills/architect-plan-review
+-./.agent/skills/domain-analysis
+-./.agent/skills/ci-cd-and-automation
+-./.agent/skills/context-engineering
+-./.agent/skills/frontend-ui-engineering
+-./.agent/skills/shipping-and-launch
+-./.agent/skills/spec-driven-development
+-./.agent/skills/code-review-and-quality
+-./.agent/skills/security-and-hardening
+-./.agent/skills/mysql
+-./.agent/skills/deprecation-and-migration
+-./.agent/skills/observability-and-instrumentation
+-./.agent/skills/interview-me
+-./.agent/skills/code-simplification
+-./.agent/skills/doubt-driven-development
+-./.agent/skills/source-driven-development
+-./.agent/skills/material-design
+-./.agent/skills/domain-driven-design
+-./.agent/skills/performance-optimization
+-./.agent/skills/browser-testing-with-devtools
+-./.agent/skills/architect-consultation
+-./.agent/skills/git-workflow-and-versioning
+-./.agent/skills/documentation-and-adrs
+-./docker-compose.yml
+-./GEMINI.md
+-./.ai
+-./.ai/project-index.md
+-./.ai/reference
+-./.ai/reference/assessment-ui.md
+-./.ai/reference/frontend-api-state.md
+-./.ai/reference/components.md
+-./.ai/reference/security-errors.md
+-./.ai/reference/backend-services.md
+-./.ai/reference/backend-data.md
+-./.git
+-./test-metadata.js
+-./.git_files.txt
+-./coverage
+-./coverage/index.html
+-./coverage/contexts
+-./coverage/contexts/SidebarContext.tsx.html
+-./coverage/contexts/index.html
+-./coverage/contexts/AuthContext.tsx.html
+-./coverage/contexts/DetailsContext.tsx.html
+-./coverage/block-navigation.js
+-./coverage/clover.xml
+-./coverage/config
+-./coverage/config/index.html
+-./coverage/config/layoutConstants.ts.html
+-./coverage/utils
+-./coverage/utils/index.html
+-./coverage/utils/referralUtils.ts.html
+-./coverage/utils/dateUtils.ts.html
+-./coverage/prettify.js
+-./coverage/components
+-./coverage/components/records
+-./coverage/components/dashboard
+-./coverage/components/common
+-./coverage/favicon.png
+-./coverage/prettify.css
+-./coverage/hooks
+-./coverage/hooks/index.html
+-./coverage/hooks/useReferralActions.ts.html
+-./coverage/sorter.js
+-./coverage/base.css
+-./coverage/sort-arrow-sprite.png
+-./coverage/coverage-final.json
+-./.git_status.txt
+-./.vite
+-./.vite/deps
+-./.vite/deps/_metadata.json
+-./.vite/deps/package.json
+-./.idea
+-./.idea/dataSources
+-./.idea/dataSources/983e841d-4633-4dc2-b1fd-6854cc7f2ba7.xml
+-./.idea/dataSources/983e841d-4633-4dc2-b1fd-6854cc7f2ba7
+-./.idea/dataSources.xml
+-./.idea/dataSources.local.xml
+-./.idea/medical-system.iml
+-./.idea/vcs.xml
+-./.idea/.gitignore
+-./.idea/workspace.xml
+-./.idea/modules.xml
+-./.idea/misc.xml
+diff --git a/frontend/src/components/admin/AssessmentCatalogManagementView.test.tsx b/frontend/src/components/admin/AssessmentCatalogManagementView.test.tsx
+index 1908916..20787e2 100644
+--- a/frontend/src/components/admin/AssessmentCatalogManagementView.test.tsx
++++ b/frontend/src/components/admin/AssessmentCatalogManagementView.test.tsx
+@@ -68,20 +68,23 @@ describe('AssessmentCatalogManagementView', () => {
+     cleanup();
+   });
+ 
+-  it('renders scale catalog items and action buttons', () => {
++  it('renders scale catalog items and table columns', () => {
+     render(<AssessmentCatalogManagementView />);
+ 
+     expect(screen.getByText('抑郁症筛查量表 (PHQ-9)')).toBeDefined();
+     expect(screen.getByText('广泛性焦虑量表 (GAD-7)')).toBeDefined();
+-    expect(screen.getAllByText('查看详情').length).toBe(2);
++    expect(screen.getByText('量表名称')).toBeDefined();
++    expect(screen.getByText('题目数量')).toBeDefined();
++    expect(screen.getByText('预估用时')).toBeDefined();
++    expect(screen.getByText('状态')).toBeDefined();
+     expect(screen.getAllByText('指派测评').length).toBe(2);
+   });
+ 
+-  it('opens full-screen details view when clicking 查看详情', () => {
++  it('opens full-screen details view when clicking on a row', () => {
+     render(<AssessmentCatalogManagementView />);
+ 
+-    const viewBtns = screen.getAllByText('查看详情');
+-    fireEvent.click(viewBtns[0]);
++    const rowItem = screen.getByText('抑郁症筛查量表 (PHQ-9)');
++    fireEvent.click(rowItem);
+ 
+     // Full screen view is opened
+     expect(screen.getByText('量表题目明细与临床常模配置')).toBeDefined();
+@@ -193,33 +196,4 @@ describe('AssessmentCatalogManagementView', () => {
+     fireEvent.click(retryBtn);
+     expect(mockRefetch).toHaveBeenCalled();
+   });
+-
+-  it('renders segmented button with text-only labels', () => {
+-    render(<AssessmentCatalogManagementView />);
+-
+-    expect(screen.getByText('量表列表')).toBeDefined();
+-    expect(screen.getByText('指派历史')).toBeDefined();
+-  });
+-
+-  it('switches between catalog card grid and empty history placeholder view via segmented button', () => {
+-    render(<AssessmentCatalogManagementView />);
+-
+-    // Initially on catalog view
+-    expect(screen.getByText('抑郁症筛查量表 (PHQ-9)')).toBeDefined();
+-    expect(screen.queryByText('暂无指派历史')).toBeNull();
+-
+-    // Click history segment
+-    fireEvent.click(screen.getByText('指派历史'));
+-
+-    // History view is shown, catalog cards are hidden
+-    expect(screen.getByText('暂无指派历史')).toBeDefined();
+-    expect(screen.queryByText('抑郁症筛查量表 (PHQ-9)')).toBeNull();
+-
+-    // Click catalog segment
+-    fireEvent.click(screen.getByText('量表列表'));
+-
+-    // Catalog cards are restored
+-    expect(screen.getByText('抑郁症筛查量表 (PHQ-9)')).toBeDefined();
+-    expect(screen.queryByText('暂无指派历史')).toBeNull();
+-  });
+ });
+diff --git a/frontend/src/components/admin/AssessmentCatalogManagementView.tsx b/frontend/src/components/admin/AssessmentCatalogManagementView.tsx
+index 10d4566..9fddb52 100644
+--- a/frontend/src/components/admin/AssessmentCatalogManagementView.tsx
++++ b/frontend/src/components/admin/AssessmentCatalogManagementView.tsx
+@@ -2,19 +2,14 @@ import React, { useState } from 'react';
+ import { motion, AnimatePresence } from 'motion/react';
+ import { useAssessmentCatalogManagement } from '../../hooks/useAssessmentCatalogManagement';
+ import { AssessmentCatalogItemDto } from '../../types';
+-import { PrimaryButton, TertiaryButton, OutlinedButton, SegmentedButton } from '../common/Buttons';
++import { PrimaryButton, TertiaryButton, OutlinedButton } from '../common/Buttons';
+ import { GenericDialog } from '../common/GenericDialog';
+ import { useCreationOverlay } from '../../contexts/CreationContext';
+ import { AssessmentAssignmentCreationForm } from '../assessments/AssessmentAssignmentCreationForm';
+ import { AssessmentScaleDetailsFullScreen } from '../assessments/AssessmentScaleDetailsFullScreen';
+-
+-export const CATALOG_VIEW_SEGMENTS = [
+-  { label: '量表列表', value: 'catalog' },
+-  { label: '指派历史', value: 'history' },
+-];
++import { DataTable, ColumnDefinition } from '../common/DataTable';
+ 
+ export const AssessmentCatalogManagementView: React.FC = () => {
+-  const [activeTab, setActiveTab] = useState<string>('catalog');
+   const { catalog, isLoading, isError, refetch, toggleAvailability, isToggling } = useAssessmentCatalogManagement();
+   const { openCreation, closeCreation } = useCreationOverlay();
+   const [togglingCode, setTogglingCode] = useState<string | null>(null);
+@@ -44,185 +39,157 @@ export const AssessmentCatalogManagementView: React.FC = () => {
+     );
+   };
+ 
+-  return (
+-    <div className="w-full h-full flex flex-col pt-5 overflow-hidden relative">
+-      {/* Segmented Button Navigation */}
+-      <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-5 pt-5 px-6 mb-6 flex items-center justify-start">
+-        <SegmentedButton
+-          items={CATALOG_VIEW_SEGMENTS}
+-          selectedValue={activeTab}
+-          onChange={(value) => setActiveTab(value)}
+-        />
+-      </div>
+-
+-      {activeTab === 'catalog' ? (
+-        /* Catalog Grid — scrollable portrait cards */
+-        <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-20 custom-scrollbar">
+-          {isLoading ? (
+-            <div className="p-12 text-center text-sm text-[var(--md-sys-color-on-surface-variant)]">
+-              正在加载量表目录...
+-            </div>
+-          ) : isError ? (
+-            <div className="p-12 text-center">
+-              <p className="text-sm text-[var(--md-sys-color-error)] mb-3">加载量表目录失败</p>
+-              <PrimaryButton
+-                label="重试"
+-                onClick={() => refetch()}
+-                className="h-8"
+-              />
+-            </div>
+-          ) : (
+-            <div className="max-w-[800px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+-              {catalog.map((item) => {
+-                const isAvailable = item.isEnabled !== false;
+-                const isBusy = isToggling && togglingCode === item.batteryCode;
+-                const anchorId = `scale-menu-${item.batteryCode.replace(/[^a-zA-Z0-9_-]/g, '')}`;
++  const columns: ColumnDefinition<AssessmentCatalogItemDto>[] = [
++    {
++      key: 'title',
++      label: '量表名称',
++      width: 'w-[40%]',
++      render: (item) => (
++        <div className="flex flex-col py-1">
++          <span className="font-semibold text-[14px] text-[var(--md-sys-color-on-surface)]">{item.title}</span>
++          {item.subtitle && (
++            <span className="text-xs text-[var(--md-sys-color-on-surface-variant)] opacity-80 mt-0.5">
++              {item.subtitle}
++            </span>
++          )}
++        </div>
++      )
++    },
++    {
++      key: 'questionCount',
++      label: '题目数量',
++      width: 'w-[15%]',
++      render: (item) => (
++        <span className="text-sm text-[var(--md-sys-color-on-surface-variant)]">{item.questionCount} 题</span>
++      )
++    },
++    {
++      key: 'duration',
++      label: '预估用时',
++      width: 'w-[15%]',
++      render: (item) => (
++        <span className="text-sm text-[var(--md-sys-color-on-surface-variant)]">{item.duration}</span>
++      )
++    },
++    {
++      key: 'status',
++      label: '状态',
++      width: 'w-[15%]',
++      render: (item) => {
++        const isAvailable = item.isEnabled !== false;
++        return (
++          <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md ${
++            isAvailable 
++              ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
++              : 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]'
++          }`}>
++            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
++              isAvailable ? 'bg-[var(--md-sys-color-primary)]' : 'bg-[var(--md-sys-color-outline)]'
++            }`} />
++            {isAvailable ? '正常可用' : '已隐藏'}
++          </span>
++        );
++      }
++    },
++    {
++      key: 'actions',
++      label: '操作',
++      width: 'w-[15%]',
++      overflowVisible: true,
++      render: (item) => {
++        const isAvailable = item.isEnabled !== false;
++        const anchorId = `scale-menu-${item.batteryCode.replace(/[^a-zA-Z0-9_-]/g, '')}`;
++        return (
++          <div className="flex items-center justify-end gap-1 pr-2" onClick={(e) => e.stopPropagation()}>
++            <OutlinedButton 
++              label="指派测评"
++              disabled={!isAvailable}
++              onClick={() => handleOpenAssign(item)}
++              className="h-8 !px-2.5 text-xs"
++              noCollapse
++            />
++            <div className="relative shrink-0 flex items-center justify-center">
++              <md-icon-button
++                id={anchorId}
++                className="scale-90 text-[var(--md-sys-color-on-surface-variant)] cursor-pointer"
++                onClick={(e: React.MouseEvent) => {
++                  e.stopPropagation();
++                  setActiveMenuCode(activeMenuCode === item.batteryCode ? null : item.batteryCode);
++                }}
++              >
++                <md-icon>more_horiz</md-icon>
++              </md-icon-button>
+ 
+-                return (
+-                  <div
+-                    key={item.batteryCode}
+-                    className={`group relative flex flex-col justify-between px-4 pt-3 pb-3.5 rounded-3xl transition-all duration-200 min-h-[280px] ${
+-                      isAvailable
+-                        ? 'bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container)]'
+-                        : 'bg-[var(--md-sys-color-surface-container-lowest)] opacity-75'
+-                    }`}
++              <md-menu
++                anchor={anchorId}
++                open={activeMenuCode === item.batteryCode}
++                onClosed={() => {
++                  if (activeMenuCode === item.batteryCode) setActiveMenuCode(null);
++                }}
++                quick
++                style={{
++                  minWidth: '150px',
++                  '--md-menu-item-focus-outline-width': '0',
++                  '--md-menu-item-selected-outline-width': '0',
++                  zIndex: 100,
++                } as React.CSSProperties}
++              >
++                {isAvailable ? (
++                  <md-menu-item
++                    onClick={(e) => {
++                      e.stopPropagation();
++                      setActiveMenuCode(null);
++                      setPendingHideScale(item);
++                    }}
+                   >
+-                    <div className="flex flex-col flex-1">
+-                      {/* Top row: Markers (Availability, Time, Questions) + 3-dots Menu Button */}
+-                      <div className="flex items-center justify-between min-h-[24px] mb-1">
+-                        <div className="flex items-center gap-1.5 min-w-0 text-[11px] font-medium">
+-                          <span
+-                            className={`inline-flex items-center gap-1 shrink-0 ${
+-                              isAvailable ? 'text-[var(--md-sys-color-on-surface-variant)]' : 'text-[var(--md-sys-color-outline)]'
+-                            }`}
+-                          >
+-                            <span
+-                              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+-                                isAvailable ? 'bg-[var(--md-sys-color-primary)]' : 'bg-[var(--md-sys-color-outline)]'
+-                              }`}
+-                            />
+-                            {isAvailable ? '正常可用' : '已隐藏'}
+-                          </span>
+-                          <span className="opacity-30 shrink-0">·</span>
+-                          <span className="text-[var(--md-sys-color-on-surface-variant)] opacity-75 tabular-nums truncate">
+-                            {item.duration}
+-                          </span>
+-                          <span className="opacity-30 shrink-0">·</span>
+-                          <span className="text-[var(--md-sys-color-on-surface-variant)] opacity-75 tabular-nums shrink-0">
+-                            {item.questionCount} 题
+-                          </span>
+-                        </div>
+-
+-                        <div className="relative shrink-0">
+-                          <md-icon-button
+-                            id={anchorId}
+-                            className="scale-75 -mr-2 -my-1 text-[var(--md-sys-color-on-surface-variant)] cursor-pointer"
+-                            title="更多选项"
+-                            disabled={isBusy}
+-                            onClick={(e: React.MouseEvent) => {
+-                              e.stopPropagation();
+-                              setActiveMenuCode(activeMenuCode === item.batteryCode ? null : item.batteryCode);
+-                            }}
+-                          >
+-                            <md-icon>more_horiz</md-icon>
+-                          </md-icon-button>
+-
+-                          <md-menu
+-                            anchor={anchorId}
+-                            open={activeMenuCode === item.batteryCode}
+-                            onClosed={() => {
+-                              if (activeMenuCode === item.batteryCode) setActiveMenuCode(null);
+-                            }}
+-                            quick
+-                            style={{
+-                              minWidth: '150px',
+-                              '--md-menu-item-focus-outline-width': '0',
+-                              '--md-menu-item-selected-outline-width': '0',
+-                              zIndex: 100,
+-                            } as React.CSSProperties}
+-                          >
+-                            {isAvailable ? (
+-                              <md-menu-item
+-                                onClick={() => {
+-                                  setActiveMenuCode(null);
+-                                  setPendingHideScale(item);
+-                                }}
+-                              >
+-                                <md-icon slot="start">visibility_off</md-icon>
+-                                <div slot="headline">隐藏量表</div>
+-                              </md-menu-item>
+-                            ) : (
+-                              <md-menu-item
+-                                onClick={() => {
+-                                  setActiveMenuCode(null);
+-                                  handleToggle(item, true);
+-                                }}
+-                              >
+-                                <md-icon slot="start">visibility</md-icon>
+-                                <div slot="headline">启用上线</div>
+-                              </md-menu-item>
+-                            )}
+-                          </md-menu>
+-                        </div>
+-                      </div>
+-
+-                      {/* Title */}
+-                      <h3
+-                        className={`text-[14px] font-bold leading-snug mb-1.5 ${
+-                          isAvailable ? 'text-[var(--md-sys-color-on-surface)]' : 'text-[var(--md-sys-color-outline)]'
+-                        }`}
+-                      >
+-                        {item.title}
+-                      </h3>
+-
+-                      {/* Description */}
+-                      <p
+-                        className={`text-xs leading-relaxed flex-1 line-clamp-3 mb-3 ${
+-                          isAvailable ? 'text-[var(--md-sys-color-on-surface-variant)]' : 'text-[var(--md-sys-color-outline)]'
+-                        }`}
+-                      >
+-                        {item.description || '暂无量表详细描述'}
+-                      </p>
+-                    </div>
+-
+-                    {/* Actions: View Details (Outlined) + Assign (Outlined) */}
+-                    <div className="flex items-center gap-1.5 pt-2">
+-                      <OutlinedButton
+-                        label="查看详情"
+-                        onClick={() => setViewingScale(item)}
+-                        className="flex-1 h-8 !px-1.5 text-xs justify-center"
+-                        style={{
+-                          '--md-outlined-button-leading-space': '8px',
+-                          '--md-outlined-button-trailing-space': '8px',
+-                        } as React.CSSProperties}
+-                        noCollapse
+-                      />
+-                      <OutlinedButton
+-                        icon="assignment_add"
+-                        label="指派测评"
+-                        onClick={() => handleOpenAssign(item)}
+-                        disabled={!isAvailable}
+-                        className="flex-1 h-8 !px-1.5 text-xs justify-center"
+-                        iconSize="16px"
+-                        style={{
+-                          '--md-outlined-button-leading-space': '8px',
+-                          '--md-outlined-button-trailing-space': '8px',
+-                        } as React.CSSProperties}
+-                        noCollapse
+-                      />
+-                    </div>
+-                  </div>
+-                );
+-              })}
++                    <md-icon slot="start">visibility_off</md-icon>
++                    <div slot="headline">隐藏量表</div>
++                  </md-menu-item>
++                ) : (
++                  <md-menu-item
++                    onClick={(e) => {
++                      e.stopPropagation();
++                      setActiveMenuCode(null);
++                      handleToggle(item, true);
++                    }}
++                  >
++                    <md-icon slot="start">visibility</md-icon>
++                    <div slot="headline">启用上线</div>
++                  </md-menu-item>
++                )}
++              </md-menu>
+             </div>
+-          )}
+-        </div>
+-      ) : (
+-        /* Empty History View */
+-        <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-12 text-[var(--md-sys-color-on-surface-variant)]">
+-          <p className="text-sm">暂无指派历史</p>
+-        </div>
+-      )}
++          </div>
++        );
++      }
++    }
++  ];
++
++  return (
++    <div className="w-full h-full flex flex-col overflow-hidden bg-[var(--md-sys-color-surface)]">
++      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
++        {isLoading ? (
++          <div className="flex-1 min-h-0 flex items-center justify-center p-12 text-sm text-[var(--md-sys-color-on-surface-variant)]">
++            正在加载量表目录...
++          </div>
++        ) : isError ? (
++          <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-12">
++            <p className="text-sm text-[var(--md-sys-color-error)] mb-3">加载量表目录失败</p>
++            <PrimaryButton
++              label="重试"
++              onClick={() => refetch()}
++              className="h-8"
++            />
++          </div>
++        ) : (
++          <DataTable
++            columns={columns}
++            data={catalog}
++            onRowClick={(item) => setViewingScale(item)}
++            minWidth="900px"
++          />
++        )}
++      </div>
+ 
+       {/* Full-Screen Scale View */}
+       <AssessmentScaleDetailsFullScreen
+@@ -254,14 +221,11 @@ export const AssessmentCatalogManagementView: React.FC = () => {
+               }}
+               disabled={isToggling}
+             />
+-            <TertiaryButton
++            <PrimaryButton
+               label="确认隐藏"
+               style={{
+-                color: 'var(--md-sys-color-error)',
+-                '--md-text-button-label-text-color': 'var(--md-sys-color-error)',
+-                '--md-text-button-hover-label-text-color': 'var(--md-sys-color-error)',
+-                '--md-text-button-hover-state-layer-color': 'var(--md-sys-color-error)',
+-                '--md-text-button-pressed-label-text-color': 'var(--md-sys-color-error)',
++                '--md-sys-color-primary': 'var(--md-sys-color-error)',
++                '--md-sys-color-on-primary': 'var(--md-sys-color-on-error)',
+                 '--md-text-button-pressed-state-layer-color': 'var(--md-sys-color-error)',
+                 '--md-text-button-focus-label-text-color': 'var(--md-sys-color-error)',
+               } as React.CSSProperties}

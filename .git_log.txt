@@ -1,10 +1,10 @@
-b01fdb3 feat: add sourceAssignmentId to PsychometricTest to track test origins
-3b52d5a refactor: elevate PsychometricTest to a domain entity
-1c4b9ae refactor: simplify assessment scoring and risk evaluation
-b767a8c Migrate assessment catalog to static JSON files and refactor tests
-a5ffa21 feat: migrate assessment catalog to dynamic database structure
-15d0157 refactor: Decouple AssessmentService and enforce language-agnostic DTOs
-908d80a docs: create on-demand context for Assessment UI and link it in GEMINI.md
-b809eda feat: implement strict typed assessment api
-c4e6e57 feat: implement student assessment assignment and questionnaire answering system
-5d0f5a1 fix: correct doctor actionable referral policy and JPA criteria mapping
+418ccf3 refactor(frontend): port adaptive inset grouped list layout to triage and risk assessment markers
+0a80bdc test(frontend): update UserDetailsView tests to match dynamic copy button titles from GroupedInfoList
+73e7324 refactor(admin): port adaptive inset grouped list layout to UserDetailsView
+ab55ace fix(frontend): standardize layout gap between canvas header and content filter chips across admin views
+5982bb1 feat(search): implement role-adaptive global search and achieve 100% test coverage
+5e8fcbf fix(frontend): prevent avatar halo clipping by adding margin and setting overflowVisible on table columns
+81c8d36 fix(frontend): enhance outline contrast on selected status badges and add high-contrast avatar badge halo
+d1f982e feat(students): port adaptive inset grouped list for personal data in overview tab
+3320ae4 feat(frontend): standardize status badge and dot styling across tables and views
+946ab4f fix(frontend): target 127.0.0.1 in vite proxy to avoid node ipv6 connection refusal

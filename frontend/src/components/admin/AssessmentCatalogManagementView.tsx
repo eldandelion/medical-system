@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAssessmentCatalogManagement } from '../../hooks/useAssessmentCatalogManagement';
-import { AssessmentCatalogItemDto } from '../../types';
+import { AssessmentCatalogItemDto, Student } from '../../types';
 import { PrimaryButton, TertiaryButton, OutlinedButton, SegmentedButton } from '../common/Buttons';
 import { GenericDialog } from '../common/GenericDialog';
 import { useCreationOverlay } from '../../contexts/CreationContext';
@@ -14,15 +14,20 @@ export const CATALOG_VIEW_SEGMENTS = [
   { label: '量表列表', value: 'catalog' },
   { label: '指派历史', value: 'history' },
 ];
+export interface AssessmentCatalogManagementViewProps {
+  onStudentSelect?: (student: Student) => void;
+  selectedStudentId?: string;
+}
 
-export const AssessmentCatalogManagementView: React.FC = () => {
+export const AssessmentCatalogManagementView: React.FC<AssessmentCatalogManagementViewProps> = ({ onStudentSelect, selectedStudentId }) => {
   const [activeTab, setActiveTab] = useState<string>('catalog');
   const { catalog, isLoading, isError, refetch, toggleAvailability, isToggling } = useAssessmentCatalogManagement();
   const { openCreation, closeCreation } = useCreationOverlay();
   const [togglingCode, setTogglingCode] = useState<string | null>(null);
-    const [pendingHideScale, setPendingHideScale] = useState<AssessmentCatalogItemDto | null>(null);
+  const [pendingHideScale, setPendingHideScale] = useState<AssessmentCatalogItemDto | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [viewingScale, setViewingScale] = useState<AssessmentCatalogItemDto | null>(null);
+
 
   const handleToggle = async (item: AssessmentCatalogItemDto, explicitState?: boolean) => {
     const nextState = explicitState !== undefined ? explicitState : item.isEnabled === false;
@@ -182,7 +187,7 @@ export const AssessmentCatalogManagementView: React.FC = () => {
         </div>
       ) : (
         <div className="flex-1 min-h-0 flex flex-col">
-          <DispatchHistoryTab />
+          <DispatchHistoryTab onSelect={onStudentSelect} selectedStudentId={selectedStudentId} />
         </div>
       )}
 

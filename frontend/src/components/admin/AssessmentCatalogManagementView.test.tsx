@@ -25,6 +25,18 @@ vi.mock('../../hooks/useAssessmentCatalogManagement', () => ({
 const mockOpenCreation = vi.fn();
 const mockCloseCreation = vi.fn();
 
+vi.mock('../../contexts/AuthContext', () => ({
+  useAuth: () => ({
+    session: { token: 'mock-token', user: { role: 'ADMIN' } },
+    isAuthenticated: true
+  })
+}));
+
+vi.mock('../../hooks/useAssessmentDispatchHistory', () => ({
+  useAssessmentDispatches: () => ({ data: [] }),
+  useAssessmentDispatchHistory: () => ({ data: { content: [] }, isLoading: false })
+}));
+
 vi.mock('../../contexts/CreationContext', () => ({
   useCreationOverlay: () => ({
     openCreation: mockOpenCreation,
@@ -189,17 +201,16 @@ describe('AssessmentCatalogManagementView', () => {
     expect(screen.getByText('指派历史')).toBeDefined();
   });
 
-  it('switches between catalog table and empty history placeholder view via segmented button', () => {
+  it('switches between catalog table and history view via segmented button', () => {
     render(<AssessmentCatalogManagementView />);
     expect(screen.getByText('抑郁症筛查量表 (PHQ-9)')).toBeDefined();
-    expect(screen.queryByText('暂无指派历史')).toBeNull();
 
     fireEvent.click(screen.getByText('指派历史'));
-    expect(screen.getByText('暂无指派历史')).toBeDefined();
+    // DispatchHistoryTab is now rendered, so we check for one of its elements instead of placeholder
+    expect(screen.getByText(/指派批次/i)).toBeDefined();
     expect(screen.queryByText('抑郁症筛查量表 (PHQ-9)')).toBeNull();
 
     fireEvent.click(screen.getByText('量表列表'));
     expect(screen.getByText('抑郁症筛查量表 (PHQ-9)')).toBeDefined();
-    expect(screen.queryByText('暂无指派历史')).toBeNull();
   });
 });

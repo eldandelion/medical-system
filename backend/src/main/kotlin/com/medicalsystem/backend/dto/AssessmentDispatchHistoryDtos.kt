@@ -13,8 +13,11 @@ data class AssessmentDispatchSummaryDto(
 
 data class ParticipationRecordDto(
     val assignmentId: Long,
+    val studentId: Long,
     val studentName: String,
     val studentNumber: String,
     val status: AssessmentStatus,
-    val severity: ResultSeverity
+    val severity: ResultSeverity,
+    val assessmentName: String,
+    val dispatchedAt: LocalDateTime?
 )

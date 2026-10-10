@@ -1,12 +1,28 @@
-On branch feature/medical-assessments-system
+On branch main
+Your branch is up to date with 'origin/main'.
+
 Changes not staged for commit:
   (use "git add <file>..." to update what will be committed)
   (use "git restore <file>..." to discard changes in working directory)
 	modified:   .git_log.txt
+	modified:   .git_ls_files.txt
 	modified:   .git_status.txt
+	modified:   .tree.txt
+	modified:   backend/src/main/kotlin/com/medicalsystem/backend/controller/ReferralController.kt
+	modified:   backend/src/main/kotlin/com/medicalsystem/backend/model/Referral.kt
+	modified:   backend/src/main/kotlin/com/medicalsystem/backend/model/ReferralAction.kt
+	modified:   backend/src/main/kotlin/com/medicalsystem/backend/model/ReferralActionPolicy.kt
+	modified:   backend/src/main/kotlin/com/medicalsystem/backend/service/ReferralService.kt
+	modified:   backend/src/test/kotlin/com/medicalsystem/backend/model/ReferralActionPolicyTest.kt
+	modified:   frontend/src/components/records/ReferralActionFooter.tsx
+	modified:   frontend/src/components/records/ReferralDetailsView.tsx
+	modified:   frontend/src/hooks/useReferralActions.ts
+	modified:   frontend/src/types/index.ts
 
 Untracked files:
   (use "git add <file>..." to include in what will be committed)
-	.git_files.txt
+	backend/src/main/kotlin/com/medicalsystem/backend/dto/AdminArchiveReferralDto.kt
+	patch_test.sh
+	update_userdetails.js
 
 no changes added to commit (use "git add" and/or "git commit -a")

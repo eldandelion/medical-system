@@ -1,0 +1,427 @@
+diff --git a/frontend/src/components/admin/AssessmentCatalogManagementView.test.tsx b/frontend/src/components/admin/AssessmentCatalogManagementView.test.tsx
+index 1908916..20787e2 100644
+--- a/frontend/src/components/admin/AssessmentCatalogManagementView.test.tsx
++++ b/frontend/src/components/admin/AssessmentCatalogManagementView.test.tsx
+@@ -68,20 +68,23 @@ describe('AssessmentCatalogManagementView', () => {
+     cleanup();
+   });
+ 
+-  it('renders scale catalog items and action buttons', () => {
++  it('renders scale catalog items and table columns', () => {
+     render(<AssessmentCatalogManagementView />);
+ 
+     expect(screen.getByText('抑郁症筛查量表 (PHQ-9)')).toBeDefined();
+     expect(screen.getByText('广泛性焦虑量表 (GAD-7)')).toBeDefined();
+-    expect(screen.getAllByText('查看详情').length).toBe(2);
++    expect(screen.getByText('量表名称')).toBeDefined();
++    expect(screen.getByText('题目数量')).toBeDefined();
++    expect(screen.getByText('预估用时')).toBeDefined();
++    expect(screen.getByText('状态')).toBeDefined();
+     expect(screen.getAllByText('指派测评').length).toBe(2);
+   });
+ 
+-  it('opens full-screen details view when clicking 查看详情', () => {
++  it('opens full-screen details view when clicking on a row', () => {
+     render(<AssessmentCatalogManagementView />);
+ 
+-    const viewBtns = screen.getAllByText('查看详情');
+-    fireEvent.click(viewBtns[0]);
++    const rowItem = screen.getByText('抑郁症筛查量表 (PHQ-9)');
++    fireEvent.click(rowItem);
+ 
+     // Full screen view is opened
+     expect(screen.getByText('量表题目明细与临床常模配置')).toBeDefined();
+@@ -193,33 +196,4 @@ describe('AssessmentCatalogManagementView', () => {
+     fireEvent.click(retryBtn);
+     expect(mockRefetch).toHaveBeenCalled();
+   });
+-
+-  it('renders segmented button with text-only labels', () => {
+-    render(<AssessmentCatalogManagementView />);
+-
+-    expect(screen.getByText('量表列表')).toBeDefined();
+-    expect(screen.getByText('指派历史')).toBeDefined();
+-  });
+-
+-  it('switches between catalog card grid and empty history placeholder view via segmented button', () => {
+-    render(<AssessmentCatalogManagementView />);
+-
+-    // Initially on catalog view
+-    expect(screen.getByText('抑郁症筛查量表 (PHQ-9)')).toBeDefined();
+-    expect(screen.queryByText('暂无指派历史')).toBeNull();
+-
+-    // Click history segment
+-    fireEvent.click(screen.getByText('指派历史'));
+-
+-    // History view is shown, catalog cards are hidden
+-    expect(screen.getByText('暂无指派历史')).toBeDefined();
+-    expect(screen.queryByText('抑郁症筛查量表 (PHQ-9)')).toBeNull();
+-
+-    // Click catalog segment
+-    fireEvent.click(screen.getByText('量表列表'));
+-
+-    // Catalog cards are restored
+-    expect(screen.getByText('抑郁症筛查量表 (PHQ-9)')).toBeDefined();
+-    expect(screen.queryByText('暂无指派历史')).toBeNull();
+-  });
+ });
+diff --git a/frontend/src/components/admin/AssessmentCatalogManagementView.tsx b/frontend/src/components/admin/AssessmentCatalogManagementView.tsx
+index 10d4566..e0f9edc 100644
+--- a/frontend/src/components/admin/AssessmentCatalogManagementView.tsx
++++ b/frontend/src/components/admin/AssessmentCatalogManagementView.tsx
+@@ -2,19 +2,14 @@ import React, { useState } from 'react';
+ import { motion, AnimatePresence } from 'motion/react';
+ import { useAssessmentCatalogManagement } from '../../hooks/useAssessmentCatalogManagement';
+ import { AssessmentCatalogItemDto } from '../../types';
+-import { PrimaryButton, TertiaryButton, OutlinedButton, SegmentedButton } from '../common/Buttons';
++import { PrimaryButton, TertiaryButton, OutlinedButton } from '../common/Buttons';
+ import { GenericDialog } from '../common/GenericDialog';
+ import { useCreationOverlay } from '../../contexts/CreationContext';
+ import { AssessmentAssignmentCreationForm } from '../assessments/AssessmentAssignmentCreationForm';
+ import { AssessmentScaleDetailsFullScreen } from '../assessments/AssessmentScaleDetailsFullScreen';
+-
+-export const CATALOG_VIEW_SEGMENTS = [
+-  { label: '量表列表', value: 'catalog' },
+-  { label: '指派历史', value: 'history' },
+-];
++import { DataTable, ColumnDefinition } from '../common/DataTable';
+ 
+ export const AssessmentCatalogManagementView: React.FC = () => {
+-  const [activeTab, setActiveTab] = useState<string>('catalog');
+   const { catalog, isLoading, isError, refetch, toggleAvailability, isToggling } = useAssessmentCatalogManagement();
+   const { openCreation, closeCreation } = useCreationOverlay();
+   const [togglingCode, setTogglingCode] = useState<string | null>(null);
+@@ -44,185 +39,157 @@ export const AssessmentCatalogManagementView: React.FC = () => {
+     );
+   };
+ 
+-  return (
+-    <div className="w-full h-full flex flex-col pt-5 overflow-hidden relative">
+-      {/* Segmented Button Navigation */}
+-      <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-5 pt-5 px-6 mb-6 flex items-center justify-start">
+-        <SegmentedButton
+-          items={CATALOG_VIEW_SEGMENTS}
+-          selectedValue={activeTab}
+-          onChange={(value) => setActiveTab(value)}
+-        />
+-      </div>
+-
+-      {activeTab === 'catalog' ? (
+-        /* Catalog Grid — scrollable portrait cards */
+-        <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-20 custom-scrollbar">
+-          {isLoading ? (
+-            <div className="p-12 text-center text-sm text-[var(--md-sys-color-on-surface-variant)]">
+-              正在加载量表目录...
+-            </div>
+-          ) : isError ? (
+-            <div className="p-12 text-center">
+-              <p className="text-sm text-[var(--md-sys-color-error)] mb-3">加载量表目录失败</p>
+-              <PrimaryButton
+-                label="重试"
+-                onClick={() => refetch()}
+-                className="h-8"
+-              />
+-            </div>
+-          ) : (
+-            <div className="max-w-[800px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+-              {catalog.map((item) => {
+-                const isAvailable = item.isEnabled !== false;
+-                const isBusy = isToggling && togglingCode === item.batteryCode;
+-                const anchorId = `scale-menu-${item.batteryCode.replace(/[^a-zA-Z0-9_-]/g, '')}`;
++  const columns: ColumnDefinition<AssessmentCatalogItemDto>[] = [
++    {
++      key: 'title',
++      label: '量表名称',
++      width: 'w-[40%]',
++      render: (item) => (
++        <div className="flex flex-col py-1">
++          <span className="font-semibold text-[14px] text-[var(--md-sys-color-on-surface)]">{item.title}</span>
++          {item.subtitle && (
++            <span className="text-xs text-[var(--md-sys-color-on-surface-variant)] opacity-80 mt-0.5">
++              {item.subtitle}
++            </span>
++          )}
++        </div>
++      )
++    },
++    {
++      key: 'questionCount',
++      label: '题目数量',
++      width: 'w-[15%]',
++      render: (item) => (
++        <span className="text-sm text-[var(--md-sys-color-on-surface-variant)]">{item.questionCount} 题</span>
++      )
++    },
++    {
++      key: 'duration',
++      label: '预估用时',
++      width: 'w-[15%]',
++      render: (item) => (
++        <span className="text-sm text-[var(--md-sys-color-on-surface-variant)]">{item.duration}</span>
++      )
++    },
++    {
++      key: 'status',
++      label: '状态',
++      width: 'w-[15%]',
++      render: (item) => {
++        const isAvailable = item.isEnabled !== false;
++        return (
++          <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md ${
++            isAvailable 
++              ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
++              : 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]'
++          }`}>
++            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
++              isAvailable ? 'bg-[var(--md-sys-color-primary)]' : 'bg-[var(--md-sys-color-outline)]'
++            }`} />
++            {isAvailable ? '正常可用' : '已隐藏'}
++          </span>
++        );
++      }
++    },
++    {
++      key: 'actions',
++      label: '操作',
++      width: 'w-[15%]',
++      overflowVisible: true,
++      render: (item) => {
++        const isAvailable = item.isEnabled !== false;
++        const anchorId = `scale-menu-${item.batteryCode.replace(/[^a-zA-Z0-9_-]/g, '')}`;
++        return (
++          <div className="flex items-center justify-end gap-1 pr-2" onClick={(e) => e.stopPropagation()}>
++            <OutlinedButton 
++              label="指派测评"
++              disabled={!isAvailable}
++              onClick={() => handleOpenAssign(item)}
++              className="h-8 !px-2.5 text-xs"
++              noCollapse
++            />
++            <div className="relative shrink-0 flex items-center justify-center">
++              <md-icon-button
++                id={anchorId}
++                className="scale-90 text-[var(--md-sys-color-on-surface-variant)] cursor-pointer"
++                onClick={(e: React.MouseEvent) => {
++                  e.stopPropagation();
++                  setActiveMenuCode(activeMenuCode === item.batteryCode ? null : item.batteryCode);
++                }}
++              >
++                <md-icon>more_horiz</md-icon>
++              </md-icon-button>
+ 
+-                return (
+-                  <div
+-                    key={item.batteryCode}
+-                    className={`group relative flex flex-col justify-between px-4 pt-3 pb-3.5 rounded-3xl transition-all duration-200 min-h-[280px] ${
+-                      isAvailable
+-                        ? 'bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container)]'
+-                        : 'bg-[var(--md-sys-color-surface-container-lowest)] opacity-75'
+-                    }`}
++              <md-menu
++                anchor={anchorId}
++                open={activeMenuCode === item.batteryCode}
++                onClosed={() => {
++                  if (activeMenuCode === item.batteryCode) setActiveMenuCode(null);
++                }}
++                quick
++                style={{
++                  minWidth: '150px',
++                  '--md-menu-item-focus-outline-width': '0',
++                  '--md-menu-item-selected-outline-width': '0',
++                  zIndex: 100,
++                } as React.CSSProperties}
++              >
++                {isAvailable ? (
++                  <md-menu-item
++                    onClick={(e) => {
++                      e.stopPropagation();
++                      setActiveMenuCode(null);
++                      setPendingHideScale(item);
++                    }}
+                   >
+-                    <div className="flex flex-col flex-1">
+-                      {/* Top row: Markers (Availability, Time, Questions) + 3-dots Menu Button */}
+-                      <div className="flex items-center justify-between min-h-[24px] mb-1">
+-                        <div className="flex items-center gap-1.5 min-w-0 text-[11px] font-medium">
+-                          <span
+-                            className={`inline-flex items-center gap-1 shrink-0 ${
+-                              isAvailable ? 'text-[var(--md-sys-color-on-surface-variant)]' : 'text-[var(--md-sys-color-outline)]'
+-                            }`}
+-                          >
+-                            <span
+-                              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+-                                isAvailable ? 'bg-[var(--md-sys-color-primary)]' : 'bg-[var(--md-sys-color-outline)]'
+-                              }`}
+-                            />
+-                            {isAvailable ? '正常可用' : '已隐藏'}
+-                          </span>
+-                          <span className="opacity-30 shrink-0">·</span>
+-                          <span className="text-[var(--md-sys-color-on-surface-variant)] opacity-75 tabular-nums truncate">
+-                            {item.duration}
+-                          </span>
+-                          <span className="opacity-30 shrink-0">·</span>
+-                          <span className="text-[var(--md-sys-color-on-surface-variant)] opacity-75 tabular-nums shrink-0">
+-                            {item.questionCount} 题
+-                          </span>
+-                        </div>
+-
+-                        <div className="relative shrink-0">
+-                          <md-icon-button
+-                            id={anchorId}
+-                            className="scale-75 -mr-2 -my-1 text-[var(--md-sys-color-on-surface-variant)] cursor-pointer"
+-                            title="更多选项"
+-                            disabled={isBusy}
+-                            onClick={(e: React.MouseEvent) => {
+-                              e.stopPropagation();
+-                              setActiveMenuCode(activeMenuCode === item.batteryCode ? null : item.batteryCode);
+-                            }}
+-                          >
+-                            <md-icon>more_horiz</md-icon>
+-                          </md-icon-button>
+-
+-                          <md-menu
+-                            anchor={anchorId}
+-                            open={activeMenuCode === item.batteryCode}
+-                            onClosed={() => {
+-                              if (activeMenuCode === item.batteryCode) setActiveMenuCode(null);
+-                            }}
+-                            quick
+-                            style={{
+-                              minWidth: '150px',
+-                              '--md-menu-item-focus-outline-width': '0',
+-                              '--md-menu-item-selected-outline-width': '0',
+-                              zIndex: 100,
+-                            } as React.CSSProperties}
+-                          >
+-                            {isAvailable ? (
+-                              <md-menu-item
+-                                onClick={() => {
+-                                  setActiveMenuCode(null);
+-                                  setPendingHideScale(item);
+-                                }}
+-                              >
+-                                <md-icon slot="start">visibility_off</md-icon>
+-                                <div slot="headline">隐藏量表</div>
+-                              </md-menu-item>
+-                            ) : (
+-                              <md-menu-item
+-                                onClick={() => {
+-                                  setActiveMenuCode(null);
+-                                  handleToggle(item, true);
+-                                }}
+-                              >
+-                                <md-icon slot="start">visibility</md-icon>
+-                                <div slot="headline">启用上线</div>
+-                              </md-menu-item>
+-                            )}
+-                          </md-menu>
+-                        </div>
+-                      </div>
+-
+-                      {/* Title */}
+-                      <h3
+-                        className={`text-[14px] font-bold leading-snug mb-1.5 ${
+-                          isAvailable ? 'text-[var(--md-sys-color-on-surface)]' : 'text-[var(--md-sys-color-outline)]'
+-                        }`}
+-                      >
+-                        {item.title}
+-                      </h3>
+-
+-                      {/* Description */}
+-                      <p
+-                        className={`text-xs leading-relaxed flex-1 line-clamp-3 mb-3 ${
+-                          isAvailable ? 'text-[var(--md-sys-color-on-surface-variant)]' : 'text-[var(--md-sys-color-outline)]'
+-                        }`}
+-                      >
+-                        {item.description || '暂无量表详细描述'}
+-                      </p>
+-                    </div>
+-
+-                    {/* Actions: View Details (Outlined) + Assign (Outlined) */}
+-                    <div className="flex items-center gap-1.5 pt-2">
+-                      <OutlinedButton
+-                        label="查看详情"
+-                        onClick={() => setViewingScale(item)}
+-                        className="flex-1 h-8 !px-1.5 text-xs justify-center"
+-                        style={{
+-                          '--md-outlined-button-leading-space': '8px',
+-                          '--md-outlined-button-trailing-space': '8px',
+-                        } as React.CSSProperties}
+-                        noCollapse
+-                      />
+-                      <OutlinedButton
+-                        icon="assignment_add"
+-                        label="指派测评"
+-                        onClick={() => handleOpenAssign(item)}
+-                        disabled={!isAvailable}
+-                        className="flex-1 h-8 !px-1.5 text-xs justify-center"
+-                        iconSize="16px"
+-                        style={{
+-                          '--md-outlined-button-leading-space': '8px',
+-                          '--md-outlined-button-trailing-space': '8px',
+-                        } as React.CSSProperties}
+-                        noCollapse
+-                      />
+-                    </div>
+-                  </div>
+-                );
+-              })}
++                    <md-icon slot="start">visibility_off</md-icon>
++                    <div slot="headline">隐藏量表</div>
++                  </md-menu-item>
++                ) : (
++                  <md-menu-item
++                    onClick={(e) => {
++                      e.stopPropagation();
++                      setActiveMenuCode(null);
++                      handleToggle(item, true);
++                    }}
++                  >
++                    <md-icon slot="start">visibility</md-icon>
++                    <div slot="headline">启用上线</div>
++                  </md-menu-item>
++                )}
++              </md-menu>
+             </div>
+-          )}
+-        </div>
+-      ) : (
+-        /* Empty History View */
+-        <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-12 text-[var(--md-sys-color-on-surface-variant)]">
+-          <p className="text-sm">暂无指派历史</p>
+-        </div>
+-      )}
++          </div>
++        );
++      }
++    }
++  ];
++
++  return (
++    <div className="w-full h-full flex flex-col overflow-hidden bg-[var(--md-sys-color-surface)]">
++      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
++        {isLoading ? (
++          <div className="flex-1 min-h-0 flex items-center justify-center p-12 text-sm text-[var(--md-sys-color-on-surface-variant)]">
++            正在加载量表目录...
++          </div>
++        ) : isError ? (
++          <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-12">
++            <p className="text-sm text-[var(--md-sys-color-error)] mb-3">加载量表目录失败</p>
++            <PrimaryButton
++              label="重试"
++              onClick={() => refetch()}
++              className="h-8"
++            />
++          </div>
++        ) : (
++          <DataTable
++            columns={columns}
++            data={catalog}
++            onRowClick={(item) => setViewingScale(item)}
++            minWidth="900px"
++          />
++        )}
++      </div>
+ 
+       {/* Full-Screen Scale View */}
+       <AssessmentScaleDetailsFullScreen

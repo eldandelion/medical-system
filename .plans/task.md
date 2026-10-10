@@ -1,82 +1,79 @@
-# Implementation Plan: Recent Activity Feature (Dashboard)
-
+<Implementation Plan: Assessment History UI Bugs>
 ## Overview
-Implement the complete "近期动态" (Recent Activity) feature across the Dashboard for all roles. The plan involves strictly aligning the backend API with the `architecture.md` specification, extracting magic strings into a centralized frontend UI mapper, and populating the data efficiently per role.
+Fix styling and functionality of the assessment history table. This includes standardizing student badge rendering, adding missing `assessmentName` and `dispatchedAt` columns across the stack, translating statuses to Chinese, and properly hoisting the details panel to the parent canvas layout.
 
 ## Requirements
-- Synchronize `ActivityType` enum with the exact specification in `architecture.md`.
-- Implement data aggregation in `DashboardService.kt` for each of the 6 roles, sorting activities by `timestamp` descending.
-- Utilize a centralized mapper in the frontend to translate `ActivityType` into localized Material Design UI components without relying on backend strings.
-- Pass the mapped activities into `DashboardView` across all role pages.
+- Render student name and ID in an `AvatarBadge` column exactly matching the global style.
+- Display "assessment name" and "dispatch time" in the data table.
+- Map backend enum statuses to Chinese.
+- Details panel must render outside the main table layout, alongside it via the parent container.
 
 ## Architecture Changes
-- Backend DTO: `DashboardActivityDto.kt` needs `ActivityType` updated.
-- Backend Service: `DashboardService.kt` requires querying multiple repositories and assembling the lists per role.
-- Frontend Config/Utils: `src/utils/activityMapper.ts` (new) will encapsulate the conversion of `ActivityType` to localized UI details.
-- Frontend UI: Update `*Page.tsx` dashboards to use the centralized UI mapper instead of inline formatting.
+- Backend DTO and Service modified to include the new fields.
+- Frontend types updated for the new fields.
+- `DispatchHistoryTab` updated to match new column requirements, translate statuses, and remove inline layout.
+- `AssessmentCatalogManagementView` modified to hold selected student state and pass the details panel into the side panel slot of its layout wrapper.
 
 ## Implementation Steps
 
-### Phase 1: Backend DTO & Service Synchronization (3 files)
-1. **Update ActivityType Enum** (File: `backend/src/main/kotlin/com/medicalsystem/backend/dto/DashboardActivityDto.kt`)
-   - Action: Update `ActivityType` enum to match the 10 values exactly as outlined in `architecture.md` (e.g. `REFERRAL_STATUS_UPDATED`, `HIGH_RISK_ASSESSMENT_SUBMITTED`, etc.).
-   - Why: Ensures contract parity between architecture, backend, and frontend.
+### Phase 1: Backend DTO & Service Update
+1. **Update DTO** (File: backend/src/main/kotlin/com/medicalsystem/backend/dto/AssessmentDispatchHistoryDtos.kt)
+   - Action: Add `val assessmentName: String` and `val dispatchedAt: LocalDateTime` (or `String`) to `ParticipationRecordDto`.
+   - Why: Needed to display the missing columns in the UI.
    - Dependencies: None
    - Risk: Low
 
-2. **Implement Role Aggregation Logic** (File: `backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt`)
-   - Action: In `getRecentActivity(user)`, query appropriate repositories (`notificationJpaRepository`, `assessmentAssignmentRepository`, `referralJpaRepository`) according to the queries specified in `architecture.md` for each role. Note: For `HIGH_RISK_ASSESSMENT_SUBMITTED`, query `notificationJpaRepository` for relevant `NotificationMessageCode` (like `ASSESSMENT_COMPLETED_TEACHER` or `ASSESSMENT_HIGH_RISK_ALERT_HC`). Merge, sort by timestamp DESC, and limit to top 5.
-   - Why: Core feature requirement to populate dashboard feed.
-   - Dependencies: Step 1
-   - Risk: Medium (complex querying and mapping required)
-
-3. **Add Service Tests** (File: `backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt`)
-   - Action: Add/update unit test cases validating the aggregation and correct return of top 5 activities for a subset of roles (e.g., Student and Teacher).
-   - Why: Regression prevention.
-   - Dependencies: Step 2
-   - Risk: Low
-
-### Phase 2: Frontend Data Contract & UI Mapping (3 files)
-4. **Update Frontend API Contract** (File: `frontend/src/api/dashboard.ts`)
-   - Action: Update `ActivityType` type to match the new backend enum exactly.
-   - Why: Resolves TypeScript compilation checks.
+2. **Update Service Mapper** (File: backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentDispatchService.kt)
+   - Action: Populate `assessmentName` and `dispatchedAt` when creating `ParticipationRecordDto`.
+   - Why: Serve the required data to frontend.
    - Dependencies: Step 1
    - Risk: Low
 
-5. **Update MSW Mocks** (File: `frontend/src/mocks/data/dashboard.ts`)
-   - Action: Ensure `mockDashboardActivities` includes appropriate dummy data matching the newly updated `ActivityType` enum across different roles.
-   - Why: Required to support offline/local development without backend connectivity.
-   - Dependencies: Step 4
+### Phase 2: Frontend Data & Component Fixes
+3. **Update Types** (File: frontend/src/types/index.ts)
+   - Action: Add `assessmentName: string` and `dispatchedAt: string` to the `ParticipationRecordDto` interface.
+   - Why: Sync frontend with backend schema.
+   - Dependencies: Step 1
    - Risk: Low
 
-6. **Create Activity UI Mapper** (File: `frontend/src/utils/activityMapper.ts`)
-   - Action: Create and export a function `mapActivityTypeToUI(activity: DashboardActivityDto)` returning an object with `{ title: string, statusText: string, statusType: ActivityStatusType }`. Map all 10 `ActivityType` enum values to localized text strings that align with Material Design specs (e.g. error, info, neutral).
-   - Why: Replaces hardcoded UI text logic in the view pages and enforces localization without relying on backend presentation strings.
-   - Dependencies: Step 4
-   - Risk: Low
+4. **Fix History Tab Columns** (File: frontend/src/components/assessments/DispatchHistoryTab.tsx)
+   - Action: 
+     - Update columns to include new fields.
+     - Modify the student column to use `AvatarBadge` combining name/ID.
+     - Map status enums (e.g., PENDING, COMPLETED) to Chinese labels.
+     - Accept an `onSelect` prop and remove the inline `<DetailsPanel>`.
+   - Why: Address UI inconsistencies, translations, and missing data.
+   - Dependencies: Step 3
+   - Risk: Medium
 
-### Phase 3: Connect Frontend Views (6 files)
-7. **Integrate Mapper into Dashboards** (Files: `frontend/src/pages/StudentPage.tsx`, `frontend/src/pages/TeacherPage.tsx`, `frontend/src/pages/HeadCouncillorPage.tsx`, `frontend/src/pages/TrialAdminPage.tsx`, `frontend/src/pages/DoctorPage.tsx`, `frontend/src/pages/AdminPage.tsx`)
-   - Action: Import `mapActivityTypeToUI` and replace the inline `activities` `.map()` logic passed to `DashboardView` with this new function.
-   - Why: Rollout mapped changes across all role dashboards and keeps code DRY.
-   - Dependencies: Step 6
-   - Risk: Low
+### Phase 3: Parent Layout Integration
+5. **Update Parent Layout** (File: frontend/src/components/admin/AssessmentCatalogManagementView.tsx)
+   - Action: Add local state for the selected row/student. Pass the `<DetailsPanel>` to the side panel prop of the main layout wrapper. Pass `onSelect` down to `DispatchHistoryTab`.
+   - Why: Render the details panel correctly in the canvas.
+   - Dependencies: Step 4
+   - Risk: Medium
 
 ## Testing Strategy
-- Unit Tests: Test the logic of `DashboardService.getRecentActivity` ensuring max 5 items are fetched, sorted properly, and mapped correctly from repository entities.
-- Typescript Check: Ensure no compilation errors (`npm run lint` / `tsc --noEmit`) post mapper integration.
-- MSW Verification: Render the React components with MSW providing the updated mock datasets.
+- Unit tests: `backend/src/test/kotlin/com/medicalsystem/backend/service/AssessmentDispatchServiceTest.kt` (verify DTO mapping includes new fields).
+- Unit tests: `frontend/src/components/assessments/DispatchHistoryTab.test.tsx` (verify AvatarBadge rendering, translations, and new columns).
+- Integration tests: End-to-end table row click to verify side panel opens properly.
+
+## Risks & Mitigations
+- **Risk**: Date format mismatch between backend serialization and frontend parsing.
+  - Mitigation: Use standard ISO-8601 format and frontend formatters.
+
+## Success Criteria
+- [ ] `AvatarBadge` correctly displays student name and ID stacked.
+- [ ] Table includes Assessment Name and Dispatch Time columns.
+- [ ] Status is translated into Chinese.
+- [ ] Details panel appears in the side panel area.
 
 ## Writable Files
-- `backend/src/main/kotlin/com/medicalsystem/backend/dto/DashboardActivityDto.kt`
-- `backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt`
-- `backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt`
-- `frontend/src/api/dashboard.ts`
-- `frontend/src/mocks/data/dashboard.ts`
-- `frontend/src/utils/activityMapper.ts`
-- `frontend/src/pages/StudentPage.tsx`
-- `frontend/src/pages/TeacherPage.tsx`
-- `frontend/src/pages/HeadCouncillorPage.tsx`
-- `frontend/src/pages/TrialAdminPage.tsx`
-- `frontend/src/pages/DoctorPage.tsx`
-- `frontend/src/pages/AdminPage.tsx`
+- `backend/src/main/kotlin/com/medicalsystem/backend/dto/AssessmentDispatchHistoryDtos.kt`
+- `backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentDispatchService.kt`
+- `backend/src/test/kotlin/com/medicalsystem/backend/service/AssessmentDispatchServiceTest.kt`
+- `frontend/src/types/index.ts`
+- `frontend/src/components/assessments/DispatchHistoryTab.tsx`
+- `frontend/src/components/admin/AssessmentCatalogManagementView.tsx`
+- `frontend/src/components/assessments/DispatchHistoryTab.test.tsx`
+</Implementation Plan: Assessment History UI Bugs>
