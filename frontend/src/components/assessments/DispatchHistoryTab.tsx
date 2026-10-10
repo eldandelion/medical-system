@@ -97,17 +97,7 @@ export const DispatchHistoryTab: React.FC<DispatchHistoryTabProps> = ({ onSelect
           isSelected={isSelected}
         />
       )
-    },
-    { 
-      key: 'severity', 
-      label: '预警等级', 
-      width: 'w-[15%]',
-      render: (item) => (
-        <span className={`px-2 py-1 rounded text-xs ${item.severity === 'HIGH' ? 'bg-red-100 text-red-800' : item.severity === 'MODERATE' ? 'bg-orange-100 text-orange-800' : item.severity === 'LOW' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-          {item.severity}
-        </span>
-      ) 
-    },
+    }
   ];
 
   return (
@@ -157,6 +147,7 @@ export const DispatchHistoryTab: React.FC<DispatchHistoryTabProps> = ({ onSelect
           columns={columns}
           data={historyPage?.content || []}
           selectedId={selectedStudentId}
+          getRowId={(row) => String(row.studentId || row.studentNumber)}
           onRowClick={(row) => onSelect?.({
             id: String(row.studentId || row.studentNumber),
             studentNumber: row.studentNumber,

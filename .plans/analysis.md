@@ -1,25 +1,26 @@
-# Root Cause Analysis: Assessment History UI Bugs
+# Assessment History Tab UI Bugs Analysis
 
-## 1. Data Table Entries Background and Styling
-- **Issue**: The assessment history data table (`DispatchHistoryTab.tsx`) doesn't match the "全局转诊管理" table style.
-- **Root Cause**: `ReferralManagementView` uses a custom `render` function in its columns to display an `AvatarBadge` with the student name and ID stacked in a flex column layout. `DispatchHistoryTab` renders raw text across separate columns.
-- **Fix Strategy**: Update the `columns` definition in `DispatchHistoryTab` to combine the student name and number into a single column utilizing the `AvatarBadge`, exactly matching the style in `ReferralManagementView`.
+## Bug 1: All entries show as selected by default
+**Root Cause:**  
+In `DataTable.tsx`, the selection check is implemented as `const isSelected = selectedId === item.id;`. When a user navigates to the tab without selecting a record, the passed `selectedStudentId` is `undefined`. Since the API or mock data might not populate the `id` field on `ParticipationRecordDto` (leaving it as `undefined`), the strict equality check evaluates to `undefined === undefined`, making it `true` for all rows.
+**Proposed Fix Strategy:**  
+Update `DataTable.tsx` to require a defined `selectedId` before applying the match. For example: `const isSelected = selectedId != null && selectedId === rowId;`.
+**Affected Components:**  
+- `frontend/src/components/common/DataTable.tsx`
 
-## 2. Missing Columns: Assessment Name and Dispatch Time
-- **Issue**: The entries lack "assessment name" and "dispatch time" columns.
-- **Root Cause**: The backend DTO `ParticipationRecordDto` and its corresponding frontend TypeScript interface do not include these fields.
-- **Fix Strategy**: 
-  1. Update `backend/src/main/kotlin/com/medicalsystem/backend/dto/AssessmentDispatchHistoryDtos.kt` to include `assessmentName` (String) and `dispatchedAt` (LocalDateTime/String depending on format) in `ParticipationRecordDto`.
-  2. Update the corresponding backend service/mapper to populate these fields.
-  3. Update `frontend/src/types/index.ts` to include these fields in `ParticipationRecordDto`.
-  4. Update `DispatchHistoryTab` columns to display them.
+## Bug 2: Clicked entry is not visually selected
+**Root Cause:**  
+In `DispatchHistoryTab.tsx`, the `selectedStudentId` is passed as the `selectedId` prop to `DataTable`. However, `DataTable` blindly compares it to `item.id`, which corresponds to the `ParticipationRecordDto`'s ID (the record's primary key), not the student's ID. Because these identifiers represent different domains (student ID vs record ID), the check fails and no row is highlighted.
+**Proposed Fix Strategy:**  
+Add an optional `getRowId?: (item: T) => string | number` prop to `DataTableProps` (defaulting to returning `item.id`). Then, in `DispatchHistoryTab.tsx`, provide `getRowId={(row) => String(row.studentId || row.studentNumber)}` so that the table compares the `selectedStudentId` with the actual student identifier.
+**Affected Components:**  
+- `frontend/src/components/common/DataTable.tsx`
+- `frontend/src/components/assessments/DispatchHistoryTab.tsx`
 
-## 3. Status Translation
-- **Issue**: The status is rendered in English (e.g., PENDING, COMPLETED) instead of Chinese.
-- **Root Cause**: The raw enum string is directly rendered.
-- **Fix Strategy**: Implement a mapping function or use a `StatusBadge` in `DispatchHistoryTab.tsx` to map enum values to Chinese translations (e.g., PENDING -> '待完成', COMPLETED -> '已完成').
-
-## 4. Details View Rendering Inside Canvas
-- **Issue**: Clicking a row opens the details panel inside the main canvas rather than alongside it.
-- **Root Cause**: `DispatchHistoryTab` manages local state for `selectedStudent` and renders the `<DetailsPanel>` inline at the bottom of its own JSX flex container, constraining it within the canvas.
-- **Fix Strategy**: Hoist the selected row state up to the parent layout. The tab should accept an `onSelect` callback prop. The parent container (`AssessmentCatalogManagementView` or similar parent that is wrapped by `<MainContent>`) will hold the state and pass the `<DetailsPanel>` into the `sidePanel` prop of `<MainContent>`, mimicking the architecture of `ReferralManagementView.tsx` and `AdminPage.tsx`.
+## Bug 3: '预警等级' (Severity) column needs to be removed
+**Root Cause:**  
+The severity column is explicitly hardcoded in the `columns` configuration array inside `DispatchHistoryTab.tsx`.
+**Proposed Fix Strategy:**  
+Remove the object with `key: 'severity'` from the `columns` array in `DispatchHistoryTab.tsx`.
+**Affected Components:**  
+- `frontend/src/components/assessments/DispatchHistoryTab.tsx`

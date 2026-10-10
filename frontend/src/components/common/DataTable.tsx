@@ -13,6 +13,7 @@ interface DataTableProps<T> {
   data: T[];
   onRowClick?: (item: T) => void;
   selectedId?: string | number;
+  getRowId?: (item: T) => string | number;
   minWidth?: string;
 }
 
@@ -21,6 +22,7 @@ export function DataTable<T extends { id?: string | number }>({
   data, 
   onRowClick, 
   selectedId,
+  getRowId,
   minWidth 
 }: DataTableProps<T>) {
   return (
@@ -43,7 +45,8 @@ export function DataTable<T extends { id?: string | number }>({
           {/* List Items */}
           <div className="flex flex-col flex-1 pb-4 min-w-full w-full">
             {data.map((item, rowIdx) => {
-              const isSelected = selectedId === item.id;
+              const rowId = getRowId ? getRowId(item) : item.id;
+              const isSelected = selectedId != null && selectedId === rowId;
               return (
                 <div 
                   key={rowIdx}
