@@ -356,3 +356,22 @@ export interface UpdateUserProfileRequest {
 
 export * from './studentImport';
 
+export type ResultSeverity = 'LOW' | 'MODERATE' | 'HIGH' | 'PENDING';
+
+export interface AssessmentDispatchSummaryDto {
+  id: number;
+  batteryCode: string;
+  dispatchedAt: string;
+  dispatchedByName: string;
+}
+
+export interface ParticipationRecordDto {
+  id?: number;
+  assignmentId: number;
+  studentId?: string | number;
+  studentName: string;
+  studentNumber: string;
+  status: AssessmentStatus;
+  severity: ResultSeverity;
+}
+

@@ -12,6 +12,7 @@ data class AssessmentAssignment(
     val studentId: Long,
     val assignedByUserId: Long,
     val batteryCode: BatteryId,
+    val dispatchId: Long? = null,
     var status: AssessmentStatus = AssessmentStatus.PENDING,
     val assignedAt: LocalDateTime = LocalDateTime.now(),
     var completedAt: LocalDateTime? = null,

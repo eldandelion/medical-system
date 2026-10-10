@@ -103,3 +103,9 @@ class FileCategoryConverter : AttributeConverter<com.medicalsystem.backend.stora
     override fun convertToDatabaseColumn(attribute: com.medicalsystem.backend.storage.domain.FileCategory?) = getIdFromEnum(attribute)
     override fun convertToEntityAttribute(dbData: Int?) = getEnumFromId<com.medicalsystem.backend.storage.domain.FileCategory>(dbData)
 }
+
+@Converter(autoApply = true)
+class ResultSeverityConverter : AttributeConverter<ResultSeverity, Int> {
+    override fun convertToDatabaseColumn(attribute: ResultSeverity?) = getIdFromEnum(attribute)
+    override fun convertToEntityAttribute(dbData: Int?) = getEnumFromId<ResultSeverity>(dbData)
+}

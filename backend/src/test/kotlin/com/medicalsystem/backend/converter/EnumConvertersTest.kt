@@ -21,4 +21,22 @@ class EnumConvertersTest {
         assertEquals(null, converter.convertToEntityAttribute(null))
         assertEquals(null, converter.convertToEntityAttribute(99))
     }
+
+    @Test
+    fun `ResultSeverityConverter should convert to and from database column`() {
+        val converter = ResultSeverityConverter()
+        
+        assertEquals(1, converter.convertToDatabaseColumn(com.medicalsystem.backend.model.ResultSeverity.LOW))
+        assertEquals(2, converter.convertToDatabaseColumn(com.medicalsystem.backend.model.ResultSeverity.MODERATE))
+        assertEquals(3, converter.convertToDatabaseColumn(com.medicalsystem.backend.model.ResultSeverity.HIGH))
+        assertEquals(4, converter.convertToDatabaseColumn(com.medicalsystem.backend.model.ResultSeverity.PENDING))
+        assertEquals(null, converter.convertToDatabaseColumn(null))
+        
+        assertEquals(com.medicalsystem.backend.model.ResultSeverity.LOW, converter.convertToEntityAttribute(1))
+        assertEquals(com.medicalsystem.backend.model.ResultSeverity.MODERATE, converter.convertToEntityAttribute(2))
+        assertEquals(com.medicalsystem.backend.model.ResultSeverity.HIGH, converter.convertToEntityAttribute(3))
+        assertEquals(com.medicalsystem.backend.model.ResultSeverity.PENDING, converter.convertToEntityAttribute(4))
+        assertEquals(null, converter.convertToEntityAttribute(null))
+        assertEquals(null, converter.convertToEntityAttribute(99))
+    }
 }

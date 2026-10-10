@@ -21,6 +21,12 @@ export const DispatchHistoryTab: React.FC = () => {
     severity: selectedSeverity
   });
 
+  React.useEffect(() => {
+    if (selectedDispatch === 'latest' && dispatches && dispatches.length > 0) {
+      setSelectedDispatch(dispatches[0].id);
+    }
+  }, [selectedDispatch, dispatches]);
+
   const severityOptions = [
     { label: '全部等级', value: 'ALL' },
     { label: '低风险', value: 'LOW' },

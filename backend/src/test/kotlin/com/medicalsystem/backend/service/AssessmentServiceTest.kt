@@ -44,6 +44,9 @@ class AssessmentServiceTest {
     @Mock
     private lateinit var scaleSettingRepository: com.medicalsystem.backend.repository.AssessmentScaleSettingJpaRepository
 
+    @Mock
+    private lateinit var dispatchRepository: com.medicalsystem.backend.repository.AssessmentDispatchRepository
+
     private lateinit var clock: Clock
     
     private lateinit var assessmentService: AssessmentService
@@ -129,6 +132,7 @@ class AssessmentServiceTest {
             userRepository,
             scaleRepository,
             scaleSettingRepository,
+            dispatchRepository,
             clock
         )
     }
@@ -206,6 +210,10 @@ class AssessmentServiceTest {
 
         `when`(studentRepository.findByIdAndVisibleTo(10L, teacherUser)).thenReturn(Optional.of(sampleStudent))
         `when`(assignmentRepository.findPendingByStudentIdAndBatteryCode(10L, "MENTAL_HEALTH_ASSESSMENT")).thenReturn(Optional.empty())
+        `when`(dispatchRepository.save(any())).thenAnswer { invocation ->
+            val arg = invocation.arguments[0] as AssessmentDispatch
+            arg.copy(id = 99L)
+        }
         `when`(assignmentRepository.save(any())).thenAnswer { invocation ->
             val arg = invocation.arguments[0] as AssessmentAssignment
             arg.copy(id = 55L)

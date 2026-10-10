@@ -46,5 +46,12 @@ class AssessmentAssignmentEntity(
     var answersJson: String? = null,
     
     @Column(name = "revoked_at")
-    var revokedAt: LocalDateTime? = null
+    var revokedAt: LocalDateTime? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dispatch_id")
+    var dispatch: AssessmentDispatchEntity? = null,
+
+    @Column(name = "severity_id")
+    var severity: com.medicalsystem.backend.model.ResultSeverity = com.medicalsystem.backend.model.ResultSeverity.PENDING
 )

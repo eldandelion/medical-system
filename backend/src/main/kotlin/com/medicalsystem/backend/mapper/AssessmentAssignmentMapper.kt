@@ -31,6 +31,7 @@ class AssessmentAssignmentMapper(
             studentId = entity.student.id,
             assignedByUserId = entity.assignedByUser.id,
             batteryCode = BatteryId(entity.batteryCode),
+            dispatchId = entity.dispatch?.id,
             status = entity.status,
             assignedAt = entity.assignedAt,
             completedAt = entity.completedAt,
@@ -43,6 +44,7 @@ class AssessmentAssignmentMapper(
     fun toEntity(model: AssessmentAssignment): AssessmentAssignmentEntity {
         val studentRef = entityManager.getReference(StudentEntity::class.java, model.studentId)
         val assignerRef = entityManager.getReference(UserEntity::class.java, model.assignedByUserId)
+        val dispatchRef = model.dispatchId?.let { entityManager.getReference(com.medicalsystem.backend.entity.AssessmentDispatchEntity::class.java, it) }
 
         val answersStr = model.answers?.let {
             objectMapper.writeValueAsString(it)
@@ -58,7 +60,8 @@ class AssessmentAssignmentMapper(
             completedAt = model.completedAt,
             dueDate = model.dueDate,
             answersJson = answersStr,
-            revokedAt = model.revokedAt
+            revokedAt = model.revokedAt,
+            dispatch = dispatchRef
         )
         
         return entity

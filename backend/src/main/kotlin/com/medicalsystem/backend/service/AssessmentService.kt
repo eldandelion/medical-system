@@ -24,6 +24,7 @@ class AssessmentService(
     private val userRepository: UserRepository,
     private val scaleRepository: AssessmentScaleRepository,
     private val scaleSettingRepository: com.medicalsystem.backend.repository.AssessmentScaleSettingJpaRepository,
+    private val dispatchRepository: com.medicalsystem.backend.repository.AssessmentDispatchRepository,
     private val clock: Clock
 ) {
 
@@ -110,16 +111,25 @@ class AssessmentService(
         request.batteryCodes.forEach { batteryCode ->
             val existingPending = assignmentRepository.findPendingByStudentIdAndBatteryCode(student.id, batteryCode)
             if (existingPending.isEmpty) {
+                val dispatch = AssessmentDispatch.createForIndividuals(
+                    batteryCode = BatteryId(batteryCode),
+                    dispatcherId = assigner.id,
+                    dueDate = request.dueDate
+                )
+                val savedDispatch = dispatchRepository.save(dispatch)
+
                 val newAssignment = AssessmentAssignment(
                     studentId = student.id,
                     assignedByUserId = assigner.id,
                     batteryCode = BatteryId(batteryCode),
+                    dispatchId = savedDispatch.id,
                     status = AssessmentStatus.PENDING,
                     assignedAt = LocalDateTime.now(clock),
                     dueDate = request.dueDate
                 )
                 newAssignment.initAssignedEvent()
                 assignmentRepository.save(newAssignment)
+                savedDispatch.initDispatchedEvent(listOf(student.id))
                 assignedCount++
             }
         }
@@ -158,22 +168,33 @@ class AssessmentService(
         request.batteryCodes.forEach { batteryCode ->
             val pendingAssignments = assignmentRepository.findPendingByStudentIdInAndBatteryCode(studentIds, batteryCode)
             val studentsWithPending = pendingAssignments.map { it.studentId }.toSet()
+            val targetStudents = visibleStudents.filter { !studentsWithPending.contains(it.id) }
             
-            val toSave = visibleStudents.filter { !studentsWithPending.contains(it.id) }.map { student ->
-                val assignment = AssessmentAssignment(
-                    studentId = student.id,
-                    assignedByUserId = assigner.id,
+            if (targetStudents.isNotEmpty()) {
+                val dispatch = AssessmentDispatch.createBatch(
                     batteryCode = BatteryId(batteryCode),
-                    status = AssessmentStatus.PENDING,
-                    assignedAt = LocalDateTime.now(clock),
+                    dispatcherId = assigner.id,
+                    targetCohort = "Cohort (Major: ${request.majorId}, Year: ${request.academicYear})",
                     dueDate = request.dueDate
                 )
-                assignment.initAssignedEvent()
-                assignment
-            }
-            
-            if (toSave.isNotEmpty()) {
+                val savedDispatch = dispatchRepository.save(dispatch)
+
+                val toSave = targetStudents.map { student ->
+                    val assignment = AssessmentAssignment(
+                        studentId = student.id,
+                        assignedByUserId = assigner.id,
+                        batteryCode = BatteryId(batteryCode),
+                        dispatchId = savedDispatch.id,
+                        status = AssessmentStatus.PENDING,
+                        assignedAt = LocalDateTime.now(clock),
+                        dueDate = request.dueDate
+                    )
+                    assignment.initAssignedEvent()
+                    assignment
+                }
+                
                 assignmentRepository.saveAll(toSave)
+                savedDispatch.initDispatchedEvent(toSave.map { it.studentId })
                 totalAssigned += toSave.size
             }
         }

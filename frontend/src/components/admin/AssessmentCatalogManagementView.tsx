@@ -8,6 +8,7 @@ import { useCreationOverlay } from '../../contexts/CreationContext';
 import { AssessmentAssignmentCreationForm } from '../assessments/AssessmentAssignmentCreationForm';
 import { AssessmentScaleDetailsFullScreen } from '../assessments/AssessmentScaleDetailsFullScreen';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
+import { DispatchHistoryTab } from '../assessments/DispatchHistoryTab';
 
 export const CATALOG_VIEW_SEGMENTS = [
   { label: '量表列表', value: 'catalog' },
@@ -180,10 +181,11 @@ export const AssessmentCatalogManagementView: React.FC = () => {
         )}
         </div>
       ) : (
-        <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-12 text-[var(--md-sys-color-on-surface-variant)]">
-          <p className="text-sm">暂无指派历史</p>
+        <div className="flex-1 min-h-0 flex flex-col">
+          <DispatchHistoryTab />
         </div>
       )}
+
 
       {/* Full-Screen Scale View */}
       <AssessmentScaleDetailsFullScreen
