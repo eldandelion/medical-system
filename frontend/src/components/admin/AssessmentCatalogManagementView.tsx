@@ -21,6 +21,13 @@ export interface AssessmentCatalogManagementViewProps {
 
 export const AssessmentCatalogManagementView: React.FC<AssessmentCatalogManagementViewProps> = ({ onStudentSelect, selectedStudentId }) => {
   const [activeTab, setActiveTab] = useState<string>('catalog');
+  const [selectedRecordId, setSelectedRecordId] = useState<number | string | null>(null);
+
+  React.useEffect(() => {
+    if (!selectedStudentId) {
+      setSelectedRecordId(null);
+    }
+  }, [selectedStudentId]);
   const { catalog, isLoading, isError, refetch, toggleAvailability, isToggling } = useAssessmentCatalogManagement();
   const { openCreation, closeCreation } = useCreationOverlay();
   const [togglingCode, setTogglingCode] = useState<string | null>(null);
@@ -187,7 +194,13 @@ export const AssessmentCatalogManagementView: React.FC<AssessmentCatalogManageme
         </div>
       ) : (
         <div className="flex-1 min-h-0 flex flex-col">
-          <DispatchHistoryTab onSelect={onStudentSelect} selectedStudentId={selectedStudentId} />
+          <DispatchHistoryTab 
+            onSelect={(student, record) => {
+              setSelectedRecordId(record.assignmentId);
+              onStudentSelect?.(student);
+            }} 
+            selectedRecordId={selectedRecordId || undefined} 
+          />
         </div>
       )}
 

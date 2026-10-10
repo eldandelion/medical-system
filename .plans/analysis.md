@@ -1,26 +1,18 @@
-# Assessment History Tab UI Bugs Analysis
+# Root Cause Analysis: Assessment History Tab Row Highlighting Bug
 
-## Bug 1: All entries show as selected by default
-**Root Cause:**  
-In `DataTable.tsx`, the selection check is implemented as `const isSelected = selectedId === item.id;`. When a user navigates to the tab without selecting a record, the passed `selectedStudentId` is `undefined`. Since the API or mock data might not populate the `id` field on `ParticipationRecordDto` (leaving it as `undefined`), the strict equality check evaluates to `undefined === undefined`, making it `true` for all rows.
-**Proposed Fix Strategy:**  
-Update `DataTable.tsx` to require a defined `selectedId` before applying the match. For example: `const isSelected = selectedId != null && selectedId === rowId;`.
-**Affected Components:**  
-- `frontend/src/components/common/DataTable.tsx`
+## Root Cause
+In `DispatchHistoryTab.tsx`, the `DataTable` component uses `getRowId={(row) => String(row.studentId || row.studentNumber)}` and compares it to `selectedId={selectedStudentId}` to determine which rows are highlighted. Since a single student can have multiple participation records (e.g. they were assigned multiple assessments over time), all records belonging to the clicked student evaluate to the same row ID. Consequently, when a user clicks any record, `selectedStudentId` is set in the parent `AdminPage`, causing every row associated with that student to highlight simultaneously instead of just the clicked row.
 
-## Bug 2: Clicked entry is not visually selected
-**Root Cause:**  
-In `DispatchHistoryTab.tsx`, the `selectedStudentId` is passed as the `selectedId` prop to `DataTable`. However, `DataTable` blindly compares it to `item.id`, which corresponds to the `ParticipationRecordDto`'s ID (the record's primary key), not the student's ID. Because these identifiers represent different domains (student ID vs record ID), the check fails and no row is highlighted.
-**Proposed Fix Strategy:**  
-Add an optional `getRowId?: (item: T) => string | number` prop to `DataTableProps` (defaulting to returning `item.id`). Then, in `DispatchHistoryTab.tsx`, provide `getRowId={(row) => String(row.studentId || row.studentNumber)}` so that the table compares the `selectedStudentId` with the actual student identifier.
-**Affected Components:**  
-- `frontend/src/components/common/DataTable.tsx`
-- `frontend/src/components/assessments/DispatchHistoryTab.tsx`
+## Proposed Fix Strategy
+1. **Uniquely Identify Rows:** Update `DispatchHistoryTab.tsx` so that `DataTable` uses a unique identifier for each row, specifically `getRowId={(row) => String(row.assignmentId)}` (or fallback to `row.id` if available).
+2. **Track Selected Record:** Introduce a `selectedRecordId` state in `AssessmentCatalogManagementView`. 
+3. **Update Callback Signatures:** Modify `DispatchHistoryTabProps.onSelect` to pass back the clicked `record` (`ParticipationRecordDto`) alongside the `student` object.
+4. **Synchronize Highlight with Panel:** When a row is clicked, `AssessmentCatalogManagementView` will set `selectedRecordId` to the record's `assignmentId` and pass it to `DispatchHistoryTab` as `selectedId`. To ensure the highlight clears when the user closes the side panel, add a `useEffect` in `AssessmentCatalogManagementView` that listens to the `selectedStudentId` prop from `AdminPage`; if `selectedStudentId` is falsy, reset `selectedRecordId` to `null`.
 
-## Bug 3: '预警等级' (Severity) column needs to be removed
-**Root Cause:**  
-The severity column is explicitly hardcoded in the `columns` configuration array inside `DispatchHistoryTab.tsx`.
-**Proposed Fix Strategy:**  
-Remove the object with `key: 'severity'` from the `columns` array in `DispatchHistoryTab.tsx`.
-**Affected Components:**  
-- `frontend/src/components/assessments/DispatchHistoryTab.tsx`
+## Affected Components
+- `frontend/src/components/assessments/DispatchHistoryTab.tsx`: 
+  - Update `DispatchHistoryTabProps` to include `selectedRecordId` and change `onSelect` signature to include the record.
+  - Update `DataTable` props: `selectedId={selectedRecordId}` and `getRowId={(row) => String(row.assignmentId)}`.
+- `frontend/src/components/admin/AssessmentCatalogManagementView.tsx`: 
+  - Add `selectedRecordId` state and effect to clear it when `selectedStudentId` is unset.
+  - Pass the new props and update the `onSelect` handler for `DispatchHistoryTab`.

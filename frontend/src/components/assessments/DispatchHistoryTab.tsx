@@ -9,11 +9,11 @@ import { formatDateToChinese } from '../../utils/dateUtils';
 import { StatusBadge } from '../common/StatusBadge';
 
 export interface DispatchHistoryTabProps {
-  onSelect?: (student: Student) => void;
-  selectedStudentId?: string;
+  onSelect?: (student: Student, record: ParticipationRecordDto) => void;
+  selectedRecordId?: number | string;
 }
 
-export const DispatchHistoryTab: React.FC<DispatchHistoryTabProps> = ({ onSelect, selectedStudentId }) => {
+export const DispatchHistoryTab: React.FC<DispatchHistoryTabProps> = ({ onSelect, selectedRecordId }) => {
   const [selectedDispatch, setSelectedDispatch] = useState<number | 'latest' | 'ALL'>('latest');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedSeverity, setSelectedSeverity] = useState<string>('ALL');
@@ -146,15 +146,15 @@ export const DispatchHistoryTab: React.FC<DispatchHistoryTabProps> = ({ onSelect
         <DataTable
           columns={columns}
           data={historyPage?.content || []}
-          selectedId={selectedStudentId}
-          getRowId={(row) => String(row.studentId || row.studentNumber)}
+          selectedId={selectedRecordId}
+          getRowId={(row) => row.assignmentId}
           onRowClick={(row) => onSelect?.({
             id: String(row.studentId || row.studentNumber),
             studentNumber: row.studentNumber,
             name: row.studentName,
             major: '',
             status: 'Active'
-          })}
+          }, row)}
         />
       </div>
     </div>
