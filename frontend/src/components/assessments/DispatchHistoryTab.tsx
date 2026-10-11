@@ -60,7 +60,7 @@ export const DispatchHistoryTab: React.FC<DispatchHistoryTabProps> = ({ onSelect
     {
       key: 'studentName',
       label: '学生',
-      width: 'w-[25%]',
+      width: 'w-[30%]',
       overflowVisible: true,
       render: (item, isSelected) => (
         <div className="flex items-center gap-3">
@@ -77,19 +77,22 @@ export const DispatchHistoryTab: React.FC<DispatchHistoryTabProps> = ({ onSelect
     { 
       key: 'assessmentName', 
       label: '量表名称', 
-      width: 'w-[20%]',
-      render: (item) => <span className="text-[14px] text-[var(--md-sys-color-on-surface)]">{item.assessmentName || '未知'}</span> 
-    },
-    { 
-      key: 'dispatchedAt', 
-      label: '分发时间', 
-      width: 'w-[20%]',
-      render: (item) => <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)]">{item.dispatchedAt ? formatDateToChinese(item.dispatchedAt) : '-'}</span> 
+      width: 'w-[45%]',
+      render: (item) => (
+        <div className="flex flex-col">
+          <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">
+            {item.assessmentName || '未知'}
+          </span>
+          <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)] opacity-70">
+            {item.dispatchedAt ? formatDateToChinese(item.dispatchedAt) : '-'}
+          </span>
+        </div>
+      )
     },
     { 
       key: 'status', 
       label: '状态', 
-      width: 'w-[15%]',
+      width: 'w-[20%]',
       render: (item, isSelected) => (
         <StatusBadge
           dotColorClass={item.status === 'COMPLETED' ? 'bg-green-500' : 'bg-orange-500'}
