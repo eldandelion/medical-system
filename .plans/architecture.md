@@ -1,79 +1,30 @@
-# Architecture Design: Fix Missing Dispatch History
+# Architecture Plan: Assessment Records Rework (`AssessmentHistoryTab.tsx`)
 
-## 1. Context and Problem
-The system currently experiences a bug where dispatch history fails to load or resolve correctly, particularly due to missing backend dispatch tracking for batch assignments and the frontend's inability to resolve the 'latest' alias in the dispatch history view.
+## 1. Context & Problem Statement
+Currently, `AssessmentHistoryTab.tsx` displays student assessment assignments using a generic `<DataTable>` component with a hardcoded `minWidth="620px"`.
+- **Slide-Over Panel Constraint**: This tab is hosted inside `StudentDetailsView.tsx`, which renders within a side slide-over drawer (typical viewport width: 400px–500px).
+- **Usability Defect**: The table introduces horizontal overflow and scrolling, hiding critical columns (`status`, `assignedBy`, `assignedAt`, and the `撤销` revoke action) offscreen.
+- **Visual Inconsistency**: The rest of `StudentDetailsView` (such as "基本特征", "学籍信息", "联系方式") utilizes Material Design 3 segmented capsule cards via `GroupedInfoList` / `getGroupedItemCornerRadius`.
 
-## 2. System Boundaries & Affected Components
+## 2. Requirements & Design Specifications
 
-### 2.1 Backend Domain & Persistence Layer
-We need to formalize dispatches as a Domain Aggregate Root.
-- **New Aggregate**: `AssessmentDispatch`
-- **Updated Aggregate**: `AssessmentAssignment` (must reference its parent dispatch)
+### 2.1 Visual Hierarchy & Capsule Geometry
+- Replace `DataTable` with an inset grouped capsule list adhering to Material Design 3 specifications.
+- **Container**: `<div className="flex flex-col gap-[2px] w-full" role="list">`
+- **Capsule Row Geometry** using `getGroupedItemCornerRadius(index, total)` imported from `../common/GroupedInfoList`.
+- **Row Styling**:
+  - Background: `bg-[var(--md-sys-color-surface-container-low)]`
+  - Dimensions & Spacing: `px-4 py-3.5 flex items-center gap-3.5 min-h-[56px] w-full overflow-hidden`
 
-**Affected Files (Backend):**
-- `backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentAssignment.kt`
-  - *Change*: Add `dispatchId: Long?`
-- `backend/src/main/kotlin/com/medicalsystem/backend/entity/AssessmentAssignmentEntity.kt`
-  - *Change*: Add `@Column(name = "dispatch_id") val dispatchId: Long?`
-- `backend/src/main/kotlin/com/medicalsystem/backend/mapper/AssessmentAssignmentMapper.kt`
-  - *Change*: Map the new `dispatchId` between the entity and the domain model.
-- `backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentDispatch.kt` (NEW)
-  - *Change*: Define the Aggregate Root containing dispatch details (id, timestamp, createdBy, etc.)
-- `backend/src/main/kotlin/com/medicalsystem/backend/entity/AssessmentDispatchEntity.kt` (NEW)
-  - *Change*: JPA entity mapped to the `assessment_dispatches` table.
-- `backend/src/main/kotlin/com/medicalsystem/backend/mapper/AssessmentDispatchMapper.kt` (NEW)
-- `backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentDispatchRepository.kt` (NEW)
-- `backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentDispatchJpaRepository.kt` (NEW)
-- `backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentDispatchRepositoryAdapter.kt` (NEW)
+### 2.2 Row Anatomy & Slot Layout
+1. **Leading Slot (Icon)**: `material-symbols-outlined text-[22px] text-[var(--md-sys-color-on-surface-variant)]` with `assignment`.
+2. **Main Content Slot (Title + Subtitle)**:
+   - Primary Title: `getAssessmentDisplayName(item.batteryCode)` in `text-sm font-medium text-[var(--md-sys-color-on-surface)] truncate`.
+   - Subtitle: `${item.assignedByName} · ${new Date(item.assignedAt).toLocaleDateString()}` in `text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5 truncate font-normal`.
+3. **Trailing Slot (Status Badge + Revoke Action)**:
+   - Status Badge: `<StatusBadge dotColorClass={statusInfo.dotColor} label={statusInfo.label} />`
+   - Revoke Button: Rendered when `item.status === 'PENDING' && session?.role !== 'student'`.
 
-### 2.2 Backend Service Layer
-Whenever a batch assignment occurs, the service must create and persist an `AssessmentDispatch`.
-- **Affected File**: `backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentService.kt`
-  - *Change*: Update assignment logic to instantiate an `AssessmentDispatch`, save it via its repository, and cascade the generated `dispatchId` to the newly created `AssessmentAssignment` entities.
-
-### 2.3 Frontend Presentation Layer
-The UI must handle the special routing alias 'latest' by resolving it to the concrete ID of the most recent dispatch once the list loads.
-- **Affected File**: `frontend/src/components/assessments/DispatchHistoryTab.tsx`
-  - *Change*: Implement a `useEffect` hook that detects if the requested dispatch ID is 'latest'. If so, it should select the first item from the fetched dispatch summary list and update the route/state with its actual ID.
-
-## 3. Data Migration & Historical Data Handling
-- **Constraint**: The `dispatch_id` on assignments must be nullable.
-- **Strategy**: We will actively ignore historical assignments with a NULL `dispatch_id` when querying dispatch history, as these were created before the dispatch tracking feature was introduced.
-
-## 4. Execution Plan
-1. Create the backend domain, entity, mapper, and repository interfaces for `AssessmentDispatch`.
-2. Update `AssessmentAssignment` and `AssessmentAssignmentEntity` to include `dispatchId`.
-3. Update `AssessmentService` batch logic to persist a dispatch and link assignments.
-4. Modify `DispatchHistoryTab.tsx` to handle the 'latest' string resolution.
-
-### 2.4 Domain Structure of AssessmentDispatch (DDD Addendum)
-Following DDD principles, `AssessmentDispatch` is an Aggregate Root referencing other aggregates by ID.
-```kotlin
-data class AssessmentDispatch(
-    val id: Long? = null,
-    val batteryCode: BatteryId,
-    val dispatchedByUserId: Long,
-    val dispatchType: DispatchType,
-    val targetCohort: String? = null,
-    val dispatchedAt: LocalDateTime = LocalDateTime.now(),
-    val dueDate: LocalDate? = null,
-    var status: DispatchStatus = DispatchStatus.ACTIVE
-) : AggregateRoot() {
-    companion object {
-        fun createBatch(...) = AssessmentDispatch(...)
-        fun createForIndividuals(...) = AssessmentDispatch(...)
-    }
-}
-```
-- **Service Orchestration**: `AssessmentService` will first persist `AssessmentDispatch` to generate its ID, then pass that `dispatchId` to the factory methods of `AssessmentAssignment`.
-
-### 2.5 Dispatch History Endpoint & Filtering (Severity Tracking)
-To support the 'Dispatch History' tab requirements (paginated history and filtering by ResultSeverity):
-- **Domain & Persistence**: 
-  - Add `ResultSeverity` enum (`backend/src/main/kotlin/com/medicalsystem/backend/model/ResultSeverity.kt`).
-  - Update `AssessmentAssignment` and `AssessmentAssignmentEntity` to include `severity` (mapped to `severity_id` column using a converter in `EnumConverters.kt`).
-  - Introduce `ParticipationRecordSpecification` for filtering history queries.
-- **Service & Controller**: 
-  - Create `AssessmentDispatchService` and `AssessmentDispatchController` to serve GET `/api/assessments/dispatches/summary` and GET `/api/assessments/participation-records` via `AssessmentDispatchHistoryDtos.kt`.
-- **Frontend Types**: Update `ParticipationRecordDto` in `frontend/src/types/index.ts` to expose `severity`.
-- **Frontend Hooks**: Create `useAssessmentDispatchHistory.ts`.
+### 2.3 Pagination & Empty State
+- Empty state displayed with `bg-[var(--md-sys-color-surface-container-low)] rounded-[20px]`.
+- Pagination buttons preserved when `totalPages > 1`.

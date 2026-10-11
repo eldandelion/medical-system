@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAssessmentHistory, useRevokeAssignment } from '../../hooks/useAssessmentAssignments';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSnackbar } from '../../contexts/SnackbarContext';
-import { DataTable } from '../common/DataTable';
+import { getGroupedItemCornerRadius } from '../common/GroupedInfoList';
 import { StatusBadge } from '../common/StatusBadge';
-import { AssessmentAssignmentHistoryDto, AssessmentCatalogItemDto } from '../../types';
+import { AssessmentCatalogItemDto } from '../../types';
 import { getAssessmentName } from '../../constants/assessmentDictionary';
 
 interface AssessmentHistoryTabProps {
@@ -45,8 +45,9 @@ const AssessmentHistoryTab: React.FC<AssessmentHistoryTabProps> = ({ studentId }
     try {
       await revokeMutation.mutateAsync(id);
       showSnackbar({ message: '撤销成功' });
-    } catch (error: any) {
-      showSnackbar({ message: error.message || '撤销失败' });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '撤销失败';
+      showSnackbar({ message: errorMessage });
     }
   };
 
@@ -66,71 +67,6 @@ const AssessmentHistoryTab: React.FC<AssessmentHistoryTabProps> = ({ studentId }
     return getAssessmentName(batteryCode, catalogTitle);
   };
 
-  const columns = [
-    {
-      key: 'assessment',
-      label: '量表名称',
-      width: 'flex-1 min-w-[200px]',
-      render: (item: AssessmentAssignmentHistoryDto) => (
-        <span className="font-medium text-[var(--md-sys-color-on-surface)] truncate block">
-          {getAssessmentDisplayName(item.batteryCode)}
-        </span>
-      )
-    },
-    {
-      key: 'status',
-      label: '状态',
-      width: 'w-[100px] min-w-[100px]',
-      render: (item: AssessmentAssignmentHistoryDto) => {
-        const statusInfo = getStatusDisplay(item.status);
-        return (
-          <StatusBadge dotColorClass={statusInfo.dotColor} label={statusInfo.label} />
-        );
-      }
-    },
-    {
-      key: 'assignedBy',
-      label: '分配人',
-      width: 'w-[110px] min-w-[110px]',
-      render: (item: AssessmentAssignmentHistoryDto) => (
-        <span className="text-[var(--md-sys-color-on-surface-variant)] text-sm truncate block">
-          {item.assignedByName}
-        </span>
-      )
-    },
-    {
-      key: 'assignedAt',
-      label: '分配时间',
-      width: 'w-[120px] min-w-[120px]',
-      render: (item: AssessmentAssignmentHistoryDto) => (
-        <span className="text-[var(--md-sys-color-on-surface-variant)] text-sm whitespace-nowrap block">
-          {new Date(item.assignedAt).toLocaleDateString()}
-        </span>
-      )
-    },
-    {
-      key: 'actions',
-      label: '操作',
-      width: 'w-[90px] min-w-[90px] text-right',
-      render: (item: AssessmentAssignmentHistoryDto) => {
-        if (item.status === 'PENDING' && session?.role !== 'student') {
-          return (
-            <div className="flex justify-end w-full">
-              <button
-                onClick={(e) => { e.stopPropagation(); handleRevoke(item.id); }}
-                disabled={revokeMutation.isPending}
-                className="text-[var(--md-sys-color-error)] hover:bg-[var(--md-sys-color-error-container)] hover:text-[var(--md-sys-color-on-error-container)] px-3 py-1.5 rounded-full text-sm font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
-              >
-                {revokeMutation.isPending ? '撤销中...' : '撤销'}
-              </button>
-            </div>
-          );
-        }
-        return null;
-      }
-    }
-  ];
-
   if (isLoading) return <div className="p-4 text-center text-[var(--md-sys-color-on-surface-variant)]">正在加载历史记录...</div>;
   if (isError) return <div className="p-4 text-center text-[var(--md-sys-color-error)]">加载历史记录失败</div>;
 
@@ -138,19 +74,70 @@ const AssessmentHistoryTab: React.FC<AssessmentHistoryTabProps> = ({ studentId }
   const totalPages = data?.totalPages ?? 0;
 
   return (
-    <div className="bg-[var(--md-sys-color-surface)] rounded-2xl border border-[var(--md-sys-color-outline-variant)] border-opacity-30 overflow-hidden flex flex-col min-h-[300px]">
+    <div className="w-full flex flex-col">
       {history.length === 0 ? (
-        <div className="p-8 text-center text-[var(--md-sys-color-on-surface-variant)] opacity-70">
+        <div className="p-8 text-center text-[var(--md-sys-color-on-surface-variant)] opacity-70 bg-[var(--md-sys-color-surface-container-low)] rounded-[20px]">
           暂无档案记录。
         </div>
       ) : (
-        <DataTable columns={columns} data={history} minWidth="620px" />
+        <div className="flex flex-col gap-[2px] w-full" role="list">
+          {history.map((item, index) => {
+            const cornerRadius = getGroupedItemCornerRadius(index, history.length);
+            const statusInfo = getStatusDisplay(item.status);
+            const canRevoke = item.status === 'PENDING' && session?.role !== 'student';
+
+            return (
+              <div
+                key={item.id}
+                role="listitem"
+                className={`px-4 py-3.5 bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container)] flex items-center gap-3.5 min-h-[56px] w-full overflow-hidden transition-colors ${cornerRadius}`}
+              >
+                {/* Leading Slot: Icon */}
+                <span
+                  className="material-symbols-outlined text-[22px] text-[var(--md-sys-color-on-surface-variant)] shrink-0 select-none"
+                  aria-hidden="true"
+                >
+                  assignment
+                </span>
+
+                {/* Main Content Slot: Title & Subtitle */}
+                <div className="flex-1 min-w-0 pr-2">
+                  <div className="text-sm font-medium text-[var(--md-sys-color-on-surface)] truncate leading-snug">
+                    {getAssessmentDisplayName(item.batteryCode)}
+                  </div>
+                  <div className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5 truncate font-normal">
+                    {item.assignedByName} · {new Date(item.assignedAt).toLocaleDateString()}
+                  </div>
+                </div>
+
+                {/* Trailing Slot: Status Badge + Revoke Action */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <StatusBadge dotColorClass={statusInfo.dotColor} label={statusInfo.label} />
+                  {canRevoke && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRevoke(item.id);
+                      }}
+                      disabled={revokeMutation.isPending}
+                      className="text-[var(--md-sys-color-error)] hover:bg-[var(--md-sys-color-error-container)] hover:text-[var(--md-sys-color-on-error-container)] px-2.5 py-1 rounded-full text-xs font-medium transition-colors disabled:opacity-50 whitespace-nowrap cursor-pointer"
+                    >
+                      {revokeMutation.isPending ? '撤销中...' : '撤销'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
       
       {totalPages > 1 && (
-        <div className="px-6 py-4 flex items-center justify-between border-t border-[var(--md-sys-color-outline-variant)] border-opacity-30 bg-[var(--md-sys-color-surface)]">
+        <div className="px-4 py-3 mt-3 flex items-center justify-between bg-[var(--md-sys-color-surface-container-low)] rounded-[20px]">
           <div className="flex-1 flex justify-between sm:hidden">
             <button
+              type="button"
               onClick={() => setPage(p => Math.max(0, p - 1))}
               disabled={page === 0}
               className="relative inline-flex items-center px-4 py-2 border border-[var(--md-sys-color-outline)] text-sm font-medium rounded-full text-[var(--md-sys-color-on-surface)] bg-transparent hover:bg-[var(--md-sys-color-surface-variant)] disabled:opacity-50"
@@ -158,6 +145,7 @@ const AssessmentHistoryTab: React.FC<AssessmentHistoryTabProps> = ({ studentId }
               上一页
             </button>
             <button
+              type="button"
               onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
               disabled={page >= totalPages - 1}
               className="ml-3 relative inline-flex items-center px-4 py-2 border border-[var(--md-sys-color-outline)] text-sm font-medium rounded-full text-[var(--md-sys-color-on-surface)] bg-transparent hover:bg-[var(--md-sys-color-surface-variant)] disabled:opacity-50"
@@ -174,16 +162,18 @@ const AssessmentHistoryTab: React.FC<AssessmentHistoryTabProps> = ({ studentId }
             <div>
               <nav className="relative z-0 inline-flex rounded-full shadow-sm -space-x-px overflow-hidden border border-[var(--md-sys-color-outline-variant)]" aria-label="Pagination">
                 <button
+                  type="button"
                   onClick={() => setPage(p => Math.max(0, p - 1))}
                   disabled={page === 0}
-                  className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] bg-transparent hover:bg-[var(--md-sys-color-surface-variant)] disabled:opacity-50 border-r border-[var(--md-sys-color-outline-variant)]"
+                  className="relative inline-flex items-center px-3 py-1.5 text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] bg-transparent hover:bg-[var(--md-sys-color-surface-variant)] disabled:opacity-50 border-r border-[var(--md-sys-color-outline-variant)] cursor-pointer"
                 >
                   上一页
                 </button>
                 <button
+                  type="button"
                   onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
                   disabled={page >= totalPages - 1}
-                  className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] bg-transparent hover:bg-[var(--md-sys-color-surface-variant)] disabled:opacity-50"
+                  className="relative inline-flex items-center px-3 py-1.5 text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] bg-transparent hover:bg-[var(--md-sys-color-surface-variant)] disabled:opacity-50 cursor-pointer"
                 >
                   下一页
                 </button>

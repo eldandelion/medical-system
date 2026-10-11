@@ -1,27 +1,31 @@
-# Implementation Plan: Consolidate '量表名称' and '分发时间' in DispatchHistoryTab
+# Implementation Plan: Assessment Records Rework (`AssessmentHistoryTab.tsx`)
 
 ## Overview
-Consolidate the standalone '量表名称' (Assessment Name) and '分发时间' (Dispatch Time) columns in `DispatchHistoryTab.tsx` into a single consolidated column labeled '量表名称', rendering the assessment name as the primary title and the localized dispatch time (`formatDateToChinese`) as the subtitle.
+Rework the "测评记录" (Assessment Records) list in `frontend/src/components/students/AssessmentHistoryTab.tsx` by replacing the wide `<DataTable>` component (with fixed `minWidth="620px"`) with a compact, responsive Material Design 3 inset grouped capsule list (`role="list"`). This eliminates horizontal clipping inside the slide-over drawer of `StudentDetailsView.tsx` while harmonizing visually with the existing MD3 segmented capsule cards (`GroupedInfoList`).
 
-## Requirements
-1. Remove the standalone '分发时间' table column definition from `DispatchHistoryTab.tsx`.
-2. Update the '量表名称' column definition to render:
-   - Primary line: `item.assessmentName || '未知'` (styled with `text-[14px] text-[var(--md-sys-color-on-surface)] font-medium`).
-   - Subtitle line: `item.dispatchedAt ? formatDateToChinese(item.dispatchedAt) : '-'` (styled with `text-[12px] text-[var(--md-sys-color-on-surface-variant)] opacity-70`).
-3. Adjust column width distribution to maintain responsive balance (`studentName`: `w-[30%]`, `assessmentName`: `w-[45%]`, `status`: `w-[20%]`).
-4. Maintain full backwards compatibility with row selection (`getRowId`, `onSelect`), search filters, and chip dropdowns.
-5. Provide comprehensive regression tests in `DispatchHistoryTab.test.tsx` verifying column headers and cell subtitle rendering.
+## File-by-File Roadmap
 
-## Architecture & Component Changes
-- `frontend/src/components/assessments/DispatchHistoryTab.tsx`:
-  - Consolidate columns array: remove standalone `dispatchedAt` column.
-  - Update `assessmentName` column renderer to a multi-line vertical stack (`<div className="flex flex-col">`).
-  - Optimize table column widths.
-- `frontend/src/components/assessments/DispatchHistoryTab.test.tsx`:
-  - Add regression tests checking table column headers: confirms '学生', '量表名称', '状态' exist, and '分发时间' column header does not exist.
-  - Add subtitle rendering test: verifies assessment name and formatted Chinese date (`YYYY年M月D日`) are rendered.
-  - Add fallback rendering test: verifies '未知' and '-' fallback handling when fields are missing or undefined.
+1. **`frontend/src/components/students/AssessmentHistoryTab.test.tsx`** (New Test File)
+   - Establish unit/regression tests prior to implementation (TDD).
+   - Test loading and error states.
+   - Test empty state rendering with rounded container (`bg-[var(--md-sys-color-surface-container-low)] rounded-[20px]`).
+   - Test capsule list rendering (`role="list"` and `role="listitem"`).
+   - Test adaptive corner radii using `getGroupedItemCornerRadius` for 1 item, first item, middle items, and last item in multi-item lists.
+   - Test leading slot icon (`assignment` symbol).
+   - Test primary title (`getAssessmentDisplayName`) and subtitle (`${assignedByName} · ${date}`).
+   - Test status badge rendering (`StatusBadge` with dot color and label for each status).
+   - Test revoke button visibility (rendered only for non-student roles on `PENDING` status) and trigger mutation handler.
+   - Test pagination controls rendering and page change interactions when `totalPages > 1`.
+
+2. **`frontend/src/components/students/AssessmentHistoryTab.tsx`** (Target Component)
+   - Remove `<DataTable>` and its columns configuration.
+   - Import `getGroupedItemCornerRadius` from `../common/GroupedInfoList`.
+   - Render outer wrapper and grouped capsule list with `role="list"` and `role="listitem"`.
+   - Render leading icon (`assignment`), primary title, subtitle (`${assignedByName} · ${date}`), status badge, and revoke button.
+   - Update empty state styling with `rounded-[20px]`.
+   - Retain pagination footer when `totalPages > 1`.
 
 ## Writable Files
-- `frontend/src/components/assessments/DispatchHistoryTab.tsx`
-- `frontend/src/components/assessments/DispatchHistoryTab.test.tsx`
+- `frontend/src/components/students/AssessmentHistoryTab.tsx`
+- `frontend/src/components/students/AssessmentHistoryTab.test.tsx`
+- `.plans/task.md`
