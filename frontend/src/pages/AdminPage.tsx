@@ -389,11 +389,11 @@ export function AdminPage() {
               subtitle={
                 activePage === AdminTabs.USERS
                   ? selectedItem?.role === 'STUDENT'
-                    ? selectedItem?.departmentOrCollege || selectedItem?.email || ''
+                    ? selectedItem?.employeeOrStudentId || selectedItem?.studentNumber || selectedItem?.studentId || selectedItem?.departmentOrCollege || selectedItem?.email || ''
                     : selectedItem?.email || selectedItem?.departmentOrCollege || ''
                   : (activePage === AdminTabs.STUDENTS || activePage === AdminTabs.ASSESSMENTS)
-                  ? selectedItem?.major || ''
-                  : selectedItem?.studentName || ''
+                  ? selectedItem?.studentNumber || selectedItem?.studentId || selectedItem?.major || ''
+                  : selectedItem?.studentNumber || (selectedItem?.studentId ? String(selectedItem.studentId) : '') || selectedItem?.studentName || ''
               }
               headerAvatar={
                 selectedItem?.name || selectedItem?.studentName ? (

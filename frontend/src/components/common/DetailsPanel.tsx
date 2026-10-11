@@ -83,17 +83,21 @@ export function DetailsPanel({
                 )}
                 <div className="flex flex-col min-w-0 truncate">
                   <span className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)] truncate leading-tight">{effectiveTitle}</span>
-                  {effectiveSubtitle && (
-                    <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)] truncate leading-tight mt-0.5">
-                      {effectiveSubtitle}
-                    </span>
+                  {(effectiveSubtitle || effectiveBadge) && (
+                    <div className="flex items-center gap-2 min-w-0 mt-0.5">
+                      {effectiveSubtitle && (
+                        <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)] truncate leading-tight font-mono">
+                          {effectiveSubtitle}
+                        </span>
+                      )}
+                      {effectiveBadge && (
+                        <div className="shrink-0 flex items-center">
+                          {effectiveBadge}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
-                {effectiveBadge && (
-                  <div className="shrink-0 flex items-center">
-                    {effectiveBadge}
-                  </div>
-                )}
               </div>
               <div className="flex items-center gap-0.5 shrink-0">
                 <button
@@ -129,10 +133,10 @@ export function DetailsPanel({
         onClose={() => setIsExpanded(false)}
         title={headerOverride?.title ? (typeof headerOverride.title === 'string' ? headerOverride.title : title) : title}
         subtitle={
-          headerOverride ? (
+          (effectiveSubtitle || effectiveBadge) ? (
             <div className="flex items-center gap-2">
-              <span>{headerOverride.subtitle}</span>
-              {headerOverride.badge}
+              {effectiveSubtitle && <span>{effectiveSubtitle}</span>}
+              {effectiveBadge}
             </div>
           ) : subtitle
         }
@@ -261,43 +265,6 @@ export function DetailItem({ label, value }: { label: string, value: string | Re
 /**
  * Hook to manage scroll collapsing state for detail view headers.
  */
-export function useScrollCollapse(threshold = 20) {
-  const [isScrolled, setIsScrolled] = React.useState(false);
-
-  const handleScroll = React.useCallback((e: React.UIEvent<HTMLElement>) => {
-    setIsScrolled(e.currentTarget.scrollTop > threshold);
-  }, [threshold]);
-
-  return { isScrolled, handleScroll, setIsScrolled };
-}
-
-interface CollapsibleHeaderProps {
-  visible: boolean;
-  children: React.ReactNode;
-  className?: string;
-}
-
-/**
- * Reusable motion wrapper to animate header collapse on scroll.
- */
-export function CollapsibleHeader({ visible, children, className = '' }: CollapsibleHeaderProps) {
-  return (
-    <AnimatePresence initial={false}>
-      {visible && (
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 'auto', opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className={`overflow-hidden origin-top ${className}`}
-        >
-          {children}
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
-
 interface ScrollableDetailsLayoutProps {
   header?: React.ReactNode;
   tabs?: React.ReactNode;
@@ -309,9 +276,8 @@ interface ScrollableDetailsLayoutProps {
 }
 
 /**
- * Reusable details view layout that handles standard scroll-to-collapse header interactions,
- * sticky tab items with scroll-based shadows, fixed action footers, and minimum tab content heights.
- * Automatically synchronizes the scroll title with the outer details shell.
+ * Reusable details view layout that handles sticky tab items,
+ * fixed action footers, and minimum tab content heights with clean scrolling.
  */
 export function ScrollableDetailsLayout({
   header,
@@ -319,29 +285,10 @@ export function ScrollableDetailsLayout({
   footer,
   children,
   className = '',
-  title,
-  disableTitleOverride = false
 }: ScrollableDetailsLayoutProps) {
-  const { isScrolled, handleScroll } = useScrollCollapse(20);
-  const { setTitleOverride } = React.useContext(DetailsContext);
-
-  React.useEffect(() => {
-    if (disableTitleOverride) return;
-    if (setTitleOverride) {
-      if (isScrolled && title) {
-        setTitleOverride(title);
-      } else {
-        setTitleOverride(null);
-      }
-    }
-  }, [isScrolled, title, setTitleOverride, disableTitleOverride]);
-
   return (
     <div className={`flex flex-col h-full bg-[var(--md-sys-color-surface)] relative overflow-hidden ${className}`}>
-      <div
-        className="flex-1 overflow-y-auto custom-scrollbar overflow-x-hidden relative"
-        onScroll={handleScroll}
-      >
+      <div className="flex-1 overflow-y-auto custom-scrollbar overflow-x-hidden relative">
         {/* Header Section */}
         {header && (
           <div className="p-6 pb-4 flex flex-col gap-5 shrink-0">
@@ -351,7 +298,7 @@ export function ScrollableDetailsLayout({
 
         {/* Sticky Tabs */}
         {tabs && (
-          <div className={`sticky top-0 z-20 bg-[var(--md-sys-color-surface)] transition-shadow duration-200 ${isScrolled ? 'shadow-sm' : ''}`}>
+          <div className="sticky top-0 z-20 bg-[var(--md-sys-color-surface)]">
             {tabs}
           </div>
         )}
@@ -367,4 +314,5 @@ export function ScrollableDetailsLayout({
     </div>
   );
 }
+
 

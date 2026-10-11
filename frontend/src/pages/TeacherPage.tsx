@@ -331,7 +331,7 @@ export function TeacherPage() {
               isOpen={!!selectedItem}
               onClose={() => setSelectedItem(null)}
               title={selectedItem?.name ? '学生详情' : (selectedItem?.type ? (REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type) : '转诊详情')}
-              subtitle={selectedItem?.major || (selectedItem?.type ? REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type : '') || selectedItem?.department || ''}
+              subtitle={selectedItem?.studentNumber || (selectedItem?.studentId ? String(selectedItem.studentId) : '') || (selectedItem?.type ? REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type : '') || selectedItem?.major || selectedItem?.department || ''}
               headerAvatar={
                 (selectedItem?.name || selectedItem?.studentName) ? (
                   <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[14px] font-medium">

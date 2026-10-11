@@ -1,24 +1,12 @@
 import React from 'react';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { DetailsPanel, DetailsSection, MetricCard, DetailItem, ScrollableDetailsLayout, CollapsibleHeader, useScrollCollapse } from './DetailsPanel';
+import { DetailsPanel, DetailsSection, MetricCard, DetailItem, ScrollableDetailsLayout } from './DetailsPanel';
 import { DetailsContext } from '../../contexts/DetailsContext';
 
 afterEach(() => {
   cleanup();
 });
-
-const ScrollWrapper = () => {
-  const { isScrolled, handleScroll } = useScrollCollapse(20);
-  return (
-    <div data-testid="scroll-container" onScroll={handleScroll} style={{ overflowY: 'auto', height: '100px' }}>
-      <CollapsibleHeader visible={!isScrolled}>
-        <div data-testid="header-content">Header</div>
-      </CollapsibleHeader>
-      <div style={{ height: '500px' }}>Content</div>
-    </div>
-  );
-};
 
 describe('DetailsPanel Component', () => {
   it('does not render when isOpen is false', () => {
@@ -71,6 +59,25 @@ describe('DetailsPanel Component', () => {
     fireEvent.click(backButton);
   });
 
+  it('renders subtitle and badge side-by-side in subtitle row', () => {
+    render(
+      <DetailsPanel
+        isOpen={true}
+        onClose={() => {}}
+        title="测试学生"
+        subtitle="STU2026001"
+        badge={<span data-testid="test-badge">高风险</span>}
+        icon="person"
+      >
+        <div>Content</div>
+      </DetailsPanel>
+    );
+
+    expect(screen.getByText('测试学生')).toBeDefined();
+    expect(screen.getByText('STU2026001')).toBeDefined();
+    expect(screen.getByTestId('test-badge')).toBeDefined();
+  });
+
   describe('Sub-Components', () => {
     it('DetailsSection properly groups content with a title', () => {
       render(
@@ -96,24 +103,12 @@ describe('DetailsPanel Component', () => {
   });
 
   describe('Scroll and Layout Components', () => {
-    it('handles scrolling with useScrollCollapse and CollapsibleHeader', () => {
-      render(<ScrollWrapper />);
-      
-      const container = screen.getByTestId('scroll-container');
-      expect(screen.getByTestId('header-content')).toBeDefined();
-      
-      fireEvent.scroll(container, { target: { scrollTop: 50 } });
-      
-      // Since it uses framer-motion, it might just start exit animation, but state changes
-      // In a unit test without mock, we rely on the state changing in useScrollCollapse.
-    });
-
     it('renders ScrollableDetailsLayout with header and footer', () => {
       render(
         <ScrollableDetailsLayout
           header={<div data-testid="layout-header">Header</div>}
           footer={<div data-testid="layout-footer">Footer</div>}
-          title="Dynamic Title"
+          title="Static Title"
         >
           <div>Main Content</div>
         </ScrollableDetailsLayout>
@@ -122,43 +117,6 @@ describe('DetailsPanel Component', () => {
       expect(screen.getByTestId('layout-header')).toBeDefined();
       expect(screen.getByTestId('layout-footer')).toBeDefined();
       expect(screen.getByText('Main Content')).toBeDefined();
-    });
-    
-    it('ScrollableDetailsLayout handles scroll event and context', () => {
-      const setTitleOverrideMock = vi.fn();
-      const { container } = render(
-        <DetailsContext.Provider value={{ isFullScreen: true, setTitleOverride: setTitleOverrideMock }}>
-          <ScrollableDetailsLayout title="Dynamic Title">
-            <div style={{ height: '1000px' }}>Main Content</div>
-          </ScrollableDetailsLayout>
-        </DetailsContext.Provider>
-      );
-
-      const scrollArea = container.querySelector('.custom-scrollbar');
-      if (scrollArea) {
-        fireEvent.scroll(scrollArea, { target: { scrollTop: 50 } });
-        expect(setTitleOverrideMock).toHaveBeenCalledWith('Dynamic Title');
-        
-        fireEvent.scroll(scrollArea, { target: { scrollTop: 0 } });
-        expect(setTitleOverrideMock).toHaveBeenCalledWith(null);
-      }
-    });
-
-    it('ScrollableDetailsLayout does not override title when disableTitleOverride is true', () => {
-      const setTitleOverrideMock = vi.fn();
-      const { container } = render(
-        <DetailsContext.Provider value={{ isFullScreen: false, setTitleOverride: setTitleOverrideMock }}>
-          <ScrollableDetailsLayout title="Dynamic Title" disableTitleOverride={true}>
-            <div style={{ height: '1000px' }}>Main Content</div>
-          </ScrollableDetailsLayout>
-        </DetailsContext.Provider>
-      );
-
-      const scrollArea = container.querySelector('.custom-scrollbar');
-      if (scrollArea) {
-        fireEvent.scroll(scrollArea, { target: { scrollTop: 50 } });
-        expect(setTitleOverrideMock).not.toHaveBeenCalled();
-      }
     });
   });
 
