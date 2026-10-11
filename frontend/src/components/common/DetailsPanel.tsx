@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FullScreenView } from './FullScreenView';
-import { DetailsContext } from '../../contexts/DetailsContext';
+import { DetailsContext, DetailsHeaderOverride, DetailsTabItem } from '../../contexts/DetailsContext';
 import { LAYOUT_CONSTANTS } from '../../config/layoutConstants';
 
 interface DetailsPanelProps {
@@ -9,11 +9,12 @@ interface DetailsPanelProps {
   onClose: () => void;
   onExpand?: () => void;
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   icon: string;
   headerAvatar?: React.ReactNode;
+  badge?: React.ReactNode;
   iconColor?: string;
-  tabs?: { id: string, label: string, icon: string }[];
+  tabs?: DetailsTabItem[];
   activeTab?: string;
   onTabChange?: (tabId: string) => void;
   children: React.ReactNode;
@@ -28,6 +29,7 @@ export function DetailsPanel({
   subtitle,
   icon,
   headerAvatar,
+  badge,
   iconColor = 'var(--md-sys-color-primary)',
   tabs = [],
   activeTab = '',
@@ -37,7 +39,8 @@ export function DetailsPanel({
 }: DetailsPanelProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [titleOverride, setTitleOverride] = React.useState<string | null>(null);
-  const [tabsOverride, setTabsOverride] = React.useState<any[] | null>(null);
+  const [tabsOverride, setTabsOverride] = React.useState<DetailsTabItem[] | null>(null);
+  const [headerOverride, setHeaderOverride] = React.useState<DetailsHeaderOverride | null>(null);
 
   // Reset expansion state when the panel is closed
   React.useEffect(() => {
@@ -45,8 +48,14 @@ export function DetailsPanel({
       setIsExpanded(false);
       setTitleOverride(null);
       setTabsOverride(null);
+      setHeaderOverride(null);
     }
   }, [isOpen]);
+
+  const effectiveAvatar = headerOverride?.avatar ?? headerAvatar;
+  const effectiveTitle = headerOverride?.title ?? (titleOverride || title);
+  const effectiveSubtitle = headerOverride?.subtitle ?? subtitle;
+  const effectiveBadge = headerOverride?.badge ?? badge;
 
   return (
     <>
@@ -61,23 +70,45 @@ export function DetailsPanel({
             style={{ width: typeof width === 'number' ? `${width}px` : width }}
           >
             {/* Panel Header */}
-            <div className="flex items-center justify-between px-4 py-3 shrink-0">
-              <div className="flex items-center gap-3 overflow-hidden">
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="material-symbols-outlined shrink-0" style={{ color: iconColor, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+            <div className="flex items-center justify-between px-4 py-3 shrink-0 gap-2 border-b border-[var(--md-sys-color-outline-variant)] border-opacity-20">
+              <div className="flex items-center gap-3 overflow-hidden min-w-0 flex-1">
+                {effectiveAvatar ? (
+                  <div className="shrink-0 flex items-center justify-center">
+                    {effectiveAvatar}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="material-symbols-outlined shrink-0" style={{ color: iconColor, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+                  </div>
+                )}
+                <div className="flex flex-col min-w-0 truncate">
+                  <span className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)] truncate leading-tight">{effectiveTitle}</span>
+                  {effectiveSubtitle && (
+                    <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)] truncate leading-tight mt-0.5">
+                      {effectiveSubtitle}
+                    </span>
+                  )}
                 </div>
-                <span className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)] truncate">{titleOverride || title}</span>
+                {effectiveBadge && (
+                  <div className="shrink-0 flex items-center">
+                    {effectiveBadge}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-0.5 shrink-0">
                 <button
                   onClick={() => onExpand ? onExpand() : setIsExpanded(true)}
                   className="p-1.5 hover:bg-[var(--md-sys-color-surface-variant)] rounded-full transition-colors flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)]"
+                  title="全屏"
+                  aria-label="全屏"
                 >
                   <span className="material-symbols-outlined text-[20px]">open_in_full</span>
                 </button>
                 <button
                   onClick={onClose}
                   className="p-1.5 hover:bg-[var(--md-sys-color-surface-variant)] rounded-full transition-colors flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)]"
+                  title="关闭"
+                  aria-label="关闭"
                 >
                   <span className="material-symbols-outlined text-[20px]">close</span>
                 </button>
@@ -86,7 +117,7 @@ export function DetailsPanel({
 
 
             <div className="flex-1 custom-scrollbar flex flex-col scroll-smooth overflow-hidden">
-              <DetailsContext.Provider value={{ isFullScreen: false, titleOverride, setTitleOverride, tabsOverride, setTabsOverride }}>
+              <DetailsContext.Provider value={{ isFullScreen: false, titleOverride, setTitleOverride, tabsOverride, setTabsOverride, headerOverride, setHeaderOverride }}>
                 {children}
               </DetailsContext.Provider>
             </div>
@@ -96,14 +127,21 @@ export function DetailsPanel({
       <FullScreenView
         isOpen={isExpanded}
         onClose={() => setIsExpanded(false)}
-        title={title}
-        subtitle={subtitle}
-        avatar={headerAvatar}
+        title={headerOverride?.title ? (typeof headerOverride.title === 'string' ? headerOverride.title : title) : title}
+        subtitle={
+          headerOverride ? (
+            <div className="flex items-center gap-2">
+              <span>{headerOverride.subtitle}</span>
+              {headerOverride.badge}
+            </div>
+          ) : subtitle
+        }
+        avatar={effectiveAvatar}
         tabs={tabsOverride || tabs}
         activeTab={activeTab}
         onTabChange={onTabChange}
       >
-        <DetailsContext.Provider value={{ isFullScreen: true, titleOverride, setTitleOverride, tabsOverride, setTabsOverride }}>
+        <DetailsContext.Provider value={{ isFullScreen: true, titleOverride, setTitleOverride, tabsOverride, setTabsOverride, headerOverride, setHeaderOverride }}>
           {children}
         </DetailsContext.Provider>
       </FullScreenView>
@@ -267,6 +305,7 @@ interface ScrollableDetailsLayoutProps {
   children: React.ReactNode;
   className?: string;
   title?: string;
+  disableTitleOverride?: boolean;
 }
 
 /**
@@ -280,12 +319,14 @@ export function ScrollableDetailsLayout({
   footer,
   children,
   className = '',
-  title
+  title,
+  disableTitleOverride = false
 }: ScrollableDetailsLayoutProps) {
   const { isScrolled, handleScroll } = useScrollCollapse(20);
   const { setTitleOverride } = React.useContext(DetailsContext);
 
   React.useEffect(() => {
+    if (disableTitleOverride) return;
     if (setTitleOverride) {
       if (isScrolled && title) {
         setTitleOverride(title);
@@ -293,7 +334,7 @@ export function ScrollableDetailsLayout({
         setTitleOverride(null);
       }
     }
-  }, [isScrolled, title, setTitleOverride]);
+  }, [isScrolled, title, setTitleOverride, disableTitleOverride]);
 
   return (
     <div className={`flex flex-col h-full bg-[var(--md-sys-color-surface)] relative overflow-hidden ${className}`}>

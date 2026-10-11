@@ -78,4 +78,29 @@ describe('FullScreenView Component', () => {
     fireEvent.click(screen.getByText('Details'));
     expect(onTabChangeMock).toHaveBeenCalledWith('tab2');
   });
+
+  it('renders custom avatar and ReactNode subtitle with student number and risk badge', () => {
+    render(
+      <FullScreenView
+        isOpen={true}
+        onClose={() => {}}
+        title="张三"
+        avatar={<div data-testid="student-avatar">张</div>}
+        subtitle={
+          <div data-testid="compound-subtitle" className="flex items-center gap-2">
+            <span>STU2026001</span>
+            <span data-testid="risk-pill">高风险</span>
+          </div>
+        }
+      >
+        <div>Content</div>
+      </FullScreenView>
+    );
+
+    expect(screen.getByTestId('student-avatar')).toBeDefined();
+    expect(screen.getByText('张三')).toBeDefined();
+    expect(screen.getByTestId('compound-subtitle')).toBeDefined();
+    expect(screen.getByText('STU2026001')).toBeDefined();
+    expect(screen.getByTestId('risk-pill')).toBeDefined();
+  });
 });

@@ -41,7 +41,30 @@ export const REFERRAL_DETAILS_TABS = [
 
 export function ReferralDetailsView(props: ReferralDetailsViewProps) {
   const { session } = useAuth();
-  
+  const { setHeaderOverride } = useDetails();
+
+  React.useEffect(() => {
+    if (setHeaderOverride && props.referral) {
+      setHeaderOverride({
+        avatar: (
+          <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[14px] font-medium shrink-0">
+            {props.referral.studentName ? props.referral.studentName.charAt(0) : '?'}
+          </div>
+        ),
+        title: props.referral.studentName,
+        subtitle: props.referral.studentNumber || 'N/A',
+        badge: (
+          <div className={`px-2.5 py-0.5 rounded-full flex items-center font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${RISK_LEVEL_STYLES[props.referral.riskLevel] || ''}`}>
+            <span>{RISK_LEVEL_LABELS[props.referral.riskLevel] || props.referral.riskLevel}</span>
+          </div>
+        ),
+      });
+    }
+    return () => {
+      setHeaderOverride?.(null);
+    };
+  }, [setHeaderOverride, props.referral]);
+
   const { data: referralDetails, isLoading } = useQuery<ReferralDetails>({
     queryKey: ['/api/referrals', props.referral.id, 'details'],
     queryFn: async () => {
@@ -54,21 +77,10 @@ export function ReferralDetailsView(props: ReferralDetailsViewProps) {
   });
 
   if (isLoading || !referralDetails) {
-    const { isFullScreen } = useDetails();
     return (
       <ScrollableDetailsLayout
         title="加载中..."
-        header={!props.hideHeader && !isFullScreen ? (
-          <div className="flex items-center justify-between gap-4 animate-pulse">
-            <div className="flex items-center gap-4 min-w-0">
-              <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-surface-variant)] opacity-30 shrink-0"></div>
-              <div className="flex flex-col gap-2 min-w-0">
-                <div className="w-32 h-6 bg-[var(--md-sys-color-surface-variant)] opacity-30 rounded-md"></div>
-                <div className="w-64 h-4 bg-[var(--md-sys-color-surface-variant)] opacity-30 rounded-md"></div>
-              </div>
-            </div>
-          </div>
-        ) : undefined}
+        disableTitleOverride={true}
       >
         <div className="flex flex-col gap-6 animate-pulse p-2 pt-6">
           <div className="h-40 bg-[var(--md-sys-color-surface-variant)] rounded-2xl opacity-30" />
@@ -98,7 +110,7 @@ interface ReferralDetailsPresenterProps extends Omit<ReferralDetailsViewProps, '
 }
 
 function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHeader, activeTab: propsActiveTab, onTabChange, onUpdate }: ReferralDetailsPresenterProps) {
-  const { isFullScreen, setTabsOverride } = useDetails();
+  const { isFullScreen, setTabsOverride, setHeaderOverride } = useDetails();
   const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
 
@@ -160,47 +172,37 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
     };
   }, [tabs, setTabsOverride]);
 
+  const studentNumber = referral.studentNumber || referralDetails.studentDemographics?.studentId || 'N/A';
+
+  React.useEffect(() => {
+    if (setHeaderOverride) {
+      setHeaderOverride({
+        avatar: (
+          <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[14px] font-medium shrink-0">
+            {referral.studentName ? referral.studentName.charAt(0) : '?'}
+          </div>
+        ),
+        title: referral.studentName,
+        subtitle: studentNumber,
+        badge: (
+          <div className={`px-2.5 py-0.5 rounded-full flex items-center font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${RISK_LEVEL_STYLES[referral.riskLevel] || ''}`}>
+            <span>{RISK_LEVEL_LABELS[referral.riskLevel] || referral.riskLevel}</span>
+          </div>
+        ),
+      });
+    }
+    return () => {
+      setHeaderOverride?.(null);
+    };
+  }, [setHeaderOverride, referral.studentName, studentNumber, referral.riskLevel]);
+
   const displayStatus = referral.displayStatus || referral.status;
   const isDoctorRejected = displayStatus === 'REJECTED'; // Removed steps check since we don't have it easily here. If needed we can fetch tracking data.
 
   return (
     <ScrollableDetailsLayout
       title={referral.studentName}
-      header={!hideHeader && !isFullScreen ? (
-        <div className="flex items-center justify-between gap-4 flex-nowrap overflow-hidden">
-          <div className="flex items-center gap-4 min-w-0">
-            {/* Primary Anchor: First Letter Avatar */}
-            <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium shrink-0 animate-in fade-in zoom-in duration-300">
-              {referral.studentName.charAt(0)}
-            </div>
-            <div className="flex flex-col gap-1 min-w-0">
-              <h1 className="text-[24px] font-medium leading-[32px] text-[var(--md-sys-color-on-surface)] tracking-tight truncate">
-                {referral.studentName}
-              </h1>
-              <div className="flex items-center gap-3 flex-nowrap whitespace-nowrap">
-                <span className="font-mono text-[13px] tracking-tight text-[var(--md-sys-color-primary)] font-bold">
-                  {referralDetails.studentDemographics?.studentId || 'N/A'}
-                </span>
-                <span className="opacity-40 shrink-0">•</span>
-                <span className="font-normal truncate">{referralDetails.studentDemographics?.school || '未知'}</span>
-                <span className="opacity-40 shrink-0">•</span>
-                <div className={`px-3 py-1 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${RISK_LEVEL_STYLES[referral.riskLevel]}`}>
-                  <span>
-                    {RISK_LEVEL_LABELS[referral.riskLevel] || referral.riskLevel}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Clickable right arrow button in the vertical middle */}
-          <div className="flex items-center text-[var(--md-sys-color-on-surface-variant)] shrink-0">
-            <md-icon-button>
-              <md-icon>chevron_right</md-icon>
-            </md-icon-button>
-          </div>
-        </div>
-      ) : undefined}
+      disableTitleOverride={true}
       tabs={!isFullScreen ? (
         <SecondaryTabs
           tabs={tabs}

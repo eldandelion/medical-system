@@ -143,5 +143,109 @@ describe('DetailsPanel Component', () => {
         expect(setTitleOverrideMock).toHaveBeenCalledWith(null);
       }
     });
+
+    it('ScrollableDetailsLayout does not override title when disableTitleOverride is true', () => {
+      const setTitleOverrideMock = vi.fn();
+      const { container } = render(
+        <DetailsContext.Provider value={{ isFullScreen: false, setTitleOverride: setTitleOverrideMock }}>
+          <ScrollableDetailsLayout title="Dynamic Title" disableTitleOverride={true}>
+            <div style={{ height: '1000px' }}>Main Content</div>
+          </ScrollableDetailsLayout>
+        </DetailsContext.Provider>
+      );
+
+      const scrollArea = container.querySelector('.custom-scrollbar');
+      if (scrollArea) {
+        fireEvent.scroll(scrollArea, { target: { scrollTop: 50 } });
+        expect(setTitleOverrideMock).not.toHaveBeenCalled();
+      }
+    });
+  });
+
+  describe('DetailsPanel Header Override', () => {
+    const ChildWithOverride = () => {
+      const { setHeaderOverride } = React.useContext(DetailsContext);
+      React.useEffect(() => {
+        setHeaderOverride?.({
+          avatar: <div data-testid="custom-avatar">张</div>,
+          title: '张三',
+          subtitle: 'STU2026001',
+          badge: <span data-testid="custom-badge">高风险</span>,
+        });
+        return () => {
+          setHeaderOverride?.(null);
+        };
+      }, [setHeaderOverride]);
+      return <div>Child Content</div>;
+    };
+
+    it('renders headerOverride (avatar, title, subtitle, badge) when set by child via DetailsContext', () => {
+      render(
+        <DetailsPanel isOpen={true} onClose={() => {}} title="转诊详情" icon="description">
+          <ChildWithOverride />
+        </DetailsPanel>
+      );
+
+      expect(screen.getByTestId('custom-avatar')).toBeDefined();
+      expect(screen.getByText('张三')).toBeDefined();
+      expect(screen.getByText('STU2026001')).toBeDefined();
+      expect(screen.getByTestId('custom-badge')).toBeDefined();
+      // Original icon should not be rendered when avatar is provided
+      expect(screen.queryByText('description')).toBeNull();
+    });
+
+    it('passes compound subtitle and avatar to FullScreenView when expanded with headerOverride', () => {
+      render(
+        <DetailsPanel isOpen={true} onClose={() => {}} title="转诊详情" icon="description">
+          <ChildWithOverride />
+        </DetailsPanel>
+      );
+
+      const expandIcon = screen.getByText('open_in_full');
+      fireEvent.click(expandIcon);
+
+      // Verify FullScreenView rendered custom avatar, title, subtitle and badge
+      expect(screen.getAllByTestId('custom-avatar').length).toBeGreaterThanOrEqual(2);
+      expect(screen.getAllByText('张三').length).toBeGreaterThanOrEqual(2);
+      expect(screen.getAllByText('STU2026001').length).toBeGreaterThanOrEqual(2);
+      expect(screen.getAllByTestId('custom-badge').length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('falls back to default props when headerOverride is cleared or null', () => {
+      const ToggleOverrideChild = ({ enabled }: { enabled: boolean }) => {
+        const { setHeaderOverride } = React.useContext(DetailsContext);
+        React.useEffect(() => {
+          if (enabled) {
+            setHeaderOverride?.({
+              avatar: <div data-testid="custom-avatar">李</div>,
+              title: '李四',
+            });
+          } else {
+            setHeaderOverride?.(null);
+          }
+        }, [enabled, setHeaderOverride]);
+        return <div>Toggle Child</div>;
+      };
+
+      const { rerender } = render(
+        <DetailsPanel isOpen={true} onClose={() => {}} title="默认标题" icon="person">
+          <ToggleOverrideChild enabled={true} />
+        </DetailsPanel>
+      );
+
+      expect(screen.getByTestId('custom-avatar')).toBeDefined();
+      expect(screen.getByText('李四')).toBeDefined();
+
+      rerender(
+        <DetailsPanel isOpen={true} onClose={() => {}} title="默认标题" icon="person">
+          <ToggleOverrideChild enabled={false} />
+        </DetailsPanel>
+      );
+
+      expect(screen.queryByTestId('custom-avatar')).toBeNull();
+      expect(screen.getByText('默认标题')).toBeDefined();
+      expect(screen.getByText('person')).toBeDefined();
+    });
   });
 });
+

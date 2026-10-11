@@ -12,7 +12,7 @@ interface FullScreenViewProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   avatar?: React.ReactNode;
   tabs?: FullScreenTab[];
   activeTab?: string;
@@ -61,7 +61,7 @@ export function FullScreenView({
 
             <div className="flex flex-col min-w-0 flex-1">
               <h1 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)] truncate leading-tight">{title}</h1>
-              {subtitle && <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)] truncate leading-tight opacity-70">{subtitle}</span>}
+              {subtitle && <div className="text-[12px] text-[var(--md-sys-color-on-surface-variant)] truncate leading-tight opacity-70">{subtitle}</div>}
             </div>
 
             <div id="fullscreen-header-actions" className="flex items-center gap-2 ml-auto shrink-0 px-2">

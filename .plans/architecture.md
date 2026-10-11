@@ -1,59 +1,141 @@
-# Architecture & Analysis: Assessment Display Names, Status Color Alignment, and Recall Icon Button
+# Architecture: Referral Details View Header Layout Modernization
 
-## 1. Context & User Objectives
-1. **Assessment Name Resolution in "指派历史" (`DispatchHistoryTab.tsx`)**:
-   - In `DispatchHistoryTab.tsx`, the '量表名称' column previously rendered `item.assessmentName || '未知'`.
-   - `item.assessmentName` contains the raw battery code/enum (e.g., `PHQ-9`, `PHQ_9`, `GAD-7`, `SLEEP_DISORDER`).
-   - Fix: Resolve using `getAssessmentName(item.assessmentName)` with catalog title fallback to display the actual localized assessment name (e.g., `情绪状况评估 (PHQ-9)`).
-2. **Status Color Alignment between Main List and Details Panel (`AssessmentHistoryTab.tsx`)**:
-   - In `DispatchHistoryTab.tsx` (main list), `COMPLETED` is green (`bg-green-500`) and `PENDING` is orange (`bg-orange-500`).
-   - In `AssessmentHistoryTab.tsx` (details panel), `COMPLETED` was purple (`bg-[var(--md-sys-color-primary-container)]`) and other statuses were pink/purple.
-   - Fix: Align `AssessmentHistoryTab.tsx` status colors to:
-     - `COMPLETED`: `bg-green-500`
-     - `PENDING` / `IN_PROGRESS`: `bg-orange-500`
-     - `EXPIRED`: `bg-red-500`
-     - `REVOKED`: `bg-gray-400`
-3. **Recall / Revoke Icon Button in 测评记录 (`AssessmentHistoryTab.tsx`)**:
-   - Replace the text pill button (`撤销`) with an MD3 icon button featuring the `undo` backward curving arrow symbol.
-   - When pending, show a small spinner or disabled state, and include accessible `title="撤销"` / `aria-label="撤销"`.
+## 1. Overview & Objectives
+Refactor the Referral Details View layout to move the student header information (circular avatar placeholder, student name, student number subtitle, pill-shaped risk indicator) into the very top header of `DetailsPanel` (side panel mode) and `FullScreenView` (expanded mode), on the same line as the expand and close action buttons.
+- Eliminate the previous inner header in `ReferralDetailsView` (which had a large 64px avatar, student name, college, and risk factor inside `ScrollableDetailsLayout`).
+- College is completely removed from the header.
+- Student number becomes a subtitle directly below the student name (same color and font styling).
+- Pill-shaped risk factor indicator is placed right after the title & subtitle block in the side panel header, and in the subtitle section in FullScreenView.
+- The profile/description icon in the top left corner of the details view is replaced with the circular avatar placeholder.
+- Other consumers of `DetailsPanel` (e.g. `StudentDetailsView`, `StaffDetailsView`, `UserDetailsView`) remain 100% backward-compatible.
 
-## 2. Component Design & Changes
+---
 
-### `DispatchHistoryTab.tsx`
-- Import `getAssessmentName` from `../../constants/assessmentDictionary`.
-- Fetch or access assessment catalog via `useAssessmentCatalogManagement` (or use `getAssessmentName` dictionary lookup directly).
-- Render `getAssessmentName(item.assessmentName)` in the column title.
+## 2. Component Design & Contracts
 
-### `AssessmentHistoryTab.tsx`
-- Update `getStatusDisplay`:
-  ```tsx
-  case 'COMPLETED': return { label: '已完成', dotColor: 'bg-green-500' };
-  case 'PENDING': return { label: '待测评', dotColor: 'bg-orange-500' };
-  case 'IN_PROGRESS': return { label: '进行中', dotColor: 'bg-orange-500' };
-  case 'EXPIRED': return { label: '已过期', dotColor: 'bg-red-500' };
-  case 'REVOKED': return { label: '已撤销', dotColor: 'bg-gray-400' };
-  ```
-- Replace text button with `undo` icon button:
-  ```tsx
-  <button
-    type="button"
-    onClick={(e) => {
-      e.stopPropagation();
-      handleRevoke(item.id);
-    }}
-    disabled={revokeMutation.isPending}
-    title="撤销"
-    aria-label="撤销"
-    className="w-7 h-7 rounded-full flex items-center justify-center text-[var(--md-sys-color-error)] hover:bg-[var(--md-sys-color-error-container)] hover:text-[var(--md-sys-color-on-error-container)] transition-colors disabled:opacity-50 cursor-pointer"
-  >
-    <span className="material-symbols-outlined text-[18px] leading-none select-none" aria-hidden="true">
-      undo
-    </span>
-  </button>
-  ```
+### 2.1. `DetailsContext.tsx`
+Add strongly-typed `DetailsHeaderOverride` and update `DetailsContextType`:
+```typescript
+export interface DetailsHeaderOverride {
+  avatar?: React.ReactNode;
+  title?: React.ReactNode;
+  subtitle?: React.ReactNode;
+  badge?: React.ReactNode;
+}
 
-## 3. Test Coverage Strategy
-- Update `DispatchHistoryTab.test.tsx` to assert that `item.assessmentName` is resolved to localized names (e.g. `PHQ_9` -> `情绪状况评估 (PHQ-9)`).
-- Update `AssessmentHistoryTab.test.tsx` to verify:
-  - Status dot colors match green/orange/red/gray.
-  - Revoke button is an icon button containing the `undo` icon and accessible `aria-label="撤销"`.
+export interface DetailsTabItem {
+  id: string;
+  label: string;
+  icon: string;
+}
+
+export interface DetailsContextType {
+  isFullScreen: boolean;
+  titleOverride?: string | null;
+  setTitleOverride?: (title: string | null) => void;
+  tabsOverride?: DetailsTabItem[] | null;
+  setTabsOverride?: (tabs: DetailsTabItem[] | null) => void;
+  headerOverride?: DetailsHeaderOverride | null;
+  setHeaderOverride?: (header: DetailsHeaderOverride | null) => void;
+}
+```
+
+### 2.2. `DetailsPanel.tsx`
+1. Manage `headerOverride` state in `DetailsPanel`:
+   ```typescript
+   const [headerOverride, setHeaderOverride] = React.useState<DetailsHeaderOverride | null>(null);
+   ```
+2. Derive effective slots:
+   ```typescript
+   const effectiveAvatar = headerOverride?.avatar ?? headerAvatar;
+   const effectiveTitle = headerOverride?.title ?? (titleOverride || title);
+   const effectiveSubtitle = headerOverride?.subtitle ?? subtitle;
+   const effectiveBadge = headerOverride?.badge;
+   ```
+3. Top Header Bar Layout:
+   ```tsx
+   <div className="flex items-center justify-between px-4 py-3 shrink-0 gap-2 border-b border-[var(--md-sys-color-outline-variant)] border-opacity-20">
+     <div className="flex items-center gap-3 overflow-hidden min-w-0 flex-1">
+       {/* Left Visual: Avatar or Default Icon */}
+       {effectiveAvatar ? (
+         <div className="shrink-0 flex items-center justify-center">
+           {effectiveAvatar}
+         </div>
+       ) : (
+         <div className="flex items-center gap-2 shrink-0">
+           <span className="material-symbols-outlined shrink-0" style={{ color: iconColor, fontVariationSettings: "'FILL' 1" }}>
+             {icon}
+           </span>
+         </div>
+       )}
+
+       {/* Title + Subtitle */}
+       <div className="flex flex-col min-w-0 truncate">
+         <span className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)] truncate leading-tight">
+           {effectiveTitle}
+         </span>
+         {effectiveSubtitle && (
+           <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)] truncate leading-tight mt-0.5">
+             {effectiveSubtitle}
+           </span>
+         )}
+       </div>
+
+       {/* Trailing Badge: Risk Indicator */}
+       {effectiveBadge && (
+         <div className="shrink-0 flex items-center">
+           {effectiveBadge}
+         </div>
+       )}
+     </div>
+
+     {/* Expand & Close Controls */}
+     <div className="flex items-center gap-0.5 shrink-0">
+       <button onClick={() => onExpand ? onExpand() : setIsExpanded(true)} className="...">
+         <span className="material-symbols-outlined text-[20px]">open_in_full</span>
+       </button>
+       <button onClick={onClose} className="...">
+         <span className="material-symbols-outlined text-[20px]">close</span>
+       </button>
+     </div>
+   </div>
+   ```
+
+4. Pass resolved elements to `FullScreenView`:
+   ```tsx
+   <FullScreenView
+     isOpen={isExpanded}
+     onClose={() => setIsExpanded(false)}
+     title={headerOverride?.title ? (typeof headerOverride.title === 'string' ? headerOverride.title : title) : title}
+     subtitle={
+       headerOverride ? (
+         <div className="flex items-center gap-2">
+           <span>{headerOverride.subtitle}</span>
+           {headerOverride.badge}
+         </div>
+       ) : subtitle
+     }
+     avatar={effectiveAvatar}
+     tabs={tabsOverride || tabs}
+     activeTab={activeTab}
+     onTabChange={onTabChange}
+   >
+     ...
+   </FullScreenView>
+   ```
+
+5. In `ScrollableDetailsLayout`:
+   Add `disableTitleOverride?: boolean` prop so scrolling does not overwrite `titleOverride` when the custom top header is active.
+
+### 2.3. `FullScreenView.tsx`
+Allow `subtitle?: React.ReactNode` so it can cleanly render the compound subtitle containing student number and risk pill.
+
+### 2.4. `ReferralDetailsView.tsx`
+1. Remove `header` prop from `ScrollableDetailsLayout` in both loading state and loaded state (`ReferralDetailsPresenter`).
+2. Pass `disableTitleOverride={true}` to `ScrollableDetailsLayout`.
+3. In `ReferralDetailsView` / `ReferralDetailsPresenter`, register `headerOverride` in `useEffect`:
+   - Avatar: `w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[14px] font-medium`
+   - Title: `referral.studentName`
+   - Subtitle: `studentNumber` (from `referral.studentNumber` or `referralDetails.studentDemographics?.studentId || 'N/A'`)
+   - Badge: Risk indicator pill with `RISK_LEVEL_STYLES[referral.riskLevel]` and `RISK_LEVEL_LABELS[referral.riskLevel]`.
+   - Cleanup on unmount (`setHeaderOverride(null)`).
