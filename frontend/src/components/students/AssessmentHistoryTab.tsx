@@ -53,12 +53,12 @@ const AssessmentHistoryTab: React.FC<AssessmentHistoryTabProps> = ({ studentId }
 
   const getStatusDisplay = (status: string) => {
     switch (status) {
-      case 'COMPLETED': return { label: '已完成', dotColor: 'bg-[var(--md-sys-color-primary-container)]' };
-      case 'PENDING': return { label: '待测评', dotColor: 'bg-[var(--md-sys-color-tertiary-container)]' };
-      case 'IN_PROGRESS': return { label: '进行中', dotColor: 'bg-[var(--md-sys-color-secondary-container)]' };
-      case 'REVOKED': return { label: '已撤销', dotColor: 'bg-[var(--md-sys-color-surface-variant)]' };
-      case 'EXPIRED': return { label: '已过期', dotColor: 'bg-[var(--md-sys-color-error-container)]' };
-      default: return { label: status, dotColor: 'bg-[var(--md-sys-color-surface-variant)]' };
+      case 'COMPLETED': return { label: '已完成', dotColor: 'bg-green-500' };
+      case 'PENDING': return { label: '待测评', dotColor: 'bg-orange-500' };
+      case 'IN_PROGRESS': return { label: '进行中', dotColor: 'bg-orange-500' };
+      case 'REVOKED': return { label: '已撤销', dotColor: 'bg-gray-400' };
+      case 'EXPIRED': return { label: '已过期', dotColor: 'bg-red-500' };
+      default: return { label: status, dotColor: 'bg-gray-400' };
     }
   };
   
@@ -116,14 +116,18 @@ const AssessmentHistoryTab: React.FC<AssessmentHistoryTabProps> = ({ studentId }
                   {canRevoke && (
                     <button
                       type="button"
+                      title="撤销"
+                      aria-label="撤销"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleRevoke(item.id);
                       }}
                       disabled={revokeMutation.isPending}
-                      className="text-[var(--md-sys-color-error)] hover:bg-[var(--md-sys-color-error-container)] hover:text-[var(--md-sys-color-on-error-container)] px-2.5 py-1 rounded-full text-xs font-medium transition-colors disabled:opacity-50 whitespace-nowrap cursor-pointer"
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--md-sys-color-error)] hover:bg-[var(--md-sys-color-error-container)] hover:text-[var(--md-sys-color-on-error-container)] transition-colors disabled:opacity-50 cursor-pointer"
                     >
-                      {revokeMutation.isPending ? '撤销中...' : '撤销'}
+                      <span className="material-symbols-outlined text-[18px]">
+                        undo
+                      </span>
                     </button>
                   )}
                 </div>

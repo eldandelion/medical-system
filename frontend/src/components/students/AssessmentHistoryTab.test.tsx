@@ -168,11 +168,14 @@ describe('AssessmentHistoryTab', () => {
     expect(screen.getByText(/PHQ-9/)).toBeDefined();
     expect(screen.getByText(/李老师/)).toBeDefined();
 
-    // Status badge
+    // Status badge (PENDING uses bg-orange-500)
     expect(screen.getByText('待测评')).toBeDefined();
+    const badgeContainer = screen.getByText('待测评').parentElement;
+    const dot = badgeContainer?.querySelector('span[aria-hidden="true"]');
+    expect(dot?.className).toContain('bg-orange-500');
   });
 
-  it('shows revoke button for PENDING status for teachers and handles revoke click', async () => {
+  it('shows undo icon button for PENDING status for teachers and handles revoke click', async () => {
     const mockItems = [
       {
         id: 101,
@@ -192,8 +195,9 @@ describe('AssessmentHistoryTab', () => {
 
     render(<AssessmentHistoryTab studentId="1" />);
 
-    const revokeBtn = screen.getByText('撤销');
+    const revokeBtn = screen.getByLabelText('撤销');
     expect(revokeBtn).toBeDefined();
+    expect(screen.getByText('undo')).toBeDefined();
 
     fireEvent.click(revokeBtn);
     expect(mockRevokeMutateAsync).toHaveBeenCalledWith(101);
@@ -218,7 +222,7 @@ describe('AssessmentHistoryTab', () => {
     } as any);
 
     const { rerender } = render(<AssessmentHistoryTab studentId="1" />);
-    expect(screen.queryByText('撤销')).toBeNull();
+    expect(screen.queryByLabelText('撤销')).toBeNull();
 
     // For student role with PENDING status
     vi.spyOn(authContext, 'useAuth').mockReturnValue({
@@ -243,7 +247,7 @@ describe('AssessmentHistoryTab', () => {
     } as any);
 
     rerender(<AssessmentHistoryTab studentId="1" />);
-    expect(screen.queryByText('撤销')).toBeNull();
+    expect(screen.queryByLabelText('撤销')).toBeNull();
   });
 
   it('renders pagination controls when totalPages > 1 and navigates pages', () => {

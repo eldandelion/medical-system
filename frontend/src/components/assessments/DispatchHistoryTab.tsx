@@ -7,6 +7,8 @@ import { ExpandableSearchBar } from '../common/ExpandableSearchBar';
 import { AvatarBadge } from '../common/AvatarBadge';
 import { formatDateToChinese } from '../../utils/dateUtils';
 import { StatusBadge } from '../common/StatusBadge';
+import { getAssessmentName } from '../../constants/assessmentDictionary';
+import { useAssessmentCatalogManagement } from '../../hooks/useAssessmentCatalogManagement';
 
 export interface DispatchHistoryTabProps {
   onSelect?: (student: Student, record: ParticipationRecordDto) => void;
@@ -31,6 +33,14 @@ export const DispatchHistoryTab: React.FC<DispatchHistoryTabProps> = ({ onSelect
       setSelectedDispatch(dispatches[0].id);
     }
   }, [selectedDispatch, dispatches]);
+
+  const { catalog } = useAssessmentCatalogManagement();
+
+  const getDisplayName = (code?: string) => {
+    if (!code) return '未知';
+    const catalogTitle = catalog?.find(c => c.batteryCode === code)?.title;
+    return getAssessmentName(code, catalogTitle);
+  };
 
   const severityOptions = [
     { label: '全部等级', value: 'ALL' },
@@ -81,7 +91,7 @@ export const DispatchHistoryTab: React.FC<DispatchHistoryTabProps> = ({ onSelect
       render: (item) => (
         <div className="flex flex-col">
           <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)]">
-            {item.assessmentName || '未知'}
+            {getDisplayName(item.assessmentName)}
           </span>
           <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)] opacity-70">
             {item.dispatchedAt ? formatDateToChinese(item.dispatchedAt) : '-'}

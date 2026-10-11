@@ -4,6 +4,14 @@ import { DispatchHistoryTab } from './DispatchHistoryTab';
 import * as dispatchHooks from '../../hooks/useAssessmentDispatchHistory';
 
 vi.mock('../../hooks/useAssessmentDispatchHistory');
+vi.mock('../../hooks/useAssessmentCatalogManagement', () => ({
+  useAssessmentCatalogManagement: () => ({
+    catalog: [
+      { batteryCode: 'PHQ-9', title: '情绪状况评估 (PHQ-9)' },
+      { batteryCode: 'PHQ_9', title: '情绪状况评估 (PHQ-9)' },
+    ],
+  }),
+}));
 
 describe('DispatchHistoryTab', () => {
   beforeEach(() => {
@@ -99,7 +107,7 @@ describe('DispatchHistoryTab', () => {
             studentName: '李四',
             status: 'COMPLETED',
             severity: 'LOW',
-            assessmentName: 'GAD-7 焦虑症筛查量表',
+            assessmentName: 'PHQ_9',
             dispatchedAt: '2023-10-01T12:00:00',
           }
         ],
@@ -111,7 +119,7 @@ describe('DispatchHistoryTab', () => {
 
     render(<DispatchHistoryTab />);
 
-    expect(screen.getByText('GAD-7 焦虑症筛查量表')).toBeDefined();
+    expect(screen.getByText('情绪状况评估 (PHQ-9)')).toBeDefined();
     expect(screen.getByText('2023年10月1日')).toBeDefined();
   });
 
