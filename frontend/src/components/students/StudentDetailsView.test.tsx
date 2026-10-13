@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StudentDetailsView } from './StudentDetailsView';
 import { Student } from '../../types';
 
+import { DetailsContext, DetailsHeaderOverride } from '../../contexts/DetailsContext';
+
 const mockUseAuth = vi.fn();
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => mockUseAuth()
@@ -44,10 +46,15 @@ describe('StudentDetailsView Component', () => {
     }
   };
 
-  const renderWithProviders = (ui: React.ReactElement) => {
+  const renderWithProviders = (
+    ui: React.ReactElement,
+    detailsContextValue: Partial<React.ComponentProps<typeof DetailsContext.Provider>['value']> = {}
+  ) => {
     return render(
       <QueryClientProvider client={queryClient}>
-        {ui}
+        <DetailsContext.Provider value={{ isFullScreen: false, ...detailsContextValue }}>
+          {ui}
+        </DetailsContext.Provider>
       </QueryClientProvider>
     );
   };
@@ -84,34 +91,55 @@ describe('StudentDetailsView Component', () => {
     cleanup();
   });
 
-  it('renders student name and studentNumber in header, avoiding N/A', async () => {
-    renderWithProviders(<StudentDetailsView student={mockStudent} />);
+  it('registers headerOverride with avatar, title, subtitle, and badge on mount', async () => {
+    const setHeaderOverrideMock = vi.fn();
+    renderWithProviders(<StudentDetailsView student={mockStudent} />, {
+      setHeaderOverride: setHeaderOverrideMock,
+    });
 
-    // Student name
-    expect(screen.getByText('张伟')).toBeDefined();
+    expect(setHeaderOverrideMock).toHaveBeenCalled();
+    const lastCall = setHeaderOverrideMock.mock.calls[setHeaderOverrideMock.mock.calls.length - 1][0] as DetailsHeaderOverride;
+    expect(lastCall).toBeDefined();
+    expect(lastCall.title).toBe('张伟');
+    expect(lastCall.subtitle).toBe('2021001');
 
-    // Student number displayed in header below name
-    const studentNumberElements = screen.getAllByText('2021001');
-    expect(studentNumberElements.length).toBeGreaterThanOrEqual(1);
+    // Avatar initial check
+    const avatarRender = render(lastCall.avatar);
+    expect(avatarRender.getByText('张')).toBeDefined();
 
-    // Header student number should have font-mono styling
-    const headerNumberElement = studentNumberElements.find(
-      (el) => el.classList.contains('font-mono')
-    );
-    expect(headerNumberElement).toBeDefined();
-    expect(headerNumberElement?.textContent).toBe('2021001');
-
-    // Make sure 'N/A' is not rendered for student number in header
-    expect(headerNumberElement?.textContent).not.toBe('N/A');
+    // Badge check
+    const badgeRender = render(lastCall.badge);
+    expect(badgeRender.getByText('低')).toBeDefined();
   });
 
-  it('renders student number in the Overview tab MetricCard', async () => {
+  it('cleans up headerOverride on unmount', async () => {
+    const setHeaderOverrideMock = vi.fn();
+    const { unmount } = renderWithProviders(<StudentDetailsView student={mockStudent} />, {
+      setHeaderOverride: setHeaderOverrideMock,
+    });
+
+    unmount();
+    expect(setHeaderOverrideMock).toHaveBeenLastCalledWith(null);
+  });
+
+  it('does not render legacy inner header or duplicate h1', async () => {
     renderWithProviders(<StudentDetailsView student={mockStudent} />);
 
-    // Metric card / list item for student number
+    // Legacy inner h1 should not exist in StudentDetailsView
+    expect(screen.queryAllByRole('heading', { level: 1 })).toHaveLength(0);
+
+    // Legacy 64px avatar container should not exist
+    const largeAvatars = document.querySelectorAll('.w-16.h-16');
+    expect(largeAvatars.length).toBe(0);
+  });
+
+  it('renders student number in the Overview tab', async () => {
+    renderWithProviders(<StudentDetailsView student={mockStudent} />);
+
+    // Metric card / list item for student number in Overview tab
     expect(screen.getByText('学号')).toBeDefined();
     const numbers = screen.getAllByText('2021001');
-    expect(numbers.length).toBeGreaterThanOrEqual(2); // Header + Overview list
+    expect(numbers.length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders all personal, academic, and contact details via GroupedInfoList', async () => {
@@ -179,17 +207,24 @@ describe('StudentDetailsView Component', () => {
     expect(writeTextMock).toHaveBeenCalledWith('13900139001');
   });
 
-  it('gracefully falls back to N/A when studentNumber is empty or undefined', async () => {
+  it('gracefully falls back to N/A in headerOverride when studentNumber is empty or undefined', async () => {
     const studentWithoutNumber: Student = {
       ...mockStudent,
-      studentNumber: ''
+      studentNumber: '',
+      riskLevel: undefined,
     };
+    const setHeaderOverrideMock = vi.fn();
 
-    renderWithProviders(<StudentDetailsView student={studentWithoutNumber} />);
+    renderWithProviders(<StudentDetailsView student={studentWithoutNumber} />, {
+      setHeaderOverride: setHeaderOverrideMock,
+    });
 
-    const monoElements = document.querySelectorAll('.font-mono');
-    const headerSubtitleNumber = Array.from(monoElements).find(el => el.textContent === 'N/A');
-    expect(headerSubtitleNumber).toBeDefined();
+    expect(setHeaderOverrideMock).toHaveBeenCalled();
+    const lastCall = setHeaderOverrideMock.mock.calls[setHeaderOverrideMock.mock.calls.length - 1][0] as DetailsHeaderOverride;
+    expect(lastCall.subtitle).toBe('N/A');
+
+    const badgeRender = render(lastCall.badge);
+    expect(badgeRender.getByText('低')).toBeDefined();
   });
 
   it('supports tab switching when onTabChange callback is provided', async () => {

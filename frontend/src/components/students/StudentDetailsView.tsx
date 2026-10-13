@@ -157,7 +157,7 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
   };
 
   const { openCreation, closeCreation } = useCreationOverlay();
-  const { isFullScreen } = useDetails();
+  const { isFullScreen, setHeaderOverride } = useDetails();
   const tabs = STUDENT_DETAILS_TABS;
 
   const { data: studentData } = useQuery<Student>({
@@ -174,6 +174,29 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
   });
 
   const student = studentData || initialStudent;
+  const studentNumber = student?.studentNumber || 'N/A';
+
+  React.useEffect(() => {
+    if (setHeaderOverride && student) {
+      setHeaderOverride({
+        avatar: (
+          <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[14px] font-medium shrink-0">
+            {student.name ? student.name.charAt(0) : '?'}
+          </div>
+        ),
+        title: student.name,
+        subtitle: studentNumber,
+        badge: (
+          <div className={`px-2.5 py-0.5 rounded-full flex items-center font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${RISK_LEVEL_STYLES[student.riskLevel || 'LOW'] || ''}`}>
+            <span>{RISK_LEVEL_LABELS[student.riskLevel || 'LOW'] || student.riskLevel || 'LOW'}</span>
+          </div>
+        ),
+      });
+    }
+    return () => {
+      setHeaderOverride?.(null);
+    };
+  }, [setHeaderOverride, student, student?.name, studentNumber, student?.riskLevel]);
 
   if (!student) return null;
 
@@ -184,34 +207,8 @@ export function StudentDetailsView({ student: initialStudent, hideHeader, active
   return (
     <ScrollableDetailsLayout
       title={student.name}
+      disableTitleOverride={true}
       className="min-w-[350px]"
-      header={!hideHeader && !isFullScreen ? (
-        <div className="flex items-center justify-between gap-4 flex-nowrap overflow-hidden">
-          <div className="flex items-center gap-4 min-w-0">
-            {/* Primary Anchor: First Letter Avatar */}
-            <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-3xl font-medium shrink-0 animate-in fade-in zoom-in duration-300">
-              {student.name ? student.name.charAt(0) : '?'}
-            </div>
-            <div className="flex flex-col gap-1 min-w-0">
-              <h1 className="text-[24px] font-medium leading-[32px] text-[var(--md-sys-color-on-surface)] tracking-tight truncate">
-                {student.name}
-              </h1>
-              <div className="flex items-center gap-x-2 gap-y-1 text-[14px] text-[var(--md-sys-color-on-surface-variant)] flex-wrap">
-                <span className="font-mono text-[13px] tracking-tight text-[var(--md-sys-color-primary)] font-bold">
-                  {student.studentNumber || 'N/A'}
-                </span>
-                <span className="opacity-40 shrink-0">•</span>
-                <span className="font-normal truncate">{student.major}</span>
-                <span className="opacity-40 shrink-0">•</span>
-                {/* Critical Status: Risk Level Chip */}
-                <div className={`px-3 py-1 rounded-full flex items-center gap-1 font-bold text-[12px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${RISK_LEVEL_STYLES[student.riskLevel || 'LOW']}`}>
-                  {RISK_LEVEL_LABELS[student.riskLevel || 'LOW']}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : undefined}
       tabs={!isFullScreen ? (
         <SecondaryTabs
           tabs={tabs}

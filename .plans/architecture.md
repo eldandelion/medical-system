@@ -1,134 +1,92 @@
-# Architecture: Referral Details View Header Layout & DetailsPanel Refactoring
+# Architecture: Student Details View Header Layout & DetailsPanel Delegation
 
-## 1. Overview & Objectives
-Refine the `DetailsPanel` and `ReferralDetailsView` layout based on locked requirements:
-1. **Subtitle Row Layout**:
-   - In `DetailsPanel` top bar, underneath the Student Name, the subtitle is a horizontal flex container holding:
-     - Student Number (`effectiveSubtitle`)
-     - Pill-shaped Risk Factor Indicator (`effectiveBadge`) placed directly beside the Student Number in this subtitle row.
-   - Remove the separate trailing badge column that was previously placed after the title/subtitle flex container.
-   - FullScreenView mirrors the same compound subtitle row (`[Student Number] [Risk Factor Pill]`).
-2. **Removal of Collapsible Header & Scroll-Collapse Mechanism**:
-   - Remove `useScrollCollapse`, `CollapsibleHeader`, and scroll-based title-swapping (`setTitleOverride` on scroll).
-   - In `ScrollableDetailsLayout`, tabs remain sticky (`sticky top-0 z-20`) and content scrolls beneath cleanly without scroll-collapse animations or title-swapping side effects.
-3. **Parent Pages Subtitle Binding**:
-   - Standardize the `subtitle` prop passed to `<DetailsPanel>` in the 5 parent pages (`DoctorPage.tsx`, `HeadCouncillorPage.tsx`, `TeacherPage.tsx`, `TrialAdminPage.tsx`, `AdminPage.tsx`).
-   - For referrals and students, prioritize `selectedItem?.studentNumber || selectedItem?.studentId` over `selectedItem?.major`, preventing college from ever appearing in the header.
+## 1. Overview & Problem Statement
+In "指派历史" (Dispatch / Assignment History in Assessment Catalog Management) and student directories across the system, clicking a student or assessment dispatch record opens `<DetailsPanel>` containing `<StudentDetailsView>`.
+Previously, `<StudentDetailsView>` rendered a redundant inner header inside `ScrollableDetailsLayout` featuring:
+- A 64px circular avatar placeholder.
+- An `h1` displaying the student's name.
+- A subtitle line showing student number, college/major, and a risk level chip.
+
+This created a dual header (one in `DetailsPanel`'s top navigation bar, and one inside the scrollable content area). Furthermore, the risk factor indicator was trapped in the inner body rather than appearing beside the student number in the top header bar of `DetailsPanel`.
+
+Following the modern header pattern established in `ReferralDetailsView` (commits `aa4705d` and `b870331`), `<StudentDetailsView>` will:
+1. Eliminate the legacy inner header completely.
+2. Delegate the top header presentation to `DetailsPanel` via `DetailsContext.setHeaderOverride`.
+3. Provide the compact 32px circular initial avatar, student name title, student number subtitle, and the pill-shaped risk factor badge.
+4. Clean up `setHeaderOverride` on unmount.
+5. Pass `disableTitleOverride={true}` to `ScrollableDetailsLayout`.
 
 ---
 
-## 2. Component Design & Contracts
+## 2. Component Contract & Integration
 
-### 2.1. `DetailsPanel.tsx`
-- **Header Layout Structure**:
+### 2.1. `DetailsContext` Integration in `StudentDetailsView.tsx`
+`StudentDetailsView` consumes `useDetails()` to extract `setHeaderOverride`:
 ```tsx
-<div className="flex items-center justify-between px-4 py-3 shrink-0 gap-2 border-b border-[var(--md-sys-color-outline-variant)] border-opacity-20">
-  <div className="flex items-center gap-3 overflow-hidden min-w-0 flex-1">
-    {effectiveAvatar ? (
-      <div className="shrink-0 flex items-center justify-center">
-        {effectiveAvatar}
-      </div>
-    ) : (
-      <div className="flex items-center gap-2 shrink-0">
-        <span className="material-symbols-outlined shrink-0" style={{ color: iconColor, fontVariationSettings: "'FILL' 1" }}>
-          {icon}
-        </span>
-      </div>
-    )}
-    <div className="flex flex-col min-w-0 truncate">
-      <span className="text-[16px] font-medium text-[var(--md-sys-color-on-surface)] truncate leading-tight">
-        {effectiveTitle}
-      </span>
-      {(effectiveSubtitle || effectiveBadge) && (
-        <div className="flex items-center gap-2 min-w-0 mt-0.5">
-          {effectiveSubtitle && (
-            <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)] truncate leading-tight font-mono">
-              {effectiveSubtitle}
-            </span>
-          )}
-          {effectiveBadge && (
-            <div className="shrink-0 flex items-center">
-              {effectiveBadge}
-            </div>
-          )}
+const { isFullScreen, setHeaderOverride } = useDetails();
+```
+
+In a `React.useEffect`, when `student` changes (handling both initial props and React Query fetched data), `setHeaderOverride` is called:
+```tsx
+const studentNumber = student.studentNumber || 'N/A';
+
+React.useEffect(() => {
+  if (setHeaderOverride) {
+    setHeaderOverride({
+      avatar: (
+        <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[14px] font-medium shrink-0">
+          {student.name ? student.name.charAt(0) : '?'}
         </div>
-      )}
-    </div>
-  </div>
-  <div className="flex items-center gap-0.5 shrink-0">
-    <button onClick={() => onExpand ? onExpand() : setIsExpanded(true)} className="..." title="全屏" aria-label="全屏">
-      <span className="material-symbols-outlined text-[20px]">open_in_full</span>
-    </button>
-    <button onClick={onClose} className="..." title="关闭" aria-label="关闭">
-      <span className="material-symbols-outlined text-[20px]">close</span>
-    </button>
-  </div>
-</div>
-```
-- **Remove Scroll Collapse**:
-  - Delete `useScrollCollapse` and `CollapsibleHeader`.
-  - Simplify `ScrollableDetailsLayout` to a clean container with sticky tabs:
-```tsx
-export function ScrollableDetailsLayout({
-  header,
-  tabs,
-  footer,
-  children,
-  className = '',
-}: ScrollableDetailsLayoutProps) {
-  return (
-    <div className={`flex flex-col h-full bg-[var(--md-sys-color-surface)] relative overflow-hidden ${className}`}>
-      <div className="flex-1 overflow-y-auto custom-scrollbar overflow-x-hidden relative">
-        {header && (
-          <div className="p-6 pb-4 flex flex-col gap-5 shrink-0">
-            {header}
-          </div>
-        )}
-        {tabs && (
-          <div className="sticky top-0 z-20 bg-[var(--md-sys-color-surface)]">
-            {tabs}
-          </div>
-        )}
-        <div className="flex-1 p-6 pb-8 min-h-[80vh]">
-          {children}
+      ),
+      title: student.name,
+      subtitle: studentNumber,
+      badge: (
+        <div className={`px-2.5 py-0.5 rounded-full flex items-center font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${RISK_LEVEL_STYLES[student.riskLevel || 'LOW'] || ''}`}>
+          <span>{RISK_LEVEL_LABELS[student.riskLevel || 'LOW'] || student.riskLevel || 'LOW'}</span>
         </div>
-      </div>
-      {footer}
-    </div>
-  );
-}
+      ),
+    });
+  }
+  return () => {
+    setHeaderOverride?.(null);
+  };
+}, [setHeaderOverride, student.name, studentNumber, student.riskLevel]);
 ```
 
-### 2.2. Parent Pages Subtitle Binding
-In `DoctorPage.tsx`, `HeadCouncillorPage.tsx`, `TeacherPage.tsx`, `TrialAdminPage.tsx`:
+### 2.2. Inner Header Elimination in `ScrollableDetailsLayout`
+Remove the `header={!hideHeader && !isFullScreen ? (...) : undefined}` prop from `<ScrollableDetailsLayout>`:
 ```tsx
-subtitle={
-  selectedItem?.studentNumber ||
-  (selectedItem?.studentId ? String(selectedItem.studentId) : '') ||
-  (selectedItem?.employeeId ? selectedItem?.department : '') ||
-  (selectedItem?.type ? REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type : '') ||
-  selectedItem?.major ||
-  selectedItem?.department ||
-  ''
-}
-```
-In `AdminPage.tsx`:
-```tsx
-subtitle={
-  activePage === AdminTabs.USERS
-    ? (selectedItem?.role === 'STUDENT'
-        ? selectedItem?.employeeOrStudentId || selectedItem?.studentNumber || selectedItem?.studentId || ''
-        : selectedItem?.email || selectedItem?.departmentOrCollege || '')
-    : (activePage === AdminTabs.STUDENTS || activePage === AdminTabs.ASSESSMENTS)
-    ? selectedItem?.studentNumber || selectedItem?.studentId || selectedItem?.major || ''
-    : selectedItem?.studentNumber || selectedItem?.studentId || selectedItem?.studentName || ''
-}
+return (
+  <ScrollableDetailsLayout
+    title={student.name}
+    disableTitleOverride={true}
+    className="min-w-[350px]"
+    tabs={!isFullScreen ? (
+      <SecondaryTabs
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(id) => setActiveTab(id as TabType)}
+      />
+    ) : undefined}
+    footer={...}
+  >
+    {/* Tab contents */}
+  </ScrollableDetailsLayout>
+);
 ```
 
-### 2.3. `ReferralDetailsView.tsx`
-Ensure `headerOverride` registers:
-- `avatar`: circular first-letter avatar
-- `title`: `referral.studentName`
-- `subtitle`: `studentNumber`
-- `badge`: pill-shaped risk factor indicator (`RISK_LEVEL_STYLES[referral.riskLevel]`)
-- Unmount cleanup: `setHeaderOverride?.(null)`
+### 2.3. Top Header Alignment in `DetailsPanel`
+`DetailsPanel` already supports `effectiveAvatar`, `effectiveTitle`, `effectiveSubtitle`, and `effectiveBadge`:
+- Top-left icon is replaced by the 32px circular avatar placeholder with student initial.
+- Title displays `student.name`.
+- Subtitle displays `student.studentNumber` alongside the pill-shaped `effectiveBadge` in the same subtitle flex row.
+- College/major is eliminated from the top header entirely (it remains in the Overview tab under academic details).
+
+---
+
+## 3. Testing Strategy
+Update `StudentDetailsView.test.tsx`:
+1. Assert that `setHeaderOverride` is registered on mount with the expected avatar, title (`student.name`), subtitle (`student.studentNumber`), and risk badge.
+2. Assert that `setHeaderOverride(null)` is called on component unmount.
+3. Assert that the legacy inner header elements (e.g. inner 64px avatar, inner `h1` name element) are no longer rendered inside `StudentDetailsView`.
+4. Ensure academic and contact information remain intact in the Overview tab.
