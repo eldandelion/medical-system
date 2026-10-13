@@ -17,11 +17,12 @@ import { Student } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import AssessmentHistoryTab from './AssessmentHistoryTab';
 
-interface StudentDetailsViewProps {
+export interface StudentDetailsViewProps {
   student: Student;
   hideHeader?: boolean;
-  activeTab?: string;
-  onTabChange?: (tabId: string) => void;
+  defaultTab?: TabType;
+  activeTab?: TabType | string;
+  onTabChange?: (tabId: TabType | string) => void;
   footer?: React.ReactNode;
 }
 
@@ -146,9 +147,23 @@ function getStudentContactItems(student: Student): GroupedInfoItemProps[] {
   ];
 }
 
-export function StudentDetailsView({ student: initialStudent, hideHeader, activeTab: propsActiveTab, onTabChange, footer }: StudentDetailsViewProps) {
+export function StudentDetailsView({
+  student: initialStudent,
+  hideHeader,
+  defaultTab = StudentDetailsTabs.OVERVIEW,
+  activeTab: propsActiveTab,
+  onTabChange,
+  footer
+}: StudentDetailsViewProps) {
   const { session } = useAuth();
-  const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>(StudentDetailsTabs.OVERVIEW);
+  const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>(defaultTab || StudentDetailsTabs.OVERVIEW);
+
+  React.useEffect(() => {
+    if (defaultTab && !propsActiveTab) {
+      setInternalActiveTab(defaultTab);
+    }
+  }, [defaultTab, propsActiveTab]);
+
   const activeTab = (propsActiveTab || internalActiveTab) as TabType;
 
   const setActiveTab = (tab: TabType) => {

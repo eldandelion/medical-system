@@ -1,204 +1,259 @@
-# Implementation Plan: Student Details View Header Layout & DetailsPanel Delegation
+# Implementation Plan: Assessment Dispatch Record Details View Default Tab
 
 ## Overview
-Refactor `<StudentDetailsView>` to delegate top header presentation to `<DetailsPanel>` via `DetailsContext.setHeaderOverride`, aligning it with the modern header architecture established in `ReferralDetailsView`.
-1. Consume `useDetails()` to obtain `setHeaderOverride`.
-2. In a `useEffect` hook, register compact header components: 32px initial avatar, student name as `title`, student number as `subtitle`, and pill-shaped risk factor indicator as `badge`.
-3. Provide cleanup returning `setHeaderOverride?.(null)` upon component unmount.
-4. Eliminate the redundant legacy inner header prop (`header={...}`) from `<ScrollableDetailsLayout>`, removing the 64px circular avatar and inner `h1`.
-5. Pass `disableTitleOverride={true}` to `<ScrollableDetailsLayout>`.
-6. Update the unit test suite (`StudentDetailsView.test.tsx`) to assert the `setHeaderOverride` lifecycle contract, verify the absence of legacy inner header elements / duplicate `h1`, and guarantee that all Overview tab metrics, academic info, and contact details remain fully functional.
+When opening student details from the assessment dispatch record history in `AdminTabs.ASSESSMENTS` ("测评量表" -> "指派历史"), the primary administrative intent is to inspect the student's historical assessments, participation status, and revoke actions. This implementation updates `<StudentDetailsView>` to support an optional `defaultTab?: TabType` prop with uncontrolled dynamic syncing, and updates `AdminPage.tsx` so clicking a dispatch record defaults to the "档案记录" tab (`StudentDetailsTabs.HISTORY`), while student selection from the directory (`AdminTabs.STUDENTS`) continues to default to "临床概览" (`StudentDetailsTabs.OVERVIEW`).
 
 ---
 
 ## Requirements
-- **Header Delegation**: Delegate avatar, title, subtitle, and risk level badge to `DetailsPanel` via `setHeaderOverride`.
-- **Avatar Contract**: Circular 32px initial avatar (`w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[14px] font-medium shrink-0`) displaying first character of student name (fallback to `'?'`).
-- **Title Contract**: Student name (`student.name`).
-- **Subtitle Contract**: Student number (`student.studentNumber || 'N/A'`).
-- **Badge Contract**: Pill badge (`px-2.5 py-0.5 rounded-full flex items-center font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap`) displaying risk label (`RISK_LEVEL_LABELS[student.riskLevel || 'LOW'] || student.riskLevel || 'LOW'`) with risk styling (`RISK_LEVEL_STYLES[student.riskLevel || 'LOW']`).
-- **Unmount Cleanup**: Invoke `setHeaderOverride?.(null)` upon component unmount.
-- **ScrollableDetailsLayout**: Remove `header` prop entirely; pass `disableTitleOverride={true}`.
-- **Test Integrity**: Assert `setHeaderOverride` registration payload and unmount cleanup in `StudentDetailsView.test.tsx`; assert that no legacy `h1` or inner header exists; verify Overview tab metrics, contact info, and copy-to-clipboard interactions pass without regressions.
+1. **StudentDetailsView Contract**:
+   - Add `defaultTab?: TabType` to `StudentDetailsViewProps` (typed using `TabType = typeof StudentDetailsTabs[keyof typeof StudentDetailsTabs]`).
+   - Initialize `internalActiveTab` state with `defaultTab || StudentDetailsTabs.OVERVIEW`.
+   - Include a `React.useEffect` hook that synchronizes `internalActiveTab` when `defaultTab` changes while in uncontrolled mode (`!propsActiveTab`).
+   - Retain controlled precedence when `activeTab` is supplied.
+2. **AdminPage Integration**:
+   - Import `StudentDetailsTabs` from `../components/students/StudentDetailsView`.
+   - In `AdminTabs.ASSESSMENTS`, update `onStudentSelect` to invoke `setActiveTab(StudentDetailsTabs.HISTORY)`.
+   - In `AdminTabs.STUDENTS`, ensure `onStudentSelect` invokes `setActiveTab(StudentDetailsTabs.OVERVIEW)`.
+   - In `handlePageChange`, reset `activeTab` to `page === AdminTabs.ASSESSMENTS ? StudentDetailsTabs.HISTORY : StudentDetailsTabs.OVERVIEW`.
+   - Pass `defaultTab={activePage === AdminTabs.ASSESSMENTS ? StudentDetailsTabs.HISTORY : StudentDetailsTabs.OVERVIEW}` to `<StudentDetailsView>`.
+   - Replace any lingering magic strings `'overview'` with `StudentDetailsTabs.OVERVIEW`.
+3. **Testing Requirements**:
+   - `StudentDetailsView.test.tsx`:
+     - Test uncontrolled initialization with `defaultTab={StudentDetailsTabs.HISTORY}` rendering "测评记录".
+     - Test fallback to `StudentDetailsTabs.OVERVIEW` when `defaultTab` is omitted.
+     - Test that controlled `activeTab` prop overrides `defaultTab`.
+     - Test dynamic sync of `internalActiveTab` when `defaultTab` prop changes in uncontrolled mode.
+   - `AdminPage.test.tsx`:
+     - Test that clicking an assessment dispatch record in `AssessmentCatalogManagementView` sets the details panel active tab to `StudentDetailsTabs.HISTORY` (`'history'`).
+     - Test that clicking a student in `StudentsView` sets the details panel active tab to `StudentDetailsTabs.OVERVIEW` (`'overview'`).
+     - Test that switching tabs via `handlePageChange` resets active tab appropriately.
+4. **Zero Magic Strings & Strict Typing**:
+   - Strictly use `StudentDetailsTabs` and `TabType`.
+   - Strictly zero `any` on API responses and types.
 
 ---
 
 ## Writable Files
-The execution is strictly limited to editing only the following 2 files:
+The execution is strictly limited to the following 4 files:
 1. `frontend/src/components/students/StudentDetailsView.tsx`
-2. `frontend/src/components/students/StudentDetailsView.test.tsx`
+2. `frontend/src/pages/AdminPage.tsx`
+3. `frontend/src/components/students/StudentDetailsView.test.tsx`
+4. `frontend/src/pages/AdminPage.test.tsx`
 
 ---
 
 ## File-by-File Roadmap & Technical Specification
 
 ### 1. `frontend/src/components/students/StudentDetailsView.tsx`
-- **Context Hook Consumption**:
-  - Update `useDetails()` consumption to extract `setHeaderOverride`:
-    ```tsx
-    const { isFullScreen, setHeaderOverride } = useDetails();
-    ```
-- **Header Override Lifecycle Effect**:
-  - Add `React.useEffect` binding to register header override with fallback handling:
-    ```tsx
-    const student = studentData || initialStudent;
-    const studentNumber = student?.studentNumber || 'N/A';
+- **Props Interface**:
+  Update `StudentDetailsViewProps` to include `defaultTab?: TabType`:
+  ```typescript
+  export interface StudentDetailsViewProps {
+    student: Student;
+    hideHeader?: boolean;
+    defaultTab?: TabType;                 // Defaults to StudentDetailsTabs.OVERVIEW
+    activeTab?: string;                   // Controlled mode override
+    onTabChange?: (tabId: string) => void;
+    footer?: React.ReactNode;
+  }
+  ```
+- **State Initialization & Uncontrolled Sync**:
+  ```typescript
+  export function StudentDetailsView({
+    student: initialStudent,
+    hideHeader,
+    defaultTab = StudentDetailsTabs.OVERVIEW,
+    activeTab: propsActiveTab,
+    onTabChange,
+    footer
+  }: StudentDetailsViewProps) {
+    const { session } = useAuth();
+    const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>(defaultTab || StudentDetailsTabs.OVERVIEW);
 
+    // Sync uncontrolled tab if defaultTab changes dynamically
     React.useEffect(() => {
-      if (setHeaderOverride && student) {
-        setHeaderOverride({
-          avatar: (
-            <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[14px] font-medium shrink-0">
-              {student.name ? student.name.charAt(0) : '?'}
-            </div>
-          ),
-          title: student.name,
-          subtitle: studentNumber,
-          badge: (
-            <div className={`px-2.5 py-0.5 rounded-full flex items-center font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${RISK_LEVEL_STYLES[student.riskLevel || 'LOW'] || ''}`}>
-              <span>{RISK_LEVEL_LABELS[student.riskLevel || 'LOW'] || student.riskLevel || 'LOW'}</span>
-            </div>
-          ),
-        });
+      if (defaultTab && !propsActiveTab) {
+        setInternalActiveTab(defaultTab);
       }
-      return () => {
-        setHeaderOverride?.(null);
-      };
-    }, [setHeaderOverride, student, student?.name, studentNumber, student?.riskLevel]);
-    ```
-- **Inner Header Elimination**:
-  - Remove `header={!hideHeader && !isFullScreen ? (...) : undefined}` prop from `<ScrollableDetailsLayout>`.
-  - Pass `disableTitleOverride={true}` to `<ScrollableDetailsLayout>`:
-    ```tsx
-    return (
-      <ScrollableDetailsLayout
-        title={student.name}
-        disableTitleOverride={true}
-        className="min-w-[350px]"
-        tabs={!isFullScreen ? (
-          <SecondaryTabs
-            tabs={tabs}
-            activeTab={activeTab}
-            onTabChange={(id) => setActiveTab(id as TabType)}
-          />
-        ) : undefined}
-        footer={...}
-      >
-        {/* Tab contents */}
-      </ScrollableDetailsLayout>
-    );
-    ```
+    }, [defaultTab, propsActiveTab]);
 
-### 2. `frontend/src/components/students/StudentDetailsView.test.tsx`
-- **Context Mock & Provider Enhancement**:
-  - Import `DetailsContext` and `DetailsHeaderOverride`:
-    ```tsx
-    import { DetailsContext, DetailsHeaderOverride } from '../../contexts/DetailsContext';
-    ```
-  - Update `renderWithProviders` helper to wrap with `DetailsContext.Provider`:
-    ```tsx
-    const renderWithProviders = (
-      ui: React.ReactElement,
-      detailsContextValue: Partial<React.ComponentProps<typeof DetailsContext.Provider>['value']> = {}
-    ) => {
-      return render(
-        <QueryClientProvider client={queryClient}>
-          <DetailsContext.Provider value={{ isFullScreen: false, ...detailsContextValue }}>
-            {ui}
-          </DetailsContext.Provider>
-        </QueryClientProvider>
-      );
+    const activeTab = (propsActiveTab || internalActiveTab) as TabType;
+
+    const setActiveTab = (tab: TabType) => {
+      setInternalActiveTab(tab);
+      onTabChange?.(tab);
     };
-    ```
-- **Header Override Unit Tests**:
-  - Test 1: `registers headerOverride with avatar, title, subtitle, and badge on mount`:
-    - Provide `setHeaderOverride: setHeaderOverrideMock`.
-    - Assert `setHeaderOverrideMock` is called with object having `title: '张伟'`, `subtitle: '2021001'`, `avatar`, and `badge`.
-    - Render `avatar` and assert it contains first initial `'张'`.
-    - Render `badge` and assert it contains label `'低'`.
-  - Test 2: `cleans up headerOverride on unmount`:
-    - Call `unmount()` and assert `expect(setHeaderOverrideMock).toHaveBeenLastCalledWith(null)`.
-  - Test 3: `does not render legacy inner header or duplicate h1`:
-    - Assert `screen.queryAllByRole('heading', { level: 1 })` has length 0.
-    - Assert legacy 64px avatar (`.w-16.h-16`) is null in document.
-  - Test 4: `gracefully falls back to N/A for studentNumber and LOW for riskLevel in headerOverride`:
-    - Provide student with empty `studentNumber` and undefined `riskLevel`.
-    - Assert `lastCall.subtitle === 'N/A'`.
-    - Assert badge renders with `'低'`.
-- **Overview Tab & Interaction Assertions**:
-  - Update student number test: assert student number `'2021001'` is present in Overview tab under `'学籍信息'`.
-  - Preserve all existing tests for:
-    - Demographic, academic, and contact fields in `GroupedInfoList`.
-    - Clipboard copy functionality for phone, ID card, and emergency contact.
-    - Tab switching via `onTabChange`.
+    ...
+  ```
+
+### 2. `frontend/src/pages/AdminPage.tsx`
+- **Imports**:
+  Import `StudentDetailsTabs` from `../components/students/StudentDetailsView`:
+  ```typescript
+  import { StudentDetailsView, STUDENT_DETAILS_TABS, StudentDetailsTabs } from '../components/students/StudentDetailsView';
+  ```
+- **State Initialization**:
+  Replace magic string `'overview'` with `StudentDetailsTabs.OVERVIEW`:
+  ```typescript
+  const [activeTab, setActiveTab] = React.useState<string>(StudentDetailsTabs.OVERVIEW);
+  ```
+- **Page Change Handler**:
+  ```typescript
+  const handlePageChange = (page: AdminPageName) => {
+    setActivePage(page);
+    setSelectedItem(null);
+    setActiveTab(page === AdminTabs.ASSESSMENTS ? StudentDetailsTabs.HISTORY : StudentDetailsTabs.OVERVIEW);
+  };
+  ```
+- **Navigation Hook Effect**:
+  Replace `setActiveTab('overview')` with `setActiveTab(StudentDetailsTabs.OVERVIEW)`.
+- **AdminTabs.ASSESSMENTS**:
+  ```typescript
+  case AdminTabs.ASSESSMENTS:
+    return (
+      <>
+        <CanvasHeader title={ADMIN_TAB_TITLES[activePage]} />
+        <AssessmentCatalogManagementView 
+          onStudentSelect={(student) => {
+            setSelectedItem(student);
+            setActiveTab(StudentDetailsTabs.HISTORY);
+          }}
+          selectedStudentId={selectedItem?.id}
+        />
+      </>
+    );
+  ```
+- **AdminTabs.STUDENTS**:
+  ```typescript
+  case AdminTabs.STUDENTS:
+    return (
+      <>
+        <CanvasHeader title={ADMIN_TAB_TITLES[activePage]} />
+        <StudentsView
+          resetToken={lastEvent?.timestamp}
+          onStudentSelect={(stu) => {
+            setSelectedItem(stu);
+            setActiveTab(StudentDetailsTabs.OVERVIEW);
+          }}
+          selectedStudentId={selectedItem?.id}
+        />
+      </>
+    );
+  ```
+- **StudentDetailsView Render Block**:
+  ```typescript
+  {(activePage === AdminTabs.STUDENTS || activePage === AdminTabs.ASSESSMENTS) && (
+    <StudentDetailsView
+      student={selectedItem}
+      defaultTab={activePage === AdminTabs.ASSESSMENTS ? StudentDetailsTabs.HISTORY : StudentDetailsTabs.OVERVIEW}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+    />
+  )}
+  ```
+
+### 3. `frontend/src/components/students/StudentDetailsView.test.tsx`
+- **Import Verification**:
+  Ensure `StudentDetailsTabs` is imported alongside `StudentDetailsView`.
+- **Add Tests**:
+  1. `renders history tab when initialized in uncontrolled mode with defaultTab={StudentDetailsTabs.HISTORY}`:
+     - Render `<StudentDetailsView student={mockStudent} defaultTab={StudentDetailsTabs.HISTORY} />`.
+     - Assert `screen.getByText('测评记录')` is present in DOM.
+     - Assert `screen.queryByText('基本特征')` is null (since Overview tab is inactive).
+  2. `falls back to StudentDetailsTabs.OVERVIEW when defaultTab is omitted in uncontrolled mode`:
+     - Render `<StudentDetailsView student={mockStudent} />`.
+     - Assert `screen.getByText('基本特征')` is present.
+     - Assert `screen.queryByText('测评记录')` is null.
+  3. `honors controlled activeTab prop even when defaultTab is provided`:
+     - Render `<StudentDetailsView student={mockStudent} defaultTab={StudentDetailsTabs.HISTORY} activeTab={StudentDetailsTabs.OVERVIEW} />`.
+     - Assert `screen.getByText('基本特征')` is present.
+     - Assert `screen.queryByText('测评记录')` is null.
+  4. `synchronizes internal active tab when defaultTab prop updates in uncontrolled mode`:
+     - Render `<StudentDetailsView student={mockStudent} defaultTab={StudentDetailsTabs.OVERVIEW} />`.
+     - Assert `screen.getByText('基本特征')` is present.
+     - Rerender with `<StudentDetailsView student={mockStudent} defaultTab={StudentDetailsTabs.HISTORY} />`.
+     - Assert `screen.getByText('测评记录')` is present.
+
+### 4. `frontend/src/pages/AdminPage.test.tsx`
+- **Test Scenarios**:
+  1. `clicking dispatch record in AssessmentCatalogManagementView sets active tab to history`:
+     - Render `<AdminPage />`.
+     - Switch to "测评量表" (`AdminTabs.ASSESSMENTS`).
+     - Click dispatch record.
+     - Assert that `DetailsPanel` opens with `activeTab === StudentDetailsTabs.HISTORY`.
+  2. `clicking student in student directory sets active tab to overview`:
+     - Switch to "全校学生" (`AdminTabs.STUDENTS`).
+     - Click student row in `StudentsView`.
+     - Assert that `DetailsPanel` opens with `activeTab === StudentDetailsTabs.OVERVIEW`.
+  3. `navigating between pages resets selected item and sets default tab`:
+     - Select dispatch record in `AdminTabs.ASSESSMENTS` (tab becomes `history`).
+     - Switch page to "全校学生", verify `selectedItem` is cleared and `activeTab` defaults back to `overview`.
 
 ---
 
 ## Precise Task Execution Order (TDD)
 
 ### Phase 1: Test Suite Preparation (Red Phase)
-1. **Update `StudentDetailsView.test.tsx`**:
-   - Import `DetailsContext` and `DetailsHeaderOverride`.
-   - Update `renderWithProviders` to accept custom `detailsContextValue`.
-   - Add new tests:
-     - `registers headerOverride with avatar, title, subtitle, and badge on mount`
-     - `cleans up headerOverride on unmount`
-     - `does not render legacy inner header or duplicate h1`
-   - Update legacy header tests to assert `headerOverride` subtitle fallback instead of DOM `.font-mono` inner header.
-   - Run tests (`npx vitest run StudentDetailsView.test.tsx`):
-     - Confirm failure on new headerOverride assertions and absence of `h1` (Red state).
+1. **Extend `StudentDetailsView.test.tsx`**:
+   - Add unit tests for `defaultTab={StudentDetailsTabs.HISTORY}`, omitted `defaultTab` fallback to `OVERVIEW`, controlled `activeTab` precedence, and uncontrolled `defaultTab` prop change synchronization.
+2. **Create `AdminPage.test.tsx`**:
+   - Write integration tests for AdminPage tab orchestration.
+3. **Execute Vitest (Red State)**:
+   - Run Vitest for both files to confirm failures before implementation.
 
-### Phase 2: Implementation in StudentDetailsView.tsx (Green Phase)
-2. **Implement Header Delegation**:
-   - In `StudentDetailsView.tsx`, destructure `setHeaderOverride` from `useDetails()`.
-   - Implement `React.useEffect` hook registering avatar, title, subtitle, and badge, with unmount cleanup `setHeaderOverride?.(null)`.
-   - Remove `header={!hideHeader && !isFullScreen ? (...) : undefined}` from `<ScrollableDetailsLayout>`.
-   - Add `disableTitleOverride={true}` to `<ScrollableDetailsLayout>`.
-3. **Verify Tests**:
-   - Run Vitest: `npx vitest run StudentDetailsView.test.tsx`.
-   - Confirm all tests in `StudentDetailsView.test.tsx` pass (Green state).
+### Phase 2: Implementation (Green Phase)
+4. **Implement `StudentDetailsView.tsx`**:
+   - Add `defaultTab?: TabType` to `StudentDetailsViewProps`.
+   - Initialize `internalActiveTab` with `defaultTab || StudentDetailsTabs.OVERVIEW`.
+   - Add `React.useEffect` to sync `defaultTab` changes when uncontrolled.
+5. **Implement `AdminPage.tsx`**:
+   - Import `StudentDetailsTabs`.
+   - In `AdminTabs.ASSESSMENTS` `onStudentSelect`, call `setActiveTab(StudentDetailsTabs.HISTORY)`.
+   - In `AdminTabs.STUDENTS` `onStudentSelect`, call `setActiveTab(StudentDetailsTabs.OVERVIEW)`.
+   - In `handlePageChange`, set `activeTab` to `page === AdminTabs.ASSESSMENTS ? StudentDetailsTabs.HISTORY : StudentDetailsTabs.OVERVIEW`.
+   - Pass `defaultTab` to `<StudentDetailsView>`.
+   - Replace magic strings with `StudentDetailsTabs.OVERVIEW`.
+6. **Verify Vitest (Green State)**:
+   - Run `npx vitest run StudentDetailsView.test.tsx AdminPage.test.tsx` and verify 100% pass.
 
-### Phase 3: Regression & Full Verification
-4. **Run TypeScript Check**:
-   - Execute `npm run lint` (`tsc --noEmit`) to verify zero type errors.
-5. **Run Full Test Suite**:
-   - Execute `npm run test -- run` to ensure no regressions in parent pages or surrounding modules (`DetailsPanel.test.tsx`, `ReferralDetailsView.test.tsx`, etc.).
+### Phase 3: Integration & Static Analysis Verification
+7. **Type Check**:
+   - Run `npm run lint` (`tsc --noEmit`) to verify zero TypeScript errors.
+8. **Full Suite Regression**:
+   - Run `npm run test -- run` to guarantee no regressions across all components.
 
 ---
 
 ## Testing Strategy
 - **Unit Tests**:
   - `frontend/src/components/students/StudentDetailsView.test.tsx`:
-    - `setHeaderOverride` registration on mount.
-    - Subtitle fallback to `'N/A'` when student number is omitted.
-    - Risk badge styling and label mapping.
-    - Avatar initial extraction.
-    - Unmount cleanup invoking `setHeaderOverride(null)`.
-    - Absence of legacy inner `h1` and 64px avatar.
-    - Full Overview tab field rendering and clipboard copy events.
-    - Secondary tab navigation via `onTabChange`.
-- **Integration & Regression Tests**:
-  - `frontend/src/components/common/DetailsPanel.test.tsx`: Verify parent container renders overridden header correctly.
-  - `frontend/src/components/records/ReferralDetailsView.test.tsx`: Verify referral header delegation consistency.
+    - `defaultTab` initialization (history vs overview).
+    - Uncontrolled fallback default.
+    - Controlled `activeTab` prop priority over `defaultTab`.
+    - Dynamic `defaultTab` update sync.
+- **Integration Tests**:
+  - `frontend/src/pages/AdminPage.test.tsx`:
+    - Dispatch record selection flow in `AdminTabs.ASSESSMENTS` navigating directly to `history` tab.
+    - Student directory selection flow in `AdminTabs.STUDENTS` navigating to `overview` tab.
+    - Page change tab reset behavior.
 
 ---
 
 ## Risks & Mitigations
-- **Risk**: Stale `headerOverride` if student prop updates dynamically.
-  - **Mitigation**: Include `student`, `student?.name`, `studentNumber`, and `student?.riskLevel` in `useEffect` dependency array so header updates when query resolves.
-- **Risk**: Memory leak or leftover header state when switching details view.
-  - **Mitigation**: Return cleanup function calling `setHeaderOverride?.(null)` on unmount.
-- **Risk**: Duplicate titles or headers displayed in `DetailsPanel`.
-  - **Mitigation**: Strictly pass `disableTitleOverride={true}` and remove `header` prop in `ScrollableDetailsLayout`.
+- **Risk**: In controlled mode, `AdminPage` controls `activeTab`, but if child component maintains internal tab state out of sync, tab switching in `DetailsPanel` vs `SecondaryTabs` could conflict.
+  - **Mitigation**: `StudentDetailsView` derives `activeTab = (propsActiveTab || internalActiveTab) as TabType`, ensuring controlled mode from `AdminPage` strictly takes precedence, and `onTabChange` notifies `AdminPage` to update parent state.
+- **Risk**: Switching between student directory and assessments leaves previous `selectedItem` or tab state.
+  - **Mitigation**: `handlePageChange` in `AdminPage.tsx` explicitly calls `setSelectedItem(null)` and sets `setActiveTab` according to the target page.
 
 ---
 
 ## Success Criteria
-- [ ] `setHeaderOverride` is called on mount with valid `avatar`, `title`, `subtitle`, and `badge`.
-- [ ] `setHeaderOverride?.(null)` is called on component unmount.
-- [ ] Redundant inner header inside `ScrollableDetailsLayout` is completely removed.
-- [ ] `disableTitleOverride={true}` is set on `ScrollableDetailsLayout`.
-- [ ] No `h1` or `.w-16.h-16` avatar element rendered in `StudentDetailsView` body.
-- [ ] All Overview tab fields, metrics, and clipboard copy buttons continue to work.
-- [ ] `StudentDetailsView.test.tsx` passes with 100% green status.
-- [ ] `npm run lint` (`tsc --noEmit`) passes with 0 errors.
+- [ ] `StudentDetailsViewProps` includes `defaultTab?: TabType`.
+- [ ] Uncontrolled `StudentDetailsView` mounts on `StudentDetailsTabs.HISTORY` when `defaultTab={StudentDetailsTabs.HISTORY}` is provided.
+- [ ] Uncontrolled `StudentDetailsView` defaults to `StudentDetailsTabs.OVERVIEW` when `defaultTab` is omitted.
+- [ ] Controlled `activeTab` overrides `defaultTab` in `StudentDetailsView`.
+- [ ] Clicking a dispatch record in `AssessmentCatalogManagementView` opens `StudentDetailsView` on `history` tab.
+- [ ] Clicking a student in `StudentsView` opens `StudentDetailsView` on `overview` tab.
+- [ ] `StudentDetailsView.test.tsx` and `AdminPage.test.tsx` pass without errors.
+- [ ] `npm run lint` (`tsc --noEmit`) completes with 0 errors.

@@ -12,7 +12,7 @@ import { SecurityConsentView } from '../components/security/SecurityConsentView'
 import { DetailsPanel } from '../components/common/DetailsPanel';
 import { DashboardView } from '../components/dashboard/DashboardView';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
-import { StudentDetailsView, STUDENT_DETAILS_TABS } from '../components/students/StudentDetailsView';
+import { StudentDetailsView, STUDENT_DETAILS_TABS, StudentDetailsTabs } from '../components/students/StudentDetailsView';
 import { ReferralDetailsView, REFERRAL_DETAILS_TABS } from '../components/records/ReferralDetailsView';
 import { UserManagementView } from '../components/admin/UserManagementView';
 import { UserDetailsView } from '../components/admin/UserDetailsView';
@@ -62,7 +62,7 @@ export function AdminPage() {
   const [activePage, setActivePage] = React.useState<AdminPageName>(AdminTabs.DASHBOARD);
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState('overview');
+  const [activeTab, setActiveTab] = React.useState<string>(StudentDetailsTabs.OVERVIEW);
 
   const { session } = useAuth();
   const { unreadCount } = useNotifications(session?.token);
@@ -104,7 +104,7 @@ export function AdminPage() {
               });
               
               if (isMounted) {
-                setActiveTab('overview');
+                setActiveTab(StudentDetailsTabs.OVERVIEW);
                 setSelectedItem(data.baseInfo ? data.baseInfo : data);
               }
             } else {
@@ -137,6 +137,7 @@ export function AdminPage() {
   const handlePageChange = (page: AdminPageName) => {
     setActivePage(page);
     setSelectedItem(null);
+    setActiveTab(page === AdminTabs.ASSESSMENTS ? StudentDetailsTabs.HISTORY : StudentDetailsTabs.OVERVIEW);
   };
 
   const handleCompose = () => {
@@ -258,7 +259,7 @@ export function AdminPage() {
             <AssessmentCatalogManagementView 
               onStudentSelect={(student) => {
                 setSelectedItem(student);
-                setActiveTab('overview');
+                setActiveTab(StudentDetailsTabs.HISTORY);
               }}
               selectedStudentId={selectedItem?.id}
             />
@@ -271,7 +272,10 @@ export function AdminPage() {
             <CanvasHeader title={ADMIN_TAB_TITLES[activePage]} />
             <StudentsView
               resetToken={lastEvent?.timestamp}
-              onStudentSelect={(stu) => setSelectedItem(stu)}
+              onStudentSelect={(stu) => {
+                setSelectedItem(stu);
+                setActiveTab(StudentDetailsTabs.OVERVIEW);
+              }}
               selectedStudentId={selectedItem?.id}
             />
           </>
@@ -461,6 +465,7 @@ export function AdminPage() {
                   {(activePage === AdminTabs.STUDENTS || activePage === AdminTabs.ASSESSMENTS) && (
                     <StudentDetailsView
                       student={selectedItem}
+                      defaultTab={activePage === AdminTabs.ASSESSMENTS ? StudentDetailsTabs.HISTORY : StudentDetailsTabs.OVERVIEW}
                       activeTab={activeTab}
                       onTabChange={setActiveTab}
                     />

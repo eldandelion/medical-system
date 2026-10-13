@@ -2,10 +2,11 @@ import React from 'react';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { StudentDetailsView } from './StudentDetailsView';
+import { StudentDetailsView, StudentDetailsTabs } from './StudentDetailsView';
 import { Student } from '../../types';
 
 import { DetailsContext, DetailsHeaderOverride } from '../../contexts/DetailsContext';
+import { SnackbarProvider } from '../../contexts/SnackbarContext';
 
 const mockUseAuth = vi.fn();
 vi.mock('../../contexts/AuthContext', () => ({
@@ -52,9 +53,11 @@ describe('StudentDetailsView Component', () => {
   ) => {
     return render(
       <QueryClientProvider client={queryClient}>
-        <DetailsContext.Provider value={{ isFullScreen: false, ...detailsContextValue }}>
-          {ui}
-        </DetailsContext.Provider>
+        <SnackbarProvider>
+          <DetailsContext.Provider value={{ isFullScreen: false, ...detailsContextValue }}>
+            {ui}
+          </DetailsContext.Provider>
+        </SnackbarProvider>
       </QueryClientProvider>
     );
   };
@@ -240,5 +243,61 @@ describe('StudentDetailsView Component', () => {
       fireEvent(mdTabs, new CustomEvent('change', { bubbles: true }));
       expect(onTabChange).toHaveBeenCalledWith('psychometrics');
     }
+  });
+
+  describe('defaultTab configuration and uncontrolled mode', () => {
+    it('renders history tab when initialized in uncontrolled mode with defaultTab={StudentDetailsTabs.HISTORY}', () => {
+      renderWithProviders(
+        <StudentDetailsView student={mockStudent} defaultTab={StudentDetailsTabs.HISTORY} />
+      );
+
+      // In history tab, "基本特征" from overview should NOT be displayed
+      expect(screen.queryByText('基本特征')).toBeNull();
+      expect(screen.queryByText('学籍信息')).toBeNull();
+    });
+
+    it('falls back to StudentDetailsTabs.OVERVIEW when defaultTab is omitted in uncontrolled mode', () => {
+      renderWithProviders(<StudentDetailsView student={mockStudent} />);
+
+      // Overview tab should be displayed
+      expect(screen.getByText('基本特征')).toBeDefined();
+      expect(screen.getByText('学籍信息')).toBeDefined();
+    });
+
+    it('honors controlled activeTab prop even when defaultTab is provided', () => {
+      renderWithProviders(
+        <StudentDetailsView
+          student={mockStudent}
+          defaultTab={StudentDetailsTabs.HISTORY}
+          activeTab={StudentDetailsTabs.OVERVIEW}
+        />
+      );
+
+      // Controlled activeTab is OVERVIEW, so overview should be displayed
+      expect(screen.getByText('基本特征')).toBeDefined();
+      expect(screen.getByText('学籍信息')).toBeDefined();
+    });
+
+    it('synchronizes internal active tab when defaultTab prop updates in uncontrolled mode', async () => {
+      const { rerender } = renderWithProviders(
+        <StudentDetailsView student={mockStudent} defaultTab={StudentDetailsTabs.OVERVIEW} />
+      );
+
+      expect(screen.getByText('基本特征')).toBeDefined();
+
+      rerender(
+        <QueryClientProvider client={queryClient}>
+          <SnackbarProvider>
+            <DetailsContext.Provider value={{ isFullScreen: false }}>
+              <StudentDetailsView student={mockStudent} defaultTab={StudentDetailsTabs.HISTORY} />
+            </DetailsContext.Provider>
+          </SnackbarProvider>
+        </QueryClientProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByText('基本特征')).toBeNull();
+      });
+    });
   });
 });
