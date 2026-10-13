@@ -70,7 +70,7 @@ export function DetailsPanel({
             style={{ width: typeof width === 'number' ? `${width}px` : width }}
           >
             {/* Panel Header */}
-            <div className="flex items-center justify-between px-4 py-3 shrink-0 gap-2 border-b border-[var(--md-sys-color-outline-variant)] border-opacity-20">
+            <div className="flex items-center justify-between px-4 py-3 shrink-0 gap-2">
               <div className="flex items-center gap-3 overflow-hidden min-w-0 flex-1">
                 {effectiveAvatar ? (
                   <div className="shrink-0 flex items-center justify-center">
