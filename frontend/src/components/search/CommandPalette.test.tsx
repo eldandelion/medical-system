@@ -3,12 +3,16 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GlobalSearchProvider, useGlobalSearch } from '../../contexts/GlobalSearchContext';
-import { NavigationProvider } from '../../contexts/NavigationContext';
+import { NavigationProvider, useNavigation } from '../../contexts/NavigationContext';
 import { ThemeProvider } from '../../contexts/ThemeContext';
 import { AuthContext, Role } from '../../contexts/AuthContext';
 import { CommandPalette } from './CommandPalette';
 
-function renderCommandPalette(role: Role = 'teacher', defaultOpen: boolean = true) {
+function renderCommandPalette(
+  role: Role = 'teacher',
+  defaultOpen: boolean = true,
+  onNavigate?: (tab: string, entityId?: string | number) => void
+) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -37,11 +41,22 @@ function renderCommandPalette(role: Role = 'teacher', defaultOpen: boolean = tru
     return null;
   }
 
+  function NavigationWatcher() {
+    const { lastEvent } = useNavigation();
+    React.useEffect(() => {
+      if (lastEvent && onNavigate) {
+        onNavigate(lastEvent.tab, lastEvent.entityId);
+      }
+    }, [lastEvent]);
+    return null;
+  }
+
   return render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthContext.Provider value={mockAuthContext as any}>
           <NavigationProvider>
+            <NavigationWatcher />
             <GlobalSearchProvider>
               <TestTrigger />
               <CommandPalette />
@@ -238,4 +253,280 @@ describe('CommandPalette Component', () => {
       expect(screen.queryByPlaceholderText(/搜索学生、转诊记录/i)).toBeNull();
     });
   });
+
+  it('Enter key on active query opens the first remote student record with entityId', async () => {
+    const navigateSpy = vi.fn();
+    const mockSearchResults = {
+      query: '李四',
+      students: [
+        {
+          id: 202,
+          studentNumber: '2026202',
+          name: '李四',
+          majorName: '临床心理学',
+          collegeName: '心理学院',
+          enrollmentDate: '2026-09-01',
+          riskLevel: 'MEDIUM' as const,
+        },
+      ],
+      referrals: [],
+      assessments: [],
+    };
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => mockSearchResults,
+    } as Response);
+
+    renderCommandPalette('teacher', true, navigateSpy);
+
+    const input = screen.getByPlaceholderText(/搜索学生、转诊记录/i);
+    fireEvent.change(input, { target: { value: '李四' } });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('李四')).toBeDefined();
+      },
+      { timeout: 2000 }
+    );
+
+    // Press Enter directly on search input without arrow navigation
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(navigateSpy).toHaveBeenCalledWith('Students', 202);
+      expect(screen.queryByPlaceholderText(/搜索学生、转诊记录/i)).toBeNull();
+    });
+  });
+
+  it('Enter key on active query opens remote referral record with entityId even when action keywords match', async () => {
+    const navigateSpy = vi.fn();
+    const mockSearchResults = {
+      query: '转诊',
+      students: [],
+      referrals: [
+        {
+          id: 'ref-999',
+          studentId: 101,
+          studentName: '王五',
+          title: '心理专科转诊',
+          descriptionSnippet: '情绪低落需要转诊',
+          status: 'WAITING_FOR_APPOINTMENT' as const,
+          type: 'INITIAL' as const,
+          createdAt: '2026-10-01T10:00:00',
+          riskLevel: 'HIGH' as const,
+        },
+      ],
+      assessments: [],
+    };
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => mockSearchResults,
+    } as Response);
+
+    renderCommandPalette('teacher', true, navigateSpy);
+
+    const input = screen.getByPlaceholderText(/搜索学生、转诊记录/i);
+    fireEvent.change(input, { target: { value: '转诊' } });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('心理专科转诊')).toBeDefined();
+      },
+      { timeout: 2000 }
+    );
+
+    // Press Enter directly on search input
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() => {
+      // Must open the specific referral record with its entityId, NOT generic tab switch without ID
+      expect(navigateSpy).toHaveBeenCalledWith('Referral Management', 'ref-999');
+      expect(screen.queryByPlaceholderText(/搜索学生、转诊记录/i)).toBeNull();
+    });
+  });
+
+  it('ArrowDown navigation highlights specific item and Enter key opens highlighted entity', async () => {
+    const navigateSpy = vi.fn();
+    const mockSearchResults = {
+      query: '张',
+      students: [
+        {
+          id: 101,
+          studentNumber: '2026001',
+          name: '张一',
+          majorName: '计算机科学',
+          collegeName: '计算机学院',
+          enrollmentDate: '2026-09-01',
+          riskLevel: 'LOW' as const,
+        },
+        {
+          id: 102,
+          studentNumber: '2026002',
+          name: '张二',
+          majorName: '软件工程',
+          collegeName: '软件学院',
+          enrollmentDate: '2026-09-01',
+          riskLevel: 'HIGH' as const,
+        },
+      ],
+      referrals: [],
+      assessments: [],
+    };
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => mockSearchResults,
+    } as Response);
+
+    renderCommandPalette('teacher', true, navigateSpy);
+
+    const input = screen.getByPlaceholderText(/搜索学生、转诊记录/i);
+    fireEvent.change(input, { target: { value: '张' } });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('张一')).toBeDefined();
+        expect(screen.getByText('张二')).toBeDefined();
+      },
+      { timeout: 2000 }
+    );
+
+    // Navigate to second student using ArrowDown
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(navigateSpy).toHaveBeenCalledWith('Students', 102);
+      expect(screen.queryByPlaceholderText(/搜索学生、转诊记录/i)).toBeNull();
+    });
+  });
+
+  it('Enter key with zero search results does nothing and maintains focus on search input', async () => {
+    const navigateSpy = vi.fn();
+    const mockSearchResults = {
+      query: 'NonExistentXYZ999',
+      students: [],
+      referrals: [],
+      assessments: [],
+    };
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => mockSearchResults,
+    } as Response);
+
+    renderCommandPalette('teacher', true, navigateSpy);
+
+    const input = screen.getByPlaceholderText(/搜索学生、转诊记录/i);
+    fireEvent.change(input, { target: { value: 'NonExistentXYZ999' } });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('未找到相关结果')).toBeDefined();
+      },
+      { timeout: 2000 }
+    );
+
+    const focusSpy = vi.spyOn(input, 'focus');
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    // Palette should NOT navigate
+    expect(navigateSpy).not.toHaveBeenCalled();
+    // Palette should remain open and focus kept on input
+    expect(focusSpy).toHaveBeenCalled();
+    expect(screen.getByPlaceholderText(/搜索学生、转诊记录/i)).toBeDefined();
+  });
+
+  it('Enter key during IME composition does not trigger navigation', async () => {
+    const navigateSpy = vi.fn();
+    const mockSearchResults = {
+      query: '李',
+      students: [
+        {
+          id: 202,
+          studentNumber: '2026202',
+          name: '李四',
+          majorName: '临床心理学',
+          collegeName: '心理学院',
+          enrollmentDate: '2026-09-01',
+          riskLevel: 'MEDIUM' as const,
+        },
+      ],
+      referrals: [],
+      assessments: [],
+    };
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => mockSearchResults,
+    } as Response);
+
+    renderCommandPalette('teacher', true, navigateSpy);
+
+    const input = screen.getByPlaceholderText(/搜索学生、转诊记录/i);
+    fireEvent.change(input, { target: { value: '李' } });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('李四')).toBeDefined();
+      },
+      { timeout: 2000 }
+    );
+
+    // Press Enter while IME is composing (e.g. confirming Pinyin input)
+    fireEvent.keyDown(input, { key: 'Enter', isComposing: true });
+
+    // Navigation must not be triggered
+    expect(navigateSpy).not.toHaveBeenCalled();
+    expect(screen.getByPlaceholderText(/搜索学生、转诊记录/i)).toBeDefined();
+  });
+
+  it('Visual DOM ordering renders data records above actions when query is present', async () => {
+    const mockSearchResults = {
+      query: '测试',
+      students: [
+        {
+          id: 101,
+          studentNumber: '2026001',
+          name: '测试学生',
+          majorName: '计算机科学',
+          collegeName: '计算机学院',
+          enrollmentDate: '2026-09-01',
+          riskLevel: 'LOW' as const,
+        },
+      ],
+      referrals: [],
+      assessments: [],
+    };
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => mockSearchResults,
+    } as Response);
+
+    renderCommandPalette('teacher', true);
+
+    const input = screen.getByPlaceholderText(/搜索学生、转诊记录/i);
+    fireEvent.change(input, { target: { value: '测试' } });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('测试学生')).toBeDefined();
+      },
+      { timeout: 2000 }
+    );
+
+    const studentHeader = screen.getByText(/学生档案/);
+    const actionHeader = screen.queryByText('快捷操作');
+
+    if (actionHeader) {
+      // studentHeader must appear before actionHeader in the document
+      expect(
+        studentHeader.compareDocumentPosition(actionHeader) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
+    }
+  });
 });
+

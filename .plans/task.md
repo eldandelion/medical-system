@@ -1,259 +1,220 @@
-# Implementation Plan: Assessment Dispatch Record Details View Default Tab
+# Implementation Plan: Global Search Enter Key Navigation & Details Opening Fix
 
 ## Overview
-When opening student details from the assessment dispatch record history in `AdminTabs.ASSESSMENTS` ("测评量表" -> "指派历史"), the primary administrative intent is to inspect the student's historical assessments, participation status, and revoke actions. This implementation updates `<StudentDetailsView>` to support an optional `defaultTab?: TabType` prop with uncontrolled dynamic syncing, and updates `AdminPage.tsx` so clicking a dispatch record defaults to the "档案记录" tab (`StudentDetailsTabs.HISTORY`), while student selection from the directory (`AdminTabs.STUDENTS`) continues to default to "临床概览" (`StudentDetailsTabs.OVERVIEW`).
+When searching in the frontend global search (`CommandPalette.tsx`), pressing Enter currently navigates to the generic tab (e.g., Students tab or Referral Management tab) without opening the specific detail view/drawer because `flatItems` places generic system actions ahead of remote entities, and actions invoke `navigateToTab` without an `entityId`. 
+
+This implementation prioritizes remote search results (`students`, `referrals`, `assessments`) ahead of actions/navigations both in `flatItems` and visual JSX layout when a query is non-empty, fixes Enter key resolution to target the highlighted or first entry with its `entityId`, guarantees search input blur on selection, keeps focus on the input when pressing Enter with zero results, and adds comprehensive regression test coverage.
 
 ---
 
-## Requirements
-1. **StudentDetailsView Contract**:
-   - Add `defaultTab?: TabType` to `StudentDetailsViewProps` (typed using `TabType = typeof StudentDetailsTabs[keyof typeof StudentDetailsTabs]`).
-   - Initialize `internalActiveTab` state with `defaultTab || StudentDetailsTabs.OVERVIEW`.
-   - Include a `React.useEffect` hook that synchronizes `internalActiveTab` when `defaultTab` changes while in uncontrolled mode (`!propsActiveTab`).
-   - Retain controlled precedence when `activeTab` is supplied.
-2. **AdminPage Integration**:
-   - Import `StudentDetailsTabs` from `../components/students/StudentDetailsView`.
-   - In `AdminTabs.ASSESSMENTS`, update `onStudentSelect` to invoke `setActiveTab(StudentDetailsTabs.HISTORY)`.
-   - In `AdminTabs.STUDENTS`, ensure `onStudentSelect` invokes `setActiveTab(StudentDetailsTabs.OVERVIEW)`.
-   - In `handlePageChange`, reset `activeTab` to `page === AdminTabs.ASSESSMENTS ? StudentDetailsTabs.HISTORY : StudentDetailsTabs.OVERVIEW`.
-   - Pass `defaultTab={activePage === AdminTabs.ASSESSMENTS ? StudentDetailsTabs.HISTORY : StudentDetailsTabs.OVERVIEW}` to `<StudentDetailsView>`.
-   - Replace any lingering magic strings `'overview'` with `StudentDetailsTabs.OVERVIEW`.
-3. **Testing Requirements**:
-   - `StudentDetailsView.test.tsx`:
-     - Test uncontrolled initialization with `defaultTab={StudentDetailsTabs.HISTORY}` rendering "测评记录".
-     - Test fallback to `StudentDetailsTabs.OVERVIEW` when `defaultTab` is omitted.
-     - Test that controlled `activeTab` prop overrides `defaultTab`.
-     - Test dynamic sync of `internalActiveTab` when `defaultTab` prop changes in uncontrolled mode.
-   - `AdminPage.test.tsx`:
-     - Test that clicking an assessment dispatch record in `AssessmentCatalogManagementView` sets the details panel active tab to `StudentDetailsTabs.HISTORY` (`'history'`).
-     - Test that clicking a student in `StudentsView` sets the details panel active tab to `StudentDetailsTabs.OVERVIEW` (`'overview'`).
-     - Test that switching tabs via `handlePageChange` resets active tab appropriately.
-4. **Zero Magic Strings & Strict Typing**:
-   - Strictly use `StudentDetailsTabs` and `TabType`.
-   - Strictly zero `any` on API responses and types.
+## Locked Requirements
+1. **Selection on Enter**: If an entry in the dropdown is highlighted, open that entry; otherwise, default to opening the first (top) matching entry (`flatItems[0]`).
+2. **Post-navigation State**: Close search dropdown (`closeSearch()`), blur search input (`inputRef.current?.blur()`), switch to relevant tab, and display the target entry's detail view/modal (passing `entityId` to `navigateToTab`).
+3. **Zero Results Edge Case**: When Enter is pressed and there are 0 matching items, do nothing and keep focus on the search input (`inputRef.current?.focus()`).
+4. **Data-first Priority**: When query is present (`query.trim().length > 0`), specific data entries (`students`, `referrals`, `assessments`) must precede actions and navigations in both `flatItems` array and visual JSX rendering.
 
 ---
 
 ## Writable Files
 The execution is strictly limited to the following 4 files:
-1. `frontend/src/components/students/StudentDetailsView.tsx`
-2. `frontend/src/pages/AdminPage.tsx`
-3. `frontend/src/components/students/StudentDetailsView.test.tsx`
-4. `frontend/src/pages/AdminPage.test.tsx`
+1. `frontend/src/components/search/CommandPalette.test.tsx` (Regression tests & assertion suite)
+2. `frontend/src/components/search/CommandPalette.tsx` (Component implementation)
+3. `frontend/src/config/searchActions.ts` (Action keyword refinement)
+4. `.plans/task.md` (Implementation plan document)
 
 ---
 
 ## File-by-File Roadmap & Technical Specification
 
-### 1. `frontend/src/components/students/StudentDetailsView.tsx`
-- **Props Interface**:
-  Update `StudentDetailsViewProps` to include `defaultTab?: TabType`:
-  ```typescript
-  export interface StudentDetailsViewProps {
-    student: Student;
-    hideHeader?: boolean;
-    defaultTab?: TabType;                 // Defaults to StudentDetailsTabs.OVERVIEW
-    activeTab?: string;                   // Controlled mode override
-    onTabChange?: (tabId: string) => void;
-    footer?: React.ReactNode;
-  }
-  ```
-- **State Initialization & Uncontrolled Sync**:
-  ```typescript
-  export function StudentDetailsView({
-    student: initialStudent,
-    hideHeader,
-    defaultTab = StudentDetailsTabs.OVERVIEW,
-    activeTab: propsActiveTab,
-    onTabChange,
-    footer
-  }: StudentDetailsViewProps) {
-    const { session } = useAuth();
-    const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>(defaultTab || StudentDetailsTabs.OVERVIEW);
+### 1. `frontend/src/components/search/CommandPalette.test.tsx`
+- **Mock Setup Enhancements**:
+  - Provide mock `navigateToTab` spy via custom wrapper or `useNavigation` spy to assert exact parameters `(tab, entityId)`.
+  - Simulate remote query responses containing students, referrals, and assessments.
+- **New Regression Test Cases (Red Phase)**:
+  1. `Enter key on active query opens the first remote student record with entityId`:
+     - Type query `"李四"`, return student entity with `id: 202`.
+     - Press `Enter` on search input.
+     - Assert `navigateToTab('Students', 202)` was called.
+     - Assert palette is closed and input is blurred.
+  2. `Enter key on active query opens remote referral record with entityId even when action keywords match`:
+     - Type query `"转诊"`, return referral entity with `id: 'ref-999'`.
+     - Even though `"转诊"` matches `action-create-referral` and `nav-referral-management`, remote referral entity must take precedence.
+     - Press `Enter`.
+     - Assert `navigateToTab('Referral Management', 'ref-999')` was called with `entityId: 'ref-999'`.
+  3. `ArrowDown navigation highlights specific item and Enter key opens highlighted entity`:
+     - Type query `"张"`, return 2 students: `id: 101` and `id: 102`.
+     - Press `ArrowDown` once to highlight second student.
+     - Press `Enter`.
+     - Assert `navigateToTab('Students', 102)` is called.
+  4. `Enter key with zero search results does nothing and maintains focus on search input`:
+     - Type query `"NonExistentItem999"`, return empty results.
+     - Press `Enter`.
+     - Assert `navigateToTab` is NOT called, palette remains open, and `input` retains focus.
+  5. `Visual DOM ordering renders data records above actions when query is present`:
+     - Render palette with query `"测试"`.
+     - Assert that DOM elements for student/referral results appear before "快捷操作" and "系统导航" headings.
+     - When query is empty `""`, assert "快捷操作" appears at the top.
+  6. `Search input blur is executed upon navigation`:
+     - Focus input, type search query, press Enter on result.
+     - Assert `inputRef.current?.blur()` took effect.
 
-    // Sync uncontrolled tab if defaultTab changes dynamically
-    React.useEffect(() => {
-      if (defaultTab && !propsActiveTab) {
-        setInternalActiveTab(defaultTab);
+### 2. `frontend/src/components/search/CommandPalette.tsx`
+- **Data-First `flatItems` Ordering**:
+  ```tsx
+  const hasQuery = query.trim().length > 0;
+
+  const flatItems: FlatSearchItem[] = useMemo(() => {
+    const items: FlatSearchItem[] = [];
+
+    if (hasQuery) {
+      // 1. Remote entity records take top priority when query exists
+      searchResults?.students?.forEach((item) => items.push({ kind: 'student', item }));
+      searchResults?.referrals?.forEach((item) => items.push({ kind: 'referral', item }));
+      searchResults?.assessments?.forEach((item) => items.push({ kind: 'assessment', item }));
+
+      // 2. Actions & Navigations follow
+      matchedActions.forEach((item) => items.push({ kind: 'action', item }));
+      matchedNavigations.forEach((item) => items.push({ kind: 'navigation', item }));
+    } else {
+      // Default empty query view: actions and navigations first
+      matchedActions.forEach((item) => items.push({ kind: 'action', item }));
+      matchedNavigations.forEach((item) => items.push({ kind: 'navigation', item }));
+      searchResults?.students?.forEach((item) => items.push({ kind: 'student', item }));
+      searchResults?.referrals?.forEach((item) => items.push({ kind: 'referral', item }));
+      searchResults?.assessments?.forEach((item) => items.push({ kind: 'assessment', item }));
+    }
+
+    return items;
+  }, [hasQuery, matchedActions, matchedNavigations, searchResults]);
+  ```
+
+- **Visual Rendering Re-ordering in JSX**:
+  - Re-order sections within `listRef` based on `hasQuery`:
+    - When `hasQuery` is true: Render Students -> Referrals -> Assessments -> Quick Actions -> System Navigation.
+    - When `hasQuery` is false: Render Quick Actions -> System Navigation.
+  - This ensures visual order matches `flatItems` index order 1:1, so `selectedIndex = 0` is visually highlighted at the very top.
+
+- **Keyboard Navigation & Enter Key Handling**:
+  - Replace `handleKeyDown` Enter branch:
+    ```tsx
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (flatItems.length === 0) {
+        inputRef.current?.focus();
+        return;
       }
-    }, [defaultTab, propsActiveTab]);
+      const targetItem =
+        selectedIndex >= 0 && selectedIndex < flatItems.length
+          ? flatItems[selectedIndex]
+          : flatItems[0];
+      if (!targetItem) {
+        inputRef.current?.focus();
+        return;
+      }
+      handleSelectItem(targetItem);
+    }
+    ```
+  - Only reset `selectedIndex` to 0 when `query` changes (`useEffect(() => setSelectedIndex(0), [query])`), avoiding wipes when asynchronous `searchResults` resolve.
+  - Add bounding clamp: `if (flatItems.length > 0 && selectedIndex >= flatItems.length) setSelectedIndex(flatItems.length - 1)`.
 
-    const activeTab = (propsActiveTab || internalActiveTab) as TabType;
-
-    const setActiveTab = (tab: TabType) => {
-      setInternalActiveTab(tab);
-      onTabChange?.(tab);
+- **Post-Navigation Input Blur & Selection Cleanup**:
+  - In `handleSelectItem`:
+    ```tsx
+    const handleSelectItem = (item: FlatSearchItem) => {
+      inputRef.current?.blur();
+      closeSearch();
+      switch (item.kind) {
+        case 'action':
+        case 'navigation':
+          item.item.onSelect();
+          break;
+        case 'student':
+          if (session.role === 'student') {
+            navigateToTab('My Records', item.item.id);
+          } else {
+            navigateToTab('Students', item.item.id);
+          }
+          break;
+        case 'referral':
+          navigateToTab(session.role === 'student' ? 'My Records' : 'Referral Management', item.item.id);
+          break;
+        case 'assessment':
+          navigateToTab('Assessments', item.item.id);
+          break;
+      }
     };
-    ...
-  ```
+    ```
+  - In `actionContext`:
+    ```tsx
+    closeSearch: () => {
+      inputRef.current?.blur();
+      closeSearch();
+    }
+    ```
 
-### 2. `frontend/src/pages/AdminPage.tsx`
-- **Imports**:
-  Import `StudentDetailsTabs` from `../components/students/StudentDetailsView`:
-  ```typescript
-  import { StudentDetailsView, STUDENT_DETAILS_TABS, StudentDetailsTabs } from '../components/students/StudentDetailsView';
-  ```
-- **State Initialization**:
-  Replace magic string `'overview'` with `StudentDetailsTabs.OVERVIEW`:
-  ```typescript
-  const [activeTab, setActiveTab] = React.useState<string>(StudentDetailsTabs.OVERVIEW);
-  ```
-- **Page Change Handler**:
-  ```typescript
-  const handlePageChange = (page: AdminPageName) => {
-    setActivePage(page);
-    setSelectedItem(null);
-    setActiveTab(page === AdminTabs.ASSESSMENTS ? StudentDetailsTabs.HISTORY : StudentDetailsTabs.OVERVIEW);
-  };
-  ```
-- **Navigation Hook Effect**:
-  Replace `setActiveTab('overview')` with `setActiveTab(StudentDetailsTabs.OVERVIEW)`.
-- **AdminTabs.ASSESSMENTS**:
-  ```typescript
-  case AdminTabs.ASSESSMENTS:
-    return (
-      <>
-        <CanvasHeader title={ADMIN_TAB_TITLES[activePage]} />
-        <AssessmentCatalogManagementView 
-          onStudentSelect={(student) => {
-            setSelectedItem(student);
-            setActiveTab(StudentDetailsTabs.HISTORY);
-          }}
-          selectedStudentId={selectedItem?.id}
-        />
-      </>
-    );
-  ```
-- **AdminTabs.STUDENTS**:
-  ```typescript
-  case AdminTabs.STUDENTS:
-    return (
-      <>
-        <CanvasHeader title={ADMIN_TAB_TITLES[activePage]} />
-        <StudentsView
-          resetToken={lastEvent?.timestamp}
-          onStudentSelect={(stu) => {
-            setSelectedItem(stu);
-            setActiveTab(StudentDetailsTabs.OVERVIEW);
-          }}
-          selectedStudentId={selectedItem?.id}
-        />
-      </>
-    );
-  ```
-- **StudentDetailsView Render Block**:
-  ```typescript
-  {(activePage === AdminTabs.STUDENTS || activePage === AdminTabs.ASSESSMENTS) && (
-    <StudentDetailsView
-      student={selectedItem}
-      defaultTab={activePage === AdminTabs.ASSESSMENTS ? StudentDetailsTabs.HISTORY : StudentDetailsTabs.OVERVIEW}
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
-    />
-  )}
-  ```
-
-### 3. `frontend/src/components/students/StudentDetailsView.test.tsx`
-- **Import Verification**:
-  Ensure `StudentDetailsTabs` is imported alongside `StudentDetailsView`.
-- **Add Tests**:
-  1. `renders history tab when initialized in uncontrolled mode with defaultTab={StudentDetailsTabs.HISTORY}`:
-     - Render `<StudentDetailsView student={mockStudent} defaultTab={StudentDetailsTabs.HISTORY} />`.
-     - Assert `screen.getByText('测评记录')` is present in DOM.
-     - Assert `screen.queryByText('基本特征')` is null (since Overview tab is inactive).
-  2. `falls back to StudentDetailsTabs.OVERVIEW when defaultTab is omitted in uncontrolled mode`:
-     - Render `<StudentDetailsView student={mockStudent} />`.
-     - Assert `screen.getByText('基本特征')` is present.
-     - Assert `screen.queryByText('测评记录')` is null.
-  3. `honors controlled activeTab prop even when defaultTab is provided`:
-     - Render `<StudentDetailsView student={mockStudent} defaultTab={StudentDetailsTabs.HISTORY} activeTab={StudentDetailsTabs.OVERVIEW} />`.
-     - Assert `screen.getByText('基本特征')` is present.
-     - Assert `screen.queryByText('测评记录')` is null.
-  4. `synchronizes internal active tab when defaultTab prop updates in uncontrolled mode`:
-     - Render `<StudentDetailsView student={mockStudent} defaultTab={StudentDetailsTabs.OVERVIEW} />`.
-     - Assert `screen.getByText('基本特征')` is present.
-     - Rerender with `<StudentDetailsView student={mockStudent} defaultTab={StudentDetailsTabs.HISTORY} />`.
-     - Assert `screen.getByText('测评记录')` is present.
-
-### 4. `frontend/src/pages/AdminPage.test.tsx`
-- **Test Scenarios**:
-  1. `clicking dispatch record in AssessmentCatalogManagementView sets active tab to history`:
-     - Render `<AdminPage />`.
-     - Switch to "测评量表" (`AdminTabs.ASSESSMENTS`).
-     - Click dispatch record.
-     - Assert that `DetailsPanel` opens with `activeTab === StudentDetailsTabs.HISTORY`.
-  2. `clicking student in student directory sets active tab to overview`:
-     - Switch to "全校学生" (`AdminTabs.STUDENTS`).
-     - Click student row in `StudentsView`.
-     - Assert that `DetailsPanel` opens with `activeTab === StudentDetailsTabs.OVERVIEW`.
-  3. `navigating between pages resets selected item and sets default tab`:
-     - Select dispatch record in `AdminTabs.ASSESSMENTS` (tab becomes `history`).
-     - Switch page to "全校学生", verify `selectedItem` is cleared and `activeTab` defaults back to `overview`.
+### 3. `frontend/src/config/searchActions.ts`
+- **Keyword Disambiguation**:
+  - In `action-create-referral`: Replace broad keyword `'转诊'` with explicit action keywords: `['发起转诊', '新建转诊', '创建转诊', 'create referral']`.
+  - Prevents action creation from preempting referral navigation or colliding with entity queries when users search for referral records.
 
 ---
 
 ## Precise Task Execution Order (TDD)
 
-### Phase 1: Test Suite Preparation (Red Phase)
-1. **Extend `StudentDetailsView.test.tsx`**:
-   - Add unit tests for `defaultTab={StudentDetailsTabs.HISTORY}`, omitted `defaultTab` fallback to `OVERVIEW`, controlled `activeTab` precedence, and uncontrolled `defaultTab` prop change synchronization.
-2. **Create `AdminPage.test.tsx`**:
-   - Write integration tests for AdminPage tab orchestration.
-3. **Execute Vitest (Red State)**:
-   - Run Vitest for both files to confirm failures before implementation.
+### Task 1: Failing Regression Tests in `CommandPalette.test.tsx` (Red Phase)
+1. Add spy/mock for `navigateToTab` in `CommandPalette.test.tsx` to inspect `tab` and `entityId` arguments.
+2. Add regression test 1: Type student query, press Enter, assert `navigateToTab('Students', entityId)` is called with student ID.
+3. Add regression test 2: Type referral query `"转诊"`, press Enter, assert `navigateToTab('Referral Management', referralId)` is called with referral ID.
+4. Add regression test 3: ArrowDown navigation highlights second item, Enter opens that specific highlighted entity ID.
+5. Add regression test 4: Type query with 0 results, press Enter, assert `navigateToTab` is not called, palette stays open, input maintains focus.
+6. Add regression test 5: Verify visual DOM ordering places student/referral results before actions when `query` is non-empty.
+7. Run Vitest on `CommandPalette.test.tsx` and verify test failures (demonstrating current bug).
 
-### Phase 2: Implementation (Green Phase)
-4. **Implement `StudentDetailsView.tsx`**:
-   - Add `defaultTab?: TabType` to `StudentDetailsViewProps`.
-   - Initialize `internalActiveTab` with `defaultTab || StudentDetailsTabs.OVERVIEW`.
-   - Add `React.useEffect` to sync `defaultTab` changes when uncontrolled.
-5. **Implement `AdminPage.tsx`**:
-   - Import `StudentDetailsTabs`.
-   - In `AdminTabs.ASSESSMENTS` `onStudentSelect`, call `setActiveTab(StudentDetailsTabs.HISTORY)`.
-   - In `AdminTabs.STUDENTS` `onStudentSelect`, call `setActiveTab(StudentDetailsTabs.OVERVIEW)`.
-   - In `handlePageChange`, set `activeTab` to `page === AdminTabs.ASSESSMENTS ? StudentDetailsTabs.HISTORY : StudentDetailsTabs.OVERVIEW`.
-   - Pass `defaultTab` to `<StudentDetailsView>`.
-   - Replace magic strings with `StudentDetailsTabs.OVERVIEW`.
-6. **Verify Vitest (Green State)**:
-   - Run `npx vitest run StudentDetailsView.test.tsx AdminPage.test.tsx` and verify 100% pass.
+### Task 2: Implementation in `CommandPalette.tsx` and `searchActions.ts` (Green Phase)
+1. In `searchActions.ts`, refine `action-create-referral` keywords to avoid bare `'转诊'` collision.
+2. In `CommandPalette.tsx`:
+   - Update `flatItems` `useMemo` to prioritize remote entities (`students`, `referrals`, `assessments`) when `hasQuery` is true.
+   - Update JSX rendering in `CommandPalette.tsx` to display remote entity cards above actions/navigations when `hasQuery` is true.
+   - Update `handleKeyDown` for `Enter`:
+     - Retain focus and return early if `flatItems.length === 0`.
+     - Select `flatItems[selectedIndex]` or fallback to `flatItems[0]`.
+   - Update `handleSelectItem` and `actionContext` to invoke `inputRef.current?.blur()`.
+   - Update `selectedIndex` effect: reset on `query` changes, clamp within bounds on `flatItems.length` change.
+3. Re-run Vitest on `CommandPalette.test.tsx` and verify all tests pass green.
 
-### Phase 3: Integration & Static Analysis Verification
-7. **Type Check**:
-   - Run `npm run lint` (`tsc --noEmit`) to verify zero TypeScript errors.
-8. **Full Suite Regression**:
-   - Run `npm run test -- run` to guarantee no regressions across all components.
+### Task 3: Verification & Static Analysis (Verification Phase)
+1. Run `npm run lint` (`tsc --noEmit`) to verify zero TypeScript errors.
+2. Run full frontend test suite (`npm run test`) to ensure zero regressions across pages (`TeacherPage`, `DoctorPage`, `GlobalSearchNavigation.test.tsx`).
+3. Verify role-based matrix: Student role navigates to `'My Records'` with `entityId`, Teacher/Doctor/Admin navigate to `'Students'` / `'Referral Management'` with `entityId`.
 
 ---
 
 ## Testing Strategy
-- **Unit Tests**:
-  - `frontend/src/components/students/StudentDetailsView.test.tsx`:
-    - `defaultTab` initialization (history vs overview).
-    - Uncontrolled fallback default.
-    - Controlled `activeTab` prop priority over `defaultTab`.
-    - Dynamic `defaultTab` update sync.
-- **Integration Tests**:
-  - `frontend/src/pages/AdminPage.test.tsx`:
-    - Dispatch record selection flow in `AdminTabs.ASSESSMENTS` navigating directly to `history` tab.
-    - Student directory selection flow in `AdminTabs.STUDENTS` navigating to `overview` tab.
-    - Page change tab reset behavior.
+- **Unit Tests (`frontend/src/components/search/CommandPalette.test.tsx`)**:
+  - Enter key selection on first matching remote record passing `entityId`.
+  - Arrow navigation (`ArrowDown`, `ArrowUp`) + Enter key selection passing `entityId`.
+  - Enter key on zero results keeping input focus without closing.
+  - Search input blur on navigation.
+  - Visual layout ordering with query present vs empty.
+- **Integration Tests (`frontend/src/pages/GlobalSearchNavigation.test.tsx`)**:
+  - Ensure host pages (`TeacherPage`, `DoctorPage`, `HeadCouncillorPage`) correctly receive the emitted `entityId` and open detail panels.
 
 ---
 
 ## Risks & Mitigations
-- **Risk**: In controlled mode, `AdminPage` controls `activeTab`, but if child component maintains internal tab state out of sync, tab switching in `DetailsPanel` vs `SecondaryTabs` could conflict.
-  - **Mitigation**: `StudentDetailsView` derives `activeTab = (propsActiveTab || internalActiveTab) as TabType`, ensuring controlled mode from `AdminPage` strictly takes precedence, and `onTabChange` notifies `AdminPage` to update parent state.
-- **Risk**: Switching between student directory and assessments leaves previous `selectedItem` or tab state.
-  - **Mitigation**: `handlePageChange` in `AdminPage.tsx` explicitly calls `setSelectedItem(null)` and sets `setActiveTab` according to the target page.
+- **Risk**: Asynchronous TanStack query arrival while user is pressing arrow keys could reset or shift `selectedIndex`.
+  - **Mitigation**: Do not reset `selectedIndex` on `searchResults` changes; only reset on `query` text change. Clamp `selectedIndex` to `flatItems.length - 1` if `flatItems` shrinks.
+- **Risk**: Role differences (Student navigates to "My Records" while Teacher/Doctor navigate to "Students" / "Referral Management").
+  - **Mitigation**: `handleSelectItem` already branches by `session.role` and passes `item.item.id`; regression tests will explicitly assert this role-specific mapping.
 
 ---
 
 ## Success Criteria
-- [ ] `StudentDetailsViewProps` includes `defaultTab?: TabType`.
-- [ ] Uncontrolled `StudentDetailsView` mounts on `StudentDetailsTabs.HISTORY` when `defaultTab={StudentDetailsTabs.HISTORY}` is provided.
-- [ ] Uncontrolled `StudentDetailsView` defaults to `StudentDetailsTabs.OVERVIEW` when `defaultTab` is omitted.
-- [ ] Controlled `activeTab` overrides `defaultTab` in `StudentDetailsView`.
-- [ ] Clicking a dispatch record in `AssessmentCatalogManagementView` opens `StudentDetailsView` on `history` tab.
-- [ ] Clicking a student in `StudentsView` opens `StudentDetailsView` on `overview` tab.
-- [ ] `StudentDetailsView.test.tsx` and `AdminPage.test.tsx` pass without errors.
-- [ ] `npm run lint` (`tsc --noEmit`) completes with 0 errors.
+- [ ] Pressing Enter after searching defaults to opening the top matching record with its `entityId`.
+- [ ] Arrow navigation followed by Enter opens the highlighted record with its `entityId`.
+- [ ] Detail view/modal opens automatically on the navigated tab for the target entity.
+- [ ] Search input is blurred and dropdown is closed upon navigation.
+- [ ] Pressing Enter with 0 results does nothing and preserves input focus.
+- [ ] When query is non-empty, remote entity results appear above actions/navigations both logically (`flatItems`) and visually.
+- [ ] All Vitest tests in `CommandPalette.test.tsx` pass.
+- [ ] `tsc --noEmit` passes with 0 errors.

@@ -20,7 +20,7 @@ export function getRoleActions(role: Role, context: ActionExecutionContext): Sea
       type: 'action',
       title: '发起转诊',
       subtitle: '快速创建学生就医转诊工单',
-      keywords: ['转诊', '发起转诊', '新建转诊', '创建转诊', 'referral', 'create referral'],
+      keywords: ['发起转诊', '新建转诊', '创建转诊', 'referral', 'create referral'],
       icon: 'add_circle',
       badge: '快捷操作',
       allowedRoles: ['teacher', 'head-councillor', 'admin'],

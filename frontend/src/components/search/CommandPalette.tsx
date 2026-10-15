@@ -27,7 +27,10 @@ export function CommandPalette() {
     () => ({
       navigateToTab,
       setTheme,
-      closeSearch,
+      closeSearch: () => {
+        inputRef.current?.blur();
+        closeSearch();
+      },
     }),
     [navigateToTab, setTheme, closeSearch]
   );
@@ -65,39 +68,60 @@ export function CommandPalette() {
     );
   }, [roleNavigations, query]);
 
+  const hasQuery = query.trim().length > 0;
+
   // Flatten all items for linear keyboard navigation
   const flatItems: FlatSearchItem[] = useMemo(() => {
     const items: FlatSearchItem[] = [];
 
-    // 1. Actions (if any matched)
-    matchedActions.forEach((item) => items.push({ kind: 'action', item }));
+    if (hasQuery) {
+      // 1. Students (remote)
+      searchResults?.students?.forEach((item) => items.push({ kind: 'student', item }));
 
-    // 2. Navigations (if any matched)
-    matchedNavigations.forEach((item) => items.push({ kind: 'navigation', item }));
+      // 2. Referrals (remote)
+      searchResults?.referrals?.forEach((item) => items.push({ kind: 'referral', item }));
 
-    // 3. Students (remote)
-    searchResults?.students?.forEach((item) => items.push({ kind: 'student', item }));
+      // 3. Assessments (remote)
+      searchResults?.assessments?.forEach((item) => items.push({ kind: 'assessment', item }));
 
-    // 4. Referrals (remote)
-    searchResults?.referrals?.forEach((item) => items.push({ kind: 'referral', item }));
+      // 4. Actions (if any matched)
+      matchedActions.forEach((item) => items.push({ kind: 'action', item }));
 
-    // 5. Assessments (remote)
-    searchResults?.assessments?.forEach((item) => items.push({ kind: 'assessment', item }));
+      // 5. Navigations (if any matched)
+      matchedNavigations.forEach((item) => items.push({ kind: 'navigation', item }));
+    } else {
+      // Default empty query view: actions and navigations first
+      matchedActions.forEach((item) => items.push({ kind: 'action', item }));
+      matchedNavigations.forEach((item) => items.push({ kind: 'navigation', item }));
+      searchResults?.students?.forEach((item) => items.push({ kind: 'student', item }));
+      searchResults?.referrals?.forEach((item) => items.push({ kind: 'referral', item }));
+      searchResults?.assessments?.forEach((item) => items.push({ kind: 'assessment', item }));
+    }
 
     return items;
-  }, [matchedActions, matchedNavigations, searchResults]);
+  }, [hasQuery, matchedActions, matchedNavigations, searchResults]);
 
   // Keep selected index within bounds
   useEffect(() => {
     setSelectedIndex(0);
-  }, [query, searchResults]);
+  }, [query]);
+
+  useEffect(() => {
+    setSelectedIndex((prev) => {
+      if (flatItems.length > 0 && prev >= flatItems.length) {
+        return flatItems.length - 1;
+      }
+      return prev;
+    });
+  }, [flatItems.length]);
 
   // Focus input when opened
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         inputRef.current?.focus();
       }, 50);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
@@ -133,14 +157,26 @@ export function CommandPalette() {
     }
 
     if (e.key === 'Enter') {
+      if (e.nativeEvent.isComposing) return;
       e.preventDefault();
-      const current = flatItems[selectedIndex];
-      if (!current) return;
-      handleSelectItem(current);
+      if (flatItems.length === 0) {
+        inputRef.current?.focus();
+        return;
+      }
+      const targetItem =
+        selectedIndex >= 0 && selectedIndex < flatItems.length
+          ? flatItems[selectedIndex]
+          : flatItems[0];
+      if (!targetItem) {
+        inputRef.current?.focus();
+        return;
+      }
+      handleSelectItem(targetItem);
     }
   };
 
   const handleSelectItem = (item: FlatSearchItem) => {
+    inputRef.current?.blur();
     closeSearch();
     switch (item.kind) {
       case 'action':
@@ -161,6 +197,274 @@ export function CommandPalette() {
         navigateToTab('Assessments', item.item.id);
         break;
     }
+  };
+
+  const renderActions = () => {
+    if (matchedActions.length === 0) return null;
+    return (
+      <div>
+        <div className="px-3 py-1 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] tracking-wider">
+          快捷操作
+        </div>
+        <div className="space-y-0.5 mt-1">
+          {matchedActions.map((action) => {
+            const itemIndex = flatItems.findIndex((fi) => fi.kind === 'action' && fi.item.id === action.id);
+            const isSelected = itemIndex === selectedIndex;
+            return (
+              <div
+                key={action.id}
+                data-selected={isSelected}
+                onClick={() => handleSelectItem({ kind: 'action', item: action })}
+                onMouseEnter={() => setSelectedIndex(itemIndex)}
+                className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
+                  isSelected
+                    ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                    : 'hover:bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)]'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="material-symbols-outlined text-[var(--md-sys-color-primary)] text-xl shrink-0">
+                    {action.icon}
+                  </span>
+                  <div className="truncate">
+                    <div className="text-sm font-medium">{action.title}</div>
+                    {action.subtitle && (
+                      <div className="text-xs opacity-75 truncate">{action.subtitle}</div>
+                    )}
+                  </div>
+                </div>
+                {action.badge && (
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface-variant)] font-medium shrink-0 ml-2">
+                    {action.badge}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderNavigations = () => {
+    if (matchedNavigations.length === 0) return null;
+    return (
+      <div>
+        <div className="px-3 py-1 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] tracking-wider">
+          系统导航
+        </div>
+        <div className="space-y-0.5 mt-1">
+          {matchedNavigations.map((nav) => {
+            const itemIndex = flatItems.findIndex((fi) => fi.kind === 'navigation' && fi.item.id === nav.id);
+            const isSelected = itemIndex === selectedIndex;
+            return (
+              <div
+                key={nav.id}
+                data-selected={isSelected}
+                onClick={() => handleSelectItem({ kind: 'navigation', item: nav })}
+                onMouseEnter={() => setSelectedIndex(itemIndex)}
+                className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
+                  isSelected
+                    ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                    : 'hover:bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)]'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="material-symbols-outlined text-[var(--md-sys-color-secondary)] text-xl shrink-0">
+                    {nav.icon}
+                  </span>
+                  <div className="truncate">
+                    <div className="text-sm font-medium">{nav.title}</div>
+                    {nav.subtitle && (
+                      <div className="text-xs opacity-75 truncate">{nav.subtitle}</div>
+                    )}
+                  </div>
+                </div>
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface-variant)] font-medium shrink-0 ml-2">
+                  导航
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderStudents = () => {
+    if (!searchResults?.students || searchResults.students.length === 0) return null;
+    return (
+      <div>
+        <div className="px-3 py-1 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] tracking-wider">
+          学生档案 (仅限本人管辖/可见范围)
+        </div>
+        <div className="space-y-0.5 mt-1">
+          {searchResults.students.map((student) => {
+            const itemIndex = flatItems.findIndex((fi) => fi.kind === 'student' && fi.item.id === student.id);
+            const isSelected = itemIndex === selectedIndex;
+            return (
+              <div
+                key={`student-${student.id}`}
+                data-selected={isSelected}
+                onClick={() => handleSelectItem({ kind: 'student', item: student })}
+                onMouseEnter={() => setSelectedIndex(itemIndex)}
+                className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
+                  isSelected
+                    ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                    : 'hover:bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)]'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-xs font-medium shrink-0">
+                    {student.name.charAt(0)}
+                  </div>
+                  <div className="truncate">
+                    <div className="text-sm font-medium flex items-center gap-2">
+                      <span>{student.name}</span>
+                      <span className="text-xs opacity-70 font-mono">{student.studentNumber}</span>
+                    </div>
+                    <div className="text-xs opacity-75 truncate">
+                      {student.majorName || '未分配专业'}
+                      {student.collegeName ? ` · ${student.collegeName}` : ''}
+                    </div>
+                  </div>
+                </div>
+
+                {student.riskLevel && (
+                  <span
+                    className={`text-[11px] px-2 py-0.5 rounded-full font-medium shrink-0 ml-2 ${
+                      RISK_LEVEL_STYLES[student.riskLevel] || ''
+                    }`}
+                  >
+                    风险: {RISK_LEVEL_LABELS[student.riskLevel] || student.riskLevel}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderReferrals = () => {
+    if (!searchResults?.referrals || searchResults.referrals.length === 0) return null;
+    return (
+      <div>
+        <div className="px-3 py-1 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] tracking-wider">
+          就诊转诊记录 (仅限权限范围内工单)
+        </div>
+        <div className="space-y-0.5 mt-1">
+          {searchResults.referrals.map((referral) => {
+            const itemIndex = flatItems.findIndex((fi) => fi.kind === 'referral' && fi.item.id === referral.id);
+            const isSelected = itemIndex === selectedIndex;
+            const statusStyle = STATUS_STYLES[referral.status] || STATUS_STYLES.default;
+            const statusLabel = STATUS_LABELS[referral.status] || referral.status;
+            return (
+              <div
+                key={`referral-${referral.id}`}
+                data-selected={isSelected}
+                onClick={() => handleSelectItem({ kind: 'referral', item: referral })}
+                onMouseEnter={() => setSelectedIndex(itemIndex)}
+                className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
+                  isSelected
+                    ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                    : 'hover:bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)]'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="material-symbols-outlined text-[var(--md-sys-color-tertiary)] text-xl shrink-0">
+                    swap_horiz
+                  </span>
+                  <div className="truncate">
+                    <div className="text-sm font-medium flex items-center gap-2">
+                      <span>{referral.title}</span>
+                      {referral.studentName && (
+                        <span className="text-xs opacity-75">({referral.studentName})</span>
+                      )}
+                    </div>
+                    <div className="text-xs opacity-75 truncate">
+                      {referral.descriptionSnippet}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                  {referral.riskLevel && (
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                        RISK_LEVEL_STYLES[referral.riskLevel] || ''
+                      }`}
+                    >
+                      {RISK_LEVEL_LABELS[referral.riskLevel] || referral.riskLevel}
+                    </span>
+                  )}
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${statusStyle}`}>
+                    {statusLabel}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderAssessments = () => {
+    if (!searchResults?.assessments || searchResults.assessments.length === 0) return null;
+    return (
+      <div>
+        <div className="px-3 py-1 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] tracking-wider">
+          心理测评与量表库
+        </div>
+        <div className="space-y-0.5 mt-1">
+          {searchResults.assessments.map((assessment) => {
+            const itemIndex = flatItems.findIndex((fi) => fi.kind === 'assessment' && fi.item.id === assessment.id);
+            const isSelected = itemIndex === selectedIndex;
+            return (
+              <div
+                key={`assessment-${assessment.id}`}
+                data-selected={isSelected}
+                onClick={() => handleSelectItem({ kind: 'assessment', item: assessment })}
+                onMouseEnter={() => setSelectedIndex(itemIndex)}
+                className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
+                  isSelected
+                    ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                    : 'hover:bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)]'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="material-symbols-outlined text-[var(--md-sys-color-primary)] text-xl shrink-0">
+                    quiz
+                  </span>
+                  <div className="truncate">
+                    <div className="text-sm font-medium flex items-center gap-2">
+                      <span>{assessment.title}</span>
+                      <span className="text-xs uppercase font-mono px-1 rounded bg-[var(--md-sys-color-surface-container-highest)]">
+                        {assessment.batteryCode}
+                      </span>
+                    </div>
+                    {assessment.subtitle && (
+                      <div className="text-xs opacity-75 truncate">{assessment.subtitle}</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                  {assessment.duration && (
+                    <span className="text-[11px] opacity-75">{assessment.duration}</span>
+                  )}
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-[var(--md-sys-color-surface-container-highest)] font-medium">
+                    {assessment.resultType === 'ASSIGNMENT' ? '指派测评' : '标准量表'}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   if (typeof document === 'undefined') return null;
@@ -199,6 +503,10 @@ export function CommandPalette() {
               <input
                 ref={inputRef}
                 type="text"
+                aria-label="全局指令与数据搜索"
+                role="combobox"
+                aria-expanded={flatItems.length > 0}
+                aria-autocomplete="list"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="搜索学生、转诊记录、测评量表或快捷操作 (支持 ↑ ↓ 键与回车)..."
@@ -237,262 +545,22 @@ export function CommandPalette() {
                 </div>
               )}
 
-              {/* 1. Quick Actions */}
-              {matchedActions.length > 0 && (
-                <div>
-                  <div className="px-3 py-1 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] tracking-wider">
-                    快捷操作
-                  </div>
-                  <div className="space-y-0.5 mt-1">
-                    {matchedActions.map((action) => {
-                      const itemIndex = flatItems.findIndex((fi) => fi.kind === 'action' && fi.item.id === action.id);
-                      const isSelected = itemIndex === selectedIndex;
-                      return (
-                        <div
-                          key={action.id}
-                          data-selected={isSelected}
-                          onClick={() => handleSelectItem({ kind: 'action', item: action })}
-                          onMouseEnter={() => setSelectedIndex(itemIndex)}
-                          className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
-                            isSelected
-                              ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-                              : 'hover:bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <span className="material-symbols-outlined text-[var(--md-sys-color-primary)] text-xl shrink-0">
-                              {action.icon}
-                            </span>
-                            <div className="truncate">
-                              <div className="text-sm font-medium">{action.title}</div>
-                              {action.subtitle && (
-                                <div className="text-xs opacity-75 truncate">{action.subtitle}</div>
-                              )}
-                            </div>
-                          </div>
-                          {action.badge && (
-                            <span className="text-[11px] px-2 py-0.5 rounded-full bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface-variant)] font-medium shrink-0 ml-2">
-                              {action.badge}
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* 2. Page Navigation */}
-              {matchedNavigations.length > 0 && (
-                <div>
-                  <div className="px-3 py-1 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] tracking-wider">
-                    系统导航
-                  </div>
-                  <div className="space-y-0.5 mt-1">
-                    {matchedNavigations.map((nav) => {
-                      const itemIndex = flatItems.findIndex((fi) => fi.kind === 'navigation' && fi.item.id === nav.id);
-                      const isSelected = itemIndex === selectedIndex;
-                      return (
-                        <div
-                          key={nav.id}
-                          data-selected={isSelected}
-                          onClick={() => handleSelectItem({ kind: 'navigation', item: nav })}
-                          onMouseEnter={() => setSelectedIndex(itemIndex)}
-                          className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
-                            isSelected
-                              ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-                              : 'hover:bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <span className="material-symbols-outlined text-[var(--md-sys-color-secondary)] text-xl shrink-0">
-                              {nav.icon}
-                            </span>
-                            <div className="truncate">
-                              <div className="text-sm font-medium">{nav.title}</div>
-                              {nav.subtitle && (
-                                <div className="text-xs opacity-75 truncate">{nav.subtitle}</div>
-                              )}
-                            </div>
-                          </div>
-                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface-variant)] font-medium shrink-0 ml-2">
-                            导航
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* 3. Students (Role-Scoped) */}
-              {searchResults?.students && searchResults.students.length > 0 && (
-                <div>
-                  <div className="px-3 py-1 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] tracking-wider">
-                    学生档案 (仅限本人管辖/可见范围)
-                  </div>
-                  <div className="space-y-0.5 mt-1">
-                    {searchResults.students.map((student) => {
-                      const itemIndex = flatItems.findIndex((fi) => fi.kind === 'student' && fi.item.id === student.id);
-                      const isSelected = itemIndex === selectedIndex;
-                      return (
-                        <div
-                          key={`student-${student.id}`}
-                          data-selected={isSelected}
-                          onClick={() => handleSelectItem({ kind: 'student', item: student })}
-                          onMouseEnter={() => setSelectedIndex(itemIndex)}
-                          className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
-                            isSelected
-                              ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-                              : 'hover:bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-xs font-medium shrink-0">
-                              {student.name.charAt(0)}
-                            </div>
-                            <div className="truncate">
-                              <div className="text-sm font-medium flex items-center gap-2">
-                                <span>{student.name}</span>
-                                <span className="text-xs opacity-70 font-mono">{student.studentNumber}</span>
-                              </div>
-                              <div className="text-xs opacity-75 truncate">
-                                {student.majorName || '未分配专业'}
-                                {student.collegeName ? ` · ${student.collegeName}` : ''}
-                              </div>
-                            </div>
-                          </div>
-
-                          {student.riskLevel && (
-                            <span
-                              className={`text-[11px] px-2 py-0.5 rounded-full font-medium shrink-0 ml-2 ${
-                                RISK_LEVEL_STYLES[student.riskLevel] || ''
-                              }`}
-                            >
-                              风险: {RISK_LEVEL_LABELS[student.riskLevel] || student.riskLevel}
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* 4. Referrals (Role-Scoped) */}
-              {searchResults?.referrals && searchResults.referrals.length > 0 && (
-                <div>
-                  <div className="px-3 py-1 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] tracking-wider">
-                    就诊转诊记录 (仅限权限范围内工单)
-                  </div>
-                  <div className="space-y-0.5 mt-1">
-                    {searchResults.referrals.map((referral) => {
-                      const itemIndex = flatItems.findIndex((fi) => fi.kind === 'referral' && fi.item.id === referral.id);
-                      const isSelected = itemIndex === selectedIndex;
-                      const statusStyle = STATUS_STYLES[referral.status] || STATUS_STYLES.default;
-                      const statusLabel = STATUS_LABELS[referral.status] || referral.status;
-                      return (
-                        <div
-                          key={`referral-${referral.id}`}
-                          data-selected={isSelected}
-                          onClick={() => handleSelectItem({ kind: 'referral', item: referral })}
-                          onMouseEnter={() => setSelectedIndex(itemIndex)}
-                          className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
-                            isSelected
-                              ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-                              : 'hover:bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <span className="material-symbols-outlined text-[var(--md-sys-color-tertiary)] text-xl shrink-0">
-                              swap_horiz
-                            </span>
-                            <div className="truncate">
-                              <div className="text-sm font-medium flex items-center gap-2">
-                                <span>{referral.title}</span>
-                                {referral.studentName && (
-                                  <span className="text-xs opacity-75">({referral.studentName})</span>
-                                )}
-                              </div>
-                              <div className="text-xs opacity-75 truncate">
-                                {referral.descriptionSnippet}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                            {referral.riskLevel && (
-                              <span
-                                className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                                  RISK_LEVEL_STYLES[referral.riskLevel] || ''
-                                }`}
-                              >
-                                {RISK_LEVEL_LABELS[referral.riskLevel] || referral.riskLevel}
-                              </span>
-                            )}
-                            <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${statusStyle}`}>
-                              {statusLabel}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* 5. Assessments */}
-              {searchResults?.assessments && searchResults.assessments.length > 0 && (
-                <div>
-                  <div className="px-3 py-1 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] tracking-wider">
-                    心理测评与量表库
-                  </div>
-                  <div className="space-y-0.5 mt-1">
-                    {searchResults.assessments.map((assessment) => {
-                      const itemIndex = flatItems.findIndex((fi) => fi.kind === 'assessment' && fi.item.id === assessment.id);
-                      const isSelected = itemIndex === selectedIndex;
-                      return (
-                        <div
-                          key={`assessment-${assessment.id}`}
-                          data-selected={isSelected}
-                          onClick={() => handleSelectItem({ kind: 'assessment', item: assessment })}
-                          onMouseEnter={() => setSelectedIndex(itemIndex)}
-                          className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
-                            isSelected
-                              ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
-                              : 'hover:bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <span className="material-symbols-outlined text-[var(--md-sys-color-primary)] text-xl shrink-0">
-                              quiz
-                            </span>
-                            <div className="truncate">
-                              <div className="text-sm font-medium flex items-center gap-2">
-                                <span>{assessment.title}</span>
-                                <span className="text-xs uppercase font-mono px-1 rounded bg-[var(--md-sys-color-surface-container-highest)]">
-                                  {assessment.batteryCode}
-                                </span>
-                              </div>
-                              {assessment.subtitle && (
-                                <div className="text-xs opacity-75 truncate">{assessment.subtitle}</div>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                            {assessment.duration && (
-                              <span className="text-[11px] opacity-75">{assessment.duration}</span>
-                            )}
-                            <span className="text-[11px] px-2 py-0.5 rounded-full bg-[var(--md-sys-color-surface-container-highest)] font-medium">
-                              {assessment.resultType === 'ASSIGNMENT' ? '指派测评' : '标准量表'}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+              {hasQuery ? (
+                <>
+                  {renderStudents()}
+                  {renderReferrals()}
+                  {renderAssessments()}
+                  {renderActions()}
+                  {renderNavigations()}
+                </>
+              ) : (
+                <>
+                  {renderActions()}
+                  {renderNavigations()}
+                  {renderStudents()}
+                  {renderReferrals()}
+                  {renderAssessments()}
+                </>
               )}
             </div>
 
