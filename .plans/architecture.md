@@ -1,121 +1,80 @@
-# Architecture: Assessment Dispatch Record Details View Default Tab
+# Architecture Specification: Referral Header Status Badge & Overview Tab Refactor
 
-## 1. Overview & Problem Statement
-In `AssessmentCatalogManagementView` ("测评量表" -> "指派历史"), administrators review assessment dispatch records (`ParticipationRecordDto`). Clicking a record in the dispatch table triggers `onStudentSelect`, opening the `<StudentDetailsView>` inside `<DetailsPanel>`.
-Previously, `AdminPage.tsx` hardcoded `setActiveTab('overview')`, forcing the panel to open on "临床概览" (overview). For assessment dispatch records, the primary administrative intent is to inspect the student's historical assessment submissions, status, and revoke options—which are located on the last tab: "档案记录" (`StudentDetailsTabs.HISTORY` = `'history'`).
-
-This architectural update introduces context-aware tab defaults:
-1. When opening student details from assessment dispatch history (`AdminTabs.ASSESSMENTS`), the details panel defaults directly to "档案记录" (`StudentDetailsTabs.HISTORY`).
-2. Other student selection entry points (e.g. `AdminTabs.STUDENTS` "全校学生档案", `TeacherPage`, `HeadCouncillorPage`) continue to default to "临床概览" (`StudentDetailsTabs.OVERVIEW`).
-3. `StudentDetailsView` supports an optional `defaultTab?: TabType` prop (defaulting to `StudentDetailsTabs.OVERVIEW`), providing clean uncontrolled fallback initialization while retaining controlled precedence when `activeTab` is provided.
-4. Magic strings are completely eliminated by importing and using `StudentDetailsTabs` and `TabType`.
+## 1. Context & Business Intent
+- **Feature Goal**: Refactor the referral status display in the frontend. Currently, status is shown via a prominent `ReferralStatusCard` banner at the top of the "Overview" tab. The intent is to remove this banner from the overview tab and introduce a clickable, pill-shaped badge in the details view header.
+- **Header Badge Placement**: Displayed alongside the existing risk level badge as a compound header badge: `[Status Badge] [Risk Level Badge]`.
+- **Badge Specifications**:
+  - Pill shape matching the risk level badge: `px-2.5 py-0.5 rounded-full text-[11px] font-bold`.
+  - Neutral Material Design 3 container tokens: `bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]`.
+  - Typography: Chinese label via `STATUS_LABELS[status]`, without indicator dot.
+  - Interactive micro-interactions: `hover:bg-[var(--md-sys-color-surface-container-highest)]`, `active:scale-[0.98]`, `cursor-pointer`, focus ring for keyboard accessibility (`focus-visible:ring-2`).
+  - Accessibility: Semantic `<button type="button">`, `title="点击查看转诊进度"`, `aria-label="点击查看转诊进度"`.
+  - Action: Clicking triggers navigation to the `'tracker'` ("转诊进度") tab.
 
 ---
 
-## 2. Component Architecture & Contracts
+## 2. Component Design & State Management
 
-### 2.1. `StudentDetailsView.tsx`
-- Add `defaultTab?: TabType` to `StudentDetailsViewProps`:
-```typescript
-export interface StudentDetailsViewProps {
-  student: Student;
-  hideHeader?: boolean;
-  defaultTab?: TabType;                 // Defaults to StudentDetailsTabs.OVERVIEW
-  activeTab?: string;                   // Controlled mode override
-  onTabChange?: (tabId: string) => void;
-  footer?: React.ReactNode;
+### 2.1 State Hoisting in `ReferralDetailsView.tsx`
+- Currently, `internalActiveTab` is scoped inside `ReferralDetailsPresenter`.
+- To allow the header override badge to navigate tabs consistently in all states (loading, fetched, controlled, or uncontrolled):
+  - Hoist `internalActiveTab` and `setActiveTab` to `ReferralDetailsView`.
+  - Pass `activeTab` and `onTabChange` to `ReferralDetailsPresenter`.
+  - Register `ReferralHeaderBadges` in `setHeaderOverride` for both the loading state and the presentation state.
+
+### 2.2 Reusable `ReferralHeaderBadges` Component
+```tsx
+interface ReferralHeaderBadgesProps {
+  status: string;
+  riskLevel: string;
+  onStatusClick: () => void;
+}
+
+export function ReferralHeaderBadges({ status, riskLevel, onStatusClick }: ReferralHeaderBadgesProps) {
+  const statusLabel = STATUS_LABELS[status] || status || '未知状态';
+  const riskLabel = RISK_LEVEL_LABELS[riskLevel] || riskLevel;
+  const riskStyle = RISK_LEVEL_STYLES[riskLevel] || '';
+
+  return (
+    <div className="flex items-center gap-1.5 shrink-0">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onStatusClick();
+        }}
+        className="px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-[0.5px] shrink-0 whitespace-nowrap bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)] active:scale-[0.98] cursor-pointer transition-all border-0 outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)]"
+        title="点击查看转诊进度"
+        aria-label="点击查看转诊进度"
+      >
+        {statusLabel}
+      </button>
+      <div className={`px-2.5 py-0.5 rounded-full flex items-center font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${riskStyle}`}>
+        <span>{riskLabel}</span>
+      </div>
+    </div>
+  );
 }
 ```
-- In `StudentDetailsView`:
-```typescript
-export function StudentDetailsView({
-  student: initialStudent,
-  hideHeader,
-  defaultTab = StudentDetailsTabs.OVERVIEW,
-  activeTab: propsActiveTab,
-  onTabChange,
-  footer
-}: StudentDetailsViewProps) {
-  const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>(defaultTab);
 
-  React.useEffect(() => {
-    if (defaultTab && !propsActiveTab) {
-      setInternalActiveTab(defaultTab);
-    }
-  }, [defaultTab, propsActiveTab]);
-
-  const activeTab = (propsActiveTab || internalActiveTab) as TabType;
-
-  const setActiveTab = (tab: TabType) => {
-    setInternalActiveTab(tab);
-    onTabChange?.(tab);
-  };
-  ...
-```
-
-### 2.2. `AdminPage.tsx`
-- Import `StudentDetailsTabs` from `../components/students/StudentDetailsView`.
-- In `AdminTabs.ASSESSMENTS`:
-```typescript
-case AdminTabs.ASSESSMENTS:
-  return (
-    <>
-      <CanvasHeader title={ADMIN_TAB_TITLES[activePage]} />
-      <AssessmentCatalogManagementView 
-        onStudentSelect={(student) => {
-          setSelectedItem(student);
-          setActiveTab(StudentDetailsTabs.HISTORY);
-        }}
-        selectedStudentId={selectedItem?.id}
-      />
-    </>
-  );
-```
-- In `AdminTabs.STUDENTS`:
-```typescript
-case AdminTabs.STUDENTS:
-  return (
-    <>
-      <CanvasHeader title={ADMIN_TAB_TITLES[activePage]} />
-      <StudentsView
-        resetToken={lastEvent?.timestamp}
-        onStudentSelect={(stu) => {
-          setSelectedItem(stu);
-          setActiveTab(StudentDetailsTabs.OVERVIEW);
-        }}
-        selectedStudentId={selectedItem?.id}
-      />
-    </>
-  );
-```
-- In `handlePageChange`:
-```typescript
-const handlePageChange = (page: AdminPageName) => {
-  setActivePage(page);
-  setSelectedItem(null);
-  setActiveTab(page === AdminTabs.ASSESSMENTS ? StudentDetailsTabs.HISTORY : StudentDetailsTabs.OVERVIEW);
-};
-```
-- In `<StudentDetailsView>` render block in `AdminPage.tsx`:
-```typescript
-{(activePage === AdminTabs.STUDENTS || activePage === AdminTabs.ASSESSMENTS) && (
-  <StudentDetailsView
-    student={selectedItem}
-    defaultTab={activePage === AdminTabs.ASSESSMENTS ? StudentDetailsTabs.HISTORY : StudentDetailsTabs.OVERVIEW}
-    activeTab={activeTab}
-    onTabChange={setActiveTab}
-  />
-)}
-```
+### 2.3 `ReferralOverviewTab.tsx` Simplification
+- Remove `<ReferralStatusCard />` component from the JSX.
+- Remove `onNavigateToTracker?: () => void;` from `ReferralOverviewTabProps`.
+- Remove unused imports (`ReferralStatusCard`, `STATUS_STYLES`, `STATUS_LABELS`).
+- Update callers in `ReferralDetailsView.tsx` and `RecordDetailsView.tsx` to omit `onNavigateToTracker`.
 
 ---
 
-## 3. Testing Strategy
-1. **`StudentDetailsView.test.tsx`**:
-   - Verify uncontrolled mount with `defaultTab={StudentDetailsTabs.HISTORY}` renders the history tab (`测评记录`).
-   - Verify uncontrolled mount without `defaultTab` defaults to `OVERVIEW` ("基本特征").
-   - Verify controlled `activeTab={StudentDetailsTabs.OVERVIEW}` overrides `defaultTab={StudentDetailsTabs.HISTORY}`.
-   - Verify tab change callback triggers properly.
-2. **`AdminPage.test.tsx`** or integration tests:
-   - Verify clicking dispatch record sets active tab to `history` (`档案记录`).
-   - Verify selecting student in student directory sets active tab to `overview` (`临床概览`).
+## 3. Fullscreen & Multi-Viewport Continuity
+- `DetailsPanel` feeds `effectiveBadge` directly into `FullScreenView`.
+- In both drawer mode and fullscreen portal mode, the header button preserves synthetic events and active state updates.
+- Clicking the badge in fullscreen mode activates the "转诊进度" tab in the left sidebar drawer and displays `ReferralTrackerTab` in the viewport.
+
+---
+
+## 4. Test Strategy
+1. `ReferralOverviewTab.test.tsx`:
+   - Replace the legacy test asserting `ReferralStatusCard` with an assertion verifying that the status card banner is not rendered.
+2. `ReferralDetailsView.test.tsx`:
+   - Update loading and mounted tests to verify compound header badge structure (`待分配` + `高`).
+   - Add test clicking the status badge and asserting `onTabChange` is called with `'tracker'` and `ReferralTrackerTab` is displayed.

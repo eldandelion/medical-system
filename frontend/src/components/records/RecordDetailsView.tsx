@@ -80,7 +80,6 @@ export function RecordDetailsView({ record }: RecordDetailsViewProps) {
         <ReferralOverviewTab
           referral={record}
           referralDetails={referralDetails}
-          onNavigateToTracker={() => setActiveTab('tracker')}
         />
       )}
       {activeTab === 'tracker' && (

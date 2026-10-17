@@ -133,20 +133,15 @@ describe('ReferralOverviewTab', () => {
     });
   });
 
-  it('renders dynamic workflow stage title in ReferralStatusCard and navigates on click', () => {
-    const onNavigateMock = vi.fn();
+  it('does not render ReferralStatusCard banner in Overview tab', () => {
     render(
       <ReferralOverviewTab
         referral={mockReferral}
         referralDetails={mockDetails}
-        onNavigateToTracker={onNavigateMock}
       />
     );
 
-    const statusBanner = screen.getByText('中心分诊中');
-    expect(statusBanner).toBeDefined();
-
-    fireEvent.click(statusBanner);
-    expect(onNavigateMock).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('中心分诊中')).toBeNull();
+    expect(screen.queryByText('待分配')).toBeNull();
   });
 });

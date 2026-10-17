@@ -4,25 +4,18 @@ import { DetailsSection } from '../common/DetailsPanel';
 import { GroupedInfoList } from '../common/GroupedInfoList';
 import { AttachmentList, Attachment } from '../common/AttachmentList';
 import { Quote } from 'lucide-react';
-import { STATUS_STYLES, STATUS_LABELS } from '../../config/styleConstants';
 import { Referral, ReferralDetails } from '../../types';
 import { useDetails } from '../../contexts/DetailsContext';
 import { useAttachmentActions } from '../../hooks/useAttachmentActions';
-import { ReferralStatusCard } from './ReferralStatusCard';
 
 interface ReferralOverviewTabProps {
   referral: Referral;
   referralDetails: ReferralDetails;
-  onNavigateToTracker?: () => void;
 }
 
-export function ReferralOverviewTab({ referral, referralDetails, onNavigateToTracker }: ReferralOverviewTabProps) {
+export function ReferralOverviewTab({ referral, referralDetails }: ReferralOverviewTabProps) {
   const { isFullScreen } = useDetails();
   const { previewAttachment, downloadAttachment, loadingFileId } = useAttachmentActions();
-
-  const displayStatus = referral.displayStatus || referral.status;
-  // Steps will be loaded in the tracker tab; overview tab no longer depends on it
-  const activeStep = null; // Removed activeStep logic for overview as it's separate now
 
   return (
     <motion.div
@@ -33,13 +26,6 @@ export function ReferralOverviewTab({ referral, referralDetails, onNavigateToTra
       transition={{ duration: 0.2 }}
       className="flex flex-col gap-6"
     >
-      {referral.status !== 'DRAFT' && (
-        <ReferralStatusCard 
-          status={displayStatus || referral.status}
-          onClick={onNavigateToTracker} 
-        />
-      )}
-
       <DetailsSection title="分诊基本信息" className="border-t-0 pt-0 mt-0">
         <div className="flex flex-col gap-3">
           {/* 3-Column Metrics Grid */}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, waitFor, cleanup, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ReferralDetailsView } from './ReferralDetailsView';
 import { DetailsContext, DetailsHeaderOverride } from '../../contexts/DetailsContext';
@@ -78,7 +78,7 @@ describe('ReferralDetailsView Component', () => {
     }
   };
 
-  it('registers headerOverride with avatar, name, student number, and risk badge during loading state', () => {
+  it('registers headerOverride with avatar, name, student number, and compound status+risk badge during loading state', () => {
     const setHeaderOverrideMock = vi.fn();
     // Simulate pending query by not resolving immediately
     vi.spyOn(global, 'fetch').mockImplementation(() => new Promise(() => {}));
@@ -98,6 +98,12 @@ describe('ReferralDetailsView Component', () => {
     expect(lastCall.subtitle).toBe('STU2026001');
     expect(lastCall.avatar).toBeDefined();
     expect(lastCall.badge).toBeDefined();
+
+    const { getByRole, getByText } = render(lastCall.badge);
+    const statusBtn = getByRole('button', { name: /点击查看转诊进度/ });
+    expect(statusBtn).toBeDefined();
+    expect(statusBtn.textContent).toBe('待分配');
+    expect(getByText('高')).toBeDefined();
 
     // Verify the legacy inner header is NOT present in loading state
     expect(screen.queryByText('计算机科学与技术学院')).toBeNull();
@@ -127,6 +133,13 @@ describe('ReferralDetailsView Component', () => {
     expect(lastCall).toBeDefined();
     expect(lastCall.title).toBe('李华');
     expect(lastCall.subtitle).toBe('STU2026001');
+    expect(lastCall.badge).toBeDefined();
+
+    const { getByRole, getByText } = render(lastCall.badge);
+    const statusBtn = getByRole('button', { name: /点击查看转诊进度/ });
+    expect(statusBtn).toBeDefined();
+    expect(statusBtn.textContent).toBe('待分配');
+    expect(getByText('高')).toBeDefined();
 
     // Inner header should NOT have college rendered as part of header
     // (college was removed from the header per specification)
@@ -136,5 +149,38 @@ describe('ReferralDetailsView Component', () => {
     // Unmount and verify cleanup
     unmount();
     expect(setHeaderOverrideMock).toHaveBeenLastCalledWith(null);
+  });
+
+  it('navigates to tracker tab when header status badge is clicked', async () => {
+    const setHeaderOverrideMock = vi.fn();
+    const onTabChangeMock = vi.fn();
+    vi.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => mockDetails
+    } as Response);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <DetailsContext.Provider value={{ isFullScreen: false, setHeaderOverride: setHeaderOverrideMock }}>
+          <ReferralDetailsView referral={mockReferral} onTabChange={onTabChangeMock} />
+        </DetailsContext.Provider>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('分诊基本信息')).toBeDefined();
+    });
+
+    const lastCall = setHeaderOverrideMock.mock.calls[setHeaderOverrideMock.mock.calls.length - 1][0] as DetailsHeaderOverride;
+    const { getByRole } = render(lastCall.badge);
+    const statusBtn = getByRole('button', { name: /点击查看转诊进度/ });
+    
+    fireEvent.click(statusBtn);
+
+    expect(onTabChangeMock).toHaveBeenCalledWith('tracker');
+    await waitFor(() => {
+      // In tracker tab, ReferralTrackerTab is rendered (showing timeline / steps)
+      expect(screen.queryByText('分诊基本信息')).toBeNull();
+    });
   });
 });

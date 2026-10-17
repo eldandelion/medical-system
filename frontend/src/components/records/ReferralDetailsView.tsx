@@ -16,7 +16,7 @@ import { enrichReferralStatus } from '../../utils/referralUtils';
 import { useReferralActions } from '../../hooks/useReferralActions';
 import { ReferralActionFooter } from './ReferralActionFooter';
 import { GenericDialog } from '../common/GenericDialog';
-import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS, REFERRAL_TYPE_LABELS } from '../../config/styleConstants';
+import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS, REFERRAL_TYPE_LABELS, STATUS_LABELS } from '../../config/styleConstants';
 import { DoctorScheduleCalendar } from '../common/DoctorScheduleCalendar';
 
 import { Referral, ReferralDetails } from '../../types';
@@ -39,9 +39,48 @@ export const REFERRAL_DETAILS_TABS = [
   { id: 'FEEDBACK', label: '诊疗反馈', icon: 'history_edu' },
 ];
 
+export interface ReferralHeaderBadgesProps {
+  status: string;
+  riskLevel: string;
+  onStatusClick: () => void;
+}
+
+export function ReferralHeaderBadges({ status, riskLevel, onStatusClick }: ReferralHeaderBadgesProps) {
+  const statusLabel = STATUS_LABELS[status] || status || '未知状态';
+  const riskLabel = RISK_LEVEL_LABELS[riskLevel] || riskLevel;
+  const riskStyle = RISK_LEVEL_STYLES[riskLevel] || '';
+
+  return (
+    <div className="flex items-center gap-1.5 shrink-0">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onStatusClick();
+        }}
+        className="px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-[0.5px] shrink-0 whitespace-nowrap bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)] active:scale-[0.98] cursor-pointer transition-all border-0 outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)]"
+        title="点击查看转诊进度"
+        aria-label={`转诊状态：${statusLabel}，点击查看转诊进度`}
+      >
+        {statusLabel}
+      </button>
+      <div className={`px-2.5 py-0.5 rounded-full flex items-center font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${riskStyle}`}>
+        <span>{riskLabel}</span>
+      </div>
+    </div>
+  );
+}
+
 export function ReferralDetailsView(props: ReferralDetailsViewProps) {
   const { session } = useAuth();
   const { setHeaderOverride } = useDetails();
+  const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
+  const activeTab = (props.activeTab || internalActiveTab) as TabType;
+
+  const handleTabChange = React.useCallback((tabId: string) => {
+    setInternalActiveTab(tabId as TabType);
+    props.onTabChange?.(tabId);
+  }, [props.onTabChange]);
 
   React.useEffect(() => {
     if (setHeaderOverride && props.referral) {
@@ -54,16 +93,18 @@ export function ReferralDetailsView(props: ReferralDetailsViewProps) {
         title: props.referral.studentName,
         subtitle: props.referral.studentNumber || 'N/A',
         badge: (
-          <div className={`px-2.5 py-0.5 rounded-full flex items-center font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${RISK_LEVEL_STYLES[props.referral.riskLevel] || ''}`}>
-            <span>{RISK_LEVEL_LABELS[props.referral.riskLevel] || props.referral.riskLevel}</span>
-          </div>
+          <ReferralHeaderBadges
+            status={props.referral.displayStatus || props.referral.status}
+            riskLevel={props.referral.riskLevel}
+            onStatusClick={() => handleTabChange('tracker')}
+          />
         ),
       });
     }
     return () => {
       setHeaderOverride?.(null);
     };
-  }, [setHeaderOverride, props.referral]);
+  }, [setHeaderOverride, props.referral, handleTabChange]);
 
   const { data: referralDetails, isLoading } = useQuery<ReferralDetails>({
     queryKey: ['/api/referrals', props.referral.id, 'details'],
@@ -98,6 +139,8 @@ export function ReferralDetailsView(props: ReferralDetailsViewProps) {
   return (
     <ReferralDetailsPresenter 
       {...props}
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
       referral={baseReferral}
       referralDetails={referralDetails}
     />
@@ -111,8 +154,7 @@ interface ReferralDetailsPresenterProps extends Omit<ReferralDetailsViewProps, '
 
 function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHeader, activeTab: propsActiveTab, onTabChange, onUpdate }: ReferralDetailsPresenterProps) {
   const { isFullScreen, setTabsOverride, setHeaderOverride } = useDetails();
-  const [internalActiveTab, setInternalActiveTab] = React.useState<TabType>('overview');
-  const activeTab = (propsActiveTab || internalActiveTab) as TabType;
+  const activeTab = (propsActiveTab || 'overview') as TabType;
 
   const { state, actions } = useReferralActions({ referralId: referral.id, onUpdate });
 
@@ -143,7 +185,6 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
   });
 
   const setActiveTab = React.useCallback((tab: TabType) => {
-    setInternalActiveTab(tab);
     onTabChange?.(tab);
   }, [onTabChange]);
 
@@ -152,10 +193,10 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
   }, [referralDetails, referral.status]);
 
   React.useEffect(() => {
-    if (internalActiveTab === 'FEEDBACK' && !isFeedbackAvailable) {
+    if (activeTab === 'FEEDBACK' && !isFeedbackAvailable) {
       setActiveTab('overview');
     }
-  }, [internalActiveTab, isFeedbackAvailable, setActiveTab]);
+  }, [activeTab, isFeedbackAvailable, setActiveTab]);
 
   const tabs = React.useMemo(() => REFERRAL_DETAILS_TABS.filter(
     tab => tab.id !== 'FEEDBACK' || isFeedbackAvailable
@@ -173,6 +214,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
   }, [tabs, setTabsOverride]);
 
   const studentNumber = referral.studentNumber || referralDetails.studentDemographics?.studentId || 'N/A';
+  const displayStatus = referral.displayStatus || referral.status;
 
   React.useEffect(() => {
     if (setHeaderOverride) {
@@ -185,19 +227,18 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
         title: referral.studentName,
         subtitle: studentNumber,
         badge: (
-          <div className={`px-2.5 py-0.5 rounded-full flex items-center font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${RISK_LEVEL_STYLES[referral.riskLevel] || ''}`}>
-            <span>{RISK_LEVEL_LABELS[referral.riskLevel] || referral.riskLevel}</span>
-          </div>
+          <ReferralHeaderBadges
+            status={displayStatus}
+            riskLevel={referral.riskLevel}
+            onStatusClick={() => setActiveTab('tracker')}
+          />
         ),
       });
     }
     return () => {
       setHeaderOverride?.(null);
     };
-  }, [setHeaderOverride, referral.studentName, studentNumber, referral.riskLevel]);
-
-  const displayStatus = referral.displayStatus || referral.status;
-  const isDoctorRejected = displayStatus === 'REJECTED'; // Removed steps check since we don't have it easily here. If needed we can fetch tracking data.
+  }, [setHeaderOverride, referral.studentName, studentNumber, referral.riskLevel, displayStatus, setActiveTab]);
 
   return (
     <ScrollableDetailsLayout
@@ -223,7 +264,6 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
           <ReferralOverviewTab 
             referral={referral} 
             referralDetails={referralDetails} 
-            onNavigateToTracker={() => setActiveTab('tracker')}
           />
         )}
 
