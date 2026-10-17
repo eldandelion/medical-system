@@ -485,12 +485,12 @@ describe('CommandPalette Component', () => {
 
   it('Visual DOM ordering renders data records above actions when query is present', async () => {
     const mockSearchResults = {
-      query: '测试',
+      query: '深色',
       students: [
         {
           id: 101,
           studentNumber: '2026001',
-          name: '测试学生',
+          name: '深色模式研究员',
           majorName: '计算机科学',
           collegeName: '计算机学院',
           enrollmentDate: '2026-09-01',
@@ -509,24 +509,124 @@ describe('CommandPalette Component', () => {
     renderCommandPalette('teacher', true);
 
     const input = screen.getByPlaceholderText(/搜索学生、转诊记录/i);
-    fireEvent.change(input, { target: { value: '测试' } });
+    fireEvent.change(input, { target: { value: '深色' } });
 
     await waitFor(
       () => {
-        expect(screen.getByText('测试学生')).toBeDefined();
+        expect(screen.getByText('深色模式研究员')).toBeDefined();
+        expect(screen.getByText('切换为深色模式')).toBeDefined();
       },
       { timeout: 2000 }
     );
 
     const studentHeader = screen.getByText(/学生档案/);
-    const actionHeader = screen.queryByText('快捷操作');
+    const actionHeader = screen.getByText('快捷操作');
 
-    if (actionHeader) {
-      // studentHeader must appear before actionHeader in the document
-      expect(
-        studentHeader.compareDocumentPosition(actionHeader) & Node.DOCUMENT_POSITION_FOLLOWING
-      ).toBeTruthy();
-    }
+    // studentHeader must strictly appear before actionHeader in the document
+    expect(
+      Boolean(studentHeader.compareDocumentPosition(actionHeader) & Node.DOCUMENT_POSITION_FOLLOWING)
+    ).toBe(true);
+  });
+
+  it('Enter key with student role navigates to My Records tab with entityId', async () => {
+    const navigateSpy = vi.fn();
+    const mockSearchResults = {
+      query: '李四',
+      students: [
+        {
+          id: 202,
+          studentNumber: '2026202',
+          name: '李四',
+          majorName: '临床心理学',
+          collegeName: '心理学院',
+          enrollmentDate: '2026-09-01',
+          riskLevel: 'MEDIUM' as const,
+        },
+      ],
+      referrals: [],
+      assessments: [],
+    };
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => mockSearchResults,
+    } as Response);
+
+    renderCommandPalette('student', true, navigateSpy);
+
+    const input = screen.getByPlaceholderText(/搜索学生、转诊记录/i);
+    fireEvent.change(input, { target: { value: '李四' } });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('李四')).toBeDefined();
+      },
+      { timeout: 2000 }
+    );
+
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(navigateSpy).toHaveBeenCalledWith('My Records', 202);
+      expect(screen.queryByPlaceholderText(/搜索学生、转诊记录/i)).toBeNull();
+    });
+  });
+
+  it('blurs search input upon selecting an entry', async () => {
+    const navigateSpy = vi.fn();
+    const mockSearchResults = {
+      query: '李四',
+      students: [
+        {
+          id: 202,
+          studentNumber: '2026202',
+          name: '李四',
+          majorName: '临床心理学',
+          collegeName: '心理学院',
+          enrollmentDate: '2026-09-01',
+          riskLevel: 'MEDIUM' as const,
+        },
+      ],
+      referrals: [],
+      assessments: [],
+    };
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => mockSearchResults,
+    } as Response);
+
+    renderCommandPalette('teacher', true, navigateSpy);
+
+    const input = screen.getByPlaceholderText(/搜索学生、转诊记录/i);
+    const blurSpy = vi.spyOn(input, 'blur');
+    fireEvent.change(input, { target: { value: '李四' } });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('李四')).toBeDefined();
+      },
+      { timeout: 2000 }
+    );
+
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(blurSpy).toHaveBeenCalled();
+    });
+  });
+
+  it('renders complete WAI-ARIA combobox and listbox attributes', async () => {
+    renderCommandPalette('teacher', true);
+
+    const input = screen.getByRole('combobox');
+    expect(input.getAttribute('aria-label')).toBe('全局指令与数据搜索');
+    expect(input.getAttribute('aria-autocomplete')).toBe('list');
+    expect(input.getAttribute('aria-controls')).toBe('command-palette-listbox');
+
+    const listbox = screen.getByRole('listbox');
+    expect(listbox.getAttribute('id')).toBe('command-palette-listbox');
+    expect(listbox.getAttribute('aria-label')).toBe('搜索结果列表');
   });
 });
 

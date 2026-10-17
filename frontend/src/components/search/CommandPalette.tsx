@@ -73,16 +73,21 @@ export function CommandPalette() {
   // Flatten all items for linear keyboard navigation
   const flatItems: FlatSearchItem[] = useMemo(() => {
     const items: FlatSearchItem[] = [];
+    const isMatchingRemote =
+      searchResults &&
+      searchResults.query.trim().toLowerCase() === query.trim().toLowerCase();
 
     if (hasQuery) {
-      // 1. Students (remote)
-      searchResults?.students?.forEach((item) => items.push({ kind: 'student', item }));
+      if (isMatchingRemote) {
+        // 1. Students (remote)
+        searchResults.students?.forEach((item) => items.push({ kind: 'student', item }));
 
-      // 2. Referrals (remote)
-      searchResults?.referrals?.forEach((item) => items.push({ kind: 'referral', item }));
+        // 2. Referrals (remote)
+        searchResults.referrals?.forEach((item) => items.push({ kind: 'referral', item }));
 
-      // 3. Assessments (remote)
-      searchResults?.assessments?.forEach((item) => items.push({ kind: 'assessment', item }));
+        // 3. Assessments (remote)
+        searchResults.assessments?.forEach((item) => items.push({ kind: 'assessment', item }));
+      }
 
       // 4. Actions (if any matched)
       matchedActions.forEach((item) => items.push({ kind: 'action', item }));
@@ -93,13 +98,15 @@ export function CommandPalette() {
       // Default empty query view: actions and navigations first
       matchedActions.forEach((item) => items.push({ kind: 'action', item }));
       matchedNavigations.forEach((item) => items.push({ kind: 'navigation', item }));
-      searchResults?.students?.forEach((item) => items.push({ kind: 'student', item }));
-      searchResults?.referrals?.forEach((item) => items.push({ kind: 'referral', item }));
-      searchResults?.assessments?.forEach((item) => items.push({ kind: 'assessment', item }));
+      if (isMatchingRemote) {
+        searchResults.students?.forEach((item) => items.push({ kind: 'student', item }));
+        searchResults.referrals?.forEach((item) => items.push({ kind: 'referral', item }));
+        searchResults.assessments?.forEach((item) => items.push({ kind: 'assessment', item }));
+      }
     }
 
     return items;
-  }, [hasQuery, matchedActions, matchedNavigations, searchResults]);
+  }, [hasQuery, matchedActions, matchedNavigations, searchResults, query]);
 
   // Keep selected index within bounds
   useEffect(() => {
@@ -136,6 +143,8 @@ export function CommandPalette() {
 
   // Keyboard navigation inside palette
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.nativeEvent.isComposing) return;
+
     if (e.key === 'Escape') {
       e.preventDefault();
       closeSearch();
@@ -157,7 +166,6 @@ export function CommandPalette() {
     }
 
     if (e.key === 'Enter') {
-      if (e.nativeEvent.isComposing) return;
       e.preventDefault();
       if (flatItems.length === 0) {
         inputRef.current?.focus();
@@ -213,6 +221,9 @@ export function CommandPalette() {
             return (
               <div
                 key={action.id}
+                id={`search-item-${itemIndex}`}
+                role="option"
+                aria-selected={isSelected}
                 data-selected={isSelected}
                 onClick={() => handleSelectItem({ kind: 'action', item: action })}
                 onMouseEnter={() => setSelectedIndex(itemIndex)}
@@ -260,6 +271,9 @@ export function CommandPalette() {
             return (
               <div
                 key={nav.id}
+                id={`search-item-${itemIndex}`}
+                role="option"
+                aria-selected={isSelected}
                 data-selected={isSelected}
                 onClick={() => handleSelectItem({ kind: 'navigation', item: nav })}
                 onMouseEnter={() => setSelectedIndex(itemIndex)}
@@ -292,7 +306,10 @@ export function CommandPalette() {
   };
 
   const renderStudents = () => {
-    if (!searchResults?.students || searchResults.students.length === 0) return null;
+    const isMatchingRemote =
+      searchResults &&
+      searchResults.query.trim().toLowerCase() === query.trim().toLowerCase();
+    if (!isMatchingRemote || !searchResults?.students || searchResults.students.length === 0) return null;
     return (
       <div>
         <div className="px-3 py-1 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] tracking-wider">
@@ -305,6 +322,9 @@ export function CommandPalette() {
             return (
               <div
                 key={`student-${student.id}`}
+                id={`search-item-${itemIndex}`}
+                role="option"
+                aria-selected={isSelected}
                 data-selected={isSelected}
                 onClick={() => handleSelectItem({ kind: 'student', item: student })}
                 onMouseEnter={() => setSelectedIndex(itemIndex)}
@@ -348,7 +368,10 @@ export function CommandPalette() {
   };
 
   const renderReferrals = () => {
-    if (!searchResults?.referrals || searchResults.referrals.length === 0) return null;
+    const isMatchingRemote =
+      searchResults &&
+      searchResults.query.trim().toLowerCase() === query.trim().toLowerCase();
+    if (!isMatchingRemote || !searchResults?.referrals || searchResults.referrals.length === 0) return null;
     return (
       <div>
         <div className="px-3 py-1 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] tracking-wider">
@@ -363,6 +386,9 @@ export function CommandPalette() {
             return (
               <div
                 key={`referral-${referral.id}`}
+                id={`search-item-${itemIndex}`}
+                role="option"
+                aria-selected={isSelected}
                 data-selected={isSelected}
                 onClick={() => handleSelectItem({ kind: 'referral', item: referral })}
                 onMouseEnter={() => setSelectedIndex(itemIndex)}
@@ -412,7 +438,10 @@ export function CommandPalette() {
   };
 
   const renderAssessments = () => {
-    if (!searchResults?.assessments || searchResults.assessments.length === 0) return null;
+    const isMatchingRemote =
+      searchResults &&
+      searchResults.query.trim().toLowerCase() === query.trim().toLowerCase();
+    if (!isMatchingRemote || !searchResults?.assessments || searchResults.assessments.length === 0) return null;
     return (
       <div>
         <div className="px-3 py-1 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] tracking-wider">
@@ -425,6 +454,9 @@ export function CommandPalette() {
             return (
               <div
                 key={`assessment-${assessment.id}`}
+                id={`search-item-${itemIndex}`}
+                role="option"
+                aria-selected={isSelected}
                 data-selected={isSelected}
                 onClick={() => handleSelectItem({ kind: 'assessment', item: assessment })}
                 onMouseEnter={() => setSelectedIndex(itemIndex)}
@@ -507,6 +539,10 @@ export function CommandPalette() {
                 role="combobox"
                 aria-expanded={flatItems.length > 0}
                 aria-autocomplete="list"
+                aria-controls="command-palette-listbox"
+                aria-activedescendant={
+                  flatItems[selectedIndex] ? `search-item-${selectedIndex}` : undefined
+                }
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="搜索学生、转诊记录、测评量表或快捷操作 (支持 ↑ ↓ 键与回车)..."
@@ -523,6 +559,7 @@ export function CommandPalette() {
                 <button
                   type="button"
                   onClick={() => setQuery('')}
+                  onKeyDown={(e) => e.stopPropagation()}
                   className="p-1 rounded-full text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)]"
                   title="清空"
                 >
@@ -536,7 +573,13 @@ export function CommandPalette() {
             </div>
 
             {/* Results Body */}
-            <div ref={listRef} className="overflow-y-auto p-2 space-y-4 max-h-[calc(75vh-56px)] custom-scrollbar">
+            <div
+              ref={listRef}
+              id="command-palette-listbox"
+              role="listbox"
+              aria-label="搜索结果列表"
+              className="overflow-y-auto p-2 space-y-4 max-h-[calc(75vh-56px)] custom-scrollbar"
+            >
               {flatItems.length === 0 && !isFetching && (
                 <div className="py-12 flex flex-col items-center justify-center text-center text-[var(--md-sys-color-on-surface-variant)]">
                   <span className="material-symbols-outlined text-4xl mb-2 opacity-50">search_off</span>
