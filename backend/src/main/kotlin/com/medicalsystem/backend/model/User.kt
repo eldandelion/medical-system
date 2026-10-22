@@ -10,5 +10,6 @@ data class User(
     val avatarUrl: URI? = null,
     val role: UserRole,
     val status: AccountStatus = AccountStatus.ACTIVE,
-    val deletedAt: Instant? = null
+    val deletedAt: Instant? = null,
+    val phone: String? = null
 )

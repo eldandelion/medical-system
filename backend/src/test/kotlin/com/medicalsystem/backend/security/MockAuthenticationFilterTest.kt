@@ -131,4 +131,21 @@ class MockAuthenticationFilterTest {
 
         verify(chain).doFilter(request, response)
     }
+
+    @Test
+    fun `should reject invalid JWT token and not fall back to database users`() {
+        request.addHeader("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.invalid.signature")
+        val fallbackUser = com.medicalsystem.backend.model.User(id = 2L, name = "Fallback Teacher", email = EmailAddress("fallback@univ.edu.cn"), role = com.medicalsystem.backend.model.UserRole.TEACHER)
+        `when`(userRepository.findAll()).thenReturn(listOf(fallbackUser))
+
+        doAnswer {
+            val context = MockSecurityContextHolder.getContext()
+            assertNull(context.user, "Invalid JWT must not fall back to DB user")
+            null
+        }.`when`(chain).doFilter(request, response)
+
+        filter.doFilter(request, response, chain)
+
+        verify(chain).doFilter(request, response)
+    }
 }

@@ -28,6 +28,9 @@ class AuthControllerTest {
     @Mock
     private lateinit var staffRegistrationService: StaffRegistrationService
 
+    @Mock
+    private lateinit var authService: com.medicalsystem.backend.service.AuthService
+
     @InjectMocks
     private lateinit var authController: AuthController
 

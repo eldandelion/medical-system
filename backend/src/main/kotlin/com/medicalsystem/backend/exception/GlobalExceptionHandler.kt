@@ -20,6 +20,12 @@ class GlobalExceptionHandler {
             .body(mapOf("error" to (e.message ?: "Conflict")))
     }
 
+    @ExceptionHandler(UnauthorizedException::class)
+    fun handleUnauthorized(e: UnauthorizedException): ResponseEntity<Map<String, String>> {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(mapOf("error" to (e.message ?: "Unauthorized")))
+    }
+
     @ExceptionHandler(ValidationException::class)
     fun handleValidation(e: ValidationException): ResponseEntity<Map<String, String>> {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)

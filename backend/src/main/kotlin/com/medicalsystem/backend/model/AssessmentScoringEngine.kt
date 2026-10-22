@@ -5,7 +5,7 @@ import java.time.LocalDate
 
 object AssessmentScoringEngine {
 
-    fun validateAnswers(scale: AssessmentScale, answers: Map<String, Int>) {
+    fun validateAnswers(scale: AssessmentScale, answers: Map<String, Any>) {
         val missingQuestionCodes = scale.allQuestionCodes - answers.keys
         val invalidQuestionCodes = answers.keys - scale.allQuestionCodes
         
@@ -17,10 +17,9 @@ object AssessmentScoringEngine {
         }
     }
 
-    fun scoreSection(studentId: Long, section: AssessmentSection, answers: Map<String, Int>, assignmentId: Long? = null): PsychometricTest {
-        // TODO("Implement real psychometric formula scoring")
+    fun scoreSection(studentId: Long, section: AssessmentSection, answers: Map<String, Any>, assignmentId: Long? = null): PsychometricTest {
         val testType = try {
-            PsychometricTestType.valueOf(section.code)
+            PsychometricTestType.valueOf(section.code.uppercase())
         } catch (e: IllegalArgumentException) {
             PsychometricTestType.PHQ_9 
         }

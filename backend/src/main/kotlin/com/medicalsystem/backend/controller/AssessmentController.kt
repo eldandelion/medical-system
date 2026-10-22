@@ -75,6 +75,25 @@ class AssessmentController(
         return assessmentService.submitAssessment(id, request, currentUser)
     }
 
+    @GetMapping("/{id}/draft")
+    fun getDraft(
+        @PathVariable id: Long,
+        @CurrentUser user: User?
+    ): ScaleDraftDto? {
+        val currentUser = user ?: throw ForbiddenException("Authorized user not found")
+        return assessmentService.getDraftForAssignment(id, currentUser)
+    }
+
+    @PutMapping("/{id}/draft")
+    fun saveDraft(
+        @PathVariable id: Long,
+        @RequestBody request: SaveDraftRequest,
+        @CurrentUser user: User?
+    ) {
+        val currentUser = user ?: throw ForbiddenException("Authorized user not found")
+        assessmentService.saveDraftForAssignment(id, request, currentUser)
+    }
+
     @PutMapping("/{id}/progress")
     fun recordProgress(
         @PathVariable id: Long,

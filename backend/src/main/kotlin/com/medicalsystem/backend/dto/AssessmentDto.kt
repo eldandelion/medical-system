@@ -7,13 +7,30 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class AssessmentOptionDto(
-    val value: Int,
-    val label: String
+    val value: Any,
+    val label: String,
+    val hasTextInput: Boolean = false,
+    val textInputPlaceholder: String? = null,
+    val textInputLabel: String? = null
 )
 
 data class AssessmentQuestionDto(
     val id: String,
     val text: String,
+    val orderNum: Int? = null,
+    val type: String = "single_choice",
+    val field: String? = null,
+    val placeholder: String? = null,
+    val min: Double? = null,
+    val max: Double? = null,
+    val step: Double? = null,
+    val unit: String? = null,
+    val minLabel: String? = null,
+    val maxLabel: String? = null,
+    val icon: String? = null,
+    val zeroOptionLabel: String? = null,
+    val sectionCode: String? = null,
+    val sectionTitle: String? = null,
     val options: List<AssessmentOptionDto>? = null
 )
 
@@ -22,7 +39,9 @@ data class AssessmentSectionDto(
     val title: String,
     val subtitle: String? = null,
     val description: String? = null,
-    val questions: List<AssessmentQuestionDto>
+    val questionCount: Int = 0,
+    val orderNum: Int = 0,
+    val questions: List<AssessmentQuestionDto> = emptyList()
 )
 
 data class AssessmentCatalogItemDto(
@@ -66,7 +85,8 @@ data class AssessmentDetailsDto(
     val status: AssessmentStatus,
     val sections: List<AssessmentSectionDto>,
     val requiredQuestionIds: List<String>,
-    val savedAnswers: Map<String, Int>? = null
+    val savedAnswers: Map<String, Any>? = null,
+    val questions: List<AssessmentQuestionDto>? = null
 )
 
 data class AssignAssessmentRequest(
@@ -94,12 +114,11 @@ data class AnswerSubmissionDto(
     @field:NotEmpty(message = "questionId is required")
     val questionId: String,
     @field:NotNull(message = "selectedValue is required")
-    val selectedValue: Int
+    val selectedValue: Any
 )
 
 data class SubmitAssessmentRequest(
-    @field:NotEmpty(message = "answers cannot be empty")
-    val answers: List<AnswerSubmissionDto>
+    val answers: Any? = null
 )
 
 data class AssessmentSubmissionResponseDto(
@@ -110,5 +129,17 @@ data class AssessmentSubmissionResponseDto(
 )
 
 data class RecordProgressRequest(
-    val answers: Map<String, Int>
+    val answers: Map<String, Any>
+)
+
+
+data class SaveDraftRequest(
+    val answers: Map<String, Any>,
+    val updatedAt: Long = System.currentTimeMillis()
+)
+
+data class ScaleDraftDto(
+    val scaleCode: String,
+    val answers: Map<String, Any>,
+    val updatedAt: Long
 )

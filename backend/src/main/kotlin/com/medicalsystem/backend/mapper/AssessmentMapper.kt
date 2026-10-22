@@ -26,7 +26,7 @@ object AssessmentMapper {
             ),
             type = ASSESSMENT_TYPE,
             completionPercentage = percentage,
-            duration = scale?.duration ?: "10 分钟",
+            duration = scale?.duration ?: "45 分钟",
             status = this.status,
             assignedAt = this.assignedAt,
             completedAt = this.completedAt,
@@ -44,12 +44,34 @@ object AssessmentMapper {
                 title = sec.title,
                 subtitle = sec.subtitle,
                 description = sec.description,
+                questionCount = sec.questions.size,
+                orderNum = sec.orderNum,
                 questions = sec.questions.map { q ->
                     AssessmentQuestionDto(
                         id = q.code,
                         text = q.text,
+                        orderNum = q.orderNum,
+                        type = q.type,
+                        field = q.field,
+                        placeholder = q.placeholder,
+                        min = q.min,
+                        max = q.max,
+                        step = q.step,
+                        unit = q.unit,
+                        minLabel = q.minLabel,
+                        maxLabel = q.maxLabel,
+                        icon = q.icon,
+                        zeroOptionLabel = q.zeroOptionLabel,
+                        sectionCode = q.sectionCode,
+                        sectionTitle = q.sectionTitle,
                         options = q.effectiveOptions.map { opt ->
-                            AssessmentOptionDto(value = opt.value, label = opt.label)
+                            AssessmentOptionDto(
+                                value = opt.value,
+                                label = opt.label,
+                                hasTextInput = opt.hasTextInput,
+                                textInputPlaceholder = opt.textInputPlaceholder,
+                                textInputLabel = opt.textInputLabel
+                            )
                         }
                     )
                 }
@@ -69,7 +91,8 @@ object AssessmentMapper {
             status = assignment.status,
             sections = sectionDtos,
             requiredQuestionIds = this.allQuestionCodes.toList(),
-            savedAnswers = assignment.answers
+            savedAnswers = assignment.answers,
+            questions = sectionDtos.flatMap { it.questions }
         )
     }
 
@@ -87,12 +110,34 @@ object AssessmentMapper {
                     title = sec.title,
                     subtitle = sec.subtitle,
                     description = sec.description,
+                    questionCount = sec.questions.size,
+                    orderNum = sec.orderNum,
                     questions = sec.questions.map { q ->
                         AssessmentQuestionDto(
                             id = q.code,
                             text = q.text,
+                            orderNum = q.orderNum,
+                            type = q.type,
+                            field = q.field,
+                            placeholder = q.placeholder,
+                            min = q.min,
+                            max = q.max,
+                            step = q.step,
+                            unit = q.unit,
+                            minLabel = q.minLabel,
+                            maxLabel = q.maxLabel,
+                            icon = q.icon,
+                            zeroOptionLabel = q.zeroOptionLabel,
+                            sectionCode = q.sectionCode,
+                            sectionTitle = q.sectionTitle,
                             options = q.effectiveOptions.map { opt ->
-                                AssessmentOptionDto(value = opt.value, label = opt.label)
+                                AssessmentOptionDto(
+                                    value = opt.value,
+                                    label = opt.label,
+                                    hasTextInput = opt.hasTextInput,
+                                    textInputPlaceholder = opt.textInputPlaceholder,
+                                    textInputLabel = opt.textInputLabel
+                                )
                             }
                         )
                     }

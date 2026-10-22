@@ -12,6 +12,8 @@ interface UserJpaRepository : JpaRepository<UserEntity, Long> {
     fun findByName(name: String): UserEntity?
     fun findByEmail(email: com.medicalsystem.backend.model.EmailAddress): UserEntity?
     fun existsByEmail(email: com.medicalsystem.backend.model.EmailAddress): Boolean
+    fun findByPhone(phone: String): UserEntity?
+    fun existsByPhone(phone: String): Boolean
     fun findTop5ByStatusOrderByIdDesc(status: com.medicalsystem.backend.model.AccountStatus): List<UserEntity>
 }
 

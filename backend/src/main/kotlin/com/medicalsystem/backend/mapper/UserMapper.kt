@@ -13,7 +13,8 @@ class UserMapper {
             email = entity.email,
             role = entity.role,
             status = entity.status,
-            deletedAt = entity.deletedAt
+            deletedAt = entity.deletedAt,
+            phone = entity.phone
         )
     }
 
@@ -24,7 +25,8 @@ class UserMapper {
             email = model.email,
             role = model.role,
             status = model.status,
-            deletedAt = model.deletedAt
+            deletedAt = model.deletedAt,
+            phone = model.phone
         )
     }
 }

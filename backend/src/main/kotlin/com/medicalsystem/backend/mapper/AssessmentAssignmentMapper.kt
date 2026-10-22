@@ -15,10 +15,10 @@ class AssessmentAssignmentMapper(
     private val entityManager: EntityManager
 ) {
     private val objectMapper = ObjectMapper()
-    private val mapTypeRef = object : TypeReference<Map<String, Int>>() {}
+    private val mapTypeRef = object : TypeReference<Map<String, Any>>() {}
 
     fun toModel(entity: AssessmentAssignmentEntity): AssessmentAssignment {
-        val parsedAnswers: Map<String, Int>? = entity.answersJson?.let {
+        val parsedAnswers: Map<String, Any>? = entity.answersJson?.let {
             try {
                 objectMapper.readValue(it, mapTypeRef)
             } catch (e: Exception) {

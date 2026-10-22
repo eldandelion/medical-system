@@ -17,7 +17,7 @@ data class AssessmentAssignment(
     val assignedAt: LocalDateTime = LocalDateTime.now(),
     var completedAt: LocalDateTime? = null,
     val dueDate: LocalDate? = null,
-    var answers: Map<String, Int>? = null,
+    var answers: Map<String, Any>? = null,
     var revokedAt: LocalDateTime? = null
 ) : AggregateRoot() {
 
@@ -35,7 +35,7 @@ data class AssessmentAssignment(
     }
 
     fun complete(
-        responses: Map<String, Int>,
+        responses: Map<String, Any>,
         completedTests: List<PsychometricTest>
     ) {
         if (status == AssessmentStatus.COMPLETED) {
@@ -85,7 +85,7 @@ data class AssessmentAssignment(
         }
     }
 
-    fun recordProgress(newAnswers: Map<String, Int>, currentUserId: Long) {
+    fun recordProgress(newAnswers: Map<String, Any>, currentUserId: Long) {
         if (this.studentId != currentUserId) {
             throw com.medicalsystem.backend.exception.ForbiddenException("You can only record progress for your own assessments")
         }

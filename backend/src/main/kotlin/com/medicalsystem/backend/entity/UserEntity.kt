@@ -28,5 +28,11 @@ class UserEntity(
     var deletedAt: Instant? = null,
 
     @Column(name = "rejection_reason", length = 255)
-    var rejectionReason: String? = null
+    var rejectionReason: String? = null,
+
+    @Column(name = "phone", length = 32, unique = true)
+    var phone: String? = null,
+
+    @Column(name = "password_hash", length = 255)
+    var passwordHash: String? = null
 )

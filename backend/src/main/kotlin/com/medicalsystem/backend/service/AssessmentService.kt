@@ -25,7 +25,11 @@ class AssessmentService(
     private val scaleRepository: AssessmentScaleRepository,
     private val scaleSettingRepository: com.medicalsystem.backend.repository.AssessmentScaleSettingJpaRepository,
     private val dispatchRepository: com.medicalsystem.backend.repository.AssessmentDispatchRepository,
-    private val clock: Clock
+    private val clock: Clock,
+    private val scaleDraftService: ScaleDraftService? = null,
+    private val studentJpaRepository: com.medicalsystem.backend.repository.StudentJpaRepository? = null,
+    private val demographicsProjector: DemographicsProjector? = null,
+    private val clinicalRiskEvaluator: ClinicalRiskEvaluator? = null
 ) {
 
     @Transactional(readOnly = true)
@@ -220,7 +224,27 @@ class AssessmentService(
         val scale = scaleRepository.findByBatteryCode(assignment.batteryCode.value).orElseThrow {
             NotFoundException("Assessment scale definition not found for ${assignment.batteryCode.value}")
         }
-        val answersMap = request.answers.associate { it.questionId to it.selectedValue }
+        val answersMap: Map<String, Any> = when (val a = request.answers) {
+            is Map<*, *> -> a.entries.filter { it.key != null && it.value != null }.associate { it.key.toString() to it.value!! }
+            is List<*> -> {
+                a.mapNotNull { item ->
+                    when (item) {
+                        is AnswerSubmissionDto -> item.questionId to item.selectedValue
+                        is Map<*, *> -> {
+                            val qId = (item["questionId"] ?: item["id"])?.toString()
+                            val value = item["selectedValue"] ?: item["value"]
+                            if (qId != null && value != null) qId to value else null
+                        }
+                        else -> null
+                    }
+                }.toMap()
+            }
+            else -> emptyMap()
+        }
+
+        if (answersMap.isEmpty()) {
+            throw com.medicalsystem.backend.exception.ValidationException("answers cannot be empty")
+        }
         
         AssessmentScoringEngine.validateAnswers(scale, answersMap)
         
@@ -236,12 +260,44 @@ class AssessmentService(
 
         val savedAssignment = assignmentRepository.save(assignment)
 
+        // 1. Purge draft
+        scaleDraftService?.purgeDraft(assignment.studentId, assignment.batteryCode.value)
+
+        // 2. Project demographics
+        studentJpaRepository?.findById(assignment.studentId)?.ifPresent { studentEntity ->
+            demographicsProjector?.projectDemographics(studentEntity, answersMap)
+            studentJpaRepository.save(studentEntity)
+        }
+
+        // 3. Clinical Risk Evaluation
+        clinicalRiskEvaluator?.evaluateRisk(assignment.studentId, answersMap, completedTests)
+
         return AssessmentSubmissionResponseDto(
             success = true,
             assignmentId = savedAssignment.id ?: assignmentId,
-            totalQuestionsAnswered = request.answers.size,
+            totalQuestionsAnswered = answersMap.size,
             completedAt = savedAssignment.completedAt ?: LocalDateTime.now(clock)
         )
+    }
+
+    fun getDraftForAssignment(assignmentId: Long, currentUser: User): ScaleDraftDto? {
+        val assignment = assignmentRepository.findById(assignmentId).orElseThrow {
+            NotFoundException("Assessment assignment with id $assignmentId not found")
+        }
+        if (assignment.studentId != currentUser.id) {
+            throw ForbiddenException("You can only access drafts for your own assessments")
+        }
+        return scaleDraftService?.getDraft(assignment.studentId, assignment.batteryCode.value)
+    }
+
+    fun saveDraftForAssignment(assignmentId: Long, request: SaveDraftRequest, currentUser: User) {
+        val assignment = assignmentRepository.findById(assignmentId).orElseThrow {
+            NotFoundException("Assessment assignment with id $assignmentId not found")
+        }
+        if (assignment.studentId != currentUser.id) {
+            throw ForbiddenException("You can only save drafts for your own assessments")
+        }
+        scaleDraftService?.saveDraft(assignment.studentId, assignment.batteryCode.value, request)
     }
 
     fun recordProgress(

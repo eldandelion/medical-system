@@ -31,7 +31,15 @@ class UserRepositoryAdapter(
     }
 
     override fun save(user: User): User {
-        val entity = mapper.toEntity(user)
+        val existing = jpaRepository.findById(user.id).orElse(null)
+        val entity = mapper.toEntity(user).apply {
+            if (existing != null) {
+                this.passwordHash = existing.passwordHash
+                if (this.phone == null) {
+                    this.phone = existing.phone
+                }
+            }
+        }
         val savedEntity = jpaRepository.save(entity)
         return mapper.toModel(savedEntity)
     }

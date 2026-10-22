@@ -5,6 +5,7 @@ export const ASSESSMENT_DICTIONARY: Record<string, string> = {
   'APQ_9_FATHER': '教养行为评估 (父亲篇)',
   'APQ_9_MOTHER': '教养行为评估 (母亲篇)',
   'COMPREHENSIVE_MENTAL': '年度身心健康状况综合评估',
+  'comprehensive_student_intake_survey': '中南大学学生心身健康综合调查问卷',
   
   // Legacy / Fallback mappings for old database records
   'MENTAL_HEALTH_ASSESSMENT': '年度身心健康状况综合评估'
