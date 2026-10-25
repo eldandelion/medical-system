@@ -24,10 +24,9 @@ class AssessmentAssignmentService(
             batteryCode = BatteryId(batteryCode)
         )
         
-        assignment.initAssignedEvent()
-        
         try {
             val saved = assessmentAssignmentRepository.save(assignment)
+            saved.initAssignedEvent()
             
             // Publish events registered in the aggregate
             saved.getDomainEvents().forEach { domainEventPublisher.publish(it) }
@@ -47,8 +46,8 @@ class AssessmentAssignmentService(
         assignment.revoke(revokerId)
         val saved = assessmentAssignmentRepository.save(assignment)
 
-        saved.getDomainEvents().forEach { domainEventPublisher.publish(it) }
-        saved.clearDomainEvents()
+        assignment.getDomainEvents().forEach { domainEventPublisher.publish(it) }
+        assignment.clearDomainEvents()
 
         return saved
     }

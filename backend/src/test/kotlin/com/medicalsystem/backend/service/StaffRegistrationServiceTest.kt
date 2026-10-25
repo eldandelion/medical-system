@@ -101,6 +101,12 @@ class StaffRegistrationServiceTest {
         verify(emailOtpService).verifyAndConsume("teacher.zhang@csu.edu.cn", "123456")
         verify(teacherJpaRepository).save(any<TeacherEntity>())
 
+        val userCaptor = argumentCaptor<UserEntity>()
+        verify(userJpaRepository).save(userCaptor.capture())
+        val capturedUser = userCaptor.firstValue
+        assertNotNull(capturedUser.passwordHash)
+        assertTrue(org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().matches("Password123", capturedUser.passwordHash))
+
         val eventCaptor = argumentCaptor<StaffRegisteredEvent>()
         verify(domainEventPublisher).publish(eventCaptor.capture())
         val publishedEvent = eventCaptor.firstValue

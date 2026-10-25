@@ -184,11 +184,12 @@ class DashboardServiceTest {
     @Test
     fun `getStudentDashboard returns student metrics`() {
         val mockUser = User(id = 1L, name = "John Doe", email = EmailAddress("john@univ.edu.cn"), role = UserRole.STUDENT)
+        `when`(assessmentAssignmentRepository.countByStudentIdAndStatus(1L, AssessmentStatus.PENDING)).thenReturn(2L)
         `when`(notificationRepository.countUnreadByUserId(1L)).thenReturn(4L)
 
         val result = dashboardService.getStudentDashboard(mockUser)
 
-        assertEquals(0L, result.metrics.assessmentsCount)
+        assertEquals(2L, result.metrics.assessmentsCount)
         assertEquals(4L, result.metrics.notificationsCount)
     }
 

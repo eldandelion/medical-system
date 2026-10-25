@@ -24,8 +24,7 @@ class ScaleDraftEntity(
     @Column(name = "scale_code", nullable = false, length = 64)
     val scaleCode: String,
 
-    @Lob
-    @Column(name = "answers_json", nullable = false)
+    @Column(name = "answers_json", nullable = false, columnDefinition = "LONGTEXT")
     var answersJson: String,
 
     @Column(name = "client_updated_at", nullable = false)

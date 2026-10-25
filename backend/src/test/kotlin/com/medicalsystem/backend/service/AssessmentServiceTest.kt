@@ -47,6 +47,12 @@ class AssessmentServiceTest {
     @Mock
     private lateinit var dispatchRepository: com.medicalsystem.backend.repository.AssessmentDispatchRepository
 
+    @Mock
+    private lateinit var domainEventPublisher: com.medicalsystem.backend.event.DomainEventPublisher
+
+    @Mock
+    private lateinit var scaleDraftService: ScaleDraftService
+
     private lateinit var clock: Clock
     
     private lateinit var assessmentService: AssessmentService
@@ -133,7 +139,9 @@ class AssessmentServiceTest {
             scaleRepository,
             scaleSettingRepository,
             dispatchRepository,
-            clock
+            clock,
+            scaleDraftService = scaleDraftService,
+            domainEventPublisher = domainEventPublisher
         )
     }
 
@@ -222,6 +230,7 @@ class AssessmentServiceTest {
         val result = assessmentService.assignToStudent(request, teacherUser)
 
         assertEquals(1, result.assignedCount)
+        org.mockito.kotlin.verify(domainEventPublisher, org.mockito.kotlin.atLeastOnce()).publish(any())
     }
 
     @Test
@@ -258,6 +267,14 @@ class AssessmentServiceTest {
         assertTrue(response.success)
         assertEquals(9, response.totalQuestionsAnswered)
         assertEquals(AssessmentStatus.COMPLETED, assignment.status)
+        org.mockito.kotlin.verify(scaleDraftService).purgeDraft(10L, "MENTAL_HEALTH_ASSESSMENT")
+        val eventCaptor = org.mockito.kotlin.argumentCaptor<com.medicalsystem.backend.event.DomainEvent>()
+        org.mockito.kotlin.verify(domainEventPublisher).publish(eventCaptor.capture())
+        val completedEvent = eventCaptor.firstValue as com.medicalsystem.backend.event.AssessmentCompletedEvent
+        assertEquals(10L, completedEvent.studentId)
+        assertEquals(1, completedEvent.completedTests.size)
+        assertEquals(18, completedEvent.completedTests[0].score.points)
+        assertEquals(27, completedEvent.completedTests[0].score.max)
     }
 
     @Test
@@ -299,6 +316,11 @@ class AssessmentServiceTest {
         assessmentService.recordProgress(1L, request, studentUser)
 
         assertEquals(answers, assignment.answers)
+        org.mockito.kotlin.verify(scaleDraftService).saveDraft(
+            org.mockito.kotlin.eq(10L),
+            org.mockito.kotlin.eq("MENTAL_HEALTH_ASSESSMENT"),
+            any()
+        )
     }
 
     @Test

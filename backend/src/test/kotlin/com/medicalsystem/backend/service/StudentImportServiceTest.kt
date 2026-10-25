@@ -157,6 +157,13 @@ class StudentImportServiceTest {
         assertEquals(0, result.skippedCount)
         assertTrue(result.failedRows.isEmpty())
         verify(eventPublisher).publish(any())
+
+        val userCaptor = org.mockito.kotlin.argumentCaptor<UserEntity>()
+        verify(userJpaRepository).save(userCaptor.capture())
+        val capturedUser = userCaptor.firstValue
+        assertEquals("13800138000", capturedUser.phone)
+        assertNotNull(capturedUser.passwordHash)
+        assertTrue(org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().matches("011230", capturedUser.passwordHash))
     }
 
     @Test

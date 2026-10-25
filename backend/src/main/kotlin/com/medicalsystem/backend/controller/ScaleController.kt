@@ -42,12 +42,15 @@ class ScaleController(
             }
             else -> {
                 val draft = scaleDraftService.getDraft(currentUser.id, "comprehensive_student_intake_survey")
-                if (draft != null && draft.answers.isNotEmpty()) {
-                    val count = draft.answers.size
-                    val pct = ((count.toDouble() / scale.questions.size.coerceAtLeast(1)) * 100).toInt().coerceAtMost(100)
-                    Triple("IN_PROGRESS", count, pct)
-                } else if (surveyAssignment != null) {
-                    Triple("NOT_STARTED", 0, 0)
+                val nonEmptyCount = draft?.answers?.values?.count { v ->
+                    when (v) {
+                        is Collection<*> -> v.isNotEmpty()
+                        else -> v.toString().isNotBlank()
+                    }
+                } ?: 0
+                if (nonEmptyCount > 0) {
+                    val pct = ((nonEmptyCount.toDouble() / scale.questions.size.coerceAtLeast(1)) * 100).toInt().coerceAtMost(100)
+                    Triple("IN_PROGRESS", nonEmptyCount, pct)
                 } else {
                     Triple("NOT_STARTED", 0, 0)
                 }

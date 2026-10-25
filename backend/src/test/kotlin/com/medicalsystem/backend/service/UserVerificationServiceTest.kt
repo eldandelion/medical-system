@@ -266,8 +266,29 @@ class UserVerificationServiceTest {
     }
 
     @Test
+    fun `verifyIdentifier with phone number resolves user successfully`() {
+        val user = UserEntity(
+            id = 7L,
+            name = "李明",
+            email = EmailAddress("liming@univ.edu.cn"),
+            phone = "13800138000",
+            role = UserRole.STUDENT,
+            status = AccountStatus.ACTIVE
+        )
+        `when`(studentJpaRepository.findByStudentNumber("13800138000")).thenReturn(null)
+        `when`(userJpaRepository.findByPhone("13800138000")).thenReturn(user)
+
+        val result = userVerificationService.verifyIdentifier(VerifyIdentifierRequest("13800138000"))
+
+        assertTrue(result.exists)
+        assertTrue(result.isAccountActive)
+        assertEquals(UserRole.STUDENT, result.role)
+    }
+
+    @Test
     fun `verifyIdentifier with non existent identifier returns exists false`() {
         `when`(studentJpaRepository.findByStudentNumber("UNKNOWN999")).thenReturn(null)
+        `when`(userJpaRepository.findByPhone("UNKNOWN999")).thenReturn(null)
         `when`(teacherJpaRepository.findByEmployeeNumber("UNKNOWN999")).thenReturn(null)
         `when`(doctorRepository.findByEmployeeNumber("UNKNOWN999")).thenReturn(null)
         `when`(headCounsellorJpaRepository.findByEmployeeNumber("UNKNOWN999")).thenReturn(null)

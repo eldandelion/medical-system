@@ -10,6 +10,8 @@ import com.medicalsystem.backend.exception.ValidationException
 import com.medicalsystem.backend.model.*
 import com.medicalsystem.backend.repository.*
 import org.slf4j.LoggerFactory
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -28,7 +30,8 @@ class StaffRegistrationService(
     private val schoolDepartmentJpaRepository: SchoolDepartmentJpaRepository,
     private val emailOtpService: EmailOtpService,
     private val domainEventPublisher: DomainEventPublisher,
-    private val ethnicityJpaRepository: EthnicityJpaRepository? = null
+    private val ethnicityJpaRepository: EthnicityJpaRepository? = null,
+    private val passwordEncoder: PasswordEncoder = BCryptPasswordEncoder()
 ) {
     private val logger = LoggerFactory.getLogger(StaffRegistrationService::class.java)
 
@@ -98,7 +101,8 @@ class StaffRegistrationService(
                 name = trimmedName,
                 email = emailVo,
                 role = request.role,
-                status = AccountStatus.PENDING_APPROVAL
+                status = AccountStatus.PENDING_APPROVAL,
+                passwordHash = passwordEncoder.encode(pwd)
             )
         )
 

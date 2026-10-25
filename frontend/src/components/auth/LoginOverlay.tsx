@@ -15,6 +15,24 @@ import { useEthnicities } from '../../hooks/useEthnicities';
 import { useSchools, useHospitals } from '../../hooks/useAffiliations';
 import { authApi } from '../../api/auth';
 import { UserRole } from '../../types';
+import { useAuth, Role } from '../../contexts/AuthContext';
+
+const USER_ROLE_TO_SESSION_ROLE: Record<UserRole, Role> = {
+  STUDENT: 'student',
+  TEACHER: 'teacher',
+  HEAD_COUNSELLOR: 'head-councillor',
+  TRIAL_ADMIN: 'trial-admin',
+  DOCTOR: 'doctor',
+  SYSTEM_ADMIN: 'admin',
+};
+
+function useOptionalAuth() {
+  try {
+    return useAuth();
+  } catch {
+    return undefined;
+  }
+}
 
 export type AuthView =
   | 'login'
@@ -122,6 +140,7 @@ export function LoginOverlay({
   onIdentitySubmit,
   onRegisterComplete,
 }: LoginOverlayProps) {
+  const authContext = useOptionalAuth();
   const [view, setView] = React.useState<AuthView>(initialView);
   const [selectedRole, setSelectedRole] = React.useState<RegisterRole | null>(null);
 
@@ -256,16 +275,35 @@ export function LoginOverlay({
     }
   };
 
-  const handleStep2Submit = (e?: React.SyntheticEvent) => {
+  const handleStep2Submit = async (e?: React.SyntheticEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
-    if (!password.trim()) {
+    const trimmedPassword = password.trim();
+    if (!trimmedPassword) {
       setPasswordError('请输入密码');
       return;
     }
     setPasswordError('');
-    onSuccess?.();
-    onClose();
+    setIsVerifying(true);
+    try {
+      const loginRes = await authApi.login(identifier.trim(), trimmedPassword);
+      if (loginRes && loginRes.token && authContext?.loginWithSession) {
+        const mappedRole: Role =
+          (loginRes.role && USER_ROLE_TO_SESSION_ROLE[loginRes.role]) ||
+          (loginRes.student ? 'student' : authContext.session.role);
+        authContext.loginWithSession({
+          role: mappedRole,
+          token: loginRes.token,
+        });
+      }
+      onSuccess?.();
+      onClose();
+    } catch (err: unknown) {
+      const msg = err instanceof Error && err.message ? err.message : '密码错误或登录失败，请重试';
+      setPasswordError(msg);
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const handleRegisterSubmit = async (passwordData: RegisterPasswordData) => {

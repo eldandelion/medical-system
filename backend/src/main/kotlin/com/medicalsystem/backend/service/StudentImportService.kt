@@ -26,6 +26,8 @@ import com.medicalsystem.backend.repository.UserJpaRepository
 import com.medicalsystem.backend.service.StudentImportSchema.Fields
 import com.medicalsystem.backend.util.CsvStreamReader
 import org.slf4j.LoggerFactory
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -56,6 +58,7 @@ class StudentImportService(
     private val eventPublisher: DomainEventPublisher
 ) {
     private val logger = LoggerFactory.getLogger(StudentImportService::class.java)
+    private val passwordEncoder: PasswordEncoder = BCryptPasswordEncoder()
 
     companion object {
         private val ALLOWED_IMPORT_ROLES = setOf(UserRole.SYSTEM_ADMIN, UserRole.HEAD_COUNSELLOR)
@@ -193,11 +196,19 @@ class StudentImportService(
             ?: error("Major '${row.major}' not found during commit")
 
         val email = row.email ?: StudentImportSchema.synthesizeEmail(row.studentNumber)
+        val rawIdCard = row.idCardNumber?.trim()
+        val initialPassword = if (rawIdCard != null && rawIdCard.length >= 6) {
+            rawIdCard.takeLast(6)
+        } else {
+            "123456"
+        }
         val userEntity = UserEntity(
             name = row.name,
             role = UserRole.STUDENT,
             email = EmailAddress(email),
-            status = AccountStatus.ACTIVE
+            status = AccountStatus.ACTIVE,
+            phone = row.contactNumber?.trim()?.ifEmpty { null },
+            passwordHash = passwordEncoder.encode(initialPassword)
         )
         val savedUser = userJpaRepository.save(userEntity)
 

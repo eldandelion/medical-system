@@ -118,8 +118,12 @@ class DashboardService(
 
     fun getStudentDashboard(user: User): DashboardResponseDto<StudentMetricsDto> {
         validateRole(user, UserRole.STUDENT)
+        val pendingAssessmentsCount = assessmentAssignmentRepository.countByStudentIdAndStatus(
+            user.id,
+            com.medicalsystem.backend.model.AssessmentStatus.PENDING
+        )
         val unreadCount = notificationRepository.countUnreadByUserId(user.id)
-        return DashboardResponseDto(StudentMetricsDto(assessmentsCount = 0L, notificationsCount = unreadCount))
+        return DashboardResponseDto(StudentMetricsDto(assessmentsCount = pendingAssessmentsCount, notificationsCount = unreadCount))
     }
 
     fun getTeacherDashboard(user: User): DashboardResponseDto<TeacherMetricsDto> {

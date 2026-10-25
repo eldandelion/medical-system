@@ -12,6 +12,7 @@ export interface UserSession {
 interface AuthContextProps {
   session: UserSession;
   setRole: (role: Role) => void;
+  loginWithSession: (session: UserSession) => void;
 }
 
 export const AuthContext = React.createContext<AuthContextProps | undefined>(undefined);
@@ -21,6 +22,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     role: 'student',
     token: 'token_student_default'
   });
+
+  const loginWithSession = React.useCallback((newSession: UserSession) => {
+    queryClient.clear();
+    setSession(newSession);
+  }, []);
 
   const setRole = React.useCallback((role: Role) => {
     // Clear any previously fetched data cache when switching users
@@ -53,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ session, setRole }}>
+    <AuthContext.Provider value={{ session, setRole, loginWithSession }}>
       {children}
     </AuthContext.Provider>
   );

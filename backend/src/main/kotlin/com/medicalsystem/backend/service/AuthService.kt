@@ -26,7 +26,11 @@ class AuthService(
     private val assessmentAssignmentJpaRepository: AssessmentAssignmentJpaRepository,
     private val otpService: OtpService,
     private val jwtService: JwtService,
-    private val passwordEncoder: PasswordEncoder = BCryptPasswordEncoder()
+    private val passwordEncoder: PasswordEncoder = BCryptPasswordEncoder(),
+    private val teacherJpaRepository: TeacherJpaRepository? = null,
+    private val doctorRepository: DoctorRepository? = null,
+    private val headCounsellorJpaRepository: HeadCounsellorJpaRepository? = null,
+    private val trialAdminJpaRepository: TrialAdminJpaRepository? = null
 ) {
 
     @Transactional
@@ -109,7 +113,11 @@ class AuthService(
                 fullName = savedUser.name,
                 phone = phone,
                 createdAt = LocalDateTime.now()
-            )
+            ),
+            userId = savedUser.id,
+            role = savedUser.role,
+            email = savedUser.email.value,
+            name = savedUser.name
         )
     }
 
@@ -159,11 +167,28 @@ class AuthService(
 
         val cleanIdentifier = identifier.trim()
         val student = studentJpaRepository.findByStudentNumber(cleanIdentifier)
-        val user = if (student != null) {
-            userJpaRepository.findById(student.id).orElse(null)
-        } else {
-            userJpaRepository.findByPhone(cleanIdentifier)
+        val user = when {
+            student != null -> userJpaRepository.findById(student.id).orElse(null)
+            cleanIdentifier.contains("@") -> {
+                val emailOpt = runCatching { EmailAddress(cleanIdentifier.lowercase()) }.getOrNull()
+                (emailOpt?.let { userJpaRepository.findByEmail(it) })
+                    ?: userJpaRepository.findAll().firstOrNull { it.email.value.equals(cleanIdentifier, ignoreCase = true) }
+            }
+            else -> {
+                userJpaRepository.findByPhone(cleanIdentifier)
+                    ?: teacherJpaRepository?.findByEmployeeNumber(cleanIdentifier)?.let { userJpaRepository.findById(it.userId).orElse(null) }
+                    ?: doctorRepository?.findByEmployeeNumber(cleanIdentifier)?.let { userJpaRepository.findById(it.userId).orElse(null) }
+                    ?: headCounsellorJpaRepository?.findByEmployeeNumber(cleanIdentifier)?.let { userJpaRepository.findById(it.userId).orElse(null) }
+                    ?: trialAdminJpaRepository?.findByEmployeeNumber(cleanIdentifier)?.let { userJpaRepository.findById(it.userId).orElse(null) }
+                    ?: if (cleanIdentifier.equals("SYS-ADMIN", ignoreCase = true)) {
+                        userJpaRepository.findAll().firstOrNull { it.role == UserRole.SYSTEM_ADMIN }
+                    } else null
+            }
         } ?: throw UnauthorizedException("用户不存在或密码错误")
+
+        if (user.status != AccountStatus.ACTIVE) {
+            throw UnauthorizedException("账号尚未激活或已被禁用")
+        }
 
         if (user.passwordHash == null || !passwordEncoder.matches(password, user.passwordHash)) {
             throw UnauthorizedException("用户不存在或密码错误")
@@ -178,14 +203,22 @@ class AuthService(
             role = user.role.name
         )
 
-        return AuthResponse(
-            token = token,
-            student = StudentAuthDto(
+        val studentDto = if (user.role == UserRole.STUDENT) {
+            StudentAuthDto(
                 studentNumber = resolvedStudentNum,
                 fullName = user.name,
                 phone = user.phone ?: "",
                 createdAt = LocalDateTime.now()
             )
+        } else null
+
+        return AuthResponse(
+            token = token,
+            student = studentDto,
+            userId = user.id,
+            role = user.role,
+            email = user.email.value,
+            name = user.name
         )
     }
 
@@ -248,7 +281,11 @@ class AuthService(
                 fullName = user.name,
                 phone = user.phone ?: "",
                 createdAt = LocalDateTime.now()
-            )
+            ),
+            userId = user.id,
+            role = user.role,
+            email = user.email.value,
+            name = user.name
         )
     }
 

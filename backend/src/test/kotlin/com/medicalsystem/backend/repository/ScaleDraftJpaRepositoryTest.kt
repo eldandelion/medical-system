@@ -95,19 +95,48 @@ class ScaleDraftJpaRepositoryTest {
             name = "测试学生",
             email = EmailAddress("student_test_otp@csu.edu.cn"),
             role = UserRole.STUDENT,
-            phone = "13800138000",
+            phone = "13877776666",
             passwordHash = "\$2a\$10\$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"
         )
         val saved = userRepository.save(user)
         entityManager.flush()
         entityManager.clear()
 
-        val byPhone = userRepository.findByPhone("13800138000")
+        val byPhone = userRepository.findByPhone("13877776666")
         assertNotNull(byPhone)
         assertEquals(saved.id, byPhone?.id)
-        assertEquals("13800138000", byPhone?.phone)
+        assertEquals("13877776666", byPhone?.phone)
         assertNotNull(byPhone?.passwordHash)
-        assertTrue(userRepository.existsByPhone("13800138000"))
+        assertTrue(userRepository.existsByPhone("13877776666"))
         assertFalse(userRepository.existsByPhone("13999999999"))
+    }
+
+    @Test
+    fun `testSaveAndRetrieveLongJsonDraft persists large 377 question JSON without truncation`() {
+        val sb = StringBuilder("{")
+        for (i in 1..400) {
+            if (i > 1) sb.append(",")
+            sb.append("\"question_key_$i\":\"")
+            sb.append("详细补充说明与多选答案内容_".repeat(12))
+            sb.append("\"")
+        }
+        sb.append("}")
+        val longJson = sb.toString()
+        assertTrue(longJson.length > 65535, "Expected payload > 64KB, got ${longJson.length}")
+
+        val draft = ScaleDraftEntity(
+            studentId = 9994L,
+            scaleCode = "comprehensive_student_intake_survey",
+            answersJson = longJson,
+            clientUpdatedAt = 1700000004000L
+        )
+        draftRepository.save(draft)
+        entityManager.flush()
+        entityManager.clear()
+
+        val retrieved = draftRepository.findByStudentIdAndScaleCode(9994L, "comprehensive_student_intake_survey")
+        assertTrue(retrieved.isPresent)
+        assertEquals(longJson.length, retrieved.get().answersJson.length)
+        assertEquals(longJson, retrieved.get().answersJson)
     }
 }

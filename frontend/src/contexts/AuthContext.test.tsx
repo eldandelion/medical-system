@@ -95,4 +95,20 @@ describe('AuthContext', () => {
 
     expect(queryClient.clear).toHaveBeenCalled();
   });
+
+  it('loginWithSession updates role and token and clears query cache', () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <AuthProvider>{children}</AuthProvider>
+    );
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    act(() => {
+      result.current.loginWithSession({ role: 'teacher', token: 'jwt-real-token' });
+    });
+
+    expect(result.current.session.role).toBe('teacher');
+    expect(result.current.session.token).toBe('jwt-real-token');
+    expect(queryClient.clear).toHaveBeenCalled();
+  });
 });

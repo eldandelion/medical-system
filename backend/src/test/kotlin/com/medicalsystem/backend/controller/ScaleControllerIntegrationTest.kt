@@ -49,6 +49,9 @@ class ScaleControllerIntegrationTest {
     private lateinit var collegeJpaRepository: CollegeJpaRepository
 
     @Autowired
+    private lateinit var assessmentAssignmentJpaRepository: AssessmentAssignmentJpaRepository
+
+    @Autowired
     private lateinit var catalogLoader: AssessmentCatalogLoader
 
     private lateinit var mockMvc: MockMvc
@@ -68,7 +71,7 @@ class ScaleControllerIntegrationTest {
                 role = UserRole.STUDENT,
                 email = EmailAddress("mobile_stu_${System.currentTimeMillis()}@univ.edu.cn"),
                 status = AccountStatus.ACTIVE,
-                phone = "13800138000"
+                phone = "13899998888"
             )
         )
 
@@ -163,7 +166,7 @@ class ScaleControllerIntegrationTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.studentNumber").value("STU_MOB_999"))
             .andExpect(jsonPath("$.fullName").value("移动端学生"))
-            .andExpect(jsonPath("$.phone").value("13800138000"))
+            .andExpect(jsonPath("$.phone").value("13899998888"))
             .andExpect(jsonPath("$.demographics.major").value(studentEntity.major.name))
             .andExpect(jsonPath("$.demographics.isSubmitted").value(false))
     }
@@ -209,5 +212,28 @@ class ScaleControllerIntegrationTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$[0].status").value("COMPLETED"))
             .andExpect(jsonPath("$[0].completionPercentage").value(100))
+    }
+
+    @Test
+    fun `testGetDraftAndListScales_FallsBackToAssignmentAnswersJson`() {
+        assessmentAssignmentJpaRepository.save(
+            AssessmentAssignmentEntity(
+                student = studentEntity,
+                assignedByUser = studentUser,
+                batteryCode = "comprehensive_student_intake_survey",
+                status = AssessmentStatus.PENDING,
+                assignedAt = java.time.LocalDateTime.now(),
+                answersJson = """{"demo_name":"桌面端草稿","phq9_1":1,"phq9_2":2}"""
+            )
+        )
+
+        mockMvc.perform(get("/api/scales/comprehensive_student_intake_survey/draft"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.answers.demo_name").value("桌面端草稿"))
+
+        mockMvc.perform(get("/api/scales"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].status").value("IN_PROGRESS"))
+            .andExpect(jsonPath("$[0].answeredCount").value(3))
     }
 }

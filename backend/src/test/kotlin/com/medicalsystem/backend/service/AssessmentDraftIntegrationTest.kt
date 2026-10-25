@@ -241,4 +241,24 @@ class AssessmentDraftIntegrationTest {
         assertEquals(LocalDate.of(2004, 5, 12), student.demographics?.dateOfBirth)
         assertEquals("城市", student.demographics?.homeAddress)
     }
+
+    @Test
+    fun `testRecordProgress_SynchronizesToScaleDrafts`() {
+        val progressReq = com.medicalsystem.backend.dto.RecordProgressRequest(
+            answers = mapOf(
+                "demo_name" to "赵六",
+                "phq9_1" to 2
+            )
+        )
+
+        mockMvc.perform(
+            put("/api/assessments/${assignmentEntity.id}/progress")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(progressReq))
+        ).andExpect(status().isOk)
+
+        val draftOpt = scaleDraftJpaRepository.findByStudentIdAndScaleCode(studentUser.id, "comprehensive_student_intake_survey")
+        assertTrue(draftOpt.isPresent)
+        assertTrue(draftOpt.get().answersJson.contains("赵六"))
+    }
 }

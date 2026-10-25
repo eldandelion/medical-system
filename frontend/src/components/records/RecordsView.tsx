@@ -6,6 +6,7 @@ import { STATUS_STYLES, STATUS_LABELS, STATUS_DOT_STYLES, REFERRAL_TYPE_LABELS }
 import { StatusBadge } from '../common/StatusBadge';
 
 import { enrichReferralStatus } from '../../utils/referralUtils';
+import { useAuth } from '../../contexts/AuthContext';
 
 import { Referral } from '../../types';
 
@@ -27,12 +28,12 @@ interface RecordsViewProps {
 }
 
 export function RecordsView({ onRecordSelect, selectedRecordId, header }: RecordsViewProps) {
+  const { session } = useAuth();
   const { data: recordsData, isLoading: loading } = useQuery<Referral[]>({
-    queryKey: ['/api/referrals'],
+    queryKey: ['/api/referrals', session.token],
     queryFn: async () => {
-      // In a real app we'd pass the auth token. Here the mock handler intercepts it based on mock logic.
       const res = await fetch(`${import.meta.env.BASE_URL}/api/referrals`.replace('//api', '/api'), {
-        headers: { 'Authorization': 'Bearer student_token_chen' }
+        headers: { 'Authorization': `Bearer ${session.token}` }
       });
       if (!res.ok) throw new Error('Failed to fetch referrals');
       const rawData = await res.json();

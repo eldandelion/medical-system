@@ -31,6 +31,16 @@ export interface Assessment {
 
 export const mockAssessmentCatalog: AssessmentCatalogItemDto[] = [
   {
+    batteryCode: 'comprehensive_student_intake_survey',
+    title: '中南大学学生心理健康综合测评',
+    subtitle: '2025-2026 学年新生与在校生心理健康综合普查',
+    description: '涵盖基本信息、抑郁、焦虑、睡眠、生活习惯与支持系统的全方位综合评估。',
+    duration: '45 分钟',
+    questionCount: 377,
+    sections: MENTAL_HEALTH_ASSESSMENT,
+    isEnabled: true
+  },
+  {
     batteryCode: 'PHQ_9',
     title: '情绪状况评估 (PHQ-9)',
     subtitle: '抑郁症筛查量表',
@@ -89,8 +99,9 @@ export const mockAssessmentCatalog: AssessmentCatalogItemDto[] = [
 export const mockAssessmentsDb: Assessment[] = [
   {
     id: '1',
-    title: '年度身心健康状况评估',
+    title: '中南大学学生心理健康综合测评',
     subtitle: '2025-2026 学年学生心理健康普查',
+    batteryCode: 'comprehensive_student_intake_survey',
     sections: MENTAL_HEALTH_ASSESSMENT,
     assignedBy: {
       name: '莎拉·詹金斯',
@@ -98,7 +109,7 @@ export const mockAssessmentsDb: Assessment[] = [
     },
     type: '测试',
     completionPercentage: 0,
-    duration: '15 分钟',
+    duration: '45 分钟',
     status: 'In progress'
   },
   {

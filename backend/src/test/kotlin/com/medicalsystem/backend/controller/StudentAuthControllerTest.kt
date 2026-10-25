@@ -235,4 +235,69 @@ class StudentAuthControllerTest {
                 .content(objectMapper.writeValueAsString(wrongLoginReq))
         ).andExpect(status().isUnauthorized)
     }
+
+    @Test
+    fun `testStaffLogin_EmployeeNumberAndEmail logs in successfully`() {
+        val loginByEmp = LoginRequest(
+            identifier = "EMP-00001",
+            password = "123456"
+        )
+
+        mockMvc.perform(
+            post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginByEmp))
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.token").isString)
+            .andExpect(jsonPath("$.role").value("TEACHER"))
+            .andExpect(jsonPath("$.email").value("emily@univ.edu.cn"))
+            .andExpect(jsonPath("$.student").doesNotExist())
+
+        val loginByEmail = LoginRequest(
+            identifier = "emily@univ.edu.cn",
+            password = "123456"
+        )
+
+        mockMvc.perform(
+            post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginByEmail))
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.token").isString)
+            .andExpect(jsonPath("$.role").value("TEACHER"))
+    }
+
+    @Test
+    fun `testSeededStudentLogin_ByStudentNumberAndPhone logs in successfully`() {
+        val loginBySno = LoginRequest(
+            identifier = "S2023001",
+            password = "123457"
+        )
+
+        mockMvc.perform(
+            post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginBySno))
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.token").isString)
+            .andExpect(jsonPath("$.role").value("STUDENT"))
+            .andExpect(jsonPath("$.student.studentNumber").value("S2023001"))
+
+        val loginByPhone = LoginRequest(
+            identifier = "13800138000",
+            password = "123457"
+        )
+
+        mockMvc.perform(
+            post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginByPhone))
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.token").isString)
+            .andExpect(jsonPath("$.student.phone").value("13800138000"))
+    }
 }

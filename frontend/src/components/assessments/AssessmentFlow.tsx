@@ -7,11 +7,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Header } from '../layout/Header';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { AssessmentSection, Question } from './AssessmentData';
+import { AssessmentSection, Question, QuestionOption } from './AssessmentData';
 import { useRecordProgress } from '../../hooks/useRecordProgress';
 import { useAssessmentPosition } from '../../hooks/useAssessmentPosition';
 
-const DEFAULT_OPTIONS = [
+const DEFAULT_OPTIONS: QuestionOption[] = [
   { value: 0, label: '完全不会' },
   { value: 1, label: '好几天' },
   { value: 2, label: '一半以上时间' },
@@ -19,6 +19,44 @@ const DEFAULT_OPTIONS = [
 ];
 
 const INCOMPLETE_ASSESSMENT_MSG = '请先完成所有题目后再提交';
+
+export function isQuestionAnswered(question: Question | undefined, answers: Record<string, any>): boolean {
+  if (!question || !question.id) return false;
+  const val = answers[question.id];
+  if (val === undefined || val === null) return false;
+  const qType = question.type || 'single_choice';
+
+  if (qType === 'text' || qType === 'date') {
+    return String(val).trim().length > 0;
+  }
+  if (qType === 'number') {
+    if (val === '') return false;
+    return !Number.isNaN(Number(val));
+  }
+  if (qType === 'slider') {
+    return typeof val === 'number' || (val !== '' && !Number.isNaN(Number(val)));
+  }
+  if (qType === 'multiple_choice') {
+    if (!Array.isArray(val) || val.length === 0) return false;
+    const opts = question.options || [];
+    for (const opt of opts) {
+      if (opt.hasTextInput && val.some((v: any) => String(v) === String(opt.value))) {
+        const noteKey = `__note_${question.id}_${opt.value}`;
+        if (!String(answers[noteKey] ?? '').trim()) return false;
+      }
+    }
+    return true;
+  }
+  // single_choice or default
+  if (val === '') return false;
+  const opts = question.options && question.options.length > 0 ? question.options : DEFAULT_OPTIONS;
+  const selectedOpt = opts.find(o => String(o.value) === String(val));
+  if (selectedOpt?.hasTextInput) {
+    const noteKey = `__note_${question.id}_${selectedOpt.value}`;
+    if (!String(answers[noteKey] ?? '').trim()) return false;
+  }
+  return true;
+}
 
 interface AssessmentFlowProps {
   isOpen: boolean;
@@ -38,12 +76,12 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
   const [appState, setAppState] = React.useState<AppState>('intro');
   const [currentSectionIdx, setCurrentSectionIdx] = React.useState(0);
   const [currentQuestionIdx, setCurrentQuestionIdx] = React.useState(0);
-  const [answers, setAnswers] = React.useState<Record<string, number>>({});
+  const [answers, setAnswers] = React.useState<Record<string, any>>({});
   const [loadedSections, setLoadedSections] = React.useState<AssessmentSection[]>(sections);
   const [loading, setLoading] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
 
-  useRecordProgress(assessmentId, answers);
+  useRecordProgress(assessmentId, answers as any);
   const { getPosition, hasSavedPosition, savePosition, clearPosition } = useAssessmentPosition(session?.token, assessmentId);
 
   const prevIsOpen = React.useRef(false);
@@ -59,25 +97,36 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
 
       if (assessmentId) {
         setLoading(true);
-        fetch(`${import.meta.env.BASE_URL}/api/assessments/${assessmentId}`.replace('//api', '/api'), {
+        const detailsPromise = fetch(`${import.meta.env.BASE_URL}/api/assessments/${assessmentId}`.replace('//api', '/api'), {
+          headers: {
+            'Authorization': `Bearer ${session.token}`
+          }
+        }).then((res) => {
+          if (!res.ok) throw new Error('Failed to fetch assessment');
+          return res.json();
+        });
+
+        const draftPromise = fetch(`${import.meta.env.BASE_URL}/api/assessments/${assessmentId}/draft`.replace('//api', '/api'), {
           headers: {
             'Authorization': `Bearer ${session.token}`
           }
         })
-          .then((res) => {
-            if (!res.ok) throw new Error('Failed to fetch assessment');
-            return res.json();
-          })
-          .then((data) => {
+          .then((res) => (res && res.ok ? res.json() : null))
+          .catch(() => null);
+
+        Promise.all([detailsPromise, draftPromise])
+          .then(([data, draftData]) => {
             let hasAnswers = false;
             if (data && data.sections) {
               setLoadedSections(data.sections);
             }
-            if (data && data.savedAnswers) {
-              setAnswers(data.savedAnswers);
-              if (Object.keys(data.savedAnswers).length > 0) {
-                hasAnswers = true;
-              }
+            const mergedAnswers: Record<string, any> = {
+              ...(data?.savedAnswers || {}),
+              ...(draftData?.answers || {})
+            };
+            if (Object.keys(mergedAnswers).length > 0) {
+              setAnswers(mergedAnswers);
+              hasAnswers = true;
             }
 
             if (hasAnswers || hasSavedPosition()) {
@@ -115,23 +164,57 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
   const currentSection = activeSections[currentSectionIdx];
   const currentQuestion = currentSection?.questions[currentQuestionIdx];
   const questionKey = currentQuestion?.id || '';
+  const questionType = currentQuestion?.type || 'single_choice';
 
   const questionText = currentQuestion?.text || '';
-  const questionOptions = currentQuestion?.options || DEFAULT_OPTIONS;
+  const questionOptions =
+    currentQuestion?.options && currentQuestion.options.length > 0
+      ? currentQuestion.options
+      : questionType === 'single_choice'
+        ? DEFAULT_OPTIONS
+        : [];
 
-  const totalQuestions = activeSections.reduce((acc, section) => acc + section.questions.length, 0);
-  const answeredCount = Object.keys(answers).length;
-  const progress = (answeredCount / totalQuestions) * 100;
+  const allQuestions = React.useMemo(
+    () => activeSections.flatMap(sec => sec.questions),
+    [activeSections]
+  );
+  const totalQuestions = allQuestions.length;
+  const answeredCount = React.useMemo(
+    () => allQuestions.filter(q => isQuestionAnswered(q, answers)).length,
+    [allQuestions, answers]
+  );
+  const progress = totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0;
 
-  const handleSelect = (val: number) => {
+  const handleSelect = (val: any) => {
     setAnswers(prev => ({ ...prev, [questionKey]: val }));
   };
 
-  const submitAssessment = async (finalAnswers: Record<string, number>) => {
+  const handleMultiToggle = (optValue: number | string) => {
+    setAnswers(prev => {
+      const currentArr = Array.isArray(prev[questionKey]) ? [...prev[questionKey]] : [];
+      const existsIdx = currentArr.findIndex(v => String(v) === String(optValue));
+      let nextArr: (number | string)[];
+      if (existsIdx >= 0) {
+        nextArr = currentArr.filter((_, idx) => idx !== existsIdx);
+      } else {
+        nextArr = [...currentArr, optValue];
+      }
+      return { ...prev, [questionKey]: nextArr };
+    });
+  };
+
+  const handleNoteChange = (optValue: number | string, text: string) => {
+    const noteKey = `__note_${questionKey}_${optValue}`;
+    setAnswers(prev => ({ ...prev, [noteKey]: text }));
+  };
+
+  const submitAssessment = async (finalAnswers: Record<string, any>) => {
     setSubmitting(true);
     try {
       if (assessmentId) {
-        const answersList = Object.entries(finalAnswers).map(([k, v]) => ({ questionId: k, selectedValue: v }));
+        const answersList = Object.entries(finalAnswers)
+          .filter(([k]) => !k.startsWith('__note_'))
+          .map(([k, v]) => ({ questionId: k, selectedValue: v }));
         const res = await fetch(`${import.meta.env.BASE_URL}/api/assessments/${assessmentId}/submit`.replace('//api', '/api'), {
           method: 'POST',
           headers: {
@@ -197,7 +280,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
     setCurrentQuestionIdx(0);
   };
 
-  const isCurrentQuestionAnswered = answers[questionKey] !== undefined;
+  const isCurrentQuestionAnswered = isQuestionAnswered(currentQuestion, answers);
 
   // Detailed sidebar content showing all sections and questions
   const sidebar = (
@@ -205,12 +288,12 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
       {activeSections.map((section, sIdx) => (
         <div key={section.id} className="flex flex-col gap-2 px-4">
           <h4 className="text-[11px] font-bold text-[var(--md-sys-color-primary)] uppercase tracking-[0.1em] px-4 mb-1">
-            {section.subtitle}
+            {section.subtitle || section.title}
           </h4>
           <div className="flex flex-col gap-1">
             {section.questions.map((q, qIdx) => {
-              const qKey = typeof q === 'string' ? '' : (q as any).id;
-              const isAnswered = qKey ? answers[qKey] !== undefined : false;
+              const qObj = typeof q === 'string' ? { id: '', text: q } : (q as Question);
+              const isAnswered = isQuestionAnswered(qObj, answers);
               const isActive = currentSectionIdx === sIdx && currentQuestionIdx === qIdx;
 
               return (
@@ -231,7 +314,7 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
                 >
                   <span className={`truncate pr-4 flex-1 text-[13px] transition-opacity duration-200 ${isActive || isAnswered ? 'text-[var(--md-sys-color-on-surface)] opacity-100' : 'text-[var(--md-sys-color-on-surface-variant)] opacity-60 group-hover:opacity-100'
                     }`}>
-                    {qIdx + 1}. {(q as any).text || ''}
+                    {qIdx + 1}. {qObj.text || ''}
                   </span>
                   <div className={`w-2 h-2 rounded-full shrink-0 transition-all ${isActive ? 'bg-[var(--md-sys-color-primary)] ring-4 ring-[var(--md-sys-color-primary)] ring-opacity-20' :
                     isAnswered ? 'bg-[var(--md-sys-color-primary)]' :
@@ -245,10 +328,10 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
       ))}
 
       {/* Submit bypass button if completed */}
-      {answeredCount === totalQuestions && (
+      {totalQuestions > 0 && answeredCount === totalQuestions && (
         <div className="px-6 mt-4">
           <PrimaryButton
-            onClick={() => setAppState('outro')}
+            onClick={() => submitAssessment(answers)}
             label="完成并提交"
             icon="done_all"
             className="w-full h-12"
@@ -388,27 +471,204 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
                       {questionText}
                     </h3>
 
-                    <div className="space-y-3 mb-12">
-                      {questionOptions.map((option) => {
-                        const isSelected = answers[questionKey] === option.value;
-                        return (
-                          <button
-                            key={option.value}
-                            onClick={() => handleSelect(option.value)}
-                            className={`w-full flex items-center justify-between p-5 rounded-lg border text-left transition-all duration-200 group ${isSelected
-                              ? 'bg-[var(--md-sys-color-secondary-container)] border-[var(--md-sys-color-secondary)] border-opacity-50 text-[var(--md-sys-color-on-secondary-container)] shadow-sm'
-                              : 'bg-transparent border-[var(--md-sys-color-outline-variant)] hover:border-[var(--md-sys-color-outline)] hover:bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]'
-                              }`}
-                          >
-                            <span className={`text-lg font-medium ${isSelected ? 'text-[var(--md-sys-color-on-secondary-container)]' : ''}`}>{option.label}</span>
+                    <div className="space-y-4 mb-12">
+                      {questionType === 'text' && (
+                        <div className="flex flex-col gap-3">
+                          <md-outlined-text-field
+                            data-testid={`text-input-${questionKey}`}
+                            type="text"
+                            label={currentQuestion?.placeholder || '请输入内容'}
+                            placeholder={currentQuestion?.placeholder || '请输入您的回答'}
+                            value={answers[questionKey] !== undefined && answers[questionKey] !== null ? String(answers[questionKey]) : ''}
+                            onInput={(e: any) => handleSelect(e.target.value)}
+                            className="w-full"
+                          />
+                        </div>
+                      )}
 
-                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'border-[var(--md-sys-color-secondary)]' : 'border-[var(--md-sys-color-outline)] group-hover:border-[var(--md-sys-color-on-surface-variant)]'
-                              }`}>
-                              {isSelected && <div className="w-3 h-3 bg-[var(--md-sys-color-secondary)] rounded-full animate-in zoom-in duration-200" />}
+                      {questionType === 'date' && (
+                        <div className="flex flex-col gap-3">
+                          <md-outlined-text-field
+                            data-testid={`date-input-${questionKey}`}
+                            type="date"
+                            label={currentQuestion?.placeholder || '请选择日期'}
+                            value={answers[questionKey] !== undefined && answers[questionKey] !== null ? String(answers[questionKey]) : ''}
+                            onInput={(e: any) => handleSelect(e.target.value)}
+                            className="w-full"
+                          />
+                        </div>
+                      )}
+
+                      {questionType === 'number' && (
+                        <div className="flex flex-col gap-4">
+                          <md-outlined-text-field
+                            data-testid={`number-input-${questionKey}`}
+                            type="number"
+                            label={currentQuestion?.placeholder || '请输入数值'}
+                            placeholder={currentQuestion?.placeholder || '请输入数值'}
+                            min={currentQuestion?.min !== undefined && currentQuestion?.min !== null ? String(currentQuestion.min) : undefined}
+                            max={currentQuestion?.max !== undefined && currentQuestion?.max !== null ? String(currentQuestion.max) : undefined}
+                            step={currentQuestion?.step !== undefined && currentQuestion?.step !== null ? String(currentQuestion.step) : undefined}
+                            suffix-text={currentQuestion?.unit || undefined}
+                            value={answers[questionKey] !== undefined && answers[questionKey] !== null ? String(answers[questionKey]) : ''}
+                            onInput={(e: any) => {
+                              const raw = e.target.value;
+                              if (raw === '') {
+                                handleSelect('');
+                              } else {
+                                const num = Number(raw);
+                                handleSelect(Number.isNaN(num) ? raw : num);
+                              }
+                            }}
+                            className="w-full"
+                          />
+
+                          {currentQuestion?.zeroOptionLabel && (
+                            <button
+                              type="button"
+                              onClick={() => handleSelect(0)}
+                              className={`w-full flex items-center justify-between p-4 rounded-xl border text-left transition-all duration-200 ${
+                                answers[questionKey] === 0 || answers[questionKey] === '0'
+                                  ? 'bg-[var(--md-sys-color-secondary-container)] border-[var(--md-sys-color-secondary)] text-[var(--md-sys-color-on-secondary-container)] font-medium'
+                                  : 'bg-transparent border-[var(--md-sys-color-outline-variant)] hover:bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]'
+                              }`}
+                            >
+                              <span>{currentQuestion.zeroOptionLabel}</span>
+                              <md-checkbox
+                                checked={answers[questionKey] === 0 || answers[questionKey] === '0' || undefined}
+                                style={{ pointerEvents: 'none' }}
+                              />
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {questionType === 'slider' && (() => {
+                        const minVal = currentQuestion?.min ?? 0;
+                        const maxVal = currentQuestion?.max ?? 100;
+                        const stepVal = currentQuestion?.step ?? 1;
+                        const currentVal =
+                          answers[questionKey] !== undefined && answers[questionKey] !== null && answers[questionKey] !== ''
+                            ? Number(answers[questionKey])
+                            : Math.round((minVal + maxVal) / 2);
+
+                        return (
+                          <div className="flex flex-col gap-6 bg-[var(--md-sys-color-surface-container-low)] p-6 rounded-2xl border border-[var(--md-sys-color-outline-variant)]">
+                            <div className="flex items-baseline justify-center gap-2">
+                              <span className="text-4xl font-bold text-[var(--md-sys-color-primary)]">
+                                {answers[questionKey] !== undefined && answers[questionKey] !== null && answers[questionKey] !== ''
+                                  ? answers[questionKey]
+                                  : '--'}
+                              </span>
+                              {currentQuestion?.unit && (
+                                <span className="text-base text-[var(--md-sys-color-on-surface-variant)]">{currentQuestion.unit}</span>
+                              )}
                             </div>
-                          </button>
+
+                            <md-slider
+                              data-testid={`slider-input-${questionKey}`}
+                              min={minVal}
+                              max={maxVal}
+                              step={stepVal}
+                              value={currentVal}
+                              labeled={true}
+                              onInput={(e: any) => handleSelect(Number(e.target.value))}
+                              onChange={(e: any) => handleSelect(Number(e.target.value))}
+                              className="w-full"
+                            />
+
+                            {(currentQuestion?.minLabel || currentQuestion?.maxLabel) && (
+                              <div className="flex items-center justify-between text-xs text-[var(--md-sys-color-on-surface-variant)] px-1">
+                                <span>{currentQuestion?.minLabel || minVal}</span>
+                                <span>{currentQuestion?.maxLabel || maxVal}</span>
+                              </div>
+                            )}
+                          </div>
                         );
-                      })}
+                      })()}
+
+                      {questionType === 'multiple_choice' &&
+                        questionOptions.map((option) => {
+                          const selectedArr = Array.isArray(answers[questionKey]) ? answers[questionKey] : [];
+                          const isSelected = selectedArr.some((v: any) => String(v) === String(option.value));
+                          const noteKey = `__note_${questionKey}_${option.value}`;
+                          return (
+                            <div key={String(option.value)} className="flex flex-col gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleMultiToggle(option.value)}
+                                className={`w-full flex items-center justify-between p-5 rounded-lg border text-left transition-all duration-200 group ${isSelected
+                                  ? 'bg-[var(--md-sys-color-secondary-container)] border-[var(--md-sys-color-secondary)] border-opacity-50 text-[var(--md-sys-color-on-secondary-container)] shadow-sm'
+                                  : 'bg-transparent border-[var(--md-sys-color-outline-variant)] hover:border-[var(--md-sys-color-outline)] hover:bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]'
+                                  }`}
+                              >
+                                <span className={`text-lg font-medium ${isSelected ? 'text-[var(--md-sys-color-on-secondary-container)]' : ''}`}>
+                                  {option.label}
+                                </span>
+                                <md-checkbox
+                                  checked={isSelected || undefined}
+                                  style={{ pointerEvents: 'none' }}
+                                />
+                              </button>
+
+                              {isSelected && option.hasTextInput && (
+                                <div className="pl-4 pr-1 pt-1">
+                                  <md-outlined-text-field
+                                    data-testid={`option-note-${questionKey}-${option.value}`}
+                                    type="text"
+                                    label={option.textInputLabel || '请补充说明'}
+                                    placeholder={option.textInputPlaceholder || '请输入具体情况'}
+                                    value={answers[noteKey] || ''}
+                                    onInput={(e: any) => handleNoteChange(option.value, e.target.value)}
+                                    className="w-full"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                      {questionType === 'single_choice' &&
+                        questionOptions.map((option) => {
+                          const isSelected =
+                            answers[questionKey] !== undefined &&
+                            answers[questionKey] !== null &&
+                            String(answers[questionKey]) === String(option.value);
+                          const noteKey = `__note_${questionKey}_${option.value}`;
+                          return (
+                            <div key={String(option.value)} className="flex flex-col gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleSelect(option.value)}
+                                className={`w-full flex items-center justify-between p-5 rounded-lg border text-left transition-all duration-200 group ${isSelected
+                                  ? 'bg-[var(--md-sys-color-secondary-container)] border-[var(--md-sys-color-secondary)] border-opacity-50 text-[var(--md-sys-color-on-secondary-container)] shadow-sm'
+                                  : 'bg-transparent border-[var(--md-sys-color-outline-variant)] hover:border-[var(--md-sys-color-outline)] hover:bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)]'
+                                  }`}
+                              >
+                                <span className={`text-lg font-medium ${isSelected ? 'text-[var(--md-sys-color-on-secondary-container)]' : ''}`}>{option.label}</span>
+
+                                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'border-[var(--md-sys-color-secondary)]' : 'border-[var(--md-sys-color-outline)] group-hover:border-[var(--md-sys-color-on-surface-variant)]'
+                                  }`}>
+                                  {isSelected && <div className="w-3 h-3 bg-[var(--md-sys-color-secondary)] rounded-full animate-in zoom-in duration-200" />}
+                                </div>
+                              </button>
+
+                              {isSelected && option.hasTextInput && (
+                                <div className="pl-4 pr-1 pt-1">
+                                  <md-outlined-text-field
+                                    data-testid={`option-note-${questionKey}-${option.value}`}
+                                    type="text"
+                                    label={option.textInputLabel || '请补充说明'}
+                                    placeholder={option.textInputPlaceholder || '请输入具体情况'}
+                                    value={answers[noteKey] || ''}
+                                    onInput={(e: any) => handleNoteChange(option.value, e.target.value)}
+                                    className="w-full"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                     </div>
 
                     <div className="flex items-center justify-between pt-6 mt-auto">

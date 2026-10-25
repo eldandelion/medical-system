@@ -7,6 +7,7 @@ import { NotificationDto } from '../../api/notifications';
 interface NotificationsViewProps {
   onViewReferral?: (referralId: string) => void;
   onViewRecords?: () => void;
+  onViewStudent?: (studentId: string) => void;
 }
 
 // Helper to translate message codes to readable Chinese text
@@ -56,12 +57,23 @@ const getNotificationText = (notification: NotificationDto) => {
       return <span>医生要求重新分配 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 的转诊申请，请处理。</span>;
     case 'REFERRAL_RECALLED_HC':
       return <span>关于 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 的转诊申请已被撤回。</span>;
+    case 'ASSESSMENT_HIGH_RISK_ALERT_HC': {
+      const flags = notification.payload?.crisisFlags ? `（${notification.payload.crisisFlags}）` : '';
+      return <span>学生 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 的心理测评结果触发高危预警{flags}，请及时关注并干预处理。</span>;
+    }
+    case 'ASSESSMENT_ASSIGNED_STUDENT':
+      return <span>您收到了一项新的心理健康测评任务，请及时前往完成测评。</span>;
+    case 'ASSESSMENT_COMPLETED_TEACHER':
+      return <span>您的学生 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 已完成心理健康测评。</span>;
     default:
       return notification.messageCode.replace(/_/g, ' ');
   }
 };
 
 const getNotificationTitle = (notification: NotificationDto) => {
+  if (notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_HC') return '高危心理测评预警';
+  if (notification.messageCode === 'ASSESSMENT_ASSIGNED_STUDENT') return '新测评任务提醒';
+  if (notification.messageCode === 'ASSESSMENT_COMPLETED_TEACHER') return '学生已完成测评';
   if (notification.messageCode === 'REFERRAL_SUBMITTED_INITIATOR') return '转诊申请提交成功';
   if (notification.messageCode === 'REFERRAL_CREATED_FOR_STUDENT_TEACHER') return '学生转诊申请已创建';
   if (notification.messageCode.includes('SUBMITTED')) return '转诊申请已提交';
@@ -77,6 +89,8 @@ const getNotificationTitle = (notification: NotificationDto) => {
 };
 
 const getNotificationIcon = (notification: NotificationDto) => {
+  if (notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_HC') return 'warning';
+  if (notification.messageCode.startsWith('ASSESSMENT_')) return 'assignment';
   if (notification.actionType === 'REVIEW_REFERRAL') return 'assignment_turned_in';
   if (notification.actionType === 'ASSIGN_DOCTOR') return 'person_add';
   if (notification.actionType === 'CREATE_APPOINTMENT') return 'edit_calendar';
@@ -92,7 +106,7 @@ const getNotificationIcon = (notification: NotificationDto) => {
   return 'info';
 };
 
-export function NotificationsView({ onViewReferral, onViewRecords }: NotificationsViewProps) {
+export function NotificationsView({ onViewReferral, onViewRecords, onViewStudent }: NotificationsViewProps) {
   const { session } = useAuth();
   const { notifications, markAsRead, isLoading } = useNotifications(session?.token);
 
@@ -158,7 +172,26 @@ export function NotificationsView({ onViewReferral, onViewRecords }: Notificatio
                 ...(notification.actionType === 'VIEW_RECORDS' ? [{
                   label: '查看记录',
                   variant: 'text' as const,
-                  onClick: () => onViewRecords && onViewRecords()
+                  onClick: () => {
+                    const studentId = notification.payload?.studentId || notification.actionTargetId;
+                    if (onViewStudent && studentId) {
+                      onViewStudent(String(studentId));
+                    } else if (onViewRecords) {
+                      onViewRecords();
+                    }
+                  }
+                }] : []),
+                ...(notification.actionType === 'VIEW_STUDENT' ? [{
+                  label: '查看学生',
+                  variant: 'text' as const,
+                  onClick: () => {
+                    const studentId = notification.payload?.studentId || notification.actionTargetId;
+                    if (onViewStudent && studentId) {
+                      onViewStudent(String(studentId));
+                    } else if (onViewRecords) {
+                      onViewRecords();
+                    }
+                  }
                 }] : [])
               ]}
             />

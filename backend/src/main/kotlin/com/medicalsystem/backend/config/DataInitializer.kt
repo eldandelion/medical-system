@@ -87,7 +87,7 @@ class DataInitializer {
             "佤族", "畲族", "高山族", "拉祜族", "水族", "东乡族", "纳西族", "景颇族", "柯尔克孜族", "土族",
             "达斡尔族", "仫佬族", "羌族", "布朗族", "撒拉族", "毛南族", "仡佬族", "锡伯族", "阿昌族", "普米族",
             "塔吉克族", "怒族", "乌孜别克族", "俄罗斯族", "鄂温克族", "德昂族", "保安族", "裕固族", "京族", "塔塔尔族",
-            "独龙族", "鄂伦春族", "赫哲族", "门巴族", "珞巴族", "基诺族", "其他"
+            "独龙族", "鄂伦春族", "赫哲族", "门巴族", "珞巴族", "基诺族", "少数民族", "其他"
         )
         val ethnicityMap = standardEthnicities.associateWith { name ->
             ethnicityRepository.save(EthnicityEntity(name = name))
@@ -140,15 +140,22 @@ class DataInitializer {
         val s3Demo = StudentDemographicsEntity(gender = Gender.MALE, dateOfBirth = LocalDate.of(2005, 11, 2), ethnicity = han, idCardNumber = "440106200511025677", contactNumber = "13500135000", email = "zhangwei@univ.edu.cn", homeAddress = "广州市天河区某街道", emergencyContactName = "张明", emergencyContactPhone = "13400134000", school = mainSchool)
         val s4Demo = StudentDemographicsEntity(gender = Gender.FEMALE, dateOfBirth = LocalDate.of(2002, 3, 15), ethnicity = man, idCardNumber = "210102200203158902", contactNumber = "13300133000", email = "chenxiu@univ.edu.cn", homeAddress = "沈阳市和平区某街道", emergencyContactName = "陈军", emergencyContactPhone = "13200132000", school = mainSchool)
 
-        val referrerBase = userRepository.save(UserEntity(name = "艾米丽·沃森", email = EmailAddress("emily@univ.edu.cn"), role = UserRole.TEACHER))
+        val passwordEncoder = org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder()
+        val defaultStaffPasswordHash = passwordEncoder.encode("123456")
+        fun studentPasswordHash(idCard: String?): String? {
+            val raw = if (idCard != null && idCard.length >= 6) idCard.takeLast(6) else "123456"
+            return passwordEncoder.encode(raw)
+        }
+
+        val referrerBase = userRepository.save(UserEntity(name = "艾米丽·沃森", email = EmailAddress("emily@univ.edu.cn"), role = UserRole.TEACHER, passwordHash = defaultStaffPasswordHash))
         val referrer = teacherRepository.save(TeacherEntity(userId = referrerBase.id, employeeNumber = "EMP-00001", college = medCollege))
-        val teacher2Base = userRepository.save(UserEntity(name = "李老师", email = EmailAddress("teacher2@univ.edu.cn"), role = UserRole.TEACHER))
+        val teacher2Base = userRepository.save(UserEntity(name = "李老师", email = EmailAddress("teacher2@univ.edu.cn"), role = UserRole.TEACHER, passwordHash = defaultStaffPasswordHash))
         val teacher2 = teacherRepository.save(TeacherEntity(userId = teacher2Base.id, employeeNumber = "EMP-00002", college = medCollege))
 
-        val u1 = userRepository.save(UserEntity(name = "李明", email = EmailAddress("liming@univ.edu.cn"), role = UserRole.STUDENT))
-        val u2 = userRepository.save(UserEntity(name = "王芳", email = EmailAddress("wangfang@univ.edu.cn"), role = UserRole.STUDENT))
-        val u3 = userRepository.save(UserEntity(name = "张伟", email = EmailAddress("zhangwei@univ.edu.cn"), role = UserRole.STUDENT))
-        val u4 = userRepository.save(UserEntity(name = "陈秀", email = EmailAddress("chenxiu@univ.edu.cn"), role = UserRole.STUDENT))
+        val u1 = userRepository.save(UserEntity(name = "李明", email = EmailAddress("liming@univ.edu.cn"), role = UserRole.STUDENT, phone = s1Demo.contactNumber, passwordHash = studentPasswordHash(s1Demo.idCardNumber)))
+        val u2 = userRepository.save(UserEntity(name = "王芳", email = EmailAddress("wangfang@univ.edu.cn"), role = UserRole.STUDENT, phone = s2Demo.contactNumber, passwordHash = studentPasswordHash(s2Demo.idCardNumber)))
+        val u3 = userRepository.save(UserEntity(name = "张伟", email = EmailAddress("zhangwei@univ.edu.cn"), role = UserRole.STUDENT, phone = s3Demo.contactNumber, passwordHash = studentPasswordHash(s3Demo.idCardNumber)))
+        val u4 = userRepository.save(UserEntity(name = "陈秀", email = EmailAddress("chenxiu@univ.edu.cn"), role = UserRole.STUDENT, phone = s4Demo.contactNumber, passwordHash = studentPasswordHash(s4Demo.idCardNumber)))
         val s1 = studentRepository.save(StudentEntity(id = u1.id, studentNumber = "S2023001", name = "李明", major = csMajor, enrollmentDate = LocalDate.of(2024, 9, 1), degreeLevel = bachelorDegree, demographics = s1Demo, assignedTeacher = referrer))
         val s2 = studentRepository.save(StudentEntity(id = u2.id, studentNumber = "S2023002", name = "王芳", major = engMajor, enrollmentDate = LocalDate.of(2023, 9, 1), degreeLevel = masterDegree, demographics = s2Demo, assignedTeacher = referrer))
         val s3 = studentRepository.save(StudentEntity(id = u3.id, studentNumber = "2021001", name = "张伟", major = busMajor, enrollmentDate = LocalDate.of(2025, 9, 1), degreeLevel = bachelorDegree, demographics = s3Demo))
@@ -161,12 +168,12 @@ class DataInitializer {
         val s9Demo = StudentDemographicsEntity(gender = Gender.FEMALE, dateOfBirth = LocalDate.of(2002, 12, 12), ethnicity = han, idCardNumber = "110101200212129999", contactNumber = "13555556666", email = "zhoumei@univ.edu.cn", homeAddress = "武汉市洪山区", emergencyContactName = "周华", emergencyContactPhone = "13555557777", school = mainSchool)
         val s10Demo = StudentDemographicsEntity(gender = Gender.MALE, dateOfBirth = LocalDate.of(2003, 4, 30), ethnicity = han, idCardNumber = "110101200304300000", contactNumber = "13466667777", email = "zhengqi@univ.edu.cn", homeAddress = "杭州市西湖区", emergencyContactName = "郑伟", emergencyContactPhone = "13466668888", school = mainSchool)
 
-        val u5 = userRepository.save(UserEntity(name = "赵敏", email = EmailAddress("zhaomin@univ.edu.cn"), role = UserRole.STUDENT))
-        val u6 = userRepository.save(UserEntity(name = "刘海", email = EmailAddress("liuhai@univ.edu.cn"), role = UserRole.STUDENT))
-        val u7 = userRepository.save(UserEntity(name = "孙丽", email = EmailAddress("sunli@univ.edu.cn"), role = UserRole.STUDENT))
-        val u8 = userRepository.save(UserEntity(name = "吴东", email = EmailAddress("wudong@univ.edu.cn"), role = UserRole.STUDENT))
-        val u9 = userRepository.save(UserEntity(name = "周梅", email = EmailAddress("zhoumei@univ.edu.cn"), role = UserRole.STUDENT))
-        val u10 = userRepository.save(UserEntity(name = "郑奇", email = EmailAddress("zhengqi@univ.edu.cn"), role = UserRole.STUDENT))
+        val u5 = userRepository.save(UserEntity(name = "赵敏", email = EmailAddress("zhaomin@univ.edu.cn"), role = UserRole.STUDENT, phone = s5Demo.contactNumber, passwordHash = studentPasswordHash(s5Demo.idCardNumber)))
+        val u6 = userRepository.save(UserEntity(name = "刘海", email = EmailAddress("liuhai@univ.edu.cn"), role = UserRole.STUDENT, phone = s6Demo.contactNumber, passwordHash = studentPasswordHash(s6Demo.idCardNumber)))
+        val u7 = userRepository.save(UserEntity(name = "孙丽", email = EmailAddress("sunli@univ.edu.cn"), role = UserRole.STUDENT, phone = s7Demo.contactNumber, passwordHash = studentPasswordHash(s7Demo.idCardNumber)))
+        val u8 = userRepository.save(UserEntity(name = "吴东", email = EmailAddress("wudong@univ.edu.cn"), role = UserRole.STUDENT, phone = s8Demo.contactNumber, passwordHash = studentPasswordHash(s8Demo.idCardNumber)))
+        val u9 = userRepository.save(UserEntity(name = "周梅", email = EmailAddress("zhoumei@univ.edu.cn"), role = UserRole.STUDENT, phone = s9Demo.contactNumber, passwordHash = studentPasswordHash(s9Demo.idCardNumber)))
+        val u10 = userRepository.save(UserEntity(name = "郑奇", email = EmailAddress("zhengqi@univ.edu.cn"), role = UserRole.STUDENT, phone = s10Demo.contactNumber, passwordHash = studentPasswordHash(s10Demo.idCardNumber)))
         val s5 = studentRepository.save(StudentEntity(id = u5.id, studentNumber = "S2023005", name = "赵敏", major = medMajor, enrollmentDate = LocalDate.of(2024, 9, 1), degreeLevel = bachelorDegree, demographics = s5Demo, assignedTeacher = referrer))
         val s6 = studentRepository.save(StudentEntity(id = u6.id, studentNumber = "S2023006", name = "刘海", major = csMajor, enrollmentDate = LocalDate.of(2023, 9, 1), degreeLevel = bachelorDegree, demographics = s6Demo, assignedTeacher = referrer))
         val s7 = studentRepository.save(StudentEntity(id = u7.id, studentNumber = "S2023007", name = "孙丽", major = engMajor, enrollmentDate = LocalDate.of(2025, 9, 1), degreeLevel = masterDegree, demographics = s7Demo, assignedTeacher = referrer))
@@ -233,22 +240,22 @@ class DataInitializer {
         val medDept = hospitalDepartmentRepository.findByHospitalIdOrderByIdAsc(hosp.id).find { it.name == "内科" }!!
         val psychDept = hospitalDepartmentRepository.findByHospitalIdOrderByIdAsc(hosp.id).find { it.name == "心理咨询科" }!!
 
-        val triageAdminBase = userRepository.save(UserEntity(name = "张老师", email = EmailAddress("zhang@univ.edu.cn"), role = UserRole.TRIAL_ADMIN))
+        val triageAdminBase = userRepository.save(UserEntity(name = "张老师", email = EmailAddress("zhang@univ.edu.cn"), role = UserRole.TRIAL_ADMIN, passwordHash = defaultStaffPasswordHash))
         val triageAdmin = trialAdminRepository.save(TrialAdminEntity(userId = triageAdminBase.id, employeeNumber = "TA-00001", hospital = hosp))
 
-        val doctorBase = userRepository.save(UserEntity(name = "李医生", email = EmailAddress("li@univ.edu.cn"), role = UserRole.DOCTOR))
+        val doctorBase = userRepository.save(UserEntity(name = "李医生", email = EmailAddress("li@univ.edu.cn"), role = UserRole.DOCTOR, passwordHash = defaultStaffPasswordHash))
         val doctor = doctorRepository.save(DoctorEntity(userId = doctorBase.id, employeeNumber = "DOC-00001", department = medDept))
 
-        val doctorWangBase = userRepository.save(UserEntity(name = "王医生", email = EmailAddress("wang@univ.edu.cn"), role = UserRole.DOCTOR))
+        val doctorWangBase = userRepository.save(UserEntity(name = "王医生", email = EmailAddress("wang@univ.edu.cn"), role = UserRole.DOCTOR, passwordHash = defaultStaffPasswordHash))
         val doctorWang = doctorRepository.save(DoctorEntity(userId = doctorWangBase.id, employeeNumber = "DOC-00002", department = psychDept))
 
-        val headCounsellorBase = userRepository.save(UserEntity(name = "王主任", email = EmailAddress("wang_head@univ.edu.cn"), role = UserRole.HEAD_COUNSELLOR))
+        val headCounsellorBase = userRepository.save(UserEntity(name = "王主任", email = EmailAddress("wang_head@univ.edu.cn"), role = UserRole.HEAD_COUNSELLOR, passwordHash = defaultStaffPasswordHash))
         val scDept = schoolDepartmentJpaRepository.findBySchoolIdOrderByIdAsc(mainSchool.id).find { it.name == "咨询中心" }!!
         val headCounsellor = headCounsellorJpaRepository.save(HeadCounsellorEntity(userId = headCounsellorBase.id, employeeNumber = "HC-00001", schoolId = mainSchool.id, departmentId = scDept.id))
 
-        val adminBase = userRepository.save(UserEntity(name = "系统管理员", email = EmailAddress("admin@univ.edu.cn"), role = UserRole.SYSTEM_ADMIN, status = AccountStatus.ACTIVE))
-        val pendingTeacher = userRepository.save(UserEntity(name = "赵老师", email = EmailAddress("zhao_pending@univ.edu.cn"), role = UserRole.TEACHER, status = AccountStatus.PENDING_APPROVAL))
-        val pendingDoctor = userRepository.save(UserEntity(name = "刘医生", email = EmailAddress("liu_pending@univ.edu.cn"), role = UserRole.DOCTOR, status = AccountStatus.PENDING_APPROVAL))
+        val adminBase = userRepository.save(UserEntity(name = "系统管理员", email = EmailAddress("admin@univ.edu.cn"), role = UserRole.SYSTEM_ADMIN, status = AccountStatus.ACTIVE, passwordHash = defaultStaffPasswordHash))
+        val pendingTeacher = userRepository.save(UserEntity(name = "赵老师", email = EmailAddress("zhao_pending@univ.edu.cn"), role = UserRole.TEACHER, status = AccountStatus.PENDING_APPROVAL, passwordHash = defaultStaffPasswordHash))
+        val pendingDoctor = userRepository.save(UserEntity(name = "刘医生", email = EmailAddress("liu_pending@univ.edu.cn"), role = UserRole.DOCTOR, status = AccountStatus.PENDING_APPROVAL, passwordHash = defaultStaffPasswordHash))
 
         val dest = ReferralDestinationEntity(
             hospital = hosp,
@@ -350,15 +357,15 @@ class DataInitializer {
         val a1 = AssessmentAssignmentEntity(
             student = s1,
             assignedByUser = assignerUser,
-            batteryCode = "MENTAL_HEALTH_ASSESSMENT",
+            batteryCode = "comprehensive_student_intake_survey",
             status = AssessmentStatus.PENDING,
             assignedAt = LocalDateTime.now().minusDays(1),
             dueDate = LocalDate.now().plusDays(6)
         )
         val a2 = AssessmentAssignmentEntity(
-            student = s1,
+            student = s4,
             assignedByUser = assignerUser,
-            batteryCode = "MENTAL_HEALTH_ASSESSMENT",
+            batteryCode = "comprehensive_student_intake_survey",
             status = AssessmentStatus.COMPLETED,
             assignedAt = LocalDateTime.now().minusDays(5),
             completedAt = LocalDateTime.now().minusDays(3),
@@ -368,7 +375,7 @@ class DataInitializer {
         val a3 = AssessmentAssignmentEntity(
             student = s2,
             assignedByUser = assignerUser,
-            batteryCode = "MENTAL_HEALTH_ASSESSMENT",
+            batteryCode = "comprehensive_student_intake_survey",
             status = AssessmentStatus.PENDING,
             assignedAt = LocalDateTime.now(),
             dueDate = LocalDate.now().plusDays(7)
@@ -376,7 +383,7 @@ class DataInitializer {
         val a4 = AssessmentAssignmentEntity(
             student = s3,
             assignedByUser = assignerUser,
-            batteryCode = "MENTAL_HEALTH_ASSESSMENT",
+            batteryCode = "comprehensive_student_intake_survey",
             status = AssessmentStatus.PENDING,
             assignedAt = LocalDateTime.now().minusHours(6),
             dueDate = LocalDate.now().plusDays(10)

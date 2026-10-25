@@ -35,9 +35,14 @@ class DemographicsProjector(
         }
 
         val rawEthnicity = resolveChoice(questionsByField["ethnicity"], answers, listOf("G4", "demo_ethnicity", "ethnicity")) ?: "汉族"
-        val ethnicityEntity = ethnicityJpaRepository.findByName(rawEthnicity).orElseGet {
-            ethnicityJpaRepository.findAll().firstOrNull()
-        }
+        val ethnicityEntity = ethnicityJpaRepository.findByName(rawEthnicity)
+            .or {
+                if (rawEthnicity == "少数民族") ethnicityJpaRepository.findByName("其他")
+                else java.util.Optional.empty()
+            }
+            .orElseGet {
+                ethnicityJpaRepository.findAll().firstOrNull()
+            }
 
         val contactNumber = resolveText(questionsByField["phone"], answers, listOf("demo_phone", "phone", "contactNumber"))
         val email = resolveText(questionsByField["email"], answers, listOf("demo_email", "email"))

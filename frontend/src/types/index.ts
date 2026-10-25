@@ -193,7 +193,9 @@ export type AssessmentScaleType =
   | 'SLEEP_DISORDER'
   | 'APQ_9_FATHER'
   | 'APQ_9_MOTHER'
-  | 'COMPREHENSIVE_MENTAL';
+  | 'COMPREHENSIVE_MENTAL'
+  | 'comprehensive_student_intake_survey'
+  | string;
 
 export type AssessmentStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED' | 'REVOKED';
 
@@ -209,13 +211,30 @@ export interface AssessmentAssignmentHistoryDto {
 }
 
 export interface AssessmentOptionDto {
-  value: number;
+  value: number | string;
   label: string;
+  hasTextInput?: boolean;
+  textInputPlaceholder?: string | null;
+  textInputLabel?: string | null;
 }
 
 export interface AssessmentQuestionDto {
   id: string;
   text: string;
+  orderNum?: number;
+  type?: 'single_choice' | 'multiple_choice' | 'slider' | 'number' | 'text' | 'date' | string;
+  field?: string | null;
+  placeholder?: string | null;
+  min?: number | null;
+  max?: number | null;
+  step?: number | null;
+  unit?: string | null;
+  minLabel?: string | null;
+  maxLabel?: string | null;
+  icon?: string | null;
+  zeroOptionLabel?: string | null;
+  sectionCode?: string | null;
+  sectionTitle?: string | null;
   options?: AssessmentOptionDto[];
 }
 
@@ -269,6 +288,8 @@ export interface AssessmentDetailsDto {
   status: AssessmentStatus;
   sections: AssessmentSectionDto[];
   requiredQuestionIds: string[];
+  savedAnswers?: Record<string, any> | null;
+  questions?: AssessmentQuestionDto[];
 }
 
 export interface AssignAssessmentRequest {
@@ -290,7 +311,7 @@ export interface BatchAssignResultDto {
 }
 
 export interface SubmitAssessmentRequest {
-  answers: { questionId: string; selectedValue: number }[];
+  answers: { questionId: string; selectedValue: any }[] | Record<string, any>;
 }
 
 export interface AssessmentSubmissionResponseDto {

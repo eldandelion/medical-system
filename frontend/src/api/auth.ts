@@ -50,11 +50,36 @@ export interface RegisterResponse {
   status: 'PENDING_APPROVAL' | 'ACTIVE' | 'DISABLED' | 'DELETED';
 }
 
+export interface LoginRequestDto {
+  identifier: string;
+  password: string;
+}
+
+export interface LoginResponseDto {
+  token: string;
+  userId?: number;
+  role?: UserRole;
+  email?: string;
+  name?: string;
+  student?: {
+    studentNumber: string;
+    fullName: string;
+    phone: string;
+  };
+}
+
 export const authApi = {
   verifyIdentifier: async (identifier: string): Promise<VerifyIdentifierResponse> => {
     return apiFetch<VerifyIdentifierResponse>('/api/auth/verify-identifier', {
       method: 'POST',
       body: { identifier },
+    });
+  },
+
+  login: async (identifier: string, password: string): Promise<LoginResponseDto> => {
+    return apiFetch<LoginResponseDto>('/api/auth/login', {
+      method: 'POST',
+      body: { identifier, password },
     });
   },
 

@@ -1,66 +1,43 @@
-# Root Cause Analysis: Search Enter Key Navigation Bug
+# Root Cause Analysis: Cross-Portal Mobile Intake & Medical System Integration Bugs
 
-## 1. Problem Statement
-When searching in the frontend global search (`CommandPalette`), pressing **Enter** unexpectedly switches to the target tab (e.g., "Students" or "Referral Management") without opening the specific entry (student detail, referral detail, etc.). Clicking the exact item with the mouse successfully opens the detail panel.
+## Locked Human Intent Summary
+1. **Desktop Polymorphic Questionnaire Player**: Upgrade desktop `frontend/src/components/assessments/AssessmentFlow.tsx` (and related types/DTOs/mocks) to render and validate all polymorphic question types (`text`, `number`, `slider`, `date`, `single_choice`, `multiple_choice`, `hasTextInput`, `zeroOptionLabel`) using Material Design 3 Web Components (`<md-outlined-text-field>`, `<md-checkbox>`, `<md-slider>`, etc.), so students can take or resume `comprehensive_student_intake_survey` seamlessly on both desktop and mobile.
+2. **Unified Credentials & Desktop Real Login**:
+   - Seeded (`DataInitializer.kt`) and CSV-imported (`StudentImportService.kt`) students must have `UserEntity.phone` populated from `contactNumber` and `UserEntity.passwordHash` initialized to the BCrypt hash of the last 6 digits of `idCardNumber` (fallback `"123456"`).
+   - `StaffRegistrationService.kt` must hash and persist `request.password` into `UserEntity.passwordHash`.
+   - `AuthService.login` and `AuthController.verifyIdentifier` must support both Student and Staff accounts (login by studentNumber, employeeNumber, email, or phone + password) and return user role/session info so `frontend/` `LoginOverlay.tsx` Step 2 performs real JWT login and updates `AuthContext`, while keeping the dev role-switcher menu intact.
+   - Fix `RecordsView.tsx` and `StudentPage.tsx` to use `session.token` from `useAuth()` in `Authorization` headers and React Query `queryKey`s.
+3. **Bidirectional Draft Sync (`mobile/` <-> `frontend/`)**:
+   - `AssessmentService.recordProgress` (`PUT /api/assessments/{id}/progress`) must also upsert `ScaleDraftEntity` in `scale_drafts` (via `ScaleDraftService.saveDraft`).
+   - `ScaleDraftService.getDraft` and `ScaleController.listScales` must fall back to `assessment_assignments.answers_json` if `scale_drafts` has no record, and both portals must count non-empty answers consistently.
+   - `ScaleDraftEntity.answersJson` must use `@Column(name = "answers_json", nullable = false, columnDefinition = "LONGTEXT")` (without bare `@Lob` `TINYTEXT` truncation in MySQL 8).
+4. **Submission Event Publishing & Psychometric Subscale Scoring**:
+   - Fix `AssessmentAssignmentRepositoryAdapter.save` / `AssessmentService.submitAssessment` so `AssessmentCompletedEvent` is published to `DomainEventPublisher` upon submission.
+   - Fix `AssessmentAssignmentService` / `AssessmentService` so `AssessmentAssignedEvent` is published after saving (when `assignment.id` is non-null).
+   - Implement real psychometric subscale scoring in `AssessmentScoringEngine.scoreSection` for the clinical sections in `comprehensive_student_intake_survey` (`phq9_survey` -> `PHQ_9`, `gad7_survey` -> `GAD_7`, `scl90_survey` -> `SCL_90`, `psqi_survey` -> `PSQI`, plus `isi_survey` / `bssi_survey` / etc. mapped cleanly without duplicate `PHQ_9` fallbacks) so `psychometric_tests` and the Student Details Psychometrics tab & radar chart populate accurately.
+5. **Risk Status Mapping & High-Risk Alert UI**:
+   - Fix `StudentHealthProfileMapper` and `StudentMapper` so `profile.riskStatus` persisted by `ClinicalRiskEvaluator` is preserved on the domain `StudentHealthProfile` and mapped to `Student.riskStatus` (instead of being overwritten with `RiskStatus.LOW` by the stub `StudentRiskEvaluator`).
+   - Update `NotificationsView.tsx` to format `ASSESSMENT_HIGH_RISK_ALERT_HC`, `ASSESSMENT_ASSIGNED_STUDENT`, and `ASSESSMENT_COMPLETED_TEACHER` in Chinese and handle `VIEW_STUDENT` / `VIEW_RECORDS` actions.
+6. **Demographics Projection, DataInitializer & Dashboard Fixes**:
+   - Fix `DataInitializer.kt` to seed `comprehensive_student_intake_survey` instead of legacy `PHQ_9`/`GAD_7`/`MENTAL_HEALTH_ASSESSMENT`, and ensure `"少数民族"` is handled cleanly in `DemographicsProjector.kt` (mapping to `"其他"` if `"少数民族"` is not a distinct row, or seeding `"少数民族"`).
+   - Fix `StudentMapper.kt` to use `MobileNumber.fromOrNull(num)` instead of `MobileNumber(num)` to prevent HTTP 500 on non-standard phone strings.
+   - Fix `DashboardService.getStudentDashboard` to compute real pending `assessmentsCount` for the student.
+7. **Remove Legacy Mobile Admin Portal (`mobile/src/admin/*`)**:
+   - Remove `mobile/src/admin/*` and simplify `mobile/src/App.tsx` so `mobile/` is exclusively the student intake SPA.
 
-## 2. Root Cause Analysis
+---
 
-### A. Ordering in `flatItems` Puts System Navigations/Actions Ahead of Specific Records
-In [`frontend/src/components/search/CommandPalette.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/search/CommandPalette.tsx#L68-L88):
-```tsx
-// Current item population order:
-matchedActions.forEach((item) => items.push({ kind: 'action', item }));
-matchedNavigations.forEach((item) => items.push({ kind: 'navigation', item }));
-searchResults?.students?.forEach((item) => items.push({ kind: 'student', item }));
-searchResults?.referrals?.forEach((item) => items.push({ kind: 'referral', item }));
-searchResults?.assessments?.forEach((item) => items.push({ kind: 'assessment', item }));
-```
-Because `selectedIndex` defaults to `0`, whenever a user queries a term that matches any action or system navigation (e.g., terms matching "学生", "转诊", etc. defined in `searchActions.ts`), `flatItems[0]` resolves to a generic navigation (`nav-students-management` or `action-create-referral`).
+## Root Cause Inventory
 
-### B. Generic Navigation Omits `entityId`
-System navigations in [`searchActions.ts`](file:///Volumes/Files/Programming/medical-system/frontend/src/config/searchActions.ts) trigger:
-```ts
-context.navigateToTab('Students'); // No entityId!
-```
-In contrast, selecting a specific student or referral item calls:
-```ts
-context.navigateToTab('Students', student.id);
-```
-When `navigateToTab` is invoked without `entityId`, the hosting page (`TeacherPage`, `DoctorPage`, `HeadCouncillorPage`) receives `entityId === undefined` and runs `setSelectedItem(null)`, switching the active tab but clearing/suppressing the detail view drawer.
-
-### C. Dropdown UI Ordering Mismatch
-The rendered UI in `CommandPalette.tsx` renders Quick Actions and System Navigation sections above Remote Entity results. When a search query is typed, users see specific results or intend to open the specific record, but Enter activates the first item in `flatItems` which is a navigation action.
-
-### D. Keyboard Navigation & Edge Cases
-1. **Asynchronous Reset**: `useEffect(() => setSelectedIndex(0), [query, searchResults])` resets user arrow navigation whenever `searchResults` resolves after debouncing.
-2. **Missing Input Blur**: `inputRef.current?.blur()` is not called upon navigation, keeping search input focus state active.
-3. **Empty Results Handling**: When `flatItems.length === 0`, pressing Enter does not guarantee focus retention on the search input.
-
-## 3. Reproduction & Expected Behavior
-
-### Current Behavior:
-- Type a search query (e.g. student name or keyword) -> Press Enter -> Browser navigates to the tab, but detail modal/drawer does not open.
-
-### Expected Behavior (Locked in Phase 0):
-1. **Selection on Enter**: If an entry in the dropdown is highlighted, open that entry. Otherwise, default to opening the first (top) matching entry.
-2. **Post-navigation state**: Close the search dropdown, blur the search input, switch to the relevant tab, and display the target entry's detail view/modal.
-3. **Zero results edge case**: Do nothing and keep focus on the search input when Enter is pressed with no results.
-4. **Data-first Priority**: When a query is present (`query.trim().length > 0`), specific data entries (`students`, `referrals`, `assessments`) must take priority in `flatItems` and visual rendering over generic navigation actions.
-
-## 4. Fix Strategy
-1. **Prioritize Specific Records in `flatItems` and Visual Layout**:
-   - In `CommandPalette.tsx`, when `query.trim().length > 0`, insert `students`, `referrals`, and `assessments` into `flatItems` *before* `matchedActions` and `matchedNavigations`.
-   - In the JSX rendering, render specific search result sections above actions/navigation when a query is active.
-2. **Update Enter Key Handling (`handleKeyDown`)**:
-   - Resolve `targetItem = (selectedIndex >= 0 && selectedIndex < flatItems.length) ? flatItems[selectedIndex] : flatItems[0]`.
-   - If `flatItems.length === 0` or `!targetItem`, keep focus on `inputRef.current` and return.
-   - Blur `inputRef.current` upon selection and execute `handleSelectItem(targetItem)`.
-3. **Stabilize `selectedIndex` State**:
-   - Only reset `selectedIndex` to `0` when `query` changes, not on `searchResults` updates.
-4. **Keyword Refinement in `searchActions.ts`**:
-   - Avoid overly broad single-word keywords for system navigation that collide with student names or entity queries.
-5. **Add Comprehensive Regression Tests**:
-   - Add unit tests in `CommandPalette.test.tsx` verifying:
-     - Enter key opens top student/referral record with `entityId`.
-     - ArrowDown + Enter key opens highlighted record.
-     - Enter key with 0 results does nothing and maintains focus.
+| # | Component | Root Cause | Fix Strategy |
+|---|-----------|------------|--------------|
+| 1 | `ScaleDraftEntity.kt` | `@Lob` on `String` in Hibernate + MySQL 8 generates `TINYTEXT` (255 bytes), truncating 377-question JSON drafts. | Replace `@Lob` with `@Column(name = "answers_json", nullable = false, columnDefinition = "LONGTEXT")`. |
+| 2 | `DataInitializer.kt`, `StudentImportService.kt`, `StaffRegistrationService.kt` | Seeded/imported students have `phone = null, passwordHash = null`; registered staff have `passwordHash = null`; seeded assignments use deleted battery codes (`PHQ_9`, `GAD_7`). | Populate `phone` and BCrypt `passwordHash` (last 6 of ID card or `"123456"`); hash staff password; seed `comprehensive_student_intake_survey`. |
+| 3 | `AuthService.kt`, `AuthController.kt`, `LoginOverlay.tsx`, `AuthContext.tsx` | `LoginOverlay.tsx` Step 2 is a UI stub that never calls `/api/auth/login`; `AuthService.login` only supports students. | Support both staff & student login in `/api/auth/login` and `/api/auth/verify-identifier` (including phone lookup); return user info (`id, name, role, email, token`); wire `LoginOverlay.tsx` to `AuthContext.loginWithSession`. |
+| 4 | `ScaleDraftService.kt`, `AssessmentService.kt`, `ScaleController.kt` | `AssessmentService.recordProgress` only writes to `assessment_assignments.answers_json`, not `scale_drafts`. | Sync `recordProgress` with `ScaleDraftService.saveDraft`; let `ScaleDraftService.getDraft` and `ScaleController.listScales` fall back to assignment `answersJson`. |
+| 5 | `AssessmentService.kt`, `AssessmentScoringEngine.kt`, `AssessmentCompletedListener.kt` | `AssessmentService.submitAssessment` never publishes `AssessmentCompletedEvent`; `scoreSection` returns `Score(0,0)` and maps 28 sections to `PHQ_9`. | Publish domain events in `AssessmentService`; score clinical sections (`PHQ_9`, `GAD_7`, `SCL_90`, `PSQI`) with real point sums and maxima; filter only clinical psychometric sections for `PsychometricTest` persistence. |
+| 6 | `StudentHealthProfile.kt`, `StudentHealthProfileMapper.kt`, `StudentMapper.kt`, `StudentRiskEvaluator.kt` | `StudentHealthProfile` domain model lacks `riskStatus`; `StudentMapper` calls `StudentRiskEvaluator.evaluate()` which hardcodes `RiskStatus.LOW`. | Add `riskStatus: RiskStatus = RiskStatus.LOW` to `StudentHealthProfile` domain model, map it in `StudentHealthProfileMapper`, and use `profile.riskStatus` in `StudentMapper` / `StudentRiskEvaluator`. |
+| 7 | `DemographicsProjector.kt`, `StudentMapper.kt` | `G4` option `"少数民族"` fails lookup in `ethnicities` and falls back to `"汉族"`; `StudentMapper` calls `MobileNumber(num)` throwing `IllegalArgumentException` if malformed. | Map `"少数民族"` to `"少数民族"` (seed in `DataInitializer`) or `"其他"`; use `MobileNumber.fromOrNull(num)` in `StudentMapper`. |
+| 8 | `DashboardService.kt`, `RecordsView.tsx`, `StudentPage.tsx`, `NotificationsView.tsx` | `DashboardService` hardcodes `assessmentsCount = 0L`; `RecordsView` hardcodes `Bearer student_token_chen`; `NotificationsView` lacks cases for `ASSESSMENT_HIGH_RISK_ALERT_HC`, `ASSESSMENT_ASSIGNED_STUDENT`, `ASSESSMENT_COMPLETED_TEACHER` and `VIEW_STUDENT`. | Count pending assignments in `DashboardService`; use `session.token` in `RecordsView` & `StudentPage`; add notification templates and action handlers in `NotificationsView.tsx`. |
+| 9 | `frontend/src/components/assessments/AssessmentFlow.tsx`, `frontend/src/types/index.ts`, `frontend/src/mocks/data/assessments.ts` | `AssessmentFlow.tsx` only renders choice buttons and treats `options: []` as truthy empty array, rendering blank screen on `text`/`number`/`slider`/`date` questions. | Upgrade `AssessmentFlow.tsx` to render `text`, `number`, `slider`, `date`, `single_choice`, `multiple_choice`, `hasTextInput`, and `zeroOptionLabel` using Material Web components (`<md-outlined-text-field>`, `<md-checkbox>`, `<md-slider>`), and align types & MSW mocks with `comprehensive_student_intake_survey`. |
+| 10 | `mobile/src/admin/*`, `mobile/src/App.tsx` | Legacy `/admin` portal in `mobile/` calls 8 non-existent `/api/admin/*` endpoints from the retired SQLite backend. | Delete `mobile/src/admin/*` and render `StudentApp` directly in `mobile/src/App.tsx`. |

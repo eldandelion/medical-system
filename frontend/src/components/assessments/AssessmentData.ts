@@ -1,11 +1,25 @@
 export interface QuestionOption {
-  value: number;
+  value: number | string;
   label: string;
+  hasTextInput?: boolean;
+  textInputPlaceholder?: string | null;
+  textInputLabel?: string | null;
 }
 
 export interface Question {
   id: string;
   text: string;
+  type?: 'single_choice' | 'multiple_choice' | 'slider' | 'number' | 'text' | 'date' | string;
+  field?: string | null;
+  placeholder?: string | null;
+  min?: number | null;
+  max?: number | null;
+  step?: number | null;
+  unit?: string | null;
+  minLabel?: string | null;
+  maxLabel?: string | null;
+  icon?: string | null;
+  zeroOptionLabel?: string | null;
   options?: QuestionOption[];
 }
 

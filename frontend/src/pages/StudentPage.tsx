@@ -101,7 +101,7 @@ export function StudentPage() {
   }, [lastEvent, session?.token, showSnackbar]);
   
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardResponseDto<StudentMetricsDto>>({
-    queryKey: ['/api/dashboard/student'],
+    queryKey: ['/api/dashboard/student', session?.token],
     queryFn: async () => {
       const res = await fetch(`${import.meta.env.BASE_URL}/api/dashboard/student`.replace('//api', '/api'), {
         headers: {

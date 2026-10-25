@@ -46,6 +46,7 @@ import '@material/web/progress/linear-progress.js';
 import '@material/web/tabs/tabs.js';
 import '@material/web/tabs/primary-tab.js';
 import '@material/web/tabs/secondary-tab.js';
+import '@material/web/slider/slider.js';
 
 async function enableMocking() {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {

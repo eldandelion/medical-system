@@ -137,10 +137,14 @@ data class StudentAuthDto(
 
 data class AuthResponse(
     val token: String,
-    val student: StudentAuthDto,
-    val studentNumber: String = student.studentNumber,
-    val fullName: String = student.fullName,
-    val phone: String = student.phone
+    val student: StudentAuthDto? = null,
+    val studentNumber: String? = student?.studentNumber,
+    val fullName: String? = student?.fullName,
+    val phone: String? = student?.phone,
+    val userId: Long? = null,
+    val role: UserRole? = null,
+    val email: String? = null,
+    val name: String? = student?.fullName
 )
 
 data class SendCodeRequest(

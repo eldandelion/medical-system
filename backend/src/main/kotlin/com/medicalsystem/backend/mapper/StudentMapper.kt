@@ -34,7 +34,7 @@ class StudentMapper(
             name = entity.name,
             major = majorMapper.toModel(entity.major),
             enrollmentDate = entity.enrollmentDate,
-            riskStatus = profile?.evaluateRisk(riskEvaluator) ?: com.medicalsystem.backend.model.RiskStatus.LOW,
+            riskStatus = profile?.riskStatus ?: com.medicalsystem.backend.model.RiskStatus.LOW,
             degreeLevel = entity.degreeLevel?.let { d -> DegreeLevel(d.id, d.name) },
             demographics = entity.demographics?.let {
                 Demographics(
@@ -42,11 +42,11 @@ class StudentMapper(
                     dateOfBirth = it.dateOfBirth,
                     ethnicity = it.ethnicity?.let { e -> Ethnicity(e.id ?: 0L, e.name) },
                     idCardNumber = it.idCardNumber?.let { num -> com.medicalsystem.backend.model.IdCardNumber.fromOrNull(num) },
-                    contactNumber = it.contactNumber?.let { num -> com.medicalsystem.backend.model.MobileNumber(num) },
-                    email = it.email?.let { e -> com.medicalsystem.backend.model.EmailAddress(e) },
+                    contactNumber = it.contactNumber?.let { num -> runCatching { com.medicalsystem.backend.model.MobileNumber(num) }.getOrNull() },
+                    email = it.email?.let { e -> runCatching { com.medicalsystem.backend.model.EmailAddress(e) }.getOrNull() },
                     homeAddress = it.homeAddress,
                     emergencyContactName = it.emergencyContactName,
-                    emergencyContactPhone = it.emergencyContactPhone?.let { p -> com.medicalsystem.backend.model.PhoneNumber(p) },
+                    emergencyContactPhone = it.emergencyContactPhone?.let { p -> runCatching { com.medicalsystem.backend.model.PhoneNumber(p) }.getOrNull() },
                     school = it.school?.let { s -> School(s.id ?: 0L, s.name) }
                 )
             },

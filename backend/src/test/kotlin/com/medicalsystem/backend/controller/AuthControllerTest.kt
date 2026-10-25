@@ -117,5 +117,28 @@ class AuthControllerTest {
         assertEquals("teacher@csu.edu.cn", response.body!!.email)
         assertEquals(AccountStatus.PENDING_APPROVAL, response.body!!.status)
     }
+
+    @Test
+    fun `login returns AuthResponse for staff and student`() {
+        val request = LoginRequest(identifier = "EMP-00001", password = "Password123")
+        val expectedResponse = AuthResponse(
+            token = "jwt-token",
+            student = null,
+            userId = 1L,
+            role = UserRole.TEACHER,
+            email = "emily@univ.edu.cn",
+            name = "艾米丽·沃森"
+        )
+
+        `when`(authService.login(request)).thenReturn(expectedResponse)
+
+        val response = authController.login(request)
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertNotNull(response.body)
+        assertEquals("jwt-token", response.body!!.token)
+        assertEquals(UserRole.TEACHER, response.body!!.role)
+        assertEquals(1L, response.body!!.userId)
+    }
 }
 

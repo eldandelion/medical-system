@@ -83,7 +83,12 @@ class UserVerificationService(
             return userJpaRepository.findById(ta.userId).orElse(null)
         }
 
-        // 6. System admin shortcut identifier
+        // 6. Check phone number
+        userJpaRepository.findByPhone(idNumber)?.let { user ->
+            return user
+        }
+
+        // 7. System admin shortcut identifier
         if (idNumber.equals("SYS-ADMIN", ignoreCase = true)) {
             return userJpaRepository.findAll().firstOrNull { it.role == UserRole.SYSTEM_ADMIN }
         }

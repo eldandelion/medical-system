@@ -42,9 +42,64 @@ class AssessmentScoringEngineTest {
         val result = AssessmentScoringEngine.scoreSection(1L, scale.sections.first(), answers)
 
         assertEquals(PsychometricTestType.PHQ_9, result.testType)
-        // Score is 0 since the actual engine is stubbed out
-        assertEquals(0, result.score.points)
-        assertEquals(0, result.score.max)
+        assertEquals(3, result.score.points)
+        assertEquals(3, result.score.max)
+    }
+
+    @Test
+    fun `scoreSectionOrNull computes real score and max for PHQ_9 and GAD_7 and returns null for non-psychometric sections`() {
+        val phqSection = AssessmentSection(
+            code = "phq_9",
+            title = "PHQ-9",
+            orderNum = 1,
+            questions = (1..9).map { i ->
+                AssessmentQuestion(
+                    code = "phq9_$i",
+                    text = "Q$i",
+                    orderNum = i,
+                    optionGroup = AssessmentOptionGroup("FOUR_POINT", (0..3).map { AssessmentOption(it, "$it") })
+                )
+            }
+        )
+        val gadSection = AssessmentSection(
+            code = "gad_7",
+            title = "GAD-7",
+            orderNum = 2,
+            questions = (1..7).map { i ->
+                AssessmentQuestion(
+                    code = "gad7_$i",
+                    text = "Q$i",
+                    orderNum = i,
+                    optionGroup = AssessmentOptionGroup("FOUR_POINT", (0..3).map { AssessmentOption(it, "$it") })
+                )
+            }
+        )
+        val demoSection = AssessmentSection(
+            code = "demographics_survey",
+            title = "Demographics",
+            orderNum = 3,
+            questions = listOf(AssessmentQuestion(code = "demo_name", text = "Name", orderNum = 1, type = "text"))
+        )
+
+        val answers = mutableMapOf<String, Any>("demo_name" to "张三")
+        (1..9).forEach { answers["phq9_$it"] = 2 }
+        (1..7).forEach { answers["gad7_$it"] = 3 }
+
+        val phqResult = AssessmentScoringEngine.scoreSectionOrNull(1L, phqSection, answers, 100L)
+        assertNotNull(phqResult)
+        assertEquals(PsychometricTestType.PHQ_9, phqResult!!.testType)
+        assertEquals(18, phqResult.score.points)
+        assertEquals(27, phqResult.score.max)
+        assertEquals(100L, phqResult.sourceAssignmentId)
+
+        val gadResult = AssessmentScoringEngine.scoreSectionOrNull(1L, gadSection, answers, 100L)
+        assertNotNull(gadResult)
+        assertEquals(PsychometricTestType.GAD_7, gadResult!!.testType)
+        assertEquals(21, gadResult.score.points)
+        assertEquals(21, gadResult.score.max)
+
+        val demoResult = AssessmentScoringEngine.scoreSectionOrNull(1L, demoSection, answers, 100L)
+        assertNull(demoResult)
     }
 
     @Test

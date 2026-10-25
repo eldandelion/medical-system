@@ -29,7 +29,8 @@ class AssessmentService(
     private val scaleDraftService: ScaleDraftService? = null,
     private val studentJpaRepository: com.medicalsystem.backend.repository.StudentJpaRepository? = null,
     private val demographicsProjector: DemographicsProjector? = null,
-    private val clinicalRiskEvaluator: ClinicalRiskEvaluator? = null
+    private val clinicalRiskEvaluator: ClinicalRiskEvaluator? = null,
+    private val domainEventPublisher: com.medicalsystem.backend.event.DomainEventPublisher? = null
 ) {
 
     @Transactional(readOnly = true)
@@ -131,9 +132,14 @@ class AssessmentService(
                     assignedAt = LocalDateTime.now(clock),
                     dueDate = request.dueDate
                 )
-                newAssignment.initAssignedEvent()
-                assignmentRepository.save(newAssignment)
+                val savedAssignment = assignmentRepository.save(newAssignment)
+                savedAssignment.initAssignedEvent()
+                savedAssignment.getDomainEvents().forEach { domainEventPublisher?.publish(it) }
+                savedAssignment.clearDomainEvents()
+
                 savedDispatch.initDispatchedEvent(listOf(student.id))
+                savedDispatch.getDomainEvents().forEach { domainEventPublisher?.publish(it) }
+                savedDispatch.clearDomainEvents()
                 assignedCount++
             }
         }
@@ -184,7 +190,7 @@ class AssessmentService(
                 val savedDispatch = dispatchRepository.save(dispatch)
 
                 val toSave = targetStudents.map { student ->
-                    val assignment = AssessmentAssignment(
+                    AssessmentAssignment(
                         studentId = student.id,
                         assignedByUserId = assigner.id,
                         batteryCode = BatteryId(batteryCode),
@@ -193,12 +199,17 @@ class AssessmentService(
                         assignedAt = LocalDateTime.now(clock),
                         dueDate = request.dueDate
                     )
-                    assignment.initAssignedEvent()
-                    assignment
                 }
                 
-                assignmentRepository.saveAll(toSave)
+                val savedAssignments = assignmentRepository.saveAll(toSave)
+                savedAssignments.forEach { saved ->
+                    saved.initAssignedEvent()
+                    saved.getDomainEvents().forEach { domainEventPublisher?.publish(it) }
+                    saved.clearDomainEvents()
+                }
                 savedDispatch.initDispatchedEvent(toSave.map { it.studentId })
+                savedDispatch.getDomainEvents().forEach { domainEventPublisher?.publish(it) }
+                savedDispatch.clearDomainEvents()
                 totalAssigned += toSave.size
             }
         }
@@ -248,8 +259,8 @@ class AssessmentService(
         
         AssessmentScoringEngine.validateAnswers(scale, answersMap)
         
-        val completedTests = scale.sections.map { section ->
-            AssessmentScoringEngine.scoreSection(assignment.studentId, section, answersMap, assignment.id)
+        val completedTests = scale.sections.mapNotNull { section ->
+            AssessmentScoringEngine.scoreSectionOrNull(assignment.studentId, section, answersMap, assignment.id)
         }
 
         assignment.complete(
@@ -259,6 +270,8 @@ class AssessmentService(
         assignment.completedAt = LocalDateTime.now(clock) // override to use clock
 
         val savedAssignment = assignmentRepository.save(assignment)
+        assignment.getDomainEvents().forEach { domainEventPublisher?.publish(it) }
+        assignment.clearDomainEvents()
 
         // 1. Purge draft
         scaleDraftService?.purgeDraft(assignment.studentId, assignment.batteryCode.value)
@@ -311,5 +324,10 @@ class AssessmentService(
 
         assignment.recordProgress(request.answers, currentUser.id)
         assignmentRepository.save(assignment)
+        scaleDraftService?.saveDraft(
+            assignment.studentId,
+            assignment.batteryCode.value,
+            SaveDraftRequest(answers = request.answers, updatedAt = System.currentTimeMillis())
+        )
     }
 }

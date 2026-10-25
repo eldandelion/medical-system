@@ -105,6 +105,25 @@ beforeEach(() => {
         json: async () => ({ cooldownSeconds: 60 }),
       };
     }
+    if (url.includes('/api/auth/login')) {
+      const body = JSON.parse((init?.body as string) || '{}');
+      if (body.password === 'WrongPassword!') {
+        return {
+          ok: false,
+          json: async () => ({ error: '学号、手机号或密码错误' }),
+        };
+      }
+      return {
+        ok: true,
+        json: async () => ({
+          token: 'jwt-mock-token-123',
+          role: 'TEACHER',
+          userId: 10,
+          name: '张老师',
+          email: body.identifier,
+        }),
+      };
+    }
     return {
       ok: true,
       json: async () => ({}),
@@ -351,8 +370,10 @@ describe('LoginOverlay Component', () => {
 
     // Submit valid password
     fireEvent.click(screen.getByText('下一步'));
-    expect(onSuccessMock).toHaveBeenCalledTimes(1);
-    expect(onCloseMock).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(onSuccessMock).toHaveBeenCalledTimes(1);
+      expect(onCloseMock).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('calls onClose when Escape key is pressed', () => {

@@ -65,20 +65,41 @@ class ScaleDraftService(
     @Transactional(readOnly = true)
     fun getDraft(studentId: Long, scaleCode: String): ScaleDraftDto? {
         val draftOpt = scaleDraftJpaRepository.findByStudentIdAndScaleCode(studentId, scaleCode)
-        if (draftOpt.isEmpty) {
-            return null
+        if (draftOpt.isPresent) {
+            val draft = draftOpt.get()
+            val answers: Map<String, Any> = try {
+                objectMapper.readValue(draft.answersJson, object : TypeReference<Map<String, Any>>() {})
+            } catch (_: Exception) {
+                emptyMap()
+            }
+
+            return ScaleDraftDto(
+                scaleCode = draft.scaleCode,
+                answers = answers,
+                updatedAt = draft.clientUpdatedAt
+            )
         }
-        val draft = draftOpt.get()
-        val answers: Map<String, Any> = try {
-            objectMapper.readValue(draft.answersJson, object : TypeReference<Map<String, Any>>() {})
+
+        // Fallback to pending assignment answersJson for cross-portal draft synchronization
+        val pendingAssignment = assessmentAssignmentJpaRepository
+            .findByStudentIdAndStatus(studentId, AssessmentStatus.PENDING)
+            .firstOrNull { it.batteryCode == scaleCode && !it.answersJson.isNullOrBlank() }
+            ?: return null
+
+        val fallbackAnswers: Map<String, Any> = try {
+            objectMapper.readValue(pendingAssignment.answersJson!!, object : TypeReference<Map<String, Any>>() {})
         } catch (_: Exception) {
             emptyMap()
         }
 
+        if (fallbackAnswers.isEmpty()) {
+            return null
+        }
+
         return ScaleDraftDto(
-            scaleCode = draft.scaleCode,
-            answers = answers,
-            updatedAt = draft.clientUpdatedAt
+            scaleCode = scaleCode,
+            answers = fallbackAnswers,
+            updatedAt = 0L
         )
     }
 
