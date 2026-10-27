@@ -307,6 +307,9 @@ export function validateQuestionAnswer(
       return validateChineseMobile(textVal);
     }
     if (fieldKey.includes('student_number') || fieldKey.includes('studentno') || fieldKey === 'studentnumber') {
+      if (/^[Ss]\d{7}$|^\d{7}$/.test(textVal)) {
+        return { isValid: true, normalized: textVal.toUpperCase() };
+      }
       return validateStudentNumber(textVal);
     }
     if (fieldKey.includes('email') || fieldKey.includes('mail')) {

@@ -286,8 +286,12 @@ export const AuthPage: React.FC = () => {
 
     setLoading(true);
     try {
-      await intakeApi.sendCode(phoneValidation.normalized || loginPhone.trim(), 'LOGIN');
+      const res: any = await intakeApi.sendCode(phoneValidation.normalized || loginPhone.trim(), 'LOGIN');
       startLoginCountdown();
+      if (res?.devCode) {
+        setSnackbarMessage(`[开发环境] 验证码: ${res.devCode}`);
+        setSnackbarOpen(true);
+      }
     } catch (err: any) {
       console.error('Send login code error:', err);
       showAuthError(err.message, '获取验证码失败，请重试');
@@ -303,7 +307,11 @@ export const AuthPage: React.FC = () => {
     const errors: Record<string, string> = {};
 
     if (loginMode === 'password') {
-      const numValidation = validateStudentNumber(loginStudentNumber);
+      const trimmedNum = loginStudentNumber.trim();
+      const isLegacySeedNum = /^[Ss]\d{7}$|^\d{7}$/.test(trimmedNum);
+      const numValidation = isLegacySeedNum
+        ? { isValid: true, normalized: trimmedNum.toUpperCase() }
+        : validateStudentNumber(loginStudentNumber);
       if (!numValidation.isValid) {
         errors.loginStudentNumber = numValidation.error!;
       }

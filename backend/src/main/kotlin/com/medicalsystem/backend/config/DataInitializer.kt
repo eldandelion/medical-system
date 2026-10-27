@@ -39,35 +39,32 @@ class DataInitializer {
         assessmentAssignmentRepository: AssessmentAssignmentJpaRepository,
         jdbcTemplate: JdbcTemplate
     ) = CommandLineRunner {
-        assessmentAssignmentRepository.deleteAll()
-        referralRepository.deleteAll()
-        studentHealthProfileRepository.deleteAll()
-        studentRepository.deleteAll()
-        trialAdminRepository.deleteAll()
-        headCounsellorJpaRepository.deleteAll()
-        teacherRepository.deleteAll()
-        doctorRepository.deleteAll()
-        userRepository.deleteAll()
-        hospitalDepartmentRepository.deleteAll()
-        hospitalRepository.deleteAll()
-        schoolDepartmentJpaRepository.deleteAll()
-        majorRepository.deleteAll()
-        collegeRepository.deleteAll()
-        degreeLevelRepository.deleteAll()
-        ethnicityRepository.deleteAll()
-        schoolRepository.deleteAll()
-
         try {
             jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0")
             val tables = jdbcTemplate.queryForList("SHOW TABLES", String::class.java)
             tables.forEach { table ->
-                jdbcTemplate.execute("ALTER TABLE $table AUTO_INCREMENT = 1")
+                jdbcTemplate.execute("TRUNCATE TABLE $table")
             }
             jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1")
         } catch (e: Exception) {
-            // H2 doesn't support these MySQL commands, but since H2 is freshly created for tests, 
-            // auto-increment naturally starts at 1, so we can safely ignore the error.
-            println("Skipping auto-increment reset: ${e.message}")
+            // H2 doesn't support SHOW TABLES / TRUNCATE in the same way; fallback to repository deleteAll
+            assessmentAssignmentRepository.deleteAll()
+            referralRepository.deleteAll()
+            studentHealthProfileRepository.deleteAll()
+            studentRepository.deleteAll()
+            trialAdminRepository.deleteAll()
+            headCounsellorJpaRepository.deleteAll()
+            teacherRepository.deleteAll()
+            doctorRepository.deleteAll()
+            userRepository.deleteAll()
+            hospitalDepartmentRepository.deleteAll()
+            hospitalRepository.deleteAll()
+            schoolDepartmentJpaRepository.deleteAll()
+            majorRepository.deleteAll()
+            collegeRepository.deleteAll()
+            degreeLevelRepository.deleteAll()
+            ethnicityRepository.deleteAll()
+            schoolRepository.deleteAll()
         }
 
         val medCollege = collegeRepository.save(CollegeEntity(name = "医学院"))

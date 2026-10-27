@@ -270,8 +270,6 @@ class AssessmentService(
         assignment.completedAt = LocalDateTime.now(clock) // override to use clock
 
         val savedAssignment = assignmentRepository.save(assignment)
-        assignment.getDomainEvents().forEach { domainEventPublisher?.publish(it) }
-        assignment.clearDomainEvents()
 
         // 1. Purge draft
         scaleDraftService?.purgeDraft(assignment.studentId, assignment.batteryCode.value)
@@ -282,8 +280,11 @@ class AssessmentService(
             studentJpaRepository.save(studentEntity)
         }
 
-        // 3. Clinical Risk Evaluation
+        // 3. Clinical Risk Evaluation (runs before event publishing so AFTER_COMMIT listeners see updated riskStatus)
         clinicalRiskEvaluator?.evaluateRisk(assignment.studentId, answersMap, completedTests)
+
+        assignment.getDomainEvents().forEach { domainEventPublisher?.publish(it) }
+        assignment.clearDomainEvents()
 
         return AssessmentSubmissionResponseDto(
             success = true,

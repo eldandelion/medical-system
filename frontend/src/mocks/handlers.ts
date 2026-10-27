@@ -912,7 +912,10 @@ export const handlers = [
           const authHeader = request.headers.get('Authorization') || '';
           const enriched = liveData.map((item: Referral) => ({
             ...item,
-            availableActions: mockComputeAvailableActions(item, authHeader)
+            availableActions:
+              item.availableActions && item.availableActions.length > 0
+                ? item.availableActions
+                : mockComputeAvailableActions(item, authHeader)
           }));
           return HttpResponse.json(enriched);
         }

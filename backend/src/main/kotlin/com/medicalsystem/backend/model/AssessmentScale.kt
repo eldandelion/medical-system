@@ -33,6 +33,14 @@ data class AssessmentQuestion(
     val sectionCode: String? = null,
     val sectionTitle: String? = null
 ) {
+    @get:com.fasterxml.jackson.annotation.JsonProperty("id")
+    val id: String
+        get() = code
+
+    @get:com.fasterxml.jackson.annotation.JsonProperty("options")
+    val options: List<AssessmentOption>
+        get() = effectiveOptions
+
     val effectiveOptions: List<AssessmentOption>
         get() = customOptions?.takeIf { it.isNotEmpty() } ?: optionGroup?.options ?: emptyList()
 }
@@ -45,7 +53,11 @@ data class AssessmentSection(
     val orderNum: Int,
     val questionCount: Int = 0,
     val questions: List<AssessmentQuestion> = emptyList()
-)
+) {
+    @get:com.fasterxml.jackson.annotation.JsonProperty("id")
+    val id: String
+        get() = code
+}
 
 data class ScaleIntroItem(
     val icon: String = "assignment",

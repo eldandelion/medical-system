@@ -144,12 +144,23 @@ class ScaleController(
             .firstOrNull { it.batteryCode == code && it.status == AssessmentStatus.COMPLETED }
             ?: return ResponseEntity.notFound().build()
 
+        val parsedAnswers: Map<String, Any> = assignment.answersJson?.takeIf { it.isNotBlank() }?.let { json ->
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper().readValue(
+                    json,
+                    object : com.fasterxml.jackson.core.type.TypeReference<Map<String, Any>>() {}
+                )
+            } catch (_: Exception) {
+                emptyMap()
+            }
+        } ?: emptyMap()
+
         return ResponseEntity.ok(
             mapOf(
                 "scaleCode" to code,
                 "status" to "COMPLETED",
                 "completedAt" to (assignment.completedAt?.toString() ?: LocalDateTime.now().toString()),
-                "answers" to emptyMap<String, Any>()
+                "answers" to parsedAnswers
             )
         )
     }
