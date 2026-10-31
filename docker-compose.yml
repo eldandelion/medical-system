@@ -10,6 +10,22 @@ services:
     ports:
       - "3000:80"
     restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  mobile:
+    image: ghcr.io/eldandelion/medical-system-mobile:latest
+    build:
+      context: ./mobile
+      dockerfile: Dockerfile
+    container_name: medical-system-mobile
+    ports:
+      - "3005:80"
+    restart: unless-stopped
+    depends_on:
+      - backend
     networks:
       - app-network
 

@@ -22,11 +22,20 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: |
+            frontend/package-lock.json
+            mobile/package-lock.json
 
       - name: Frontend Quality Gate
         run: |
           cd frontend
+          npm ci
+          npm run lint
+          npm test -- --run
+
+      - name: Mobile Intake Quality Gate
+        run: |
+          cd mobile
           npm ci
           npm run lint
           npm test -- --run
@@ -76,6 +85,15 @@ jobs:
           context: ./frontend
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/medical-system-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & Push Mobile Intake Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./mobile
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/medical-system-mobile:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
