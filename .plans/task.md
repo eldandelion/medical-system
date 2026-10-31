@@ -1,295 +1,232 @@
-# Implementation Plan: Cross-Portal Mobile Intake & Medical System Integration Fixes
+# Implementation Plan: Mobile Intake Referrals Tab ("就医转诊") & Fullscreen Details View
 
 ## Overview
-This implementation plan addresses all 10 root-cause categories documented in `.plans/analysis.md`. The plan establishes end-to-end integration across the Spring Boot Kotlin backend, desktop React frontend, and mobile student intake app: upgrading the desktop questionnaire player for polymorphic question types, unifying multi-role credentials and authentication, enabling bidirectional draft synchronization, implementing real psychometric scoring and event publishing, securing demographic projections and risk mapping, fixing dashboard metrics and notification alerts, and removing legacy mobile admin remnants.
+This implementation plan establishes a dedicated **就医转诊 (Referrals)** tab and MD3-compliant **Fullscreen Referral Details View** within the Mobile Intake application (`mobile/`). The solution integrates with Spring Boot referral endpoints (`/api/referrals`, `/api/referrals/{id}`, `/api/referrals/{id}/tracking`), enforces strict read-only bounded projection and ACL filtering for students, provides desktop presentation parity (triage metrics, severe risk indicators, 6-step timeline tracking, appointment cards, doctor feedback), and delivers mobile-first ergonomics with dynamic scroll-triggered header synchronization across a 3-destination bottom navigation bar.
+
+---
+
+## Requirements & Bounded Context Alignment
+
+### Domain Invariants & Security
+1. **Read-Only Student Projection**: Emitted `ReferralDto.availableActions` is always empty for students. The mobile intake interface is strictly a read-only projection without state modification triggers.
+2. **Defensive Exclusion of Drafts & Recalls**: Upstream backend filters out `DRAFT` and `RECALLED` statuses for students. Downstream client ACL filtering in `ReferralContext` defensively excludes any unapproved drafts or withdrawn requests.
+3. **Sensitive Clinical Notes Boundary**: SCID diagnostic scales and internal therapist clinical notes are withheld from students; overview surfaces basic triage indicators (`isFirstVisit`, `isMedicated`, `priorTherapy`) and referral reasons, while clinical feedback (`summary`, `followUp`) is only displayed once approved and finalized.
+4. **Clickable Status Badge Routing (`getTargetTabForStatus`)**:
+   - Status in `AWAITING_FEEDBACK_APPROVAL`, `CLOSED`, or when feedback is present $\rightarrow$ routes directly to `feedback` (`诊疗反馈`).
+   - Status in progress (`AWAITING_APPROVAL`, `AWAITING_REVIEW`, `AWAITING_TRIAGE`, `WAITING_FOR_SCHEDULING`, `WAITING_FOR_APPOINTMENT`, `NEEDS_REASSIGNMENT`, `PENDING`) $\rightarrow$ routes directly to `tracker` (`转诊进度`).
+   - Other / default $\rightarrow$ routes to `overview` (`转诊概览`).
+5. **Ergonomic MD3 Header & Navigation Sync**:
+   - Bottom navigation bar: Index 0 (`问卷测评`), Index 1 (`就医转诊`), Index 2 (`个人中心`).
+   - Scroll sync: Scrolling down (> 35px) smoothly slides out page-level filter chips and animates segmented filter chips into the sticky top bar header (`ASSESSMENT_FILTER_ITEMS` on Tab 0, `REFERRAL_FILTER_ITEMS` on Tab 1). Scrolling back up restores the title and subtitle.
 
 ---
 
 ## Writable Files
 
-### Backend Source Files (`backend/`)
-1. [`backend/src/main/kotlin/com/medicalsystem/backend/entity/ScaleDraftEntity.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/entity/ScaleDraftEntity.kt) (Category 1: Replace `@Lob` with `@Column(name = "answers_json", nullable = false, columnDefinition = "LONGTEXT")`)
-2. [`backend/src/main/kotlin/com/medicalsystem/backend/config/DataInitializer.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/config/DataInitializer.kt) (Category 2 & 7: Seed student `phone` and BCrypt `passwordHash`; seed staff `passwordHash`; seed `"少数民族"`; seed `"comprehensive_student_intake_survey"`)
-3. [`backend/src/main/kotlin/com/medicalsystem/backend/service/StudentImportService.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/StudentImportService.kt) (Category 2: Set `userEntity.phone` and BCrypt hash of last 6 digits of `idCardNumber` or `"123456"`)
-4. [`backend/src/main/kotlin/com/medicalsystem/backend/service/StaffRegistrationService.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/StaffRegistrationService.kt) (Category 2: Hash `request.password` using `PasswordEncoder` and persist to `userEntity.passwordHash`)
-5. [`backend/src/main/kotlin/com/medicalsystem/backend/dto/AuthDtos.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/dto/AuthDtos.kt) (Category 3: Add `role: UserRole? = null`, `userId: Long? = null`, `email: String? = null`, `name: String? = null` to `AuthResponse`)
-6. [`backend/src/main/kotlin/com/medicalsystem/backend/service/AuthService.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/AuthService.kt) (Category 3: Support student and multi-role staff login via studentNumber, employeeNumber, email, phone, SYS-ADMIN + password)
-7. [`backend/src/main/kotlin/com/medicalsystem/backend/service/UserVerificationService.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/UserVerificationService.kt) (Category 3: Add phone number resolution in identifier lookup)
-8. [`backend/src/main/kotlin/com/medicalsystem/backend/service/ScaleDraftService.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/ScaleDraftService.kt) (Category 4: Add assignment `answers_json` fallback in `getDraft`)
-9. [`backend/src/main/kotlin/com/medicalsystem/backend/controller/ScaleController.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/controller/ScaleController.kt) (Category 4: Non-empty answer count calculation and fallback alignment)
-10. [`backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentService.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentService.kt) (Category 4 & 5: Sync `recordProgress` to `scale_drafts`; publish `AssessmentCompletedEvent` / `AssessmentAssignedEvent` / `AssessmentBatchDispatchedEvent` and pass scored psychometrics to `complete()`)
-11. [`backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentAssignmentService.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentAssignmentService.kt) (Category 5: Fix `assignAssessment` to register event after `save` so `assignment.id` is populated, and publish `AssessmentAssignedEvent`)
-12. [`backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentAssignmentRepositoryAdapter.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentAssignmentRepositoryAdapter.kt) (Category 5: Preserve or dispatch pending aggregate events on save)
-13. [`backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentScoringEngine.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentScoringEngine.kt) (Category 5: Implement real score calculation for clinical scales [PHQ-9, GAD-7, SCL-90, PSQI] and filter out non-psychometric sections)
-14. [`backend/src/main/kotlin/com/medicalsystem/backend/model/StudentHealthProfile.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/model/StudentHealthProfile.kt) (Category 6: Ensure `riskStatus: RiskStatus = RiskStatus.LOW` default and setter support)
-15. [`backend/src/main/kotlin/com/medicalsystem/backend/mapper/StudentHealthProfileMapper.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/mapper/StudentHealthProfileMapper.kt) (Category 6: Bi-directional mapping of `riskStatus` between entity and domain model)
-16. [`backend/src/main/kotlin/com/medicalsystem/backend/mapper/StudentMapper.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/mapper/StudentMapper.kt) (Category 6 & 7: Use `profile?.riskStatus` directly; use `MobileNumber.fromOrNull(num)`)
-17. [`backend/src/main/kotlin/com/medicalsystem/backend/service/DemographicsProjector.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/DemographicsProjector.kt) (Category 7: Resolve `"少数民族"` to `"少数民族"` or `"其他"`)
-18. [`backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt) (Category 8: Compute real pending assessment count in `getStudentDashboard`)
-19. [`backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentAssignmentJpaRepository.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentAssignmentJpaRepository.kt) (Category 8: Add `countByStudentIdAndStatus(studentId: Long, status: AssessmentStatus): Long`)
+The execution agent is strictly permitted to create or modify only the following paths:
 
-### Backend Test Files (`backend/`)
-20. [`backend/src/test/kotlin/com/medicalsystem/backend/repository/ScaleDraftJpaRepositoryTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/repository/ScaleDraftJpaRepositoryTest.kt) (Category 1: Test persistence and retrieval of large 377-question JSON payloads)
-21. [`backend/src/test/kotlin/com/medicalsystem/backend/service/StaffRegistrationServiceTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/StaffRegistrationServiceTest.kt) (Category 2: Verify password hashing on staff registration)
-22. [`backend/src/test/kotlin/com/medicalsystem/backend/service/StudentImportServiceTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/StudentImportServiceTest.kt) (Category 2: Verify `phone` and default BCrypt password creation on student import)
-23. [`backend/src/test/kotlin/com/medicalsystem/backend/controller/StudentAuthControllerTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/controller/StudentAuthControllerTest.kt) (Category 3: Test login with student number, phone, and staff identifiers)
-24. [`backend/src/test/kotlin/com/medicalsystem/backend/controller/AuthControllerTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/controller/AuthControllerTest.kt) (Category 3: Verify controller contract for multi-role login response)
-25. [`backend/src/test/kotlin/com/medicalsystem/backend/service/UserVerificationServiceTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/UserVerificationServiceTest.kt) (Category 3: Test phone-based identifier lookup)
-26. [`backend/src/test/kotlin/com/medicalsystem/backend/service/AssessmentDraftIntegrationTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/AssessmentDraftIntegrationTest.kt) (Category 4: Verify draft sync between `recordProgress` and `scale_drafts`)
-27. [`backend/src/test/kotlin/com/medicalsystem/backend/controller/ScaleControllerIntegrationTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/controller/ScaleControllerIntegrationTest.kt) (Category 4: Verify fallback from scale draft to assignment answers)
-28. [`backend/src/test/kotlin/com/medicalsystem/backend/model/AssessmentScoringEngineTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/model/AssessmentScoringEngineTest.kt) (Category 5: Verify section scoring sums and max scores)
-29. [`backend/src/test/kotlin/com/medicalsystem/backend/event/AssessmentCompletedListenerTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/event/AssessmentCompletedListenerTest.kt) (Category 5: Verify psychometrics persistence on event receipt)
-30. [`backend/src/test/kotlin/com/medicalsystem/backend/service/AssessmentServiceTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/AssessmentServiceTest.kt) (Category 5: Verify event publishing and draft purging on submission)
-31. [`backend/src/test/kotlin/com/medicalsystem/backend/mapper/StudentMapperTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/mapper/StudentMapperTest.kt) (Category 6 & 7: Test `profile.riskStatus` preservation and `MobileNumber.fromOrNull` fallback)
-32. [`backend/src/test/kotlin/com/medicalsystem/backend/service/StudentRiskEvaluatorTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/StudentRiskEvaluatorTest.kt) (Category 6: Update test cases to reflect risk evaluation)
-33. [`backend/src/test/kotlin/com/medicalsystem/backend/service/DemographicsProjectorTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/DemographicsProjectorTest.kt) (Category 7: Test `"少数民族"` ethnicity mapping)
-34. [`backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt) (Category 8: Verify student dashboard `assessmentsCount`)
+### 1. New Source & Utility Files (`mobile/src/`)
+- `mobile/src/utils/referralConstants.ts`
+- `mobile/src/utils/referralRouting.ts`
+- `mobile/src/utils/referralStatusEnricher.ts`
+- `mobile/src/contexts/ReferralContext.tsx`
+- `mobile/src/components/referrals/ReferralCard.tsx`
+- `mobile/src/components/referrals/ReferralOverviewTab.tsx`
+- `mobile/src/components/referrals/ReferralTrackerTab.tsx`
+- `mobile/src/components/referrals/ReferralFeedbackTab.tsx`
+- `mobile/src/components/referrals/ReferralDetailsFullScreen.tsx`
+- `mobile/src/pages/ReferralsPage.tsx`
 
-### Frontend Source Files (`frontend/`)
-35. [`frontend/src/api/auth.ts`](file:///Volumes/Files/Programming/medical-system/frontend/src/api/auth.ts) (Category 3: Add `login` API method and login DTO types)
-36. [`frontend/src/contexts/AuthContext.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/contexts/AuthContext.tsx) (Category 3: Add `loginWithSession(session: UserSession)` method)
-37. [`frontend/src/components/auth/LoginOverlay.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/auth/LoginOverlay.tsx) (Category 3: Implement real login API call in Step 2 and update `AuthContext`)
-38. [`frontend/src/components/records/RecordsView.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/records/RecordsView.tsx) (Category 8: Use `session.token` from `useAuth()`, add token to queryKey)
-39. [`frontend/src/pages/StudentPage.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/pages/StudentPage.tsx) (Category 8: Include `session?.token` in queryKey for `/api/dashboard/student`)
-40. [`frontend/src/components/notifications/NotificationsView.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/notifications/NotificationsView.tsx) (Category 5 & 8: Add Chinese formatters and action handlers for `ASSESSMENT_*` notifications)
-41. [`frontend/src/types/index.ts`](file:///Volumes/Files/Programming/medical-system/frontend/src/types/index.ts) (Category 9: Extend `AssessmentQuestionDto`, `AssessmentOptionDto`, `SubmitAssessmentRequest` with polymorphic fields)
-42. [`frontend/src/components/assessments/AssessmentData.ts`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/assessments/AssessmentData.ts) (Category 9: Extend `Question`, `QuestionOption` with polymorphic fields)
-43. [`frontend/src/components/assessments/AssessmentFlow.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/assessments/AssessmentFlow.tsx) (Category 9: Render polymorphic question types `text`, `number`, `slider`, `date`, `single_choice`, `multiple_choice`, `hasTextInput`, `zeroOptionLabel` via MD3)
-44. [`frontend/src/mocks/data/assessments.ts`](file:///Volumes/Files/Programming/medical-system/frontend/src/mocks/data/assessments.ts) (Category 9: Align mock assessment catalog and items with `comprehensive_student_intake_survey`)
-44b. [`frontend/src/main.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/main.tsx) (Category 9: Register `@material/web/slider/slider.js` custom element)
+### 2. New Test Files (`mobile/src/`)
+- `mobile/src/api/intakeApi.test.ts`
+- `mobile/src/utils/referralRouting.test.ts`
+- `mobile/src/utils/referralStatusEnricher.test.ts`
+- `mobile/src/contexts/ReferralContext.test.tsx`
+- `mobile/src/components/referrals/ReferralCard.test.tsx`
+- `mobile/src/components/referrals/ReferralDetailsFullScreen.test.tsx`
+- `mobile/src/pages/ReferralsPage.test.tsx`
 
-### Frontend Test Files (`frontend/`)
-45. [`frontend/src/components/auth/LoginOverlay.test.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/auth/LoginOverlay.test.tsx) (Category 3: Test real login flow in Step 2)
-46. [`frontend/src/contexts/AuthContext.test.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/contexts/AuthContext.test.tsx) (Category 3: Test `loginWithSession`)
-47. [`frontend/src/components/assessments/AssessmentFlow.test.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/assessments/AssessmentFlow.test.tsx) (Category 9: Test rendering and answering polymorphic question types)
-48. [`frontend/src/components/notifications/NotificationsView.test.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/notifications/NotificationsView.test.tsx) (Category 8: Test new assessment notification templates and action clicks)
+### 3. Existing Files to Modify (`mobile/src/`)
+- `mobile/src/api/intakeApi.ts` (Extend with referral DTOs and API methods)
+- `mobile/src/StudentApp.tsx` (Add `ReferralProvider`, 3-tab navigation bar, dynamic header sync for Tab 1, and `ReferralsPage` rendering)
+- `mobile/src/StudentApp.test.tsx` (Update test assertions for 3-tab navigation, tab switching to 就医转诊, and dynamic header sync)
+- `mobile/src/App.test.tsx` (Update navigation tabs count assertion from 2 to 3 and profileTab index from 1 to 2)
 
-### Mobile Source Files (`mobile/`)
-49. [`mobile/src/App.tsx`](file:///Volumes/Files/Programming/medical-system/mobile/src/App.tsx) (Category 10: Simplify to render `StudentApp` directly, remove `/admin` route and imports)
-50. [`mobile/src/App.test.tsx`](file:///Volumes/Files/Programming/medical-system/mobile/src/App.test.tsx) (Category 10: Verify student app renders and tests pass cleanly)
-
-### Mobile Deleted Files (`mobile/src/admin/*`)
-51. `mobile/src/admin/AdminApp.test.tsx`
-52. `mobile/src/admin/AdminApp.tsx`
-53. `mobile/src/admin/api/adminApi.ts`
-54. `mobile/src/admin/components/DataTable.tsx`
-55. `mobile/src/admin/components/DeleteStudentDialog.test.tsx`
-56. `mobile/src/admin/components/DeleteStudentDialog.tsx`
-57. `mobile/src/admin/components/DetailsPanel.test.tsx`
-58. `mobile/src/admin/components/DetailsPanel.tsx`
-59. `mobile/src/admin/components/ExpandableSearchBar.test.tsx`
-60. `mobile/src/admin/components/ExpandableSearchBar.tsx`
-61. `mobile/src/admin/components/FilterChip.test.tsx`
-62. `mobile/src/admin/components/FilterChip.tsx`
-63. `mobile/src/admin/components/FullScreenView.tsx`
-64. `mobile/src/admin/components/MetricCard.test.tsx`
-65. `mobile/src/admin/components/MetricCard.tsx`
-66. `mobile/src/admin/components/ResetPasswordDialog.test.tsx`
-67. `mobile/src/admin/components/ResetPasswordDialog.tsx`
-68. `mobile/src/admin/components/SplitButton.test.tsx`
-69. `mobile/src/admin/components/SplitButton.tsx`
-70. `mobile/src/admin/config/layoutConstants.ts`
-71. `mobile/src/admin/contexts/AdminAuthContext.tsx`
-72. `mobile/src/admin/contexts/SidebarContext.tsx`
-73. `mobile/src/admin/layout/AccountMenu.tsx`
-74. `mobile/src/admin/layout/AdminCanvasHeader.tsx`
-75. `mobile/src/admin/layout/AdminHeader.tsx`
-76. `mobile/src/admin/layout/AdminMainContent.tsx`
-77. `mobile/src/admin/layout/AdminNavItem.tsx`
-78. `mobile/src/admin/layout/AdminSidebar.tsx`
-79. `mobile/src/admin/layout/GlobalSearch.tsx`
-80. `mobile/src/admin/pages/AdminLoginPage.tsx`
-81. `mobile/src/admin/pages/DashboardPage.test.tsx`
-82. `mobile/src/admin/pages/DashboardPage.tsx`
-83. `mobile/src/admin/pages/StudentManagementPage.test.tsx`
-84. `mobile/src/admin/pages/StudentManagementPage.tsx`
-
-### Planning Files
-85. [`.plans/analysis.md`](file:///Volumes/Files/Programming/medical-system/.plans/analysis.md)
-86. [`.plans/task.md`](file:///Volumes/Files/Programming/medical-system/.plans/task.md)
+### 4. Planning Documentation
+- `.plans/task.md`
 
 ---
 
 ## Test-Driven Development (TDD) Specifications
 
-### Bug Fix 1: Draft Storage Column Definition (Category 1)
-- **Test File**: [`backend/src/test/kotlin/com/medicalsystem/backend/repository/ScaleDraftJpaRepositoryTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/repository/ScaleDraftJpaRepositoryTest.kt)
-- **Test Case**: `testSaveAndRetrieveLongJsonDraft()`: Save a `ScaleDraftEntity` with `answersJson` exceeding 65,535 bytes (simulating 377 answered questions with notes and multi-choice selections) and verify retrieval preserves the exact JSON without truncation.
+### Test Suite 1: API Client Referral Methods (`mobile/src/api/intakeApi.test.ts`)
+- **Target**: `mobile/src/api/intakeApi.ts`
+- **Test Cases**:
+  1. `getReferrals invokes GET /api/referrals with Authorization header and parses list`: Mock `fetch`, assert request path `/api/referrals`, verify bearer token is attached, and assert returned array of `ReferralDto` items.
+  2. `getReferralDetails invokes GET /api/referrals/{id}`: Call `getReferralDetails('ref-101')`, assert URL `/api/referrals/ref-101`, and assert returned `ReferralDetailsDto` matches payload.
+  3. `getReferralTracking invokes GET /api/referrals/{id}/tracking`: Call `getReferralTracking('ref-101')`, assert URL `/api/referrals/ref-101/tracking`, and verify returned `ReferralTrackingDto` contains steps and destination.
+  4. `throws descriptive Error when API returns HTTP 4xx/5xx`: Mock 403 Forbidden with `{ "error": "Access denied" }`, assert rejection with `Error('Access denied')`.
 
-### Bug Fix 2: Password Hashing & Contact Number Persistence (Category 2)
-- **Test File**: [`backend/src/test/kotlin/com/medicalsystem/backend/service/StaffRegistrationServiceTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/StaffRegistrationServiceTest.kt)
-  - **Test Case**: `registerStaff persists bcrypt hashed password`: Register a teacher/doctor with password `"Secret123"`, assert `userEntity.passwordHash != null` and `BCryptPasswordEncoder().matches("Secret123", userEntity.passwordHash)` returns `true`.
-- **Test File**: [`backend/src/test/kotlin/com/medicalsystem/backend/service/StudentImportServiceTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/StudentImportServiceTest.kt)
-  - **Test Case**: `registerNewStudent populates phone and bcrypt password from id card`: Import student with ID card `"110101200405123457"` and contact number `"13800138000"`, assert `savedUser.phone == "13800138000"` and `BCryptPasswordEncoder().matches("123457", savedUser.passwordHash)` returns `true`.
+### Test Suite 2: Referral Routing & Enricher Logic (`mobile/src/utils/referralRouting.test.ts` & `referralStatusEnricher.test.ts`)
+- **Target**: `mobile/src/utils/referralRouting.ts`, `mobile/src/utils/referralStatusEnricher.ts`
+- **Test Cases in `referralRouting.test.ts`**:
+  1. `getTargetTabForStatus routes CLOSED and AWAITING_FEEDBACK_APPROVAL to feedback tab`: Assert `getTargetTabForStatus('CLOSED') === 'feedback'`, `getTargetTabForStatus('AWAITING_FEEDBACK_APPROVAL') === 'feedback'`, and with `hasFeedback: true` returns `'feedback'`.
+  2. `getTargetTabForStatus routes operational progress statuses to tracker tab`: For statuses `AWAITING_APPROVAL`, `AWAITING_REVIEW`, `AWAITING_TRIAGE`, `WAITING_FOR_SCHEDULING`, `WAITING_FOR_APPOINTMENT`, assert result is `'tracker'`.
+  3. `getTargetTabForStatus falls back to overview tab for other statuses`: Assert `'DRAFT'`, `'RECALLED'`, or unknown status returns `'overview'`.
+- **Test Cases in `referralStatusEnricher.test.ts`**:
+  1. `enrichReferralStatus retains original status when steps are empty or null`: Pass referral with `status: 'AWAITING_TRIAGE'`, `steps: null`, assert `displayStatus === 'AWAITING_TRIAGE'`.
+  2. `enrichReferralStatus overrides to REJECTED if any step has status ISSUE`: Step with `status: 'ISSUE'`, assert `displayStatus === 'REJECTED'`.
+  3. `enrichReferralStatus maps ACTIVE step type to corresponding status`: Step with `type: 'SCHEDULING'`, `status: 'ACTIVE'`, assert `displayStatus === 'WAITING_FOR_SCHEDULING'`.
+  4. `enrichReferralStatus marks status as WAITING_FOR_APPOINTMENT or PENDING when appointment time is reached`: Step `EVALUATION`, appointmentTime in past, verify enriched displayStatus.
 
-### Bug Fix 3: Multi-Role Login & Real JWT Auth (Category 3)
-- **Test File**: [`backend/src/test/kotlin/com/medicalsystem/backend/service/UserVerificationServiceTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/UserVerificationServiceTest.kt)
-  - **Test Case**: `verifyIdentifier with phone number resolves user`: Enter registered phone `"13800138000"`, assert `result.exists == true`, `result.isAccountActive == true`.
-- **Test File**: [`backend/src/test/kotlin/com/medicalsystem/backend/controller/StudentAuthControllerTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/controller/StudentAuthControllerTest.kt)
-  - **Test Case**: `login with teacher employee number and password returns valid JWT and role TEACHER`.
-  - **Test Case**: `login with student phone and password returns valid JWT and role STUDENT`.
-  - **Test Case**: `login with email and password returns valid JWT`.
-- **Test File**: [`frontend/src/contexts/AuthContext.test.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/contexts/AuthContext.test.tsx)
-  - **Test Case**: `loginWithSession updates role and token and clears query cache`: Call `loginWithSession({ role: 'teacher', token: 'jwt-real-token' })`, verify session state reflects `teacher` and `jwt-real-token`.
-- **Test File**: [`frontend/src/components/auth/LoginOverlay.test.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/auth/LoginOverlay.test.tsx)
-  - **Test Case**: `Step 2 submit executes real login request and closes dialog on success`: Mock `POST /api/auth/login`, simulate entering password, click submit, verify login API was called with resolved identifier, and overlay closes.
+### Test Suite 3: Referral Context & ACL State (`mobile/src/contexts/ReferralContext.test.tsx`)
+- **Target**: `mobile/src/contexts/ReferralContext.tsx`
+- **Test Cases**:
+  1. `defensively filters out DRAFT and RECALLED referrals from state`: Provide mock list containing `['AWAITING_APPROVAL', 'DRAFT', 'CLOSED', 'RECALLED']`, verify `referrals` in context contains only non-draft/recalled items (count = 2).
+  2. `computes totalCount, inProgressCount, and closedCount correctly`: For `['AWAITING_TRIAGE', 'WAITING_FOR_APPOINTMENT', 'CLOSED', 'REJECTED']`, assert `totalCount === 4`, `inProgressCount === 2`, `closedCount === 2`.
+  3. `updates filter state between all, in_progress, and closed`: Verify `setFilter('in_progress')` updates `filter` value.
+  4. `tracks isScrolled state for dynamic header synchronization`: Verify `setIsScrolled(true)` updates `isScrolled`.
+  5. `refreshReferrals re-fetches from intakeApi and resets error`: Trigger refresh, assert `intakeApi.getReferrals` called.
 
-### Bug Fix 4: Bidirectional Draft Sync & Progress Recording (Category 4)
-- **Test File**: [`backend/src/test/kotlin/com/medicalsystem/backend/service/AssessmentDraftIntegrationTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/AssessmentDraftIntegrationTest.kt)
-  - **Test Case**: `recordProgress synchronizes answers to scale_drafts`: Call `PUT /api/assessments/{id}/progress`, assert `scaleDraftJpaRepository.findByStudentIdAndScaleCode(...)` contains the updated answers.
-  - **Test Case**: `getDraft falls back to assessment_assignments answersJson`: Given an assignment with `answersJson` but no `scale_drafts` record, calling `scaleDraftService.getDraft(...)` returns the answers with status `IN_PROGRESS`.
+### Test Suite 4: Referral Card Component (`mobile/src/components/referrals/ReferralCard.test.tsx`)
+- **Target**: `mobile/src/components/referrals/ReferralCard.tsx`
+- **Test Cases**:
+  1. `renders status pill, risk chip, referral type label, title, and formatted date`: Assert text for `待排诊`, `高风险`, `初次转诊`, title, and date.
+  2. `tapping card invokes onClick callback`: Simulate card click, assert `onClick` fired.
+  3. `tapping status pill invokes onStatusClick and stops click propagation`: Simulate click on status badge, verify `onStatusClick` called with status and card `onClick` not triggered twice.
 
-### Bug Fix 5: Event Publishing & Psychometric Scoring (Category 5)
-- **Test File**: [`backend/src/test/kotlin/com/medicalsystem/backend/model/AssessmentScoringEngineTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/model/AssessmentScoringEngineTest.kt)
-  - **Test Case**: `scoreSection computes real score and max for PHQ_9`: Given 9 items with answers `[2, 2, 2, 2, 2, 2, 2, 2, 2]`, score is 18 and max is 27.
-  - **Test Case**: `scoreSection computes real score and max for GAD_7`: Given 7 items with answers `[3, 3, 3, 3, 3, 3, 3]`, score is 21 and max is 21.
-  - **Test Case**: `scoreSection returns null for non-psychometric sections`: e.g., `demographics_survey` returns null and is omitted from `PsychometricTest` list.
-- **Test File**: [`backend/src/test/kotlin/com/medicalsystem/backend/service/AssessmentServiceTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/AssessmentServiceTest.kt)
-  - **Test Case**: `submitAssessment dispatches AssessmentCompletedEvent with scored psychometrics`.
-  - **Test Case**: `assignToStudent dispatches AssessmentAssignedEvent with assigned studentId and non-null assignmentId`.
-- **Test File**: [`backend/src/test/kotlin/com/medicalsystem/backend/event/AssessmentCompletedListenerTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/event/AssessmentCompletedListenerTest.kt)
-  - **Test Case**: `handleAssessmentCompleted records scored tests in studentHealthProfile`.
+### Test Suite 5: Referrals Page Component (`mobile/src/pages/ReferralsPage.test.tsx`)
+- **Target**: `mobile/src/pages/ReferralsPage.tsx`
+- **Test Cases**:
+  1. `renders loading spinner when loading is true`: Assert `<md-circular-progress>` present.
+  2. `renders error alert with retry button on failure`: Assert error message and clicking retry calls `refreshReferrals`.
+  3. `renders segmented filter chips (全部, 进行中, 已结案)`: Assert presence of all three filter options.
+  4. `filters list correctly when toggling filter chips`: Click `进行中` $\rightarrow$ shows only in-progress cards; click `已结案` $\rightarrow$ shows only closed cards.
+  5. `displays appropriate empty states when list is empty`:
+     - Empty filter `all` $\rightarrow$ "暂无转诊记录"
+     - Empty filter `in_progress` $\rightarrow$ "暂无进行中的转诊"
+     - Empty filter `closed` $\rightarrow$ "暂无已结案转诊"
+  6. `tapping a card opens ReferralDetailsFullScreen`: Click card, verify fullscreen modal renders.
+  7. `tapping status pill on card opens ReferralDetailsFullScreen directly to target tab`: Click status pill on card in `CLOSED` status, verify fullscreen details opens with `activeTab === 'feedback'`.
 
-### Bug Fix 6: Risk Status Preservation & Student Mapping (Category 6)
-- **Test File**: [`backend/src/test/kotlin/com/medicalsystem/backend/mapper/StudentMapperTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/mapper/StudentMapperTest.kt)
-  - **Test Case**: `toModel preserves profile riskStatus HIGH when healthProfile has HIGH`: Assert `student.riskStatus == RiskStatus.HIGH`.
-  - **Test Case**: `toModel safely handles non-standard contact numbers using MobileNumber fromOrNull without throwing exception`.
-- **Test File**: [`backend/src/test/kotlin/com/medicalsystem/backend/service/StudentRiskEvaluatorTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/StudentRiskEvaluatorTest.kt)
-  - **Test Case**: Verify evaluator handles clinical risk scores from tests.
+### Test Suite 6: Fullscreen Details View & Tabs (`mobile/src/components/referrals/ReferralDetailsFullScreen.test.tsx`)
+- **Target**: `mobile/src/components/referrals/ReferralDetailsFullScreen.tsx`
+- **Test Cases**:
+  1. `renders top bar with back button, student name, clickable status badge, and risk pill`: Assert header elements. Clicking back button calls `onClose()`.
+  2. `switching secondary tabs renders Overview, Tracker, and Feedback content`: Click tab buttons, verify corresponding tab component is mounted.
+  3. `clicking header status badge routes to target tab`: In progress referral, clicking status badge switches active tab to `tracker`; with closed/feedback status, switches active tab to `feedback`.
+  4. `ReferralOverviewTab renders 3 triage metrics, 3 severe risk indicators, and quote block`: Assert `是否初诊`, `是否服药`, `心理治疗`, `自杀意念`, `自杀企图`, `自残行为`, and full description quote.
+  5. `ReferralTrackerTab renders 6 timeline steps, destination card, and appointment card`: Assert timeline steps with statuses (`COMPLETED`, `ACTIVE`, `PENDING`), hospital, department, doctor, and appointment time.
+  6. `ReferralFeedbackTab renders doctor consultation summary and follow-up plan`: Assert doctor summary, follow-up plan, and doctor attachments.
 
-### Bug Fix 7: Demographics Projection & Minorities Fallback (Category 7)
-- **Test File**: [`backend/src/test/kotlin/com/medicalsystem/backend/service/DemographicsProjectorTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/DemographicsProjectorTest.kt)
-  - **Test Case**: `projectDemographics maps 少数民族 to 少数民族 when present or 其他 as fallback, not 汉族`.
-
-### Bug Fix 8: Dashboard Pending Counts & Notification UI (Category 8)
-- **Test File**: [`backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt)
-  - **Test Case**: `getStudentDashboard returns actual pending assessment count from repository`.
-- **Test File**: [`frontend/src/components/notifications/NotificationsView.test.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/notifications/NotificationsView.test.tsx)
-  - **Test Case**: Renders Chinese card for `ASSESSMENT_HIGH_RISK_ALERT_HC`, `ASSESSMENT_ASSIGNED_STUDENT`, `ASSESSMENT_COMPLETED_TEACHER`, and triggers view student callback on click.
-
-### Bug Fix 9: Desktop Polymorphic Questionnaire Player (Category 9)
-- **Test File**: [`frontend/src/components/assessments/AssessmentFlow.test.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/assessments/AssessmentFlow.test.tsx)
-  - **Test Case**: Renders `<md-outlined-text-field>` on `text` questions and records typed string answers.
-  - **Test Case**: Renders `<md-outlined-text-field type="number">` on `number` questions and supports `zeroOptionLabel` (e.g., "从未喝过酒").
-  - **Test Case**: Renders `<md-slider>` on `slider` questions and records numeric value.
-  - **Test Case**: Renders `<md-checkbox>` on `multiple_choice` questions and allows multi-selection.
-  - **Test Case**: Renders supplementary text input when `opt.hasTextInput` is true.
-
-### Bug Fix 10: Clean Mobile Intake App (Category 10)
-- **Test File**: [`mobile/src/App.test.tsx`](file:///Volumes/Files/Programming/medical-system/mobile/src/App.test.tsx)
-  - **Test Case**: Mounts and verifies `StudentApp` displays tasks and navigation tabs without any `/admin` dependencies or bundle references.
+### Test Suite 7: Student App Integration (`mobile/src/StudentApp.test.tsx`)
+- **Target**: `mobile/src/StudentApp.tsx`
+- **Test Cases**:
+  1. `renders 3-destination bottom navigation bar with 问卷测评, 就医转诊, and 个人中心`: Assert 3 `<md-navigation-tab>` elements with correct labels and icons (`assignment`, `medical_services`, `account_circle`).
+  2. `switches between 问卷测评, 就医转诊, and 个人中心 tabs`: Click tab 1, assert `ReferralsPage` renders; click tab 0, assert `AssessmentsPage` renders; click tab 2, assert `ProfilePage` renders.
+  3. `synchronizes top bar headline dynamically based on active tab`:
+     - On Tab 0: shows assessment title / task counts.
+     - On Tab 1: shows "中南大学 · 医疗转诊" and referral headline ("就医转诊服务" or "还有 X 项转诊进行中").
+  4. `scroll-triggered header filter displays REFERRAL_FILTER_ITEMS when scrolled on Tab 1`: When `isScrolled === true` on Tab 1, assert header displays segmented button with `全部`, `进行中`, `已结案`.
 
 ---
 
-## Step-by-Step Execution Order
+## Step-by-Step Implementation Roadmap
 
-### Phase 1: Database Persistence & Entity Column Definition
-1. **Update ScaleDraftEntity column definition** ([`ScaleDraftEntity.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/entity/ScaleDraftEntity.kt))
-   - Action: Replace `@Lob` with `@Column(name = "answers_json", nullable = false, columnDefinition = "LONGTEXT")`.
-   - Verification: Run [`ScaleDraftJpaRepositoryTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/repository/ScaleDraftJpaRepositoryTest.kt).
-2. **Add countByStudentIdAndStatus query** ([`AssessmentAssignmentJpaRepository.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentAssignmentJpaRepository.kt))
-   - Action: Add `fun countByStudentIdAndStatus(studentId: Long, status: AssessmentStatus): Long`.
+### Phase 1: API Client & DTO Contracts (Files: 2)
+1. **Write failing unit tests for referral API methods**
+   - File: `mobile/src/api/intakeApi.test.ts`
+   - Action: Define test cases asserting `getReferrals`, `getReferralDetails`, `getReferralTracking` endpoints, Authorization header attachment, and error handling.
+   - Verification: Run `npx vitest run src/api/intakeApi.test.ts` (fails: methods not defined).
+2. **Extend intakeApi with referral DTOs & endpoints**
+   - File: `mobile/src/api/intakeApi.ts`
+   - Action: Export `ReferralType`, `ReferralStatus`, `RiskStatus`, `ReferredByDto`, `ReferralDto`, `ReferralStudentDemographicsDto`, `TriageInfoDto`, `RiskAssessmentDto`, `AttachmentDto`, `FeedbackDto`, `ReferralDetailsDto`, `DestinationDto`, `ReferralStepDto`, `ReferralTrackingDto`. Implement `intakeApi.getReferrals()`, `getReferralDetails(id)`, `getReferralTracking(id)`.
+   - Verification: Run `npx vitest run src/api/intakeApi.test.ts` (passes green).
 
-### Phase 2: Domain Risk Models & Demographics Projection
-3. **Preserve riskStatus in StudentHealthProfile & Mappers** ([`StudentHealthProfile.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/model/StudentHealthProfile.kt), [`StudentHealthProfileMapper.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/mapper/StudentHealthProfileMapper.kt), [`StudentMapper.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/mapper/StudentMapper.kt))
-   - Action: In `StudentHealthProfile`, ensure `var riskStatus: RiskStatus = RiskStatus.LOW`. In `StudentHealthProfileMapper`, map `riskStatus` bi-directionally. In `StudentMapper.toModel`, map `riskStatus = profile?.riskStatus ?: RiskStatus.LOW` and use `MobileNumber.fromOrNull(num)`.
-   - Verification: Create and run [`StudentMapperTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/mapper/StudentMapperTest.kt).
-4. **Fix Minorities Ethnicity Resolution** ([`DemographicsProjector.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/DemographicsProjector.kt))
-   - Action: When resolving raw ethnicity choice `"少数民族"`, search for `"少数民族"`, and if not found, fall back to `"其他"`.
-   - Verification: Create and run [`DemographicsProjectorTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/DemographicsProjectorTest.kt).
+### Phase 2: Design Tokens, Utilities & Routing Logic (Files: 4)
+3. **Define referral constants and MD3 design tokens**
+   - File: `mobile/src/utils/referralConstants.ts`
+   - Action: Export `STATUS_LABELS`, `STATUS_STYLES`, `RISK_LEVEL_LABELS`, `RISK_LEVEL_STYLES`, `REFERRAL_TYPE_LABELS`, step icons and timeline labels.
+4. **Write failing tests for referral routing & enricher**
+   - Files: `mobile/src/utils/referralRouting.test.ts`, `mobile/src/utils/referralStatusEnricher.test.ts`
+   - Action: Define tests for status-based tab routing (`getTargetTabForStatus`) and status enrichment (`enrichReferralStatus`).
+   - Verification: Run vitest (fails).
+5. **Implement referral routing & enricher**
+   - Files: `mobile/src/utils/referralRouting.ts`, `mobile/src/utils/referralStatusEnricher.ts`
+   - Action: Implement `getTargetTabForStatus` routing rules and `enrichReferralStatus` step derivation logic.
+   - Verification: Run vitest (passes green).
 
-### Phase 3: Credential Population & Data Initializer
-5. **Populate phone and BCrypt password in StudentImportService** ([`StudentImportService.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/StudentImportService.kt))
-   - Action: In `registerNewStudent`, set `userEntity.phone = row.contactNumber` and `userEntity.passwordHash = passwordEncoder.encode(last6DigitsOfIdCard)`.
-   - Verification: Run [`StudentImportServiceTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/StudentImportServiceTest.kt).
-6. **Populate passwordHash in StaffRegistrationService** ([`StaffRegistrationService.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/StaffRegistrationService.kt))
-   - Action: Inject `passwordEncoder: PasswordEncoder` and set `userEntity.passwordHash = passwordEncoder.encode(request.password)`.
-   - Verification: Run [`StaffRegistrationServiceTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/StaffRegistrationServiceTest.kt).
-7. **Upgrade DataInitializer Seeds** ([`DataInitializer.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/config/DataInitializer.kt))
-   - Action: Seed `"少数民族"` into `standardEthnicities`; populate `phone` and BCrypt `passwordHash` (last 6 of ID card or `"123456"`) for students u1..u10; populate `passwordHash` for all staff; change seeded assignments from `"MENTAL_HEALTH_ASSESSMENT"` to `"comprehensive_student_intake_survey"`.
+### Phase 3: Global State & ACL Context (Files: 2)
+6. **Write failing tests for ReferralContext**
+   - File: `mobile/src/contexts/ReferralContext.test.tsx`
+   - Action: Define tests for fetching, defensive filtering of `DRAFT` and `RECALLED`, status counters (`totalCount`, `inProgressCount`, `closedCount`), filter switching, and scroll tracking.
+   - Verification: Run vitest (fails).
+7. **Implement ReferralContext and Provider**
+   - File: `mobile/src/contexts/ReferralContext.tsx`
+   - Action: Create `ReferralContext`, `ReferralProvider`, and `useReferrals` hook. Integrate with `intakeApi.getReferrals()`, enforce defensive ACL filtering, compute metrics, and manage scroll/filter state.
+   - Verification: Run `npx vitest run src/contexts/ReferralContext.test.tsx` (passes green).
 
-### Phase 4: Multi-Role Authentication & Phone Verification
-8. **Extend Auth DTOs** ([`AuthDtos.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/dto/AuthDtos.kt))
-   - Action: Add `role: UserRole? = null`, `userId: Long? = null`, `email: String? = null`, `name: String? = null` to `AuthResponse`.
-9. **Implement Multi-Role Identifier Resolution in AuthService** ([`AuthService.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/AuthService.kt))
-   - Action: In `login(request)`, resolve user by: studentNumber, teacher employeeNumber, doctor employeeNumber, head counsellor employeeNumber, trial admin employeeNumber, email, phone, or `"SYS-ADMIN"`. Match password using `passwordEncoder`. Return user info and role.
-10. **Add Phone Lookup in UserVerificationService** ([`UserVerificationService.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/UserVerificationService.kt))
-    - Action: In `resolveByIdNumber`, check `userJpaRepository.findByPhone(idNumber)`.
-    - Verification: Run [`UserVerificationServiceTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/UserVerificationServiceTest.kt) and [`StudentAuthControllerTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/controller/StudentAuthControllerTest.kt).
+### Phase 4: Referral Card & Tab Components (Files: 8)
+8. **Write failing tests for ReferralCard**
+   - File: `mobile/src/components/referrals/ReferralCard.test.tsx`
+   - Action: Test rendering of status pill, risk chip, type label, title, initiator, date, and click propagation.
+   - Verification: Run vitest (fails).
+9. **Implement ReferralCard component**
+   - File: `mobile/src/components/referrals/ReferralCard.tsx`
+   - Action: Build elevated MD3 card adhering to design tokens, with clickable status badge and chevron right drilldown affordance.
+   - Verification: Run `ReferralCard.test.tsx` (passes green).
+10. **Implement Tab Components**
+    - `mobile/src/components/referrals/ReferralOverviewTab.tsx`: 3-column triage metrics, 3-column severe risk grid, full description quote block, attachments.
+    - `mobile/src/components/referrals/ReferralTrackerTab.tsx`: 6-step timeline tracker with icons/states, active route destination card, and appointment card.
+    - `mobile/src/components/referrals/ReferralFeedbackTab.tsx`: Doctor clinical summary, follow-up plan card, doctor attachments.
+11. **Write failing tests for ReferralDetailsFullScreen**
+    - File: `mobile/src/components/referrals/ReferralDetailsFullScreen.test.tsx`
+    - Action: Test full modal rendering, back navigation, tab switching, clickable header status pill routing, and tab content hydration.
+    - Verification: Run vitest (fails).
+12. **Implement ReferralDetailsFullScreen**
+    - File: `mobile/src/components/referrals/ReferralDetailsFullScreen.tsx`
+    - Action: Build fullscreen modal takeover with sticky top bar, clickable status pill, secondary tabs (`转诊概览`, `转诊进度`, `诊疗反馈`), query fetching for details and tracking, and status enrichment.
+    - Verification: Run `ReferralDetailsFullScreen.test.tsx` (passes green).
 
-### Phase 5: Draft Sync, Event Publishing & Scoring Engine
-11. **Sync recordProgress with ScaleDraftService** ([`AssessmentService.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentService.kt))
-    - Action: In `recordProgress`, call `scaleDraftService?.saveDraft(assignment.studentId, assignment.batteryCode.value, SaveDraftRequest(answers = request.answers, updatedAt = System.currentTimeMillis()))`.
-12. **Implement Fallback in ScaleDraftService and ScaleController** ([`ScaleDraftService.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/ScaleDraftService.kt), [`ScaleController.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/controller/ScaleController.kt))
-    - Action: When `scaleDraftJpaRepository` has no draft, deserialize `assessment_assignments.answers_json` if present. Count non-empty answers consistently.
-    - Verification: Run [`AssessmentDraftIntegrationTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/AssessmentDraftIntegrationTest.kt) and [`ScaleControllerIntegrationTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/controller/ScaleControllerIntegrationTest.kt).
-13. **Implement Real Psychometric Scoring in AssessmentScoringEngine** ([`AssessmentScoringEngine.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/model/AssessmentScoringEngine.kt))
-    - Action: Calculate sum of points and question maxima for clinical sections (`PHQ_9`, `GAD_7`, `SCL_90`, `PSQI`, etc.). Return null for non-clinical sections (such as demographics, life events).
-    - Verification: Run [`AssessmentScoringEngineTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/model/AssessmentScoringEngineTest.kt).
-14. **Publish Domain Events on Assignment & Submission** ([`AssessmentService.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentService.kt), [`AssessmentAssignmentService.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/AssessmentAssignmentService.kt), [`AssessmentAssignmentRepositoryAdapter.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/repository/AssessmentAssignmentRepositoryAdapter.kt))
-    - Action: In `AssessmentAssignmentService` and `AssessmentService`, initialize and publish `AssessmentAssignedEvent` after the aggregate is saved with a non-null id. In `AssessmentService.submitAssessment`, publish `AssessmentCompletedEvent` and pass only clinical tests to `assignment.complete()`. Preserve/dispatch registered events in repository adapter.
-    - Verification: Run [`AssessmentServiceTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/AssessmentServiceTest.kt) and [`AssessmentCompletedListenerTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/event/AssessmentCompletedListenerTest.kt).
+### Phase 5: Referrals Page & Root Tab Integration (Files: 2)
+13. **Write failing tests for ReferralsPage**
+    - File: `mobile/src/pages/ReferralsPage.test.tsx`
+    - Action: Test segmented filter chips, card list rendering, loading and error states, empty states, and card/status pill click interactions.
+    - Verification: Run vitest (fails).
+14. **Implement ReferralsPage**
+    - File: `mobile/src/pages/ReferralsPage.tsx`
+    - Action: Build root page consuming `ReferralContext`, rendering segmented filter (`全部`, `进行中`, `已结案`), card list, empty states, and fullscreen modal trigger.
+    - Verification: Run `ReferralsPage.test.tsx` (passes green).
 
-### Phase 6: Dashboard Services & Desktop Authorization Wiring
-15. **Compute Real Student Assessments Count in DashboardService** ([`DashboardService.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt))
-    - Action: In `getStudentDashboard`, set `assessmentsCount = assessmentAssignmentRepository.countByStudentIdAndStatus(user.id, AssessmentStatus.PENDING)`.
-    - Verification: Run [`DashboardServiceTest.kt`](file:///Volumes/Files/Programming/medical-system/backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt).
-16. **Wire authApi, AuthContext and LoginOverlay** ([`frontend/src/api/auth.ts`](file:///Volumes/Files/Programming/medical-system/frontend/src/api/auth.ts), [`frontend/src/contexts/AuthContext.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/contexts/AuthContext.tsx), [`frontend/src/components/auth/LoginOverlay.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/auth/LoginOverlay.tsx))
-    - Action: Add `authApi.login(identifier, password)`. Add `loginWithSession(session: UserSession)` to `AuthContext`. In `LoginOverlay.handleStep2Submit`, call `authApi.login`, convert returned role to lowercase, update session, and close overlay.
-    - Verification: Run [`LoginOverlay.test.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/auth/LoginOverlay.test.tsx) and [`AuthContext.test.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/contexts/AuthContext.test.tsx).
-17. **Fix Token Headers & Query Keys in RecordsView and StudentPage** ([`frontend/src/components/records/RecordsView.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/records/RecordsView.tsx), [`frontend/src/pages/StudentPage.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/pages/StudentPage.tsx))
-    - Action: In `RecordsView`, replace `'Bearer student_token_chen'` with `session.token` from `useAuth()`, and add `session.token` to `queryKey`. In `StudentPage`, add `session?.token` to `queryKey` for `/api/dashboard/student`.
-18. **Support Assessment Notifications in NotificationsView** ([`frontend/src/components/notifications/NotificationsView.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/notifications/NotificationsView.tsx))
-    - Action: Add Chinese translation templates and title/icon mappings for `ASSESSMENT_HIGH_RISK_ALERT_HC`, `ASSESSMENT_ASSIGNED_STUDENT`, `ASSESSMENT_COMPLETED_TEACHER`; handle `VIEW_STUDENT` action button.
-    - Verification: Create and run [`NotificationsView.test.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/notifications/NotificationsView.test.tsx).
-
-### Phase 7: Mobile Admin Pruning
-19. **Delete mobile/src/admin/* directory** (Files 51–84)
-    - Action: Remove all 34 files in `mobile/src/admin/`.
-20. **Simplify mobile/src/App.tsx** ([`mobile/src/App.tsx`](file:///Volumes/Files/Programming/medical-system/mobile/src/App.tsx))
-    - Action: Remove lazy load of `AdminApp` and `isAdminRoute` check. Directly return `<StudentApp />`.
-    - Verification: Run `npm test` in `mobile/` (`mobile/src/App.test.tsx`).
-
-### Phase 8: Desktop Polymorphic Questionnaire Player Upgrade
-21. **Extend Types & AssessmentData** ([`frontend/src/types/index.ts`](file:///Volumes/Files/Programming/medical-system/frontend/src/types/index.ts), [`frontend/src/components/assessments/AssessmentData.ts`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/assessments/AssessmentData.ts))
-    - Action: Add `type`, `min`, `max`, `step`, `minLabel`, `maxLabel`, `zeroOptionLabel`, `placeholder`, `field` to question interfaces, and `hasTextInput`, `textInputLabel`, `textInputPlaceholder` to options interfaces. Update `answers` state to accept `Record<string, any>`.
-22. **Upgrade AssessmentFlow Component Rendering** ([`frontend/src/components/assessments/AssessmentFlow.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/assessments/AssessmentFlow.tsx))
-    - Action: Render polymorphic question types:
-      - `single_choice`: Options with radio icons and supplementary text field when `opt.hasTextInput`.
-      - `multiple_choice`: Options with `<md-checkbox>` and supplementary text input.
-      - `slider`: `<md-slider>` with score preview card and boundary labels.
-      - `number`: `<md-outlined-text-field type="number">` with `zeroOptionLabel` toggle.
-      - `text`: `<md-outlined-text-field type="text">`.
-      - `date`: Date field with year/month/day selectors.
-    - Verification: Run [`AssessmentFlow.test.tsx`](file:///Volumes/Files/Programming/medical-system/frontend/src/components/assessments/AssessmentFlow.test.tsx).
-23. **Align MSW Mock Catalog with Comprehensive Survey** ([`frontend/src/mocks/data/assessments.ts`](file:///Volumes/Files/Programming/medical-system/frontend/src/mocks/data/assessments.ts))
-    - Action: Align mock catalog battery codes to `comprehensive_student_intake_survey`.
+### Phase 6: StudentApp Dynamic Navigation & Header Sync (Files: 2)
+15. **Update StudentApp.test.tsx with failing integration tests**
+    - File: `mobile/src/StudentApp.test.tsx`
+    - Action: Add test cases verifying 3 bottom navigation tabs, switching to Tab 1 (`就医转诊`), header headline synchronization for referrals, and scroll-triggered `REFERRAL_FILTER_ITEMS` header filter.
+    - Verification: Run vitest (fails).
+16. **Update StudentApp.tsx**
+    - File: `mobile/src/StudentApp.tsx`
+    - Action:
+      - Wrap content in `ReferralProvider`.
+      - Expand `<md-navigation-bar>` to 3 tabs: 0 (`问卷测评`, `assignment`), 1 (`就医转诊`, `medical_services`), 2 (`个人中心`, `account_circle`).
+      - In main body: render `ReferralsPage` when `activeTab === 1`.
+      - Add scroll listener handler for `activeTab === 1` that updates `ReferralContext.setIsScrolled`.
+      - In top header: conditionally animate segmented filter when scrolled (`ASSESSMENT_FILTER_ITEMS` on Tab 0, `REFERRAL_FILTER_ITEMS` on Tab 1), and dynamic headline when not scrolled.
+    - Verification: Run `StudentApp.test.tsx` (passes green).
 
 ---
 
 ## Acceptance Criteria & Verification Gates
 
-### Backend Gates
-- [ ] `./mvnw clean test` passes 100% of unit and integration tests across all services, repositories, and controllers.
-- [ ] `ScaleDraftJpaRepositoryTest` confirms `answersJson` > 64KB persists without MySQL truncation error.
-- [ ] `StudentAuthControllerTest` confirms student, teacher, doctor, head counsellor, and trial admin accounts can authenticate with identifier + password.
-- [ ] `AssessmentDraftIntegrationTest` confirms progress updates sync bi-directionally to drafts and fallback to assignments.
-- [ ] `AssessmentScoringEngineTest` confirms subscale scores and maxima match clinical thresholds for PHQ-9 and GAD-7.
-- [ ] `StudentMapperTest` confirms `profile.riskStatus` (`HIGH`, `MEDIUM`) is preserved and malformed phone numbers do not throw 500 exceptions.
-- [ ] `DemographicsProjectorTest` confirms `"少数民族"` resolves without falling back to `"汉族"`.
-- [ ] `DashboardServiceTest` confirms student metrics reflect real pending assessment counts.
-
-### Frontend Gates
-- [ ] `cd frontend && npm run lint` (`tsc --noEmit`) passes with zero type errors.
-- [ ] `cd frontend && npm run test` passes all Vitest unit and component tests.
-- [ ] `LoginOverlay` Step 2 authenticates against real backend endpoint and updates active user session.
-- [ ] `AssessmentFlow` successfully renders `text`, `number`, `slider`, `date`, `single_choice`, `multiple_choice`, and handles `zeroOptionLabel` and `hasTextInput` using Material Web components.
-- [ ] `RecordsView` passes real `session.token` in Authorization header and scopes React Query cache to `session.token`.
-- [ ] `NotificationsView` formats all assessment-related message codes in clear Chinese and provides working action triggers.
-- [ ] `cd frontend && npm run build` produces a production build without bundling errors.
-
-### Mobile Gates
-- [ ] `mobile/src/admin/` is completely removed.
-- [ ] `cd mobile && npm run lint` passes with zero type errors.
-- [ ] `cd mobile && npm run test` passes all Vitest test suites.
-- [ ] `cd mobile && npm run build` produces a production build of the student intake app without admin dependencies.
+### Quality Gates
+- [ ] `cd mobile && npm run lint` (`tsc --noEmit`) passes with zero type errors.
+- [ ] `cd mobile && npm run test` passes 100% of unit, component, and integration tests across all suites:
+  - `src/api/intakeApi.test.ts`
+  - `src/utils/referralRouting.test.ts`
+  - `src/utils/referralStatusEnricher.test.ts`
+  - `src/contexts/ReferralContext.test.tsx`
+  - `src/components/referrals/ReferralCard.test.tsx`
+  - `src/components/referrals/ReferralDetailsFullScreen.test.tsx`
+  - `src/pages/ReferralsPage.test.tsx`
+  - `src/StudentApp.test.tsx`
+- [ ] `cd mobile && npm run build` completes cleanly without bundling errors or missing dependencies.
+- [ ] Read-only bounded context invariant verified: no student mutation buttons or draft exposures.

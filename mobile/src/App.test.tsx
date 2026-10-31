@@ -179,10 +179,10 @@ describe('App Top Bar & Navigation', () => {
       expect(screen.getByRole('heading', { level: 1, name: '还有 2 项任务待完成' })).toBeDefined();
     });
 
-    // Switch to Tab 1 (个人中心)
+    // Switch to Tab 2 (个人中心)
     const navTabs = container.querySelectorAll('md-navigation-tab');
-    expect(navTabs.length).toBe(2);
-    const profileTab = navTabs[1];
+    expect(navTabs.length).toBe(3);
+    const profileTab = navTabs[2];
     fireEvent.click(profileTab);
 
     const header = container.querySelector('header');
@@ -204,7 +204,7 @@ describe('App Top Bar & Navigation', () => {
     });
 
     const navTabs = container.querySelectorAll('md-navigation-tab');
-    expect(navTabs.length).toBe(2);
+    expect(navTabs.length).toBe(3);
 
     navTabs.forEach((tab) => {
       const activeIcon = tab.querySelector('md-icon[slot="active-icon"]');
