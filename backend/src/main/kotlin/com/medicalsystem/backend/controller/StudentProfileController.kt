@@ -25,7 +25,8 @@ class StudentProfileController(
     private val studentJpaRepository: StudentJpaRepository,
     private val userJpaRepository: UserJpaRepository,
     private val assignmentJpaRepository: AssessmentAssignmentJpaRepository,
-    private val studentHealthProfileJpaRepository: StudentHealthProfileJpaRepository
+    private val studentHealthProfileJpaRepository: StudentHealthProfileJpaRepository,
+    private val studentRepository: com.medicalsystem.backend.repository.StudentRepository
 ) {
 
     data class UpdateHealthProfileDto(
@@ -43,8 +44,10 @@ class StudentProfileController(
         if (currentUser.role !in listOf(UserRole.DOCTOR, UserRole.HEAD_COUNSELLOR, UserRole.SYSTEM_ADMIN)) {
             throw ForbiddenException("Only doctors and head counsellors can update clinical diagnosis")
         }
-        if (!studentJpaRepository.existsById(id)) {
-            throw NotFoundException("Student not found for id $id")
+        // Reuse the same scoped policy as student detail reads. Do not reveal
+        // whether an out-of-scope student exists, or touch their clinical data.
+        if (studentRepository.findByIdAndVisibleTo(id, currentUser).isEmpty) {
+            throw ForbiddenException("Student is not visible to this user")
         }
         val profile = studentHealthProfileJpaRepository.findByStudentId(id).orElseGet {
             com.medicalsystem.backend.entity.StudentHealthProfileEntity(studentId = id, riskStatus = RiskStatus.LOW)

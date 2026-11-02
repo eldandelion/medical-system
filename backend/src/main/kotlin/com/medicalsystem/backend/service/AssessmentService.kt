@@ -12,7 +12,6 @@ import com.medicalsystem.backend.repository.AssessmentCohortSpecification
 import com.medicalsystem.backend.repository.StudentRepository
 import com.medicalsystem.backend.repository.UserRepository
 import org.springframework.stereotype.Service
-import org.slf4j.LoggerFactory
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 import java.time.LocalDateTime
@@ -28,13 +27,10 @@ class AssessmentService(
     private val dispatchRepository: com.medicalsystem.backend.repository.AssessmentDispatchRepository,
     private val clock: Clock,
     private val scaleDraftService: ScaleDraftService? = null,
-    private val studentJpaRepository: com.medicalsystem.backend.repository.StudentJpaRepository? = null,
-    private val demographicsProjector: DemographicsProjector? = null,
     private val clinicalRiskEvaluator: ClinicalRiskEvaluator? = null,
-    private val domainEventPublisher: com.medicalsystem.backend.event.DomainEventPublisher? = null
+    private val domainEventPublisher: com.medicalsystem.backend.event.DomainEventPublisher? = null,
+    private val demographicsProjectionService: DemographicsProjectionService? = null
 ) {
-    private val logger = LoggerFactory.getLogger(AssessmentService::class.java)
-
     @Transactional(readOnly = true)
     fun getAssessmentsForUser(user: User): List<AssessmentListItemDto> {
         val assignments = when (user.role) {
@@ -276,15 +272,9 @@ class AssessmentService(
         // 1. Purge draft
         scaleDraftService?.purgeDraft(assignment.studentId, assignment.batteryCode.value)
 
-        // 2. Project demographics (best-effort: a uniqueness race or stale answers must not fail the submission)
-        try {
-            studentJpaRepository?.findById(assignment.studentId)?.ifPresent { studentEntity ->
-                demographicsProjector?.projectDemographics(studentEntity, answersMap)
-                studentJpaRepository.save(studentEntity)
-            }
-        } catch (e: Exception) {
-            logger.warn("Demographics projection failed for student {}: {}", assignment.studentId, e.message)
-        }
+        // 2. Optional projection must not mutate managed entities in this transaction.
+        // The separate service waits for commit, then reloads in REQUIRES_NEW.
+        demographicsProjectionService?.afterSubmission(assignment.studentId, answersMap)
 
         // 3. Clinical Risk Evaluation (runs before event publishing so AFTER_COMMIT listeners see updated riskStatus)
         val riskResult = clinicalRiskEvaluator?.evaluateRisk(assignment.studentId, answersMap, completedTests)

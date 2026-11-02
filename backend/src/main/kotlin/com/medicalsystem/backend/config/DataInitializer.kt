@@ -15,7 +15,9 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Configuration
-class DataInitializer {
+class DataInitializer(
+    private val environment: org.springframework.core.env.Environment
+) {
 
     @Bean
     fun initData(
@@ -39,7 +41,8 @@ class DataInitializer {
         assessmentAssignmentRepository: AssessmentAssignmentJpaRepository,
         jdbcTemplate: JdbcTemplate
     ) = CommandLineRunner {
-        val seedEnabled = System.getenv("SEED_DEMO_DATA")?.equals("true", ignoreCase = true) ?: true
+        // Explicit opt-in only: this runner deletes existing application data.
+        val seedEnabled = environment.getProperty("SEED_DEMO_DATA")?.equals("true", ignoreCase = true) == true
         if (!seedEnabled) {
             return@CommandLineRunner
         }

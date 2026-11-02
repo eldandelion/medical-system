@@ -48,7 +48,8 @@ never point it at production or accounts containing real health information.
 
 - The suite assumes the seeded demo dataset (accounts above, hospital +
   trial admin + doctor). After a backend restart the seeder recreates it;
-  if the seeder is disabled (`SEED_DEMO_DATA=false`) the accounts may not
+  the seeder is disabled by default; unless explicitly enabled with
+  `SEED_DEMO_DATA=true` on a disposable demo database, the accounts may not
   exist and S1 will fail — that is a data problem, not a product bug.
 - S6 assigns whatever doctor `/api/doctors` lists first; if that doctor
   lacks a department profile the backend rejects assignment and the step is
