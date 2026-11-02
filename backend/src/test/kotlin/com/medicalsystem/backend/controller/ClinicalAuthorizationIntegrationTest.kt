@@ -19,6 +19,21 @@ class ClinicalAuthorizationIntegrationTest {
     @Autowired private lateinit var profiles: StudentHealthProfileJpaRepository
 
     @Test
+    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    fun `repeated profile updates work without an enclosing test transaction`() {
+        val assignment = org.springframework.transaction.support.TransactionTemplate(transactionManager).execute {
+            val referral = referrals.findAll().first { it.destination?.doctor != null }
+            Pair(referral.studentId, referral.destination!!.doctor!!.userId)
+        }!!
+        val doctor = UserMapper().toModel(users.findById(assignment.second).orElseThrow())
+        controller.updateHealthProfile(assignment.first, StudentProfileController.UpdateHealthProfileDto("synthetic first update"), doctor)
+        controller.updateHealthProfile(assignment.first, StudentProfileController.UpdateHealthProfileDto("synthetic second update"), doctor)
+        assertEquals("synthetic second update", profiles.findByStudentId(assignment.first).orElseThrow().scidDiagnosis)
+    }
+
+    @Autowired private lateinit var transactionManager: org.springframework.transaction.PlatformTransactionManager
+
+    @Test
     fun `assigned doctor can update while unrelated doctor cannot alter same profile`() {
         val referral = referrals.findAll().first { it.destination?.doctor != null }
         val doctorId = referral.destination!!.doctor!!.userId

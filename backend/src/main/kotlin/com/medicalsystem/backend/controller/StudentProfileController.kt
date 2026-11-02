@@ -34,6 +34,7 @@ class StudentProfileController(
         val riskStatus: RiskStatus? = null
     )
 
+    @org.springframework.transaction.annotation.Transactional
     @org.springframework.web.bind.annotation.PutMapping("/{id}/health-profile")
     fun updateHealthProfile(
         @org.springframework.web.bind.annotation.PathVariable id: Long,

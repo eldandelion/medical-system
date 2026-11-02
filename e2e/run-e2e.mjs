@@ -31,6 +31,7 @@ const ACCOUNTS = {
   teacher: { identifier: 'EMP-00001', password: '123456' },
   hc: { identifier: 'HC-00001', password: '123456' },
   doctor: { identifier: 'DOC-00001', password: '123456' },
+  unrelatedDoctor: { identifier: 'DOC-00002', password: '123456' },
   admin: { identifier: 'TA-00001', password: '123456' },
 };
 
@@ -311,6 +312,10 @@ scenarios.push(['S7 doctor diagnosis write + propagation', async () => {
   const diagnosis = `E2E诊断 ${new Date().toISOString()}`;
   const put = await req(T.doctor, `/api/students/${STUDENTS.high.id}/health-profile`, { method: 'PUT', body: { scidDiagnosis: diagnosis } });
   check('doctor saves diagnosis (200)', put.status === 200, `${put.status}`);
+  const denied = await req(T.unrelatedDoctor, `/api/students/${STUDENTS.high.id}/health-profile`, {
+    method: 'PUT', body: { scidDiagnosis: 'Synthetic unauthorized overwrite' },
+  });
+  check('unrelated doctor diagnosis write denied (403)', denied.status === 403);
 
   const tok = await login(STUDENTS.high.number, STUDENTS.high.password);
   const det = await req(tok, `/api/referrals/${highRiskReferralId}`);
