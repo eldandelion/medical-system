@@ -18,7 +18,8 @@ class ReferralController(
 ) {
     @GetMapping
     fun fetchActiveReferrals(@CurrentUser user: User?): List<ReferralDto> {
-        return referralService.fetchActiveReferrals(user)
+        val currentUser = user ?: throw ForbiddenException("Authorized user not found")
+        return referralService.fetchActiveReferrals(currentUser)
     }
 
     @GetMapping("/{id}")

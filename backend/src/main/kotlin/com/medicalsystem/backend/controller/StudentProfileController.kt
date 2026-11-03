@@ -11,6 +11,7 @@ import com.medicalsystem.backend.repository.StudentJpaRepository
 import com.medicalsystem.backend.repository.UserJpaRepository
 import com.medicalsystem.backend.security.CurrentUser
 import org.springframework.http.ResponseEntity
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -23,6 +24,7 @@ class StudentProfileController(
     private val assignmentJpaRepository: AssessmentAssignmentJpaRepository
 ) {
 
+    @Transactional(readOnly = true)
     @GetMapping("/me/profile")
     fun getMyProfile(@CurrentUser user: User?): ResponseEntity<StudentProfileResponseDto> {
         val currentUser = user ?: throw UnauthorizedException("Unauthorized")
