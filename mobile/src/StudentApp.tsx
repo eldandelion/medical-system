@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
@@ -51,6 +51,7 @@ export function AppContent() {
   const { isDark, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState(0);
   const mainRef = useRef<HTMLElement>(null);
+  const navBarRef = useRef<HTMLElement | null>(null);
 
   const handleTabChange = (tab: number) => {
     setActiveTab(tab);
@@ -64,6 +65,19 @@ export function AppContent() {
       }
     }
   };
+
+  useEffect(() => {
+    const el = navBarRef.current;
+    if (!el) return;
+    const handler = (e: any) => {
+      const newIndex = e.target?.activeIndex ?? e.detail?.activeIndex;
+      if (typeof newIndex === 'number' && newIndex >= 0 && newIndex <= 2) {
+        handleTabChange(newIndex);
+      }
+    };
+    el.addEventListener('navigation-bar-change', handler);
+    return () => el.removeEventListener('navigation-bar-change', handler);
+  }, []);
 
   const showAssessmentHeaderFilter = activeTab === 0 && isAssessmentScrolled && totalCount > 1;
   const showReferralHeaderFilter = activeTab === 1 && isReferralScrolled && referralTotalCount > 0;
@@ -242,6 +256,7 @@ export function AppContent() {
         }}
       >
         <md-navigation-bar
+          ref={navBarRef as any}
           active-index={activeTab}
           className="w-full flex"
           style={{

@@ -75,21 +75,22 @@ export const ReferralDetailsFullScreen: React.FC<ReferralDetailsFullScreenProps>
 
   // Derive enriched status using steps and appointment timeline
   const enrichedStatus = useMemo<ReferralStatus | string>(() => {
-    if (!details?.baseInfo) return 'AWAITING_TRIAGE';
+    if (!details?.baseInfo) return loading ? '' : 'AWAITING_TRIAGE';
     const enriched = enrichReferralStatus(
       details.baseInfo,
       tracking?.steps,
       tracking?.destination?.appointmentTime
     );
     return enriched.displayStatus;
-  }, [details, tracking]);
+  }, [details, tracking, loading]);
 
   const handleStatusBadgeClick = () => {
+    if (!enrichedStatus) return;
     const target = getTargetTabForStatus(enrichedStatus, Boolean(details?.feedback));
     setActiveTab(target);
   };
 
-  const statusLabel = STATUS_LABELS[enrichedStatus] || enrichedStatus;
+  const statusLabel = enrichedStatus ? (STATUS_LABELS[enrichedStatus] || enrichedStatus) : (loading ? '加载中...' : '');
   const riskLevel = details?.baseInfo?.riskLevel;
   const riskLabel = riskLevel ? RISK_LEVEL_LABELS[riskLevel] || riskLevel : null;
   const riskClass = riskLevel ? RISK_LEVEL_STYLES[riskLevel] || RISK_LEVEL_STYLES.default : '';
@@ -109,7 +110,7 @@ export const ReferralDetailsFullScreen: React.FC<ReferralDetailsFullScreenProps>
       className="fixed inset-0 z-50 flex flex-col bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface)]"
     >
       {/* Top Header matching desktop ReferralDetailsView header */}
-      <header className="sticky top-0 z-30 flex flex-col border-b border-[var(--md-sys-color-outline-variant)]/40 bg-[var(--md-sys-color-surface)] shadow-xs">
+      <header className="sticky top-0 z-30 flex flex-col border-b border-[var(--md-sys-color-outline-variant)]/40 bg-[var(--md-sys-color-surface)] shadow-xs pt-[env(safe-area-inset-top,0px)]">
         <div className="flex h-14 items-center justify-between px-3 gap-2">
           {/* Back Button */}
           <button
@@ -167,7 +168,7 @@ export const ReferralDetailsFullScreen: React.FC<ReferralDetailsFullScreenProps>
       </header>
 
       {/* Main Body with AnimatePresence */}
-      <main className="flex-1 overflow-y-auto px-4 py-5">
+      <main className="flex-1 overflow-y-auto px-4 py-5 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]">
         {loading ? (
           <div className="flex flex-col gap-6 animate-pulse p-2 pt-6">
             <div className="h-40 bg-[var(--md-sys-color-surface-variant)] rounded-2xl opacity-30" />

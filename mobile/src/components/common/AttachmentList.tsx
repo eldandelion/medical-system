@@ -48,12 +48,10 @@ export function AttachmentList({
                 isLoading ? 'opacity-60 pointer-events-none' : 'cursor-pointer'
               }`}
               onClick={() => {
-                if (onDelete) {
-                  onDelete(file);
-                } else if (capability.isPreviewable && onPreview) {
+                if (onPreview && capability.isPreviewable) {
                   onPreview(file);
-                } else {
-                  onDownload?.(file);
+                } else if (onDownload) {
+                  onDownload(file);
                 }
               }}
             >
@@ -68,7 +66,7 @@ export function AttachmentList({
                     {file.name}
                   </span>
                   <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] opacity-60 uppercase">
-                    {file.size || ''} {capability.isPreviewable && !onDelete && '· 点击预览'}
+                    {file.size || ''} {capability.isPreviewable && !onDelete && onPreview && '· 点击预览'}
                   </span>
                 </div>
               </div>

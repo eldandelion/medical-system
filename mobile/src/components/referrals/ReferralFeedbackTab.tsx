@@ -10,7 +10,14 @@ export interface ReferralFeedbackTabProps {
 export const ReferralFeedbackTab: React.FC<ReferralFeedbackTabProps> = ({ feedback }) => {
   if (!feedback) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--md-sys-color-outline-variant)] p-8 text-center">
+      <motion.div
+        key="empty-feedback"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.2 }}
+        className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--md-sys-color-outline-variant)] p-8 text-center"
+      >
         <span className="material-symbols-outlined text-[40px] text-[var(--md-sys-color-outline)]">
           pending_actions
         </span>
@@ -20,7 +27,7 @@ export const ReferralFeedbackTab: React.FC<ReferralFeedbackTabProps> = ({ feedba
         <p className="mt-1 text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
           接诊医生尚未提交就医诊疗反馈，问诊完成后将在此同步诊断结果与随访方案。
         </p>
-      </div>
+      </motion.div>
     );
   }
 
