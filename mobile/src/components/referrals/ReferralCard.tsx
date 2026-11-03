@@ -52,30 +52,25 @@ export const ReferralCard: React.FC<ReferralCardProps> = ({
       onClick={onClick}
       className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[var(--md-sys-color-surface-container-low)] p-4 transition-all duration-200 active:scale-[0.99] active:bg-[var(--md-sys-color-surface-container)]"
     >
-      {/* Top Header: Type & Badges */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="rounded-md bg-[var(--md-sys-color-surface-container-high)] px-2 py-0.5 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)]">
-            {typeLabel}
+      {/* Top Header: Type, Risk, and Status Badges */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <span className="rounded-md bg-[var(--md-sys-color-surface-container-high)] px-2 py-0.5 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)]">
+          {typeLabel}
+        </span>
+        {referral.riskLevel && (
+          <span
+            className={`rounded-md px-2 py-0.5 text-xs font-semibold ${riskClass}`}
+          >
+            {riskLabel}
           </span>
-          {referral.riskLevel && (
-            <span
-              className={`rounded-md px-2 py-0.5 text-xs font-semibold ${riskClass}`}
-            >
-              {riskLabel}
-            </span>
-          )}
-        </div>
-
-        {/* Clickable Status Badge with direct navigation affordance */}
+        )}
         <button
           type="button"
           onClick={handleStatusBadgeClick}
           title="点击查看进度与详情"
-          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-opacity active:opacity-75 ${statusClass}`}
+          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium transition-opacity active:opacity-75 ${statusClass}`}
         >
-          <span>{statusLabel}</span>
-          <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+          {statusLabel}
         </button>
       </div>
 
@@ -91,31 +86,25 @@ export const ReferralCard: React.FC<ReferralCardProps> = ({
         )}
       </div>
 
-      {/* Bottom Footer: Initiator, Date, Drilldown affordance */}
-      <div className="mt-4 flex items-center justify-between border-t border-[var(--md-sys-color-outline-variant)]/60 pt-3 text-xs text-[var(--md-sys-color-outline)]">
-        <div className="flex items-center gap-3">
-          {initiatorName && initiatorInitial && (
-            <span className="flex items-center gap-1.5">
-              <span
-                className="flex size-[18px] items-center justify-center rounded-full bg-[var(--md-sys-color-primary-container)] text-[10px] font-semibold text-[var(--md-sys-color-on-primary-container)] shrink-0 select-none"
-                aria-hidden="true"
-              >
-                {initiatorInitial}
-              </span>
-              <span>发起: {initiatorName}</span>
+      {/* Bottom Footer: Initiator and Date separated by dot without separator line */}
+      <div className="mt-3 flex items-center gap-2 text-xs text-[var(--md-sys-color-outline)]">
+        {initiatorName && initiatorInitial && (
+          <span className="flex items-center gap-1.5">
+            <span
+              className="flex size-[18px] items-center justify-center rounded-full bg-[var(--md-sys-color-primary-container)] text-[10px] font-semibold text-[var(--md-sys-color-on-primary-container)] shrink-0 select-none"
+              aria-hidden="true"
+            >
+              {initiatorInitial}
             </span>
-          )}
-          {formattedDate && (
-            <span className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-[14px]">schedule</span>
-              <span>{formattedDate}</span>
-            </span>
-          )}
-        </div>
-
-        <span className="material-symbols-outlined text-[18px] text-[var(--md-sys-color-on-surface-variant)]">
-          chevron_right
-        </span>
+            <span>{initiatorName}</span>
+          </span>
+        )}
+        {initiatorName && initiatorInitial && formattedDate && (
+          <span className="opacity-60" aria-hidden="true">
+            ·
+          </span>
+        )}
+        {formattedDate && <span>{formattedDate}</span>}
       </div>
     </div>
   );

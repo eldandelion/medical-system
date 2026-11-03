@@ -19,16 +19,38 @@ describe('ReferralCard', () => {
     availableActions: [],
   };
 
-  it('renders status pill, risk chip, referral type label, title, and formatted date', () => {
+  it('renders status pill after risk chip, referral type label, title, and formatted date with separating dot', () => {
     render(<ReferralCard referral={mockReferral} />);
 
-    expect(screen.getByText('待排诊')).toBeDefined();
-    expect(screen.getByText('高风险')).toBeDefined();
     expect(screen.getByText('初次转诊')).toBeDefined();
+    expect(screen.getByText('高风险')).toBeDefined();
+    expect(screen.getByText('待排诊')).toBeDefined();
     expect(screen.getByText('期末考前重度焦虑与失眠')).toBeDefined();
     expect(screen.getByText('学生连续两周失眠，伴随心悸')).toBeDefined();
-    expect(screen.getByText(/赵辅导员/)).toBeDefined();
+    expect(screen.getByText('赵辅导员')).toBeDefined();
+    expect(screen.getByText('·')).toBeDefined();
     expect(screen.getByText(/2026-10-31/)).toBeDefined();
+
+    // Assert that '发起' text is removed
+    expect(screen.queryByText(/发起/)).toBeNull();
+
+    // Assert that clock icon 'schedule' is removed
+    expect(screen.queryByText('schedule')).toBeNull();
+
+    // Assert that status arrow 'arrow_forward' is removed
+    expect(screen.queryByText('arrow_forward')).toBeNull();
+
+    // Assert that bottom-right arrow 'chevron_right' is removed
+    expect(screen.queryByText('chevron_right')).toBeNull();
+  });
+
+  it('renders smaller status pill directly after risk badge without arrow icon', () => {
+    render(<ReferralCard referral={mockReferral} />);
+
+    const statusButton = screen.getByRole('button', { name: '待排诊' });
+    expect(statusButton.className).toContain('text-[11px]');
+    expect(statusButton.className).toContain('rounded-full');
+    expect(statusButton.textContent?.trim()).toBe('待排诊');
   });
 
   it('tapping card invokes onClick callback', () => {
@@ -51,14 +73,14 @@ describe('ReferralCard', () => {
       />
     );
 
-    const statusPill = screen.getByText('待排诊');
+    const statusPill = screen.getByRole('button', { name: '待排诊' });
     fireEvent.click(statusPill);
 
     expect(onStatusClick).toHaveBeenCalledWith('WAITING_FOR_SCHEDULING');
     expect(onClick).not.toHaveBeenCalled();
   });
 
-  it('renders card container without border outline or elevation shadow', () => {
+  it('renders card container without horizontal separation line, border outline, or elevation shadow', () => {
     const { container } = render(<ReferralCard referral={mockReferral} />);
     const card = container.firstElementChild as HTMLElement;
 
@@ -67,6 +89,9 @@ describe('ReferralCard', () => {
     expect(card.className).toContain('bg-[var(--md-sys-color-surface-container-low)]');
     expect(card.className).not.toContain('border');
     expect(card.className).not.toContain('shadow');
+
+    // Assert no internal horizontal separation line
+    expect(container.querySelector('.border-t')).toBeNull();
   });
 
   it('renders circular placeholder avatar badge with initiator first letter instead of person icon', () => {
@@ -103,20 +128,20 @@ describe('ReferralCard', () => {
       referredBy: { name: '   ' },
     };
     const { rerender } = render(<ReferralCard referral={emptyNameReferral} />);
-    expect(screen.queryByText(/发起:/)).toBeNull();
+    expect(screen.queryByText('赵辅导员')).toBeNull();
 
     const missingReferral: ReferralDto = {
       ...mockReferral,
       referredBy: { name: '' },
     };
     rerender(<ReferralCard referral={missingReferral} />);
-    expect(screen.queryByText(/发起:/)).toBeNull();
+    expect(screen.queryByText('赵辅导员')).toBeNull();
   });
 
-  it('uses material-symbols-outlined for all icon glyph spans with zero material-symbols-rounded', () => {
+  it('does not render any leftover icon glyphs on the referral card', () => {
     const { container } = render(<ReferralCard referral={mockReferral} />);
 
     expect(container.querySelectorAll('.material-symbols-rounded').length).toBe(0);
-    expect(container.querySelectorAll('.material-symbols-outlined').length).toBeGreaterThan(0);
+    expect(container.querySelectorAll('.material-symbols-outlined').length).toBe(0);
   });
 });
