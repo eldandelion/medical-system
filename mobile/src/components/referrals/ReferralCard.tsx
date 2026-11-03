@@ -1,6 +1,6 @@
 /**
  * Referral Card Component (Mobile MD3)
- * Displays referral overview with status pill, risk badge, title, initiator, and date
+ * Displays referral overview with initiator/date header, title/description, and status/risk pills footer
  */
 
 import React from 'react';
@@ -41,6 +41,7 @@ export const ReferralCard: React.FC<ReferralCardProps> = ({
 
   const initiatorName = referral.referredBy?.name?.trim();
   const initiatorInitial = initiatorName ? Array.from(initiatorName)[0] : '';
+  const hasTopHeader = Boolean((initiatorName && initiatorInitial) || formattedDate);
 
   const handleStatusBadgeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -52,8 +53,43 @@ export const ReferralCard: React.FC<ReferralCardProps> = ({
       onClick={onClick}
       className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[var(--md-sys-color-surface-container-low)] p-4 transition-all duration-200 active:scale-[0.99] active:bg-[var(--md-sys-color-surface-container)]"
     >
-      {/* Top Header: Type, Risk, and Status Badges */}
-      <div className="flex items-center gap-1.5 flex-wrap">
+      {/* Top Header: Initiator and Date separated by dot */}
+      {hasTopHeader && (
+        <div className="flex items-center gap-2 text-xs text-[var(--md-sys-color-outline)]">
+          {initiatorName && initiatorInitial && (
+            <span className="flex items-center gap-1.5">
+              <span
+                className="flex size-[18px] items-center justify-center rounded-full bg-[var(--md-sys-color-primary-container)] text-[10px] font-semibold text-[var(--md-sys-color-on-primary-container)] shrink-0 select-none"
+                aria-hidden="true"
+              >
+                {initiatorInitial}
+              </span>
+              <span>{initiatorName}</span>
+            </span>
+          )}
+          {initiatorName && initiatorInitial && formattedDate && (
+            <span className="opacity-60" aria-hidden="true">
+              ·
+            </span>
+          )}
+          {formattedDate && <span>{formattedDate}</span>}
+        </div>
+      )}
+
+      {/* Main Content: Title & Description */}
+      <div className={hasTopHeader ? 'mt-4' : ''}>
+        <h3 className="text-base font-semibold text-[var(--md-sys-color-on-surface)] line-clamp-1">
+          {referral.title}
+        </h3>
+        {referral.description && (
+          <p className="mt-1.5 text-sm text-[var(--md-sys-color-on-surface-variant)] line-clamp-2 leading-relaxed">
+            {referral.description}
+          </p>
+        )}
+      </div>
+
+      {/* Bottom Footer: Type, Risk, and Status Badges */}
+      <div className="mt-4 flex items-center gap-1.5 flex-wrap">
         <span className="rounded-md bg-[var(--md-sys-color-surface-container-high)] px-2 py-0.5 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)]">
           {typeLabel}
         </span>
@@ -72,39 +108,6 @@ export const ReferralCard: React.FC<ReferralCardProps> = ({
         >
           {statusLabel}
         </button>
-      </div>
-
-      {/* Main Content: Title & Description */}
-      <div className="mt-4">
-        <h3 className="text-base font-semibold text-[var(--md-sys-color-on-surface)] line-clamp-1">
-          {referral.title}
-        </h3>
-        {referral.description && (
-          <p className="mt-1.5 text-sm text-[var(--md-sys-color-on-surface-variant)] line-clamp-2 leading-relaxed">
-            {referral.description}
-          </p>
-        )}
-      </div>
-
-      {/* Bottom Footer: Initiator and Date separated by dot without separator line */}
-      <div className="mt-4 flex items-center gap-2 text-xs text-[var(--md-sys-color-outline)]">
-        {initiatorName && initiatorInitial && (
-          <span className="flex items-center gap-1.5">
-            <span
-              className="flex size-[18px] items-center justify-center rounded-full bg-[var(--md-sys-color-primary-container)] text-[10px] font-semibold text-[var(--md-sys-color-on-primary-container)] shrink-0 select-none"
-              aria-hidden="true"
-            >
-              {initiatorInitial}
-            </span>
-            <span>{initiatorName}</span>
-          </span>
-        )}
-        {initiatorName && initiatorInitial && formattedDate && (
-          <span className="opacity-60" aria-hidden="true">
-            ·
-          </span>
-        )}
-        {formattedDate && <span>{formattedDate}</span>}
       </div>
     </div>
   );

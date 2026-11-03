@@ -19,17 +19,34 @@ describe('ReferralCard', () => {
     availableActions: [],
   };
 
-  it('renders status pill after risk chip, referral type label, title, and formatted date with separating dot', () => {
+  it('renders initiator/date at top, title/description in middle, and pills at bottom with separating dot', () => {
     render(<ReferralCard referral={mockReferral} />);
 
-    expect(screen.getByText('初次转诊')).toBeDefined();
-    expect(screen.getByText('高风险')).toBeDefined();
-    expect(screen.getByText('待排诊')).toBeDefined();
-    expect(screen.getByText('期末考前重度焦虑与失眠')).toBeDefined();
-    expect(screen.getByText('学生连续两周失眠，伴随心悸')).toBeDefined();
-    expect(screen.getByText('赵辅导员')).toBeDefined();
-    expect(screen.getByText('·')).toBeDefined();
-    expect(screen.getByText(/2026-10-31/)).toBeDefined();
+    const initiatorEl = screen.getByText('赵辅导员');
+    const dotEl = screen.getByText('·');
+    const dateEl = screen.getByText(/2026-10-31/);
+    const titleEl = screen.getByText('期末考前重度焦虑与失眠');
+    const descEl = screen.getByText('学生连续两周失眠，伴随心悸');
+    const typeEl = screen.getByText('初次转诊');
+    const riskEl = screen.getByText('高风险');
+    const statusEl = screen.getByRole('button', { name: '待排诊' });
+
+    expect(initiatorEl).toBeDefined();
+    expect(dotEl).toBeDefined();
+    expect(dateEl).toBeDefined();
+    expect(titleEl).toBeDefined();
+    expect(descEl).toBeDefined();
+    expect(typeEl).toBeDefined();
+    expect(riskEl).toBeDefined();
+    expect(statusEl).toBeDefined();
+
+    // Verify DOM order: Header (initiator/date) -> Middle (title) -> Bottom (pills)
+    expect(
+      initiatorEl.compareDocumentPosition(titleEl) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(
+      titleEl.compareDocumentPosition(statusEl) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
 
     // Assert that '发起' text is removed
     expect(screen.queryByText(/发起/)).toBeNull();
@@ -44,7 +61,7 @@ describe('ReferralCard', () => {
     expect(screen.queryByText('chevron_right')).toBeNull();
   });
 
-  it('renders smaller status pill directly after risk badge without arrow icon', () => {
+  it('renders smaller status pill directly after risk badge without arrow icon in bottom pills section', () => {
     render(<ReferralCard referral={mockReferral} />);
 
     const statusButton = screen.getByRole('button', { name: '待排诊' });
