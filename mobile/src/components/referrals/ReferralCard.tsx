@@ -75,19 +75,19 @@ export const ReferralCard: React.FC<ReferralCardProps> = ({
       </div>
 
       {/* Main Content: Title & Description */}
-      <div className="mt-3">
+      <div className="mt-4">
         <h3 className="text-base font-semibold text-[var(--md-sys-color-on-surface)] line-clamp-1">
           {referral.title}
         </h3>
         {referral.description && (
-          <p className="mt-1 text-sm text-[var(--md-sys-color-on-surface-variant)] line-clamp-2 leading-relaxed">
+          <p className="mt-1.5 text-sm text-[var(--md-sys-color-on-surface-variant)] line-clamp-2 leading-relaxed">
             {referral.description}
           </p>
         )}
       </div>
 
       {/* Bottom Footer: Initiator and Date separated by dot without separator line */}
-      <div className="mt-3 flex items-center gap-2 text-xs text-[var(--md-sys-color-outline)]">
+      <div className="mt-4 flex items-center gap-2 text-xs text-[var(--md-sys-color-outline)]">
         {initiatorName && initiatorInitial && (
           <span className="flex items-center gap-1.5">
             <span
