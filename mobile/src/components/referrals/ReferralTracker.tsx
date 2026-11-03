@@ -59,7 +59,7 @@ const getCardStyles = (status: ReferralStepStatus) => {
   }
 };
 
-export const getIconForType = (type: ReferralStepType) => {
+const getIconForType = (type: ReferralStepType) => {
   switch (type) {
     case 'INITIATION':
       return GraduationCap;
@@ -78,7 +78,7 @@ export const getIconForType = (type: ReferralStepType) => {
   }
 };
 
-export const getStepTitle = (type: ReferralStepType) => {
+const getStepTitle = (type: ReferralStepType) => {
   switch (type) {
     case 'INITIATION':
       return '发起转诊';
@@ -97,7 +97,7 @@ export const getStepTitle = (type: ReferralStepType) => {
   }
 };
 
-export const getStepSubtitle = (type: ReferralStepType, status: ReferralStepStatus) => {
+const getStepSubtitle = (type: ReferralStepType, status: ReferralStepStatus) => {
   if (status === 'PENDING') {
     return '等待进行';
   }
