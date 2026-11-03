@@ -67,7 +67,7 @@ describe('ReferralDetailsFullScreen', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders top bar with back button, referral title, clickable status badge, and risk pill', async () => {
+  it('renders top bar with back button, student name, clickable status badge, and risk pill', async () => {
     vi.spyOn(intakeApi, 'getReferralDetails').mockResolvedValueOnce(mockDetails);
     vi.spyOn(intakeApi, 'getReferralTracking').mockResolvedValueOnce(mockTracking);
 
@@ -75,9 +75,10 @@ describe('ReferralDetailsFullScreen', () => {
     render(<ReferralDetailsFullScreen referralId="ref-1" onClose={onClose} />);
 
     await waitFor(() => {
-      expect(screen.getByText('急性焦虑综合征')).toBeDefined();
+      expect(screen.getByText('张同学')).toBeDefined();
     });
 
+    expect(screen.getByText('20230001')).toBeDefined();
     expect(screen.getByText('待就诊')).toBeDefined();
     expect(screen.getByText('高风险')).toBeDefined();
 
@@ -93,7 +94,7 @@ describe('ReferralDetailsFullScreen', () => {
     render(<ReferralDetailsFullScreen referralId="ref-1" onClose={vi.fn()} />);
 
     await waitFor(() => {
-      expect(screen.getByText('急性焦虑综合征')).toBeDefined();
+      expect(screen.getByText('张同学')).toBeDefined();
     });
 
     // Default tab is Overview
@@ -102,13 +103,13 @@ describe('ReferralDetailsFullScreen', () => {
     expect(screen.getByText('认知行为疗法')).toBeDefined();
 
     // Switch to Tracker tab
-    const trackerTab = screen.getByRole('tab', { name: /转诊进度/i });
+    const trackerTab = screen.getByText('转诊进度');
     fireEvent.click(trackerTab);
-    expect(screen.getByText('转诊全流程进展')).toBeDefined();
+    expect(screen.getByText('流程记录')).toBeDefined();
     expect(screen.getByText('湘雅附二医院')).toBeDefined();
 
     // Switch to Feedback tab
-    const feedbackTab = screen.getByRole('tab', { name: /诊疗反馈/i });
+    const feedbackTab = screen.getByText('诊疗反馈');
     fireEvent.click(feedbackTab);
     expect(screen.getByText('医院诊断结果')).toBeDefined();
     expect(screen.getByText(/焦虑症伴轻度抑郁状态/)).toBeDefined();
@@ -132,14 +133,14 @@ describe('ReferralDetailsFullScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('急性焦虑综合征')).toBeDefined();
+      expect(screen.getByText('张同学')).toBeDefined();
     });
 
     // In WAITING_FOR_APPOINTMENT without feedback, clicking status pill routes to 'tracker'
     const statusPill = screen.getByTestId('details-status-badge');
     fireEvent.click(statusPill);
 
-    expect(screen.getByText('转诊全流程进展')).toBeDefined();
+    expect(screen.getByText('流程记录')).toBeDefined();
   });
 
   it('ReferralOverviewTab renders 3 triage metrics, 3 severe risk indicators, and quote block', async () => {
@@ -149,7 +150,7 @@ describe('ReferralDetailsFullScreen', () => {
     render(<ReferralDetailsFullScreen referralId="ref-1" onClose={vi.fn()} />);
 
     await waitFor(() => {
-      expect(screen.getByText('急性焦虑综合征')).toBeDefined();
+      expect(screen.getByText('张同学')).toBeDefined();
     });
 
     expect(screen.getByText('是否初诊')).toBeDefined();
@@ -161,6 +162,7 @@ describe('ReferralDetailsFullScreen', () => {
     expect(screen.getByText('自残行为')).toBeDefined();
 
     expect(screen.getByText(/连续四周出现强迫思维与失眠/)).toBeDefined();
+    expect(screen.getByText('初审评估表.pdf')).toBeDefined();
   });
 
   it('ReferralTrackerTab renders 6 timeline steps, destination card, and appointment card', async () => {
@@ -176,15 +178,15 @@ describe('ReferralDetailsFullScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('转诊全流程进展')).toBeDefined();
+      expect(screen.getByText('流程记录')).toBeDefined();
     });
 
-    expect(screen.getByText('转诊发起')).toBeDefined();
-    expect(screen.getByText('初审评估')).toBeDefined();
-    expect(screen.getByText('中心分诊')).toBeDefined();
-    expect(screen.getByText('医院排诊')).toBeDefined();
-    expect(screen.getByText('就医问诊')).toBeDefined();
-    expect(screen.getAllByText('诊疗反馈').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('发起转诊')).toBeDefined();
+    expect(screen.getByText('转诊审核')).toBeDefined();
+    expect(screen.getByText('分诊评估')).toBeDefined();
+    expect(screen.getByText('预约安排')).toBeDefined();
+    expect(screen.getByText('医生评估')).toBeDefined();
+    expect(screen.getByText('反馈跟进')).toBeDefined();
 
     expect(screen.getByText('接收医院')).toBeDefined();
     expect(screen.getByText('湘雅附二医院')).toBeDefined();

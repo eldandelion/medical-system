@@ -1,9 +1,12 @@
 /**
  * Referral Details FullScreen Component (Mobile MD3)
- * Fullscreen modal takeover with sticky top bar, status badge routing, and tabbed presenters
+ * Ported layout matching the main medical system ReferralDetailsView:
+ * Header with avatar, student name & student number, status & risk badges,
+ * SecondaryTabs with native M3 tabs and icons, and animated tab presenters.
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { AnimatePresence } from 'motion/react';
 import {
   intakeApi,
   ReferralDetailsDto,
@@ -12,7 +15,6 @@ import {
 } from '../../api/intakeApi';
 import {
   STATUS_LABELS,
-  STATUS_STYLES,
   RISK_LEVEL_LABELS,
   RISK_LEVEL_STYLES,
 } from '../../utils/referralConstants';
@@ -21,6 +23,7 @@ import {
   ReferralDetailsTab,
 } from '../../utils/referralRouting';
 import { enrichReferralStatus } from '../../utils/referralStatusEnricher';
+import { SecondaryTabs, TabItem } from '../common/Tabs';
 import { ReferralOverviewTab } from './ReferralOverviewTab';
 import { ReferralTrackerTab } from './ReferralTrackerTab';
 import { ReferralFeedbackTab } from './ReferralFeedbackTab';
@@ -30,6 +33,12 @@ export interface ReferralDetailsFullScreenProps {
   initialTab?: ReferralDetailsTab;
   onClose: () => void;
 }
+
+export const REFERRAL_DETAILS_TABS: TabItem[] = [
+  { id: 'overview', label: '转诊概览', icon: 'clinical_notes' },
+  { id: 'tracker', label: '转诊进度', icon: 'timeline' },
+  { id: 'feedback', label: '诊疗反馈', icon: 'history_edu' },
+];
 
 export const ReferralDetailsFullScreen: React.FC<ReferralDetailsFullScreenProps> = ({
   referralId,
@@ -81,11 +90,16 @@ export const ReferralDetailsFullScreen: React.FC<ReferralDetailsFullScreenProps>
   };
 
   const statusLabel = STATUS_LABELS[enrichedStatus] || enrichedStatus;
-  const statusClass = STATUS_STYLES[enrichedStatus] || STATUS_STYLES.default;
-
   const riskLevel = details?.baseInfo?.riskLevel;
   const riskLabel = riskLevel ? RISK_LEVEL_LABELS[riskLevel] || riskLevel : null;
   const riskClass = riskLevel ? RISK_LEVEL_STYLES[riskLevel] || RISK_LEVEL_STYLES.default : '';
+
+  const studentName = details?.baseInfo?.studentName || '转诊详情';
+  const studentInitial = studentName ? Array.from(studentName.trim())[0] : '?';
+  const studentNumber =
+    details?.baseInfo?.studentNumber ||
+    details?.studentDemographics?.studentId ||
+    'N/A';
 
   return (
     <div
@@ -94,101 +108,71 @@ export const ReferralDetailsFullScreen: React.FC<ReferralDetailsFullScreenProps>
       aria-label="转诊详情"
       className="fixed inset-0 z-50 flex flex-col bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface)]"
     >
-      {/* Sticky Top Header */}
-      <header className="sticky top-0 z-10 flex flex-col border-b border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] shadow-xs">
+      {/* Top Header matching desktop ReferralDetailsView header */}
+      <header className="sticky top-0 z-30 flex flex-col border-b border-[var(--md-sys-color-outline-variant)]/40 bg-[var(--md-sys-color-surface)] shadow-xs">
         <div className="flex h-14 items-center justify-between px-3 gap-2">
           {/* Back Button */}
           <button
             type="button"
             onClick={onClose}
             aria-label="返回"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--md-sys-color-on-surface)] transition-colors active:bg-[var(--md-sys-color-surface-container-high)]"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--md-sys-color-on-surface)] transition-colors active:bg-[var(--md-sys-color-surface-container-high)] shrink-0 cursor-pointer"
           >
             <span className="material-symbols-outlined text-[22px]">arrow_back</span>
           </button>
 
-          {/* Title Area */}
-          <div className="min-w-0 flex-1">
-            <h2 className="text-base font-semibold leading-tight text-[var(--md-sys-color-on-surface)] truncate">
-              {details?.baseInfo?.title || '转诊详情'}
-            </h2>
-            {details?.baseInfo?.studentName && (
-              <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] truncate">
-                {details.baseInfo.studentName} ({details.baseInfo.studentNumber})
-              </p>
-            )}
+          {/* Student Avatar */}
+          <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[14px] font-medium shrink-0">
+            {studentInitial}
           </div>
 
-          {/* Header Action Badges */}
+          {/* Title Area */}
+          <div className="min-w-0 flex-1">
+            <h2 className="text-[15px] font-semibold leading-tight text-[var(--md-sys-color-on-surface)] truncate">
+              {studentName}
+            </h2>
+            <p className="text-[12px] text-[var(--md-sys-color-on-surface-variant)] truncate leading-tight font-mono">
+              {studentNumber}
+            </p>
+          </div>
+
+          {/* Header Action Badges matching desktop ReferralHeaderBadges */}
           <div className="flex items-center gap-1.5 shrink-0">
-            {riskLabel && (
-              <span className={`rounded-md px-2 py-0.5 text-xs font-semibold ${riskClass}`}>
-                {riskLabel}
-              </span>
-            )}
             <button
               type="button"
               data-testid="details-status-badge"
               onClick={handleStatusBadgeClick}
-              title="点击跳转对应进度/反馈"
-              className={`inline-flex items-center gap-0.5 rounded-full px-2.5 py-0.5 text-xs font-semibold transition-opacity active:opacity-75 ${statusClass}`}
+              title="点击查看转诊进度"
+              aria-label={`转诊状态：${statusLabel}，点击查看转诊进度`}
+              className="px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-[0.5px] shrink-0 whitespace-nowrap bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)] active:scale-[0.98] cursor-pointer transition-all border-0 outline-none"
             >
-              <span>{statusLabel}</span>
-              <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+              {statusLabel}
             </button>
+            {riskLabel && (
+              <div
+                className={`px-2.5 py-0.5 rounded-full flex items-center font-bold text-[11px] uppercase tracking-[0.5px] shrink-0 whitespace-nowrap ${riskClass}`}
+              >
+                <span>{riskLabel}</span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Tab Navigation Segment */}
-        <div className="flex border-t border-[var(--md-sys-color-outline-variant)]/60 px-2">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === 'overview'}
-            onClick={() => setActiveTab('overview')}
-            className={`flex-1 py-2.5 text-center text-sm font-semibold transition-colors border-b-2 ${
-              activeTab === 'overview'
-                ? 'border-[var(--md-sys-color-primary)] text-[var(--md-sys-color-primary)]'
-                : 'border-transparent text-[var(--md-sys-color-on-surface-variant)]'
-            }`}
-          >
-            转诊概览
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === 'tracker'}
-            onClick={() => setActiveTab('tracker')}
-            className={`flex-1 py-2.5 text-center text-sm font-semibold transition-colors border-b-2 ${
-              activeTab === 'tracker'
-                ? 'border-[var(--md-sys-color-primary)] text-[var(--md-sys-color-primary)]'
-                : 'border-transparent text-[var(--md-sys-color-on-surface-variant)]'
-            }`}
-          >
-            转诊进度
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === 'feedback'}
-            onClick={() => setActiveTab('feedback')}
-            className={`flex-1 py-2.5 text-center text-sm font-semibold transition-colors border-b-2 ${
-              activeTab === 'feedback'
-                ? 'border-[var(--md-sys-color-primary)] text-[var(--md-sys-color-primary)]'
-                : 'border-transparent text-[var(--md-sys-color-on-surface-variant)]'
-            }`}
-          >
-            诊疗反馈
-          </button>
-        </div>
+        {/* Secondary Tabs using native MD3 secondary tabs */}
+        <SecondaryTabs
+          tabs={REFERRAL_DETAILS_TABS}
+          activeTab={activeTab}
+          onTabChange={(id) => setActiveTab(id as ReferralDetailsTab)}
+        />
       </header>
 
-      {/* Main Body */}
+      {/* Main Body with AnimatePresence */}
       <main className="flex-1 overflow-y-auto px-4 py-5">
         {loading ? (
-          <div className="flex flex-col gap-4 animate-pulse">
-            <div className="h-32 rounded-2xl bg-[var(--md-sys-color-surface-container)]" />
-            <div className="h-44 rounded-2xl bg-[var(--md-sys-color-surface-container)]" />
+          <div className="flex flex-col gap-6 animate-pulse p-2 pt-6">
+            <div className="h-40 bg-[var(--md-sys-color-surface-variant)] rounded-2xl opacity-30" />
+            <div className="h-64 bg-[var(--md-sys-color-surface-variant)] rounded-2xl opacity-30" />
+            <div className="h-32 bg-[var(--md-sys-color-surface-variant)] rounded-2xl opacity-30" />
           </div>
         ) : error || !details ? (
           <div className="flex flex-col items-center justify-center p-8 text-center">
@@ -201,21 +185,23 @@ export const ReferralDetailsFullScreen: React.FC<ReferralDetailsFullScreenProps>
             <button
               type="button"
               onClick={loadData}
-              className="mt-4 rounded-xl bg-[var(--md-sys-color-primary)] px-4 py-2 text-xs font-semibold text-[var(--md-sys-color-on-primary)]"
+              className="mt-4 rounded-xl bg-[var(--md-sys-color-primary)] px-4 py-2 text-xs font-semibold text-[var(--md-sys-color-on-primary)] cursor-pointer"
             >
               重新加载
             </button>
           </div>
         ) : (
-          <div>
-            {activeTab === 'overview' && <ReferralOverviewTab details={details} />}
+          <AnimatePresence mode="wait">
+            {activeTab === 'overview' && (
+              <ReferralOverviewTab details={details} referral={details.baseInfo} />
+            )}
             {activeTab === 'tracker' && (
               <ReferralTrackerTab tracking={tracking} loading={false} />
             )}
             {activeTab === 'feedback' && (
               <ReferralFeedbackTab feedback={details.feedback} />
             )}
-          </div>
+          </AnimatePresence>
         )}
       </main>
     </div>

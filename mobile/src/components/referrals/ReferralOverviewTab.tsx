@@ -1,159 +1,176 @@
-/**
- * Referral Overview Tab (Mobile MD3)
- * Displays 3-column triage metrics, 3-column severe risk indicators, full description quote, and attachments
- */
-
 import React from 'react';
-import { ReferralDetailsDto } from '../../api/intakeApi';
+import { motion } from 'motion/react';
+import { DetailsSection } from '../common/DetailsSection';
+import { GroupedInfoList } from '../common/GroupedInfoList';
+import { AttachmentList } from '../common/AttachmentList';
+import { Quote } from 'lucide-react';
+import { ReferralDetailsDto, ReferralDto } from '../../api/intakeApi';
 
 export interface ReferralOverviewTabProps {
   details: ReferralDetailsDto;
+  referral?: ReferralDto;
 }
 
-export const ReferralOverviewTab: React.FC<ReferralOverviewTabProps> = ({ details }) => {
-  const triage = details.triageInfo;
-  const risk = details.riskAssessment;
-  const attachments = details.attachments || [];
+export const ReferralOverviewTab: React.FC<ReferralOverviewTabProps> = ({
+  details,
+  referral: customReferral,
+}) => {
+  const referral = customReferral || details.baseInfo;
+  const initiatorName = referral?.referredBy?.name?.trim();
+  const initiatorInitial = initiatorName ? Array.from(initiatorName)[0] : '';
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Triage Metrics (3 Column Grid) */}
-      {triage && (
-        <div>
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--md-sys-color-primary)]">
-            分诊基本信息
-          </h4>
-          <div className="mt-2 grid grid-cols-3 gap-2.5">
-            <div className="flex flex-col items-center justify-center rounded-xl bg-[var(--md-sys-color-surface-container)] p-3 text-center">
-              <span className="material-symbols-outlined text-[20px] text-[var(--md-sys-color-primary)]">
-                person_add
-              </span>
-              <span className="mt-1 text-xs text-[var(--md-sys-color-on-surface-variant)]">
-                是否初诊
-              </span>
-              <span className="mt-0.5 text-sm font-bold text-[var(--md-sys-color-on-surface)]">
-                {triage.isFirstVisit ? '是' : '否'}
-              </span>
+    <motion.div
+      key="overview"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+      className="flex flex-col gap-6"
+    >
+      <DetailsSection title="分诊基本信息" className="border-t-0 pt-0 mt-0">
+        <div className="flex flex-col gap-3">
+          {/* 3-Column Metrics Grid */}
+          {details.triageInfo && (
+            <GroupedInfoList
+              items={[
+                {
+                  id: 'firstVisit',
+                  icon: 'person_add',
+                  label: '是否初诊',
+                  value: details.triageInfo.isFirstVisit ? '是' : '否',
+                  valueClassName: details.triageInfo.isFirstVisit
+                    ? 'text-[var(--md-sys-color-on-surface)]'
+                    : 'text-[var(--md-sys-color-on-surface-variant)] opacity-70',
+                },
+                {
+                  id: 'medicated',
+                  icon: 'medication',
+                  label: '是否服药',
+                  value: details.triageInfo.isMedicated ? '是' : '否',
+                  valueClassName: details.triageInfo.isMedicated
+                    ? 'text-[var(--md-sys-color-on-surface)]'
+                    : 'text-[var(--md-sys-color-on-surface-variant)] opacity-70',
+                },
+                {
+                  id: 'priorTherapy',
+                  icon: 'monitoring',
+                  label: '心理治疗',
+                  value: details.triageInfo.priorTherapy || '无',
+                  valueClassName:
+                    details.triageInfo.priorTherapy === '无'
+                      ? 'text-[var(--md-sys-color-on-surface-variant)] opacity-70'
+                      : 'text-[var(--md-sys-color-on-surface)] truncate',
+                },
+              ]}
+              layout="horizontal"
+            />
+          )}
+
+          {/* 3-Column Risk Grid */}
+          {details.riskAssessment && (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <GroupedInfoList
+                items={[
+                  {
+                    id: 'ideation',
+                    icon: 'psychology',
+                    label: '自杀意念',
+                    value: details.riskAssessment.ideation ? '是' : '否',
+                    className: details.riskAssessment.ideation
+                      ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
+                      : '',
+                    iconClassName: details.riskAssessment.ideation
+                      ? 'text-[var(--md-sys-color-on-error-container)]'
+                      : 'text-[var(--md-sys-color-on-surface-variant)]',
+                    labelClassName: details.riskAssessment.ideation
+                      ? 'text-[var(--md-sys-color-on-error-container)] opacity-90'
+                      : 'text-[var(--md-sys-color-on-surface-variant)]',
+                    valueClassName: details.riskAssessment.ideation
+                      ? 'font-bold text-[var(--md-sys-color-on-error-container)]'
+                      : 'text-[var(--md-sys-color-on-surface-variant)] opacity-70',
+                  },
+                  {
+                    id: 'attempt',
+                    icon: 'personal_injury',
+                    label: '自杀企图',
+                    value: details.riskAssessment.attempt ? '是' : '否',
+                    className: details.riskAssessment.attempt
+                      ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
+                      : '',
+                    iconClassName: details.riskAssessment.attempt
+                      ? 'text-[var(--md-sys-color-on-error-container)]'
+                      : 'text-[var(--md-sys-color-on-surface-variant)]',
+                    labelClassName: details.riskAssessment.attempt
+                      ? 'text-[var(--md-sys-color-on-error-container)] opacity-90'
+                      : 'text-[var(--md-sys-color-on-surface-variant)]',
+                    valueClassName: details.riskAssessment.attempt
+                      ? 'font-bold text-[var(--md-sys-color-on-error-container)]'
+                      : 'text-[var(--md-sys-color-on-surface-variant)] opacity-70',
+                  },
+                  {
+                    id: 'selfHarm',
+                    icon: 'healing',
+                    label: '自残行为',
+                    value: details.riskAssessment.selfHarm ? '是' : '否',
+                    className: details.riskAssessment.selfHarm
+                      ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
+                      : '',
+                    iconClassName: details.riskAssessment.selfHarm
+                      ? 'text-[var(--md-sys-color-on-error-container)]'
+                      : 'text-[var(--md-sys-color-on-surface-variant)]',
+                    labelClassName: details.riskAssessment.selfHarm
+                      ? 'text-[var(--md-sys-color-on-error-container)] opacity-90'
+                      : 'text-[var(--md-sys-color-on-surface-variant)]',
+                    valueClassName: details.riskAssessment.selfHarm
+                      ? 'font-bold text-[var(--md-sys-color-on-error-container)]'
+                      : 'text-[var(--md-sys-color-on-surface-variant)] opacity-70',
+                  },
+                ]}
+                layout="horizontal"
+              />
             </div>
+          )}
 
-            <div className="flex flex-col items-center justify-center rounded-xl bg-[var(--md-sys-color-surface-container)] p-3 text-center">
-              <span className="material-symbols-outlined text-[20px] text-[var(--md-sys-color-primary)]">
-                medication
-              </span>
-              <span className="mt-1 text-xs text-[var(--md-sys-color-on-surface-variant)]">
-                是否服药
-              </span>
-              <span className="mt-0.5 text-sm font-bold text-[var(--md-sys-color-on-surface)]">
-                {triage.isMedicated ? '是' : '否'}
-              </span>
-            </div>
-
-            <div className="flex flex-col items-center justify-center rounded-xl bg-[var(--md-sys-color-surface-container)] p-3 text-center">
-              <span className="material-symbols-outlined text-[20px] text-[var(--md-sys-color-primary)]">
-                monitoring
-              </span>
-              <span className="mt-1 text-xs text-[var(--md-sys-color-on-surface-variant)]">
-                心理治疗
-              </span>
-              <span className="mt-0.5 text-sm font-bold text-[var(--md-sys-color-on-surface)] truncate max-w-full">
-                {triage.priorTherapy || '无'}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Severe Risk Indicators (3 Column Grid) */}
-      {risk && (
-        <div>
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--md-sys-color-error)]">
-            重点风险筛查
-          </h4>
-          <div className="mt-2 grid grid-cols-3 gap-2.5">
-            <div
-              className={`flex flex-col items-center justify-center rounded-xl p-3 text-center transition-colors ${
-                risk.ideation
-                  ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
-                  : 'bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">psychology</span>
-              <span className="mt-1 text-xs">自杀意念</span>
-              <span className="mt-0.5 text-sm font-bold">{risk.ideation ? '是' : '否'}</span>
-            </div>
-
-            <div
-              className={`flex flex-col items-center justify-center rounded-xl p-3 text-center transition-colors ${
-                risk.attempt
-                  ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
-                  : 'bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">personal_injury</span>
-              <span className="mt-1 text-xs">自杀企图</span>
-              <span className="mt-0.5 text-sm font-bold">{risk.attempt ? '是' : '否'}</span>
-            </div>
-
-            <div
-              className={`flex flex-col items-center justify-center rounded-xl p-3 text-center transition-colors ${
-                risk.selfHarm
-                  ? 'bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]'
-                  : 'bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">healing</span>
-              <span className="mt-1 text-xs">自残行为</span>
-              <span className="mt-0.5 text-sm font-bold">{risk.selfHarm ? '是' : '否'}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Description / Referral Quote */}
-      {triage?.fullDescription && (
-        <div className="rounded-2xl border-l-4 border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-surface-container-low)] p-4 shadow-sm">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--md-sys-color-primary)]">
-            <span className="material-symbols-outlined text-[16px]">format_quote</span>
-            <span>转诊原因及详细主诉</span>
-          </div>
-          <p className="mt-2 text-sm leading-relaxed text-[var(--md-sys-color-on-surface)] whitespace-pre-wrap">
-            {triage.fullDescription}
-          </p>
-        </div>
-      )}
-
-      {/* Attachments Section */}
-      {attachments.length > 0 && (
-        <div>
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--md-sys-color-outline)]">
-            附件资料 ({attachments.length})
-          </h4>
-          <div className="mt-2 flex flex-col gap-2">
-            {attachments.map((att, idx) => (
-              <div
-                key={att.fileId ?? `${att.name}-${idx}`}
-                className="flex items-center justify-between rounded-xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container)] px-3 py-2.5"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="material-symbols-outlined text-[20px] text-[var(--md-sys-color-primary)] shrink-0">
-                    attachment
+          {/* Referral Full Description Card (Watermarked elegant quote) */}
+          <div className="relative p-5 sm:p-6 rounded-2xl bg-[var(--md-sys-color-surface-container-low)] border-opacity-10 overflow-hidden flex flex-col gap-3">
+            {/* Referrer Pill */}
+            {initiatorName && (
+              <div className="flex items-center gap-1 pe-3 w-fit self-start rounded-full bg-transparent mt-1">
+                <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-xs font-medium shrink-0 me-1">
+                  {initiatorInitial}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[13px] font-medium leading-[1.2] text-[var(--md-sys-color-on-surface)]">
+                    {initiatorName}
                   </span>
-                  <div className="truncate">
-                    <p className="text-sm font-medium text-[var(--md-sys-color-on-surface)] truncate">
-                      {att.name}
-                    </p>
-                    {att.size && (
-                      <p className="text-xs text-[var(--md-sys-color-on-surface-variant)]">
-                        {att.size}
-                      </p>
-                    )}
-                  </div>
+                  <span className="text-[11px] font-normal leading-[1.2] text-[var(--md-sys-color-on-surface-variant)] opacity-80">
+                    转诊发起人
+                  </span>
                 </div>
               </div>
-            ))}
+            )}
+            <span className="text-[15px] sm:text-[16px] font-bold text-[var(--md-sys-color-on-surface-variant)] opacity-85 mt-2 sm:mt-4">
+              转诊详细说明
+            </span>
+            <p className="text-[14px] sm:text-[15px] leading-relaxed text-[var(--md-sys-color-on-surface)] font-normal z-10 pr-6 whitespace-pre-wrap">
+              {details.triageInfo?.fullDescription || referral?.description || '暂无详细说明'}
+            </p>
+
+            {/* Large elegant watermark quote mark */}
+            <Quote
+              className="absolute top-5 right-5 sm:top-6 sm:right-6 text-[var(--md-sys-color-primary)] opacity-10"
+              size={30}
+            />
           </div>
+
+          {/* Attachment List */}
+          <AttachmentList
+            attachments={details.attachments || []}
+            title="转诊附件"
+          />
         </div>
-      )}
-    </div>
+      </DetailsSection>
+    </motion.div>
   );
 };
