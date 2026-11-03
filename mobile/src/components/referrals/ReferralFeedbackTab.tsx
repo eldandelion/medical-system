@@ -14,7 +14,7 @@ export const ReferralFeedbackTab: React.FC<ReferralFeedbackTabProps> = ({ feedba
   if (!feedback) {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--md-sys-color-outline-variant)] p-8 text-center">
-        <span className="material-symbols-rounded text-[40px] text-[var(--md-sys-color-outline)]">
+        <span className="material-symbols-outlined text-[40px] text-[var(--md-sys-color-outline)]">
           pending_actions
         </span>
         <h4 className="mt-2 text-sm font-semibold text-[var(--md-sys-color-on-surface)]">
@@ -46,7 +46,7 @@ export const ReferralFeedbackTab: React.FC<ReferralFeedbackTabProps> = ({ feedba
       {/* Follow-up Plan */}
       <div>
         <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--md-sys-color-tertiary)] flex items-center gap-1">
-          <span className="material-symbols-rounded text-[16px]">repeat</span>
+          <span className="material-symbols-outlined text-[16px]">repeat</span>
           <span>随访计划</span>
         </h4>
         <div className="mt-2 rounded-2xl border-l-4 border-[var(--md-sys-color-tertiary)] bg-[var(--md-sys-color-tertiary-container)]/30 p-4">
@@ -69,7 +69,7 @@ export const ReferralFeedbackTab: React.FC<ReferralFeedbackTabProps> = ({ feedba
                 className="flex items-center justify-between rounded-xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container)] px-3 py-2.5"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="material-symbols-rounded text-[20px] text-[var(--md-sys-color-primary)] shrink-0">
+                  <span className="material-symbols-outlined text-[20px] text-[var(--md-sys-color-primary)] shrink-0">
                     description
                   </span>
                   <div className="truncate">

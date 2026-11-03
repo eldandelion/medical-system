@@ -25,7 +25,7 @@ export const ReferralOverviewTab: React.FC<ReferralOverviewTabProps> = ({ detail
           </h4>
           <div className="mt-2 grid grid-cols-3 gap-2.5">
             <div className="flex flex-col items-center justify-center rounded-xl bg-[var(--md-sys-color-surface-container)] p-3 text-center">
-              <span className="material-symbols-rounded text-[20px] text-[var(--md-sys-color-primary)]">
+              <span className="material-symbols-outlined text-[20px] text-[var(--md-sys-color-primary)]">
                 person_add
               </span>
               <span className="mt-1 text-xs text-[var(--md-sys-color-on-surface-variant)]">
@@ -37,7 +37,7 @@ export const ReferralOverviewTab: React.FC<ReferralOverviewTabProps> = ({ detail
             </div>
 
             <div className="flex flex-col items-center justify-center rounded-xl bg-[var(--md-sys-color-surface-container)] p-3 text-center">
-              <span className="material-symbols-rounded text-[20px] text-[var(--md-sys-color-primary)]">
+              <span className="material-symbols-outlined text-[20px] text-[var(--md-sys-color-primary)]">
                 medication
               </span>
               <span className="mt-1 text-xs text-[var(--md-sys-color-on-surface-variant)]">
@@ -49,7 +49,7 @@ export const ReferralOverviewTab: React.FC<ReferralOverviewTabProps> = ({ detail
             </div>
 
             <div className="flex flex-col items-center justify-center rounded-xl bg-[var(--md-sys-color-surface-container)] p-3 text-center">
-              <span className="material-symbols-rounded text-[20px] text-[var(--md-sys-color-primary)]">
+              <span className="material-symbols-outlined text-[20px] text-[var(--md-sys-color-primary)]">
                 monitoring
               </span>
               <span className="mt-1 text-xs text-[var(--md-sys-color-on-surface-variant)]">
@@ -77,7 +77,7 @@ export const ReferralOverviewTab: React.FC<ReferralOverviewTabProps> = ({ detail
                   : 'bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]'
               }`}
             >
-              <span className="material-symbols-rounded text-[20px]">psychology</span>
+              <span className="material-symbols-outlined text-[20px]">psychology</span>
               <span className="mt-1 text-xs">自杀意念</span>
               <span className="mt-0.5 text-sm font-bold">{risk.ideation ? '是' : '否'}</span>
             </div>
@@ -89,7 +89,7 @@ export const ReferralOverviewTab: React.FC<ReferralOverviewTabProps> = ({ detail
                   : 'bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]'
               }`}
             >
-              <span className="material-symbols-rounded text-[20px]">personal_injury</span>
+              <span className="material-symbols-outlined text-[20px]">personal_injury</span>
               <span className="mt-1 text-xs">自杀企图</span>
               <span className="mt-0.5 text-sm font-bold">{risk.attempt ? '是' : '否'}</span>
             </div>
@@ -101,7 +101,7 @@ export const ReferralOverviewTab: React.FC<ReferralOverviewTabProps> = ({ detail
                   : 'bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]'
               }`}
             >
-              <span className="material-symbols-rounded text-[20px]">healing</span>
+              <span className="material-symbols-outlined text-[20px]">healing</span>
               <span className="mt-1 text-xs">自残行为</span>
               <span className="mt-0.5 text-sm font-bold">{risk.selfHarm ? '是' : '否'}</span>
             </div>
@@ -113,7 +113,7 @@ export const ReferralOverviewTab: React.FC<ReferralOverviewTabProps> = ({ detail
       {triage?.fullDescription && (
         <div className="rounded-2xl border-l-4 border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-surface-container-low)] p-4 shadow-sm">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--md-sys-color-primary)]">
-            <span className="material-symbols-rounded text-[16px]">format_quote</span>
+            <span className="material-symbols-outlined text-[16px]">format_quote</span>
             <span>转诊原因及详细主诉</span>
           </div>
           <p className="mt-2 text-sm leading-relaxed text-[var(--md-sys-color-on-surface)] whitespace-pre-wrap">
@@ -135,7 +135,7 @@ export const ReferralOverviewTab: React.FC<ReferralOverviewTabProps> = ({ detail
                 className="flex items-center justify-between rounded-xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container)] px-3 py-2.5"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="material-symbols-rounded text-[20px] text-[var(--md-sys-color-primary)] shrink-0">
+                  <span className="material-symbols-outlined text-[20px] text-[var(--md-sys-color-primary)] shrink-0">
                     attachment
                   </span>
                   <div className="truncate">

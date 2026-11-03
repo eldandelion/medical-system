@@ -104,11 +104,11 @@ export const ReferralTrackerTab: React.FC<ReferralTrackerTabProps> = ({
                   className={`absolute -left-6 top-1.5 flex h-6 w-6 items-center justify-center rounded-full text-xs transition-colors ${dotClasses}`}
                 >
                   {isCompleted ? (
-                    <span className="material-symbols-rounded text-[14px]">check</span>
+                    <span className="material-symbols-outlined text-[14px]">check</span>
                   ) : isIssue ? (
-                    <span className="material-symbols-rounded text-[14px]">close</span>
+                    <span className="material-symbols-outlined text-[14px]">close</span>
                   ) : (
-                    <span className="material-symbols-rounded text-[14px]">{config.icon}</span>
+                    <span className="material-symbols-outlined text-[14px]">{config.icon}</span>
                   )}
                 </div>
 
@@ -153,7 +153,7 @@ export const ReferralTrackerTab: React.FC<ReferralTrackerTabProps> = ({
         <div className="rounded-2xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--md-sys-color-primary)]">
-              <span className="material-symbols-rounded text-[18px]">output_circle</span>
+              <span className="material-symbols-outlined text-[18px]">output_circle</span>
               <span>转诊去向</span>
             </div>
             <span className="rounded-full bg-[var(--md-sys-color-secondary-container)] px-2 py-0.5 text-[11px] font-semibold text-[var(--md-sys-color-on-secondary-container)]">
@@ -203,7 +203,7 @@ export const ReferralTrackerTab: React.FC<ReferralTrackerTabProps> = ({
         <div className="rounded-2xl bg-[var(--md-sys-color-primary-container)] p-4 text-[var(--md-sys-color-on-primary-container)] shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider">
-              <span className="material-symbols-rounded text-[18px]">event_available</span>
+              <span className="material-symbols-outlined text-[18px]">event_available</span>
               <span>就诊预约</span>
             </div>
             <span className="rounded-full bg-[var(--md-sys-color-primary)] px-2 py-0.5 text-[11px] font-semibold text-[var(--md-sys-color-on-primary)]">
@@ -213,7 +213,7 @@ export const ReferralTrackerTab: React.FC<ReferralTrackerTabProps> = ({
 
           <div className="mt-3 flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]">
-              <span className="material-symbols-rounded text-[20px]">calendar_clock</span>
+              <span className="material-symbols-outlined text-[20px]">calendar_clock</span>
             </div>
             <div>
               <p className="text-xs opacity-80">预约时间</p>

@@ -39,6 +39,9 @@ export const ReferralCard: React.FC<ReferralCardProps> = ({
     ? referral.date.replace('T', ' ').substring(0, 16)
     : '';
 
+  const initiatorName = referral.referredBy?.name?.trim();
+  const initiatorInitial = initiatorName ? Array.from(initiatorName)[0] : '';
+
   const handleStatusBadgeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onStatusClick?.(referral.status);
@@ -47,7 +50,7 @@ export const ReferralCard: React.FC<ReferralCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className="group relative cursor-pointer overflow-hidden rounded-2xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] p-4 shadow-sm transition-all duration-200 active:scale-[0.99] active:bg-[var(--md-sys-color-surface-container)]"
+      className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[var(--md-sys-color-surface-container-low)] p-4 transition-all duration-200 active:scale-[0.99] active:bg-[var(--md-sys-color-surface-container)]"
     >
       {/* Top Header: Type & Badges */}
       <div className="flex items-center justify-between gap-2">
@@ -72,7 +75,7 @@ export const ReferralCard: React.FC<ReferralCardProps> = ({
           className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-opacity active:opacity-75 ${statusClass}`}
         >
           <span>{statusLabel}</span>
-          <span className="material-symbols-rounded text-[14px]">arrow_forward</span>
+          <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
         </button>
       </div>
 
@@ -91,21 +94,26 @@ export const ReferralCard: React.FC<ReferralCardProps> = ({
       {/* Bottom Footer: Initiator, Date, Drilldown affordance */}
       <div className="mt-4 flex items-center justify-between border-t border-[var(--md-sys-color-outline-variant)]/60 pt-3 text-xs text-[var(--md-sys-color-outline)]">
         <div className="flex items-center gap-3">
-          {referral.referredBy?.name && (
-            <span className="flex items-center gap-1">
-              <span className="material-symbols-rounded text-[14px]">person</span>
-              <span>发起: {referral.referredBy.name}</span>
+          {initiatorName && initiatorInitial && (
+            <span className="flex items-center gap-1.5">
+              <span
+                className="flex size-[18px] items-center justify-center rounded-full bg-[var(--md-sys-color-primary-container)] text-[10px] font-semibold text-[var(--md-sys-color-on-primary-container)] shrink-0 select-none"
+                aria-hidden="true"
+              >
+                {initiatorInitial}
+              </span>
+              <span>发起: {initiatorName}</span>
             </span>
           )}
           {formattedDate && (
             <span className="flex items-center gap-1">
-              <span className="material-symbols-rounded text-[14px]">schedule</span>
+              <span className="material-symbols-outlined text-[14px]">schedule</span>
               <span>{formattedDate}</span>
             </span>
           )}
         </div>
 
-        <span className="material-symbols-rounded text-[18px] text-[var(--md-sys-color-on-surface-variant)]">
+        <span className="material-symbols-outlined text-[18px] text-[var(--md-sys-color-on-surface-variant)]">
           chevron_right
         </span>
       </div>

@@ -78,7 +78,7 @@ export const ReferralsPage: React.FC = () => {
           </div>
         ) : filteredReferrals.length === 0 ? (
           <div className="py-12 flex flex-col items-center justify-center text-center text-[var(--md-sys-color-on-surface-variant)]">
-            <span className="material-symbols-rounded text-[48px] opacity-40">
+            <span className="material-symbols-outlined text-[48px] opacity-40">
               {filter === 'closed' ? 'inventory_2' : 'medical_services'}
             </span>
             <p className="text-sm mt-3 font-medium">

@@ -144,14 +144,16 @@ describe('ReferralsPage', () => {
   });
 
   describe('empty states', () => {
-    it('displays "暂无转诊记录" when filter is all and list is empty', () => {
+    it('displays "暂无转诊记录" when filter is all and list is empty with material-symbols-outlined icon', () => {
       const ctx = createMockContext({
         referrals: [],
         filteredReferrals: [],
         filter: 'all',
       });
-      renderWithContext(ctx);
+      const { container } = renderWithContext(ctx);
       expect(screen.getByText('暂无转诊记录')).toBeDefined();
+      expect(container.querySelector('.material-symbols-outlined')).not.toBeNull();
+      expect(container.querySelector('.material-symbols-rounded')).toBeNull();
     });
 
     it('displays "暂无进行中的转诊" when filter is in_progress and list is empty', () => {
@@ -160,7 +162,11 @@ describe('ReferralsPage', () => {
         filter: 'in_progress',
       });
       renderWithContext(ctx);
-      expect(screen.getByText('暂无进行中的转诊')).toBeDefined();
+      const textEl = screen.getByText('暂无进行中的转诊');
+      const emptyStateContainer = textEl.parentElement;
+      expect(textEl).toBeDefined();
+      expect(emptyStateContainer?.querySelector('.material-symbols-outlined')?.textContent?.trim()).toBe('medical_services');
+      expect(emptyStateContainer?.querySelector('.material-symbols-rounded')).toBeNull();
     });
 
     it('displays "暂无已结案转诊" when filter is closed and list is empty', () => {
@@ -169,7 +175,11 @@ describe('ReferralsPage', () => {
         filter: 'closed',
       });
       renderWithContext(ctx);
-      expect(screen.getByText('暂无已结案转诊')).toBeDefined();
+      const textEl = screen.getByText('暂无已结案转诊');
+      const emptyStateContainer = textEl.parentElement;
+      expect(textEl).toBeDefined();
+      expect(emptyStateContainer?.querySelector('.material-symbols-outlined')?.textContent?.trim()).toBe('inventory_2');
+      expect(emptyStateContainer?.querySelector('.material-symbols-rounded')).toBeNull();
     });
   });
 

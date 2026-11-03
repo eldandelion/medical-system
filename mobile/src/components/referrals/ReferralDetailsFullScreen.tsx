@@ -104,7 +104,7 @@ export const ReferralDetailsFullScreen: React.FC<ReferralDetailsFullScreenProps>
             aria-label="返回"
             className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--md-sys-color-on-surface)] transition-colors active:bg-[var(--md-sys-color-surface-container-high)]"
           >
-            <span className="material-symbols-rounded text-[22px]">arrow_back</span>
+            <span className="material-symbols-outlined text-[22px]">arrow_back</span>
           </button>
 
           {/* Title Area */}
@@ -134,7 +134,7 @@ export const ReferralDetailsFullScreen: React.FC<ReferralDetailsFullScreenProps>
               className={`inline-flex items-center gap-0.5 rounded-full px-2.5 py-0.5 text-xs font-semibold transition-opacity active:opacity-75 ${statusClass}`}
             >
               <span>{statusLabel}</span>
-              <span className="material-symbols-rounded text-[14px]">arrow_forward</span>
+              <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
             </button>
           </div>
         </div>
@@ -192,7 +192,7 @@ export const ReferralDetailsFullScreen: React.FC<ReferralDetailsFullScreenProps>
           </div>
         ) : error || !details ? (
           <div className="flex flex-col items-center justify-center p-8 text-center">
-            <span className="material-symbols-rounded text-[40px] text-[var(--md-sys-color-error)]">
+            <span className="material-symbols-outlined text-[40px] text-[var(--md-sys-color-error)]">
               error_outline
             </span>
             <p className="mt-2 text-sm text-[var(--md-sys-color-error)]">
