@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { AppContent } from './StudentApp';
 import { AuthContext } from './contexts/AuthContext';
 import { AssessmentContext } from './contexts/AssessmentContext';
@@ -169,7 +169,7 @@ describe('StudentApp', () => {
 
     // Click on 个人中心 tab
     fireEvent.click(tabs[2]);
-    await screen.findByText('个人信息');
+    await screen.findByText('中南大学 · 个人档案');
     expect(screen.getByText('医疗与数据安全须知')).toBeDefined();
 
     // Click back to 问卷测评 tab
@@ -188,15 +188,16 @@ describe('StudentApp', () => {
     expect(screen.getByText('还有 2 项转诊进行中')).toBeDefined();
   });
 
-  it('scroll-triggered header filter displays REFERRAL_FILTER_ITEMS when scrolled on Tab 1', () => {
+  it('scroll-triggered header filter displays REFERRAL_FILTER_ITEMS when scrolled on Tab 1', async () => {
     renderWithProviders({}, {}, { isScrolled: true, totalCount: 2 });
 
     const tabs = document.querySelectorAll('md-navigation-tab');
     fireEvent.click(tabs[1]);
 
     // Segmented filter is in header
-    expect(screen.getByRole('radio', { name: /全部/ })).toBeDefined();
-    expect(screen.getByRole('radio', { name: /进行中/ })).toBeDefined();
-    expect(screen.getByRole('radio', { name: /已结案/ })).toBeDefined();
+    const header = document.querySelector('header')!;
+    await within(header).findByRole('radio', { name: /全部/ });
+    expect(within(header).getByRole('radio', { name: /进行中/ })).toBeDefined();
+    expect(within(header).getByRole('radio', { name: /已结案/ })).toBeDefined();
   });
 });
