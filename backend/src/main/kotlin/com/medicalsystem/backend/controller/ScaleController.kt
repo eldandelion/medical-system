@@ -30,46 +30,54 @@ class ScaleController(
     @GetMapping
     fun listScales(@CurrentUser user: User?): ResponseEntity<List<ScaleSummaryDto>> {
         val currentUser = user ?: throw UnauthorizedException("Unauthorized")
-        val scale = catalogLoader.getScaleDetail("comprehensive_student_intake_survey")
-            ?: return ResponseEntity.ok(emptyList())
-
         val assignments = assignmentJpaRepository.findByStudentId(currentUser.id)
-        val surveyAssignment = assignments.firstOrNull { it.batteryCode == "comprehensive_student_intake_survey" }
+            .filter { it.status != AssessmentStatus.REVOKED }
 
-        val (status, answeredCount, percentage) = when {
-            surveyAssignment?.status == AssessmentStatus.COMPLETED -> {
-                Triple("COMPLETED", scale.questions.size, 100)
-            }
-            else -> {
-                val draft = scaleDraftService.getDraft(currentUser.id, "comprehensive_student_intake_survey")
-                val nonEmptyCount = draft?.answers?.values?.count { v ->
-                    when (v) {
-                        is Collection<*> -> v.isNotEmpty()
-                        else -> v.toString().isNotBlank()
-                    }
-                } ?: 0
-                if (nonEmptyCount > 0) {
-                    val pct = ((nonEmptyCount.toDouble() / scale.questions.size.coerceAtLeast(1)) * 100).toInt().coerceAtMost(100)
-                    Triple("IN_PROGRESS", nonEmptyCount, pct)
-                } else {
-                    Triple("NOT_STARTED", 0, 0)
-                }
-            }
+        if (assignments.isEmpty()) {
+            return ResponseEntity.ok(emptyList())
         }
 
-        val summary = ScaleSummaryDto(
-            code = scale.code,
-            title = scale.title,
-            subtitle = scale.subtitle,
-            description = scale.description ?: "",
-            questionCount = scale.questions.size,
-            estimatedMinutes = scale.estimatedMinutes,
-            status = status,
-            answeredCount = answeredCount,
-            completionPercentage = percentage
-        )
+        val batteryCodes = assignments.map { it.batteryCode }.distinct()
 
-        return ResponseEntity.ok(listOf(summary))
+        val summaries = batteryCodes.mapNotNull { batteryCode ->
+            val scale = catalogLoader.getScaleDetail(batteryCode) ?: return@mapNotNull null
+            val assignment = assignments.firstOrNull { it.batteryCode == batteryCode }
+
+            val (status, answeredCount, percentage) = when {
+                assignment?.status == AssessmentStatus.COMPLETED -> {
+                    Triple("COMPLETED", scale.questions.size, 100)
+                }
+                else -> {
+                    val draft = scaleDraftService.getDraft(currentUser.id, batteryCode)
+                    val nonEmptyCount = draft?.answers?.values?.count { v ->
+                        when (v) {
+                            is Collection<*> -> v.isNotEmpty()
+                            else -> v.toString().isNotBlank()
+                        }
+                    } ?: 0
+                    if (nonEmptyCount > 0) {
+                        val pct = ((nonEmptyCount.toDouble() / scale.questions.size.coerceAtLeast(1)) * 100).toInt().coerceAtMost(100)
+                        Triple("IN_PROGRESS", nonEmptyCount, pct)
+                    } else {
+                        Triple("NOT_STARTED", 0, 0)
+                    }
+                }
+            }
+
+            ScaleSummaryDto(
+                code = scale.code,
+                title = scale.title,
+                subtitle = scale.subtitle,
+                description = scale.description ?: "",
+                questionCount = scale.questions.size,
+                estimatedMinutes = scale.estimatedMinutes,
+                status = status,
+                answeredCount = answeredCount,
+                completionPercentage = percentage
+            )
+        }
+
+        return ResponseEntity.ok(summaries)
     }
 
     @GetMapping("/{code}")

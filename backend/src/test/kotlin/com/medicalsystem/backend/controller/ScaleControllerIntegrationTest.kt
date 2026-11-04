@@ -85,6 +85,16 @@ class ScaleControllerIntegrationTest {
             )
         )
 
+        assessmentAssignmentJpaRepository.save(
+            AssessmentAssignmentEntity(
+                student = studentEntity,
+                assignedByUser = studentUser,
+                batteryCode = "comprehensive_student_intake_survey",
+                status = AssessmentStatus.PENDING,
+                assignedAt = java.time.LocalDateTime.now()
+            )
+        )
+
         val userModel = User(
             id = studentUser.id,
             name = studentUser.name,
@@ -120,6 +130,14 @@ class ScaleControllerIntegrationTest {
             .andExpect(jsonPath("$[0].code").value("comprehensive_student_intake_survey"))
             .andExpect(jsonPath("$[0].status").value("NOT_STARTED"))
             .andExpect(jsonPath("$[0].questionCount").value(377))
+    }
+
+    @Test
+    fun `testListScales_NoAssignments_ReturnsEmptyList`() {
+        assessmentAssignmentJpaRepository.deleteAll()
+        mockMvc.perform(get("/api/scales"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$").isEmpty)
     }
 
     @Test
