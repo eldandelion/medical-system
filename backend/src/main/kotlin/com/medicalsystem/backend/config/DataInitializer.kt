@@ -108,9 +108,11 @@ class DataInitializer(
         // Two deliberately separate switches: inserting demo rows (SEED_DEMO_DATA) and
         // destroying the entire database (SEED_WIPE_ALL_TABLES) must never share one flag.
         // Defaults: seed-if-empty ON, destructive wipe OFF. A restart must never truncate.
-        val seedEnabled = System.getenv(SEED_DEMO_DATA_ENV)?.equals("true", ignoreCase = true) ?: true
-        val wipeRequested = System.getenv(SEED_WIPE_ALL_TABLES_ENV)?.equals("true", ignoreCase = true) ?: false
-        val maxStudentsBeforeRefusing = System.getenv(SEED_WIPE_MAX_STUDENTS_ENV)?.toLongOrNull()
+        // Resolution order: Spring Environment (testable) first, then the OS env var.
+        fun flag(name: String): String? = environment.getProperty(name) ?: System.getenv(name)
+        val seedEnabled = flag(SEED_DEMO_DATA_ENV)?.equals("true", ignoreCase = true) ?: true
+        val wipeRequested = flag(SEED_WIPE_ALL_TABLES_ENV)?.equals("true", ignoreCase = true) ?: false
+        val maxStudentsBeforeRefusing = flag(SEED_WIPE_MAX_STUDENTS_ENV)?.toLongOrNull()
             ?: DEFAULT_MAX_STUDENTS_BEFORE_REFUSING
 
         val studentRows: Long = try {
