@@ -1,6 +1,7 @@
 package com.medicalsystem.backend.service
 
 import com.medicalsystem.backend.dto.*
+import com.medicalsystem.backend.exception.ConflictException
 import com.medicalsystem.backend.exception.ForbiddenException
 import com.medicalsystem.backend.exception.NotFoundException
 import com.medicalsystem.backend.mapper.AssessmentMapper.toCatalogItemDto
@@ -27,12 +28,10 @@ class AssessmentService(
     private val dispatchRepository: com.medicalsystem.backend.repository.AssessmentDispatchRepository,
     private val clock: Clock,
     private val scaleDraftService: ScaleDraftService? = null,
-    private val studentJpaRepository: com.medicalsystem.backend.repository.StudentJpaRepository? = null,
-    private val demographicsProjector: DemographicsProjector? = null,
     private val clinicalRiskEvaluator: ClinicalRiskEvaluator? = null,
-    private val domainEventPublisher: com.medicalsystem.backend.event.DomainEventPublisher? = null
+    private val domainEventPublisher: com.medicalsystem.backend.event.DomainEventPublisher? = null,
+    private val demographicsProjectionService: DemographicsProjectionService? = null
 ) {
-
     @Transactional(readOnly = true)
     fun getAssessmentsForUser(user: User): List<AssessmentListItemDto> {
         val assignments = when (user.role) {
@@ -269,19 +268,27 @@ class AssessmentService(
         )
         assignment.completedAt = LocalDateTime.now(clock) // override to use clock
 
-        val savedAssignment = assignmentRepository.save(assignment)
+        // saveAndFlush + optimistic @Version on the assignment row guarantees exactly one submit
+        // transaction can transition an assignment to COMPLETED; a concurrent loser gets a 409.
+        val savedAssignment = saveAssignmentOrConflict(assignment)
 
         // 1. Purge draft
         scaleDraftService?.purgeDraft(assignment.studentId, assignment.batteryCode.value)
 
-        // 2. Project demographics
-        studentJpaRepository?.findById(assignment.studentId)?.ifPresent { studentEntity ->
-            demographicsProjector?.projectDemographics(studentEntity, answersMap)
-            studentJpaRepository.save(studentEntity)
-        }
+        // 2. Optional projection must not mutate managed entities in this transaction.
+        // The separate service waits for commit, then reloads in REQUIRES_NEW.
+        demographicsProjectionService?.afterSubmission(assignment.studentId, answersMap)
 
         // 3. Clinical Risk Evaluation (runs before event publishing so AFTER_COMMIT listeners see updated riskStatus)
-        clinicalRiskEvaluator?.evaluateRisk(assignment.studentId, answersMap, completedTests)
+        val riskResult = clinicalRiskEvaluator?.evaluateRisk(assignment.studentId, answersMap, completedTests)
+        if (riskResult != null) {
+            savedAssignment.severity = when (riskResult.riskStatus) {
+                RiskStatus.HIGH -> ResultSeverity.HIGH
+                RiskStatus.MEDIUM -> ResultSeverity.MODERATE
+                RiskStatus.LOW -> ResultSeverity.LOW
+            }
+            saveAssignmentOrConflict(savedAssignment)
+        }
 
         assignment.getDomainEvents().forEach { domainEventPublisher?.publish(it) }
         assignment.clearDomainEvents()
@@ -292,6 +299,19 @@ class AssessmentService(
             totalQuestionsAnswered = answersMap.size,
             completedAt = savedAssignment.completedAt ?: LocalDateTime.now(clock)
         )
+    }
+
+    /**
+     * Saves the assignment, translating an optimistic-lock (version) conflict — i.e. a concurrent
+     * submit that already transitioned the row to COMPLETED — into the same 409 semantics as a
+     * sequential resubmit.
+     */
+    private fun saveAssignmentOrConflict(assignment: com.medicalsystem.backend.model.AssessmentAssignment): com.medicalsystem.backend.model.AssessmentAssignment {
+        return try {
+            assignmentRepository.save(assignment)
+        } catch (e: org.springframework.dao.OptimisticLockingFailureException) {
+            throw ConflictException("问卷测评已完成，不可重复提交")
+        }
     }
 
     fun getDraftForAssignment(assignmentId: Long, currentUser: User): ScaleDraftDto? {

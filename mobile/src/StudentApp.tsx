@@ -22,10 +22,11 @@ import { AuthPage } from './pages/AuthPage';
 import { AssessmentsPage } from './pages/AssessmentsPage';
 import { ReferralsPage } from './pages/ReferralsPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { TeacherDispatchPage } from './pages/TeacherDispatchPage';
 import './utils/navigationTabStyles';
 
 export function AppContent() {
-  const { student, loading } = useAuth();
+  const { student, loading, role } = useAuth();
   const {
     totalCount,
     completedCount,
@@ -53,7 +54,11 @@ export function AppContent() {
   const mainRef = useRef<HTMLElement>(null);
   const navBarRef = useRef<HTMLElement | null>(null);
 
+  const isTeacher = role === 'TEACHER' || role === 'HEAD_COUNSELLOR';
+  const tabCount = isTeacher ? 4 : 3;
+
   const handleTabChange = (tab: number) => {
+    if (tab >= tabCount) return;
     setActiveTab(tab);
     setIsAssessmentScrolled(false);
     setIsReferralScrolled(false);
@@ -71,16 +76,18 @@ export function AppContent() {
     if (!el) return;
     const handler = (e: any) => {
       const newIndex = e.target?.activeIndex ?? e.detail?.activeIndex;
-      if (typeof newIndex === 'number' && newIndex >= 0 && newIndex <= 2) {
+      const maxTab = isTeacher ? 3 : 2;
+      if (typeof newIndex === 'number' && newIndex >= 0 && newIndex <= maxTab) {
         handleTabChange(newIndex);
       }
     };
     el.addEventListener('navigation-bar-change', handler);
     return () => el.removeEventListener('navigation-bar-change', handler);
-  }, []);
+  }, [isTeacher]);
 
+  const referralTabIndex = isTeacher ? 2 : 1;
   const showAssessmentHeaderFilter = activeTab === 0 && isAssessmentScrolled && totalCount > 1;
-  const showReferralHeaderFilter = activeTab === 1 && isReferralScrolled && referralTotalCount > 0;
+  const showReferralHeaderFilter = activeTab === referralTabIndex && isReferralScrolled && referralTotalCount > 0;
 
   if (loading) {
     return (
@@ -168,7 +175,9 @@ export function AppContent() {
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--md-sys-color-primary)] block leading-tight">
                     {activeTab === 0
                       ? '中南大学 · 心理普查'
-                      : activeTab === 1
+                      : isTeacher && activeTab === 1
+                      ? '中南大学 · 问卷分发'
+                      : activeTab === (isTeacher ? 2 : 1)
                       ? '中南大学 · 医疗转诊'
                       : '中南大学 · 个人档案'}
                   </span>
@@ -183,7 +192,9 @@ export function AppContent() {
                         : singleScale
                         ? '心身健康普查问卷待填报'
                         : `还有 ${remainingCount} 项任务待完成`
-                    ) : activeTab === 1 ? (
+                    ) : isTeacher && activeTab === 1 ? (
+                      '发放普查问卷'
+                    ) : activeTab === (isTeacher ? 2 : 1) ? (
                       referralsLoading
                         ? '正在获取转诊记录...'
                         : referralInProgressCount > 0
@@ -219,7 +230,7 @@ export function AppContent() {
       <main
         ref={mainRef}
         className={`w-full max-w-md flex-1 p-4 sm:p-5 pb-24 overflow-y-auto ${
-          activeTab === 0 || activeTab === 1 ? 'pt-0 -mt-[2px]' : 'pt-6 sm:pt-8'
+          activeTab === 0 || activeTab === (isTeacher ? 2 : 1) ? 'pt-0 -mt-[2px]' : 'pt-6 sm:pt-8'
         }`}
         onScroll={(e) => {
           const top = e.currentTarget.scrollTop;
@@ -229,7 +240,7 @@ export function AppContent() {
             } else if (isAssessmentScrolled && top <= 10) {
               setIsAssessmentScrolled(false);
             }
-          } else if (activeTab === 1) {
+          } else if (activeTab === (isTeacher ? 2 : 1)) {
             if (!isReferralScrolled && top > 35) {
               setIsReferralScrolled(true);
             } else if (isReferralScrolled && top <= 10) {
@@ -240,7 +251,9 @@ export function AppContent() {
       >
         {activeTab === 0 ? (
           <AssessmentsPage />
-        ) : activeTab === 1 ? (
+        ) : isTeacher && activeTab === 1 ? (
+          <TeacherDispatchPage />
+        ) : activeTab === (isTeacher ? 2 : 1) ? (
           <ReferralsPage />
         ) : (
           <ProfilePage />
@@ -274,9 +287,20 @@ export function AppContent() {
             </md-icon>
             <md-icon slot="inactive-icon">assignment</md-icon>
           </md-navigation-tab>
+          {isTeacher && (
+            <md-navigation-tab
+              label="发放问卷"
+              onClick={() => handleTabChange(1)}
+            >
+              <md-icon slot="active-icon" filled style={{ fontVariationSettings: "'FILL' 1" } as any}>
+                send
+              </md-icon>
+              <md-icon slot="inactive-icon">send</md-icon>
+            </md-navigation-tab>
+          )}
           <md-navigation-tab
-            label="就医转诊"
-            onClick={() => handleTabChange(1)}
+            label={isTeacher ? "转诊进度" : "就医转诊"}
+            onClick={() => handleTabChange(isTeacher ? 2 : 1)}
           >
             <md-icon slot="active-icon" filled style={{ fontVariationSettings: "'FILL' 1" } as any}>
               medical_services
@@ -285,7 +309,7 @@ export function AppContent() {
           </md-navigation-tab>
           <md-navigation-tab
             label="个人中心"
-            onClick={() => handleTabChange(2)}
+            onClick={() => handleTabChange(isTeacher ? 3 : 2)}
           >
             <md-icon slot="active-icon" filled style={{ fontVariationSettings: "'FILL' 1" } as any}>
               account_circle

@@ -9,6 +9,7 @@ import { NotificationsView } from '../components/notifications/NotificationsView
 import { ProfileView } from '../components/profile/ProfileView';
 import { StudentsView } from '../components/students/StudentsView';
 import { ReferralManagementView } from '../components/records/ReferralManagementView';
+import { HighRiskListView } from '../components/records/HighRiskListView';
 import { SecurityConsentView } from '../components/security/SecurityConsentView';
 import { DetailsPanel, DetailsSection, DetailItem } from '../components/common/DetailsPanel';
 import { roleTranslations } from '../utils/roleTranslations';
@@ -39,6 +40,7 @@ export const HeadCouncillorTabs = {
   DASHBOARD: 'Dashboard',
   NOTIFICATIONS: 'Notifications',
   STUDENTS: 'Students',
+  HIGH_RISK: 'High Risk',
   STAFF: 'Staff',
   ASSESSMENTS: 'Assessments',
   REFERRAL_MANAGEMENT: 'Referral Management',
@@ -51,6 +53,7 @@ const HEAD_COUNCILLOR_TAB_TITLES: Record<HeadCouncillorPageName, string> = {
   [HeadCouncillorTabs.DASHBOARD]: '控制面板',
   [HeadCouncillorTabs.NOTIFICATIONS]: '通知中心',
   [HeadCouncillorTabs.STUDENTS]: '学生管理',
+  [HeadCouncillorTabs.HIGH_RISK]: '高危名单',
   [HeadCouncillorTabs.STAFF]: '人员管理',
   [HeadCouncillorTabs.ASSESSMENTS]: '测评量表',
   [HeadCouncillorTabs.REFERRAL_MANAGEMENT]: '转诊管理',
@@ -210,6 +213,8 @@ export function HeadCouncillorPage() {
         );
       case HeadCouncillorTabs.STUDENTS:
         return <StudentsView resetToken={lastEvent?.timestamp} onStudentSelect={setSelectedItem} selectedStudentId={selectedItem?.id} header={(loading) => <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage]} isLoading={loading} />} />;
+      case HeadCouncillorTabs.HIGH_RISK:
+        return <HighRiskListView header={(loading) => <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage]} isLoading={loading} />} />;
       case HeadCouncillorTabs.STAFF:
         return (
           <>
@@ -280,6 +285,14 @@ export function HeadCouncillorPage() {
                 statusType: ui.statusType
               };
             }) ?? []}
+            onActivityClick={item => {
+              const raw = activityData?.activities?.find(a => String(a.id) === item.id);
+              const type = raw?.type;
+              if (type?.startsWith('REFERRAL_')) handlePageChange(HeadCouncillorTabs.REFERRAL_MANAGEMENT);
+              else if (type?.startsWith('ASSESSMENT_') || type === 'HIGH_RISK_ASSESSMENT_SUBMITTED') handlePageChange(HeadCouncillorTabs.HIGH_RISK);
+              else if (type === 'USER_APPROVAL_PENDING') handlePageChange(HeadCouncillorTabs.STAFF);
+              else if (type === 'UNREAD_NOTIFICATION') handlePageChange(HeadCouncillorTabs.NOTIFICATIONS);
+            }}
           />
         </>) : null;
       default:
@@ -305,6 +318,7 @@ export function HeadCouncillorPage() {
         <NavItem icon="notifications" label="通知中心" active={activePage === HeadCouncillorTabs.NOTIFICATIONS} onClick={() => handlePageChange(HeadCouncillorTabs.NOTIFICATIONS)} badge={unreadCount > 0} />
 
         <NavItem icon="group" label="学生管理" active={activePage === HeadCouncillorTabs.STUDENTS} onClick={() => handlePageChange(HeadCouncillorTabs.STUDENTS)} />
+        <NavItem icon="warning" label="高危名单" active={activePage === HeadCouncillorTabs.HIGH_RISK} onClick={() => handlePageChange(HeadCouncillorTabs.HIGH_RISK)} />
         <NavItem icon="engineering" label="人员管理" active={activePage === HeadCouncillorTabs.STAFF} onClick={() => handlePageChange(HeadCouncillorTabs.STAFF)} />
         <NavItem icon="fact_check" label="测评量表" active={activePage === HeadCouncillorTabs.ASSESSMENTS} onClick={() => handlePageChange(HeadCouncillorTabs.ASSESSMENTS)} />
         <NavItem icon="assignment_turned_in" label="转诊管理" active={activePage === HeadCouncillorTabs.REFERRAL_MANAGEMENT} onClick={() => handlePageChange(HeadCouncillorTabs.REFERRAL_MANAGEMENT)} />

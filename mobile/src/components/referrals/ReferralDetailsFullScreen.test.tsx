@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { ReferralDetailsFullScreen } from './ReferralDetailsFullScreen';
 import { intakeApi, ReferralDetailsDto, ReferralTrackingDto } from '../../api/intakeApi';
@@ -65,6 +65,12 @@ describe('ReferralDetailsFullScreen', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-04T12:00:00Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('renders top bar with back button, student name, clickable status badge, and risk pill', async () => {

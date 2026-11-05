@@ -18,7 +18,10 @@ data class AssessmentAssignment(
     var completedAt: LocalDateTime? = null,
     val dueDate: LocalDate? = null,
     var answers: Map<String, Any>? = null,
-    var revokedAt: LocalDateTime? = null
+    var revokedAt: LocalDateTime? = null,
+    var severity: ResultSeverity = ResultSeverity.PENDING,
+    /** Optimistic-lock version carried over from AssessmentAssignmentEntity. */
+    val version: Long = 0
 ) : AggregateRoot() {
 
     fun initAssignedEvent() {

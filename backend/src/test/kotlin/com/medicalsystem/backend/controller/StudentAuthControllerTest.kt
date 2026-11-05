@@ -21,7 +21,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.transaction.annotation.Transactional
 
-@SpringBootTest
+@SpringBootTest(properties = ["SEED_DEMO_DATA=true", "spring.datasource.url=jdbc:h2:mem:auth_seed_test;DB_CLOSE_DELAY=-1"])
 @Transactional
 class StudentAuthControllerTest {
 

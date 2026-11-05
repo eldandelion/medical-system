@@ -9,6 +9,10 @@ import com.medicalsystem.backend.model.User
 import com.medicalsystem.backend.repository.AssessmentAssignmentJpaRepository
 import com.medicalsystem.backend.repository.StudentJpaRepository
 import com.medicalsystem.backend.repository.UserJpaRepository
+import com.medicalsystem.backend.repository.StudentHealthProfileJpaRepository
+import com.medicalsystem.backend.model.RiskStatus
+import com.medicalsystem.backend.model.UserRole
+import com.medicalsystem.backend.exception.ForbiddenException
 import com.medicalsystem.backend.security.CurrentUser
 import org.springframework.http.ResponseEntity
 import org.springframework.transaction.annotation.Transactional
@@ -21,16 +25,50 @@ import org.springframework.web.bind.annotation.RestController
 class StudentProfileController(
     private val studentJpaRepository: StudentJpaRepository,
     private val userJpaRepository: UserJpaRepository,
-    private val assignmentJpaRepository: AssessmentAssignmentJpaRepository
+    private val assignmentJpaRepository: AssessmentAssignmentJpaRepository,
+    private val studentHealthProfileJpaRepository: StudentHealthProfileJpaRepository,
+    private val studentRepository: com.medicalsystem.backend.repository.StudentRepository
 ) {
 
+    data class UpdateHealthProfileDto(
+        val scidDiagnosis: String?,
+        val riskStatus: RiskStatus? = null
+    )
+
+    @Transactional
+    @org.springframework.web.bind.annotation.PutMapping("/{id}/health-profile")
+    fun updateHealthProfile(
+        @org.springframework.web.bind.annotation.PathVariable id: Long,
+        @org.springframework.web.bind.annotation.RequestBody dto: UpdateHealthProfileDto,
+        @CurrentUser user: User?
+    ): ResponseEntity<Map<String, String>> {
+        val currentUser = user ?: throw UnauthorizedException("Unauthorized")
+        if (currentUser.role !in listOf(UserRole.DOCTOR, UserRole.HEAD_COUNSELLOR, UserRole.SYSTEM_ADMIN)) {
+            throw ForbiddenException("Only doctors and head counsellors can update clinical diagnosis")
+        }
+        // Reuse the same scoped policy as student detail reads. Do not reveal
+        // whether an out-of-scope student exists, or touch their clinical data.
+        if (studentRepository.findByIdAndVisibleTo(id, currentUser).isEmpty) {
+            throw ForbiddenException("Student is not visible to this user")
+        }
+        val profile = studentHealthProfileJpaRepository.findByStudentId(id).orElseGet {
+            com.medicalsystem.backend.entity.StudentHealthProfileEntity(studentId = id, riskStatus = RiskStatus.LOW)
+        }
+        dto.scidDiagnosis?.let { profile.scidDiagnosis = it }
+        dto.riskStatus?.let { profile.riskStatus = it }
+        studentHealthProfileJpaRepository.save(profile)
+        return ResponseEntity.ok(mapOf("status" to "updated"))
+    }
+
+    // Uses a fetch-join query: spring.jpa.open-in-view=false and `major` is a LAZY @ManyToOne,
+    // so reading student.major outside a session raised LazyInitializationException (HTTP 500)
+    // for freshly registered students.
     @Transactional(readOnly = true)
     @GetMapping("/me/profile")
     fun getMyProfile(@CurrentUser user: User?): ResponseEntity<StudentProfileResponseDto> {
         val currentUser = user ?: throw UnauthorizedException("Unauthorized")
-        val student = studentJpaRepository.findById(currentUser.id).orElseThrow {
-            NotFoundException("Student profile not found for user ${currentUser.id}")
-        }
+        val student = studentJpaRepository.findWithMajorById(currentUser.id)
+            ?: throw NotFoundException("Student profile not found for user ${currentUser.id}")
         val userEntity = userJpaRepository.findById(currentUser.id).orElse(null)
 
         val assignments = assignmentJpaRepository.findByStudentId(currentUser.id)

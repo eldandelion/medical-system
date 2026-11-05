@@ -26,7 +26,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver
 import org.springframework.web.method.support.ModelAndViewContainer
 import java.time.LocalDate
 
-@SpringBootTest
+@SpringBootTest(properties = ["spring.datasource.url=jdbc:h2:mem:scale_commit_test;DB_CLOSE_DELAY=-1"])
 @Transactional
 class ScaleControllerIntegrationTest {
 
@@ -71,14 +71,14 @@ class ScaleControllerIntegrationTest {
                 role = UserRole.STUDENT,
                 email = EmailAddress("mobile_stu_${System.currentTimeMillis()}@univ.edu.cn"),
                 status = AccountStatus.ACTIVE,
-                phone = "13899998888"
+                phone = "1${System.nanoTime().toString().takeLast(10)}"
             )
         )
 
         studentEntity = studentJpaRepository.save(
             StudentEntity(
                 id = studentUser.id,
-                studentNumber = "STU_MOB_999",
+                studentNumber = "MOB_${System.nanoTime()}",
                 name = "移动端学生",
                 major = major,
                 enrollmentDate = LocalDate.of(2024, 9, 1)
@@ -182,9 +182,9 @@ class ScaleControllerIntegrationTest {
     fun `testGetStudentProfile_ReturnsProfileAndDemographics`() {
         mockMvc.perform(get("/api/students/me/profile"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.studentNumber").value("STU_MOB_999"))
+            .andExpect(jsonPath("$.studentNumber").value(studentEntity.studentNumber))
             .andExpect(jsonPath("$.fullName").value("移动端学生"))
-            .andExpect(jsonPath("$.phone").value("13899998888"))
+            .andExpect(jsonPath("$.phone").value(studentUser.phone))
             .andExpect(jsonPath("$.demographics.major").value(studentEntity.major.name))
             .andExpect(jsonPath("$.demographics.isSubmitted").value(false))
     }
@@ -217,7 +217,12 @@ class ScaleControllerIntegrationTest {
             .andExpect(jsonPath("$.status").value("COMPLETED"))
             .andExpect(jsonPath("$.scaleCode").value("comprehensive_student_intake_survey"))
 
-        // Profile should now reflect isDemographicsSubmitted = true
+        // The optional projection must not run against uncommitted fixtures.
+        org.springframework.test.context.transaction.TestTransaction.flagForCommit()
+        org.springframework.test.context.transaction.TestTransaction.end()
+        org.springframework.test.context.transaction.TestTransaction.start()
+
+        // A new persistence context sees the committed optional projection.
         mockMvc.perform(get("/api/students/me/profile"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.isDemographicsSubmitted").value(true))
@@ -230,6 +235,35 @@ class ScaleControllerIntegrationTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$[0].status").value("COMPLETED"))
             .andExpect(jsonPath("$[0].completionPercentage").value(100))
+    }
+
+    @Test
+    fun `testSubmitScale_OnCompletedAssignment_Returns409NotSilent200`() {
+        // Given: the student has already completed this scale (via any entry point)
+        assessmentAssignmentJpaRepository.deleteAll()
+        assessmentAssignmentJpaRepository.save(
+            AssessmentAssignmentEntity(
+                student = studentEntity,
+                assignedByUser = studentUser,
+                batteryCode = "comprehensive_student_intake_survey",
+                status = AssessmentStatus.COMPLETED,
+                assignedAt = java.time.LocalDateTime.now(),
+                completedAt = java.time.LocalDateTime.now(),
+                answersJson = """{"G1":1}"""
+            )
+        )
+
+        val submitReq = SubmitScaleRequest(answers = mapOf<String, Any>("G1" to 2))
+
+        // When/Then: a retake attempt via the scale path must be rejected with 409 (same as
+        // POST /api/assessments/{id}/submit), not silently accepted with 200.
+        mockMvc.perform(
+            post("/api/scales/comprehensive_student_intake_survey/submit")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(submitReq))
+        )
+            .andExpect(status().isConflict)
+            .andExpect(jsonPath("$.error").value("问卷测评已完成，不可重复提交"))
     }
 
     @Test

@@ -31,6 +31,7 @@ class ReferralService(
     private val doctorRepository: com.medicalsystem.backend.repository.DoctorRepository,
     private val trialAdminRepository: com.medicalsystem.backend.repository.TrialAdminRepository,
     private val referralMapper: ReferralMapper,
+    private val studentHealthProfileRepository: com.medicalsystem.backend.repository.StudentHealthProfileRepository,
     private val eventPublisher: com.medicalsystem.backend.event.DomainEventPublisher
 ) {
     private val logger = LoggerFactory.getLogger(ReferralService::class.java)
@@ -71,7 +72,8 @@ class ReferralService(
         }.orElseThrow { ResourceNotFoundException("Referral with ID $id not found") }
         val student = studentRepository.findById(model.studentId).orElse(null)
         val referredBy = userRepository.findById(model.referredById).orElse(null)
-        return referralMapper.toDetailsDto(model, student, referredBy, user)
+        val healthProfile = studentHealthProfileRepository.findByStudentId(model.studentId).orElse(null)
+        return referralMapper.toDetailsDto(model, student, referredBy, user, healthProfile?.scidDiagnosis)
     }
 
     fun fetchReferralTracking(id: Long, user: User? = null): ReferralTrackingDto {
@@ -108,6 +110,13 @@ class ReferralService(
     fun initiateReferral(dto: com.medicalsystem.backend.dto.CreateReferralDto, user: User): ReferralDto {
         val student = studentRepository.findById(dto.studentId)
             .orElseThrow { com.medicalsystem.backend.exception.StudentNotFoundException(dto.studentId) }
+
+        // Writes must obey the same visibility policy as reads: a user may only initiate a
+        // referral for a student they can access (HEAD_COUNSELLOR/SYSTEM_ADMIN see All).
+        studentRepository.findByIdAndVisibleTo(dto.studentId, user)
+            .orElseThrow {
+                com.medicalsystem.backend.exception.ForbiddenException("referral_target_not_visible")
+            }
             
         val attachmentModels = dto.attachments.map { att ->
             com.medicalsystem.backend.model.ReferralAttachment(

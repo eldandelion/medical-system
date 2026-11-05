@@ -28,7 +28,7 @@ import org.springframework.web.method.support.ModelAndViewContainer
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-@SpringBootTest
+@SpringBootTest(properties = ["spring.datasource.url=jdbc:h2:mem:draft_commit_test;DB_CLOSE_DELAY=-1"])
 @Transactional
 class AssessmentDraftIntegrationTest {
 
@@ -77,14 +77,14 @@ class AssessmentDraftIntegrationTest {
                 role = UserRole.STUDENT,
                 email = EmailAddress("draft_student_${System.currentTimeMillis()}@univ.edu.cn"),
                 status = AccountStatus.ACTIVE,
-                phone = "13800009999"
+                phone = "1${System.nanoTime().toString().takeLast(10)}"
             )
         )
 
         studentEntity = studentJpaRepository.save(
             StudentEntity(
                 id = studentUser.id,
-                studentNumber = "STU_DRAFT_001",
+                studentNumber = "DRAFT_${System.nanoTime()}",
                 name = "测试学生",
                 major = major,
                 enrollmentDate = LocalDate.now()
@@ -233,7 +233,12 @@ class AssessmentDraftIntegrationTest {
         val draftOpt = scaleDraftJpaRepository.findByStudentIdAndScaleCode(studentUser.id, "comprehensive_student_intake_survey")
         assertFalse(draftOpt.isPresent, "Draft must be deleted upon submission")
 
-        // Verify demographics projection
+        // Commit core data before the independent after-commit projection can reload it.
+        org.springframework.test.context.transaction.TestTransaction.flagForCommit()
+        org.springframework.test.context.transaction.TestTransaction.end()
+        org.springframework.test.context.transaction.TestTransaction.start()
+
+        // Verify demographics projection from a fresh persistence context.
         val student = studentJpaRepository.findById(studentUser.id).get()
         assertNotNull(student.demographics)
         assertEquals(Gender.MALE, student.demographics?.gender)

@@ -16,6 +16,26 @@ export interface AuthResponse {
   fullName?: string;
   phone?: string;
   student?: StudentDto;
+  role?: 'STUDENT' | 'TEACHER' | 'DOCTOR' | 'HEAD_COUNSELLOR' | 'ADMIN' | string;
+  name?: string;
+  userId?: number;
+}
+
+export interface AssessmentCatalogItem {
+  batteryCode: string;
+  title: string;
+  subtitle?: string | null;
+  duration: string;
+  questionCount: number;
+  isEnabled: boolean;
+}
+
+export interface StaffStudentDto {
+  id: string;
+  studentNumber?: string;
+  name: string;
+  major: string;
+  riskLevel?: 'HIGH' | 'MEDIUM' | 'LOW';
 }
 
 export interface RegisterRequest {
@@ -389,4 +409,19 @@ export const intakeApi = {
 
   getReferralTracking: (id: string | number) =>
     request<ReferralTrackingDto>(`/api/referrals/${id}/tracking`),
+
+  // Teacher assessment dispatch
+  getAssessmentCatalog: () => request<AssessmentCatalogItem[]>('/api/assessments/catalog'),
+
+  getStaffStudents: () => request<StaffStudentDto[]>('/api/students'),
+
+  assignAssessment: (studentId: number, batteryCode: string, dueDate?: string) =>
+    request<{ assignedCount: number }>('/api/assessments/assign', {
+      method: 'POST',
+      body: JSON.stringify({
+        studentId,
+        batteryCodes: [batteryCode],
+        dueDate: dueDate || undefined,
+      }),
+    }),
 };

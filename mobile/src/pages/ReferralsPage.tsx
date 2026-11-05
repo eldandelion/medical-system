@@ -48,6 +48,7 @@ export const ReferralsPage: React.FC = () => {
       )}
 
       <div className="space-y-4">
+        <h2 className="sr-only">转诊进度</h2>
         {/* Segmented Filter */}
         <div
           className={`-mx-4 sm:-mx-5 px-4 sm:px-5 pt-5 sm:pt-6 pb-3 bg-[var(--md-sys-color-surface)] flex justify-start transition-opacity duration-200 ${
