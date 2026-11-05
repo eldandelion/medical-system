@@ -78,11 +78,12 @@ class ClinicalRiskEvaluator(
         val screening = threeTierScreeningEvaluator.screen(answers, student?.studentNumber ?: "")
 
         // 危险分级（第一层）决定风险状态：高危/中危/低危 -> HIGH/MEDIUM/LOW。
-        // 第二层仅对高危者筛选，阳性者仍为 HIGH，故 riskStatus 直接取第一层等级。
-        val evaluatedRisk: RiskStatus = when (screening.dangerLevel) {
-            ThreeTierScreeningEvaluator.DangerLevel.HIGH -> RiskStatus.HIGH
-            ThreeTierScreeningEvaluator.DangerLevel.MEDIUM -> RiskStatus.MEDIUM
-            ThreeTierScreeningEvaluator.DangerLevel.LOW -> RiskStatus.LOW
+        // 急性风险（自杀意念/自杀企图）直接判定为高危（HIGH）。
+        val evaluatedRisk: RiskStatus = when {
+            isAcute -> RiskStatus.HIGH
+            screening.dangerLevel == ThreeTierScreeningEvaluator.DangerLevel.HIGH -> RiskStatus.HIGH
+            screening.dangerLevel == ThreeTierScreeningEvaluator.DangerLevel.MEDIUM -> RiskStatus.MEDIUM
+            else -> RiskStatus.LOW
         }
 
         val profileOpt = studentHealthProfileJpaRepository.findByStudentId(studentId)

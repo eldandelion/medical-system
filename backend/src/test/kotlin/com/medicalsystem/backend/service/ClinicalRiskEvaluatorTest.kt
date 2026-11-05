@@ -156,16 +156,27 @@ class ClinicalRiskEvaluatorTest {
 
     @Test
     fun `testPhqAloneWithoutGhqRisk_isLowRiskNotTier2`() {
-        // PHQ-9=18 但无 GHQ 危险 -> 第一层低危，不进入第二层（甲方分层法：第二层仅高危者）。
-        val answers = (1..9).associate { "phq9_$it" to 2 }
+        // PHQ-9=16（无自杀意念 phq9_9=0）且无 GHQ 危险 -> 第一层低危，不进入第二层（甲方分层法：第二层仅高危者）。
+        val answers = (1..8).associate { "phq9_$it" to 2 } + ("phq9_9" to 0)
 
         val result = clinicalRiskEvaluator.evaluateRisk(studentUser.id, answers)
 
         assertEquals(RiskStatus.LOW, result.riskStatus)
         assertEquals(ThreeTierScreeningEvaluator.DangerLevel.LOW, result.dangerLevel)
-        assertEquals(18, result.phq9Score)
+        assertEquals(16, result.phq9Score)
         assertFalse(result.layer2Positive)
         assertTrue(result.screeningReasons.isEmpty())
+    }
+
+    @Test
+    fun `testSuicidalIdeationAlone_withoutGhq_elevatesToHighRisk`() {
+        // 自杀意念（phq9_9 >= 1）具备急性风险，直接归为 HIGH，触发高危警报流程
+        val answers = mapOf("phq9_9" to 2)
+
+        val result = clinicalRiskEvaluator.evaluateRisk(studentUser.id, answers)
+
+        assertEquals(RiskStatus.HIGH, result.riskStatus)
+        assertTrue(result.flags.contains(RiskFlagName.SUICIDAL_IDEATION))
     }
 
     @Test

@@ -22,8 +22,9 @@ export const TeacherDispatchPage: React.FC = () => {
         intakeApi.getAssessmentCatalog().catch(() => []),
         intakeApi.getStaffStudents().catch(() => []),
       ]);
-      setCatalog(c.filter(item => item.isEnabled !== false));
-      if (c.length > 0) setScale(c[0].batteryCode);
+      const enabled = c.filter(item => item.isEnabled !== false);
+      setCatalog(enabled);
+      if (enabled.length > 0) setScale(enabled[0].batteryCode);
       setStudents(s);
     } catch (e) {
       setError(e instanceof Error ? e.message : '加载失败');
@@ -49,13 +50,17 @@ export const TeacherDispatchPage: React.FC = () => {
   const submit = async () => {
     if (!scale || selectedStudents.size === 0) return;
     setSubmitting(true);
+    const results = await Promise.allSettled(
+      Array.from(selectedStudents).map(sid =>
+        intakeApi.assignAssessment(Number(sid), scale, dueDate || undefined)
+      )
+    );
     let ok = 0;
     let fail = 0;
-    for (const sid of selectedStudents) {
-      try {
-        await intakeApi.assignAssessment(Number(sid), scale, dueDate || undefined);
+    for (const res of results) {
+      if (res.status === 'fulfilled') {
         ok++;
-      } catch {
+      } else {
         fail++;
       }
     }
@@ -78,57 +83,83 @@ export const TeacherDispatchPage: React.FC = () => {
         <div className="py-10 text-center text-sm text-[var(--md-sys-color-on-surface-variant)]">加载中…</div>
       ) : (
         <>
-          <div className="rounded-2xl bg-[var(--md-sys-color-surface-container)] p-4">
-            <div className="text-sm font-semibold mb-2">选择量表</div>
+          <div className="rounded-2xl bg-[var(--md-sys-color-surface-container)] p-4 flex flex-col gap-3">
+            <div className="text-sm font-semibold text-[var(--md-sys-color-on-surface)]">选择量表</div>
             {catalog.length === 0 ? (
               <div className="text-sm text-[var(--md-sys-color-on-surface-variant)]">暂无可用量表</div>
-            ) : catalog.map(c => (
-              <label key={c.batteryCode} className="flex items-center gap-2 py-1.5 text-sm">
-                <input
-                  type="radio"
-                  name="scale"
-                  checked={scale === c.batteryCode}
-                  onChange={() => setScale(c.batteryCode)}
-                />
-                <span className="text-[var(--md-sys-color-on-surface)]">{c.title}（{c.questionCount} 题 · 约 {c.duration}）</span>
-              </label>
-            ))}
+            ) : (
+              <div className="flex flex-col gap-1">
+                {catalog.map(c => (
+                  <label
+                    key={c.batteryCode}
+                    className="flex items-center gap-3 py-2 px-1 text-sm cursor-pointer select-none rounded-lg hover:bg-[var(--md-sys-color-surface-container-high)]"
+                    onClick={() => setScale(c.batteryCode)}
+                  >
+                    <md-radio
+                      name="scale"
+                      checked={scale === c.batteryCode}
+                      value={c.batteryCode}
+                      tabIndex={-1}
+                      className="pointer-events-none shrink-0"
+                    ></md-radio>
+                    <span className="text-[var(--md-sys-color-on-surface)] font-medium">
+                      {c.title}（{c.questionCount} 题 · 约 {c.duration}）
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
 
-            <div className="text-sm font-semibold mt-3 mb-1">截止日期（可选）</div>
-            <input
-              type="date"
-              value={dueDate}
-              onChange={e => setDueDate(e.target.value)}
-              className="w-full p-2 rounded-xl bg-[var(--md-sys-color-surface)] text-sm text-[var(--md-sys-color-on-surface)]"
-            />
+            <div className="pt-1">
+              <md-outlined-text-field
+                label="截止日期（可选）"
+                type="date"
+                value={dueDate}
+                onInput={(e: any) => setDueDate(e.target.value)}
+                className="w-full"
+              ></md-outlined-text-field>
+            </div>
           </div>
 
-          <div className="rounded-2xl bg-[var(--md-sys-color-surface-container)] p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-semibold">选择学生（已选 {selectedStudents.size} 人）</div>
-              <button
-                className="text-sm text-[var(--md-sys-color-primary)]"
+          <div className="rounded-2xl bg-[var(--md-sys-color-surface-container)] p-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-semibold text-[var(--md-sys-color-on-surface)]">
+                选择学生（已选 {selectedStudents.size} 人）
+              </div>
+              <md-text-button
                 onClick={() => setSelectedStudents(new Set(filtered.map(s => s.id)))}
               >
                 全选
-              </button>
+              </md-text-button>
             </div>
-            <input
-              type="search"
-              placeholder="搜索姓名或学号"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full mb-2 p-2 rounded-xl bg-[var(--md-sys-color-surface)] text-sm text-[var(--md-sys-color-on-surface)]"
-            />
-            <div className="max-h-72 overflow-y-auto flex flex-col">
+
+            <div>
+              <md-outlined-text-field
+                label="搜索学生"
+                placeholder="搜索姓名或学号"
+                value={search}
+                onInput={(e: any) => setSearch(e.target.value)}
+                className="w-full"
+              >
+                <md-icon slot="leading-icon">search</md-icon>
+              </md-outlined-text-field>
+            </div>
+
+            <div className="max-h-72 overflow-y-auto flex flex-col gap-0.5">
               {filtered.map(s => (
-                <label key={s.id} className="flex items-center gap-2 py-1.5 text-sm">
-                  <input
-                    type="checkbox"
+                <label
+                  key={s.id}
+                  className="flex items-center gap-3 py-2 px-1 text-sm cursor-pointer select-none rounded-lg hover:bg-[var(--md-sys-color-surface-container-high)]"
+                  onClick={() => toggleStudent(s.id)}
+                >
+                  <md-checkbox
                     checked={selectedStudents.has(s.id)}
-                    onChange={() => toggleStudent(s.id)}
-                  />
-                  <span className="text-[var(--md-sys-color-on-surface)]">{s.name}（{s.studentNumber}）</span>
+                    tabIndex={-1}
+                    className="pointer-events-none shrink-0"
+                  ></md-checkbox>
+                  <span className="text-[var(--md-sys-color-on-surface)] font-medium">
+                    {s.name}（{s.studentNumber}）
+                  </span>
                 </label>
               ))}
               {filtered.length === 0 && (
@@ -137,13 +168,13 @@ export const TeacherDispatchPage: React.FC = () => {
             </div>
           </div>
 
-          <button
-            className="w-full py-3 rounded-full text-sm font-semibold bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] disabled:opacity-50"
+          <md-filled-button
+            className="w-full mt-1"
             disabled={submitting || !scale || selectedStudents.size === 0}
             onClick={submit}
           >
             {submitting ? '发放中…' : `发放给 ${selectedStudents.size} 名学生`}
-          </button>
+          </md-filled-button>
         </>
       )}
     </div>

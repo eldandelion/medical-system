@@ -57,6 +57,12 @@ export function AppContent() {
   const isTeacher = role === 'TEACHER' || role === 'HEAD_COUNSELLOR';
   const tabCount = isTeacher ? 4 : 3;
 
+  useEffect(() => {
+    if (activeTab >= tabCount) {
+      setActiveTab(tabCount - 1);
+    }
+  }, [tabCount, activeTab]);
+
   const handleTabChange = (tab: number) => {
     if (tab >= tabCount) return;
     setActiveTab(tab);

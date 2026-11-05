@@ -11,9 +11,32 @@ import java.util.Optional
 class StudentProfileAuthorizationTest {
     private val students = mock<StudentRepository>()
     private val profiles = mock<StudentHealthProfileJpaRepository>()
-    private val controller = StudentProfileController(mock(), mock(), mock(), profiles, students)
+    private val eventPublisher = mock<com.medicalsystem.backend.event.DomainEventPublisher>()
+    private val controller = StudentProfileController(mock(), mock(), mock(), profiles, students, eventPublisher)
     private fun user(role: UserRole) = User(7L, "Staff", EmailAddress("staff@example.test"), null, role)
     private val update = StudentProfileController.UpdateHealthProfileDto("synthetic diagnosis")
+
+    @Test
+    fun `visible assigned doctor can update diagnosis and risk status with event emitted`() {
+        val doctor = user(UserRole.DOCTOR)
+        whenever(students.findByIdAndVisibleTo(11L, doctor)).thenReturn(Optional.of(mock<Student>()))
+        val existingProfile = com.medicalsystem.backend.entity.StudentHealthProfileEntity(studentId = 11L, riskStatus = RiskStatus.LOW)
+        whenever(profiles.findByStudentId(11L)).thenReturn(Optional.of(existingProfile))
+
+        val updateWithRisk = StudentProfileController.UpdateHealthProfileDto("synthetic diagnosis", RiskStatus.HIGH)
+        assertEquals(200, controller.updateHealthProfile(11L, updateWithRisk, doctor).statusCode.value())
+
+        verify(profiles).save(check {
+            assertEquals("synthetic diagnosis", it.scidDiagnosis)
+            assertEquals(RiskStatus.HIGH, it.riskStatus)
+        })
+        verify(eventPublisher).publish(check { event ->
+            val riskEvent = event as com.medicalsystem.backend.event.StudentRiskStatusChangedEvent
+            assertEquals(11L, riskEvent.studentId)
+            assertEquals(RiskStatus.LOW, riskEvent.oldStatus)
+            assertEquals(RiskStatus.HIGH, riskEvent.newStatus)
+        })
+    }
 
     @Test
     fun `visible assigned doctor can update diagnosis`() {
