@@ -1,308 +1,190 @@
-# Architecture Specification: Mobile Intake & Medical System Unified Monorepo Integration
+# Architecture & Technical Design: Mobile Intake Referrals Tab ("就医转诊")
 
-## 1. Executive Summary & Strategy
-This document defines the architectural specification for integrating `/Volumes/Files/Programming/mobile-intake` into the University Medical Screening System (`/Volumes/Files/Programming/medical-system`).
-
-Following the user's explicit design directives:
-1. **Unified Monorepo Architecture**: Move mobile intake frontend to `/mobile` inside `medical-system`. Mobile intake directly consumes the Spring Boot backend REST APIs (`/api/*`) and MySQL 8 database. No separate microservice, SQLite, or background sync jobs.
-2. **Fresh Start**: Legacy SQLite database (`intake.db`) is not migrated; MySQL serves as the single source of truth.
-3. **Single Unified Assessment**: Replace the 8 separate scale batteries with the single 377-question, 30-subscale milestone assessment (`comprehensive_student_intake_survey`).
-4. **Unified Authentication & Dual Login**: Student registration creates both `UserEntity` (role `STUDENT`, BCrypt password) and `StudentEntity` in MySQL. Students can log in to both mobile intake and the main portal with the same credentials (`studentNumber` or `phone` + `password`).
-5. **Dual-Mode SMS OTP**: Dev/test mode uses `MockSmsSender` (returning `devCode` in response); production uses Aliyun SMS.
-6. **Referral Workflow**: Mobile intake UI is kept as-is. Students view their referrals in the main medical system web portal using their unified account.
-7. **Extensible Clinical Triage Boilerplate**: Provide a pluggable `ClinicalRiskEvaluator` that detects acute risk items (e.g., `ghq_22=1` suicidal ideation), escalates risk to `HIGH`, appends risk flags, and alerts councillors.
+## 1. Context & Architectural Goals
+- **Target Branch**: `feat/mobile-referrals-tab`
+- **Application Target**: Mobile Intake Single Page Application (`mobile/`)
+- **System Goal**: Extend the mobile student intake portal by introducing a dedicated bottom navigation tab for **就医转诊 (Referrals)**, real-time status filtering with scroll-triggered header sync, and an MD3-compliant **Fullscreen Referral Details View** mirroring the desktop clinical review features while respecting mobile-first ergonomic constraints and `GEMINI.md` architecture invariants.
 
 ---
 
-## 2. Monorepo Directory Layout
+## 2. Bounded Context & Domain Alignment
+
+### 2.1 Domain Invariants (Upstream Backend to Downstream Mobile)
+1. **Read-Only Student Access**:
+   - In `ReferralActionPolicy.kt`, `getActionableStatusesFor(UserRole.STUDENT)` strictly evaluates to `emptyList()`.
+   - In `Referral.kt`, `getAllowedActions(user)` returns no actions for `UserRole.STUDENT`. The emitted `ReferralDto.availableActions` is therefore always `[]`.
+   - The mobile bounded view is strictly a **Read-Only Projection**.
+2. **Double-Sided Exclusion of Drafts & Recalled Referrals**:
+   - Upstream SQL predicates (`ReferralVisibilityPolicy.kt`) filter out `DRAFT` and `RECALLED` statuses for students.
+   - Downstream ACL defensive filter ensures unapproved drafts or withdrawn requests are never exposed to students.
+3. **Sensitive Clinical Notes Boundary**:
+   - Internal psychiatric SCID diagnostic scales and clinical notes are omitted from the student view.
+   - Overview exposes basic triage status (`isFirstVisit`, `isMedicated`, `priorTherapy`) and referral reason.
+   - Doctor's consultation feedback (`summary`, `followUp`) is only surfaced once submitted and approved.
+
+---
+
+## 3. System Boundaries & Component Tree
 
 ```text
-/Volumes/Files/Programming/medical-system/
-├── backend/                       # Spring Boot 4.1 + Kotlin 2.3 + MySQL REST API (Port 8080)
-│   ├── src/main/resources/
-│   │   ├── assessments/           # 30 scale JSONs + assessment_groups.json + shared options
-│   │   └── application.properties # Aliyun SMS & DB configs
-├── frontend/                      # Desktop / Administrative Web Portal (Port 3000)
-├── mobile/                        # Mobile-First Responsive Web Intake SPA (Port 3005)
-│   ├── package.json
-│   ├── vite.config.ts             # Proxy /api -> http://localhost:8080
-│   └── src/
-│       ├── StudentApp.tsx         # Mobile intake entry point
-│       └── pages/                 # Questionnaire player, profile, login
-└── docker-compose.yml             # Orchestration for db, backend, frontend, and mobile
+mobile/src/
+├── api/
+│   └── intakeApi.ts                      # Extended with ReferralDto, Details, Tracking & endpoints
+├── contexts/
+│   └── ReferralContext.tsx               # Global referral state, filter ('all'|'in_progress'|'closed'), counts, and scroll tracking
+├── utils/
+│   ├── referralConstants.ts              # Localized labels, status colors, and MD3 semantic design tokens
+│   ├── referralRouting.ts                # getTargetTabForStatus logic for status pill navigation
+│   └── referralStatusEnricher.ts         # enrichReferralStatus engine for desktop presentation parity
+├── components/
+│   └── referrals/
+│       ├── ReferralCard.tsx              # Elevated MD3 card showing status pill, type, title, date, and initiator
+│       ├── ReferralDetailsFullScreen.tsx # Fullscreen modal takeover with header pill, back navigation, and tabs
+│       ├── ReferralOverviewTab.tsx       # Triage metrics, severe risk indicators, description quote, attachments
+│       ├── ReferralTrackerTab.tsx        # 6-step timeline tracker, destination card, and appointment card
+│       └── ReferralFeedbackTab.tsx       # Doctor's clinical summary, diagnosis, follow-up plan & attachments
+├── pages/
+│   ├── ReferralsPage.tsx                 # Tab 1 root page (segmented filter + card list + empty states)
+│   └── ReferralsPage.test.tsx            # Unit tests for filter & card interactions
+└── StudentApp.tsx                        # 3-destination navigation bar & scroll-triggered dynamic header sync
 ```
 
 ---
 
-## 3. Database Schema & Domain Model (MySQL 8)
+## 4. API Contracts & TypeScript Interfaces
 
-### 3.1 Entity Relationship Diagram
+### 4.1 Data Models (`mobile/src/api/intakeApi.ts`)
+```typescript
+export type ReferralType = 'INITIAL' | 'FOLLOW_UP' | 'EMERGENCY';
 
-```mermaid
-classDiagram
-    class UserEntity {
-        +Long id
-        +String username
-        +String name
-        +String phone
-        +String passwordHash
-        +UserRole role
-        +AccountStatus status
-    }
+export type ReferralStatus =
+  | 'DRAFT'
+  | 'AWAITING_APPROVAL'
+  | 'AWAITING_REVIEW'
+  | 'AWAITING_TRIAGE'
+  | 'WAITING_FOR_SCHEDULING'
+  | 'WAITING_FOR_APPOINTMENT'
+  | 'AWAITING_FEEDBACK_APPROVAL'
+  | 'NEEDS_REASSIGNMENT'
+  | 'REJECTED'
+  | 'RECALLED'
+  | 'CLOSED'
+  | 'ERROR';
 
-    class StudentEntity {
-        +Long userId
-        +String studentNumber
-        +String name
-        +StudentDemographics demographics
-    }
+export type RiskStatus = 'HIGH' | 'MEDIUM' | 'LOW';
 
-    class ScaleDraftEntity {
-        +Long id
-        +Long studentId
-        +String scaleCode
-        +String answersJson
-        +Long clientUpdatedAt
-        +LocalDateTime updatedAt
-    }
+export interface ReferredByDto {
+  name: string;
+}
 
-    class AssessmentAssignmentEntity {
-        +Long id
-        +StudentEntity student
-        +String scaleCode
-        +AssessmentStatus status
-        +Int progressPercentage
-        +LocalDateTime assignedDate
-        +LocalDateTime completedDate
-    }
+export interface ReferralDto {
+  id: string;
+  studentId: number;
+  studentName: string;
+  studentNumber: string;
+  type: ReferralType;
+  date: string; // ISO-8601 LocalDateTime string
+  title: string;
+  description: string;
+  riskLevel: RiskStatus;
+  status: ReferralStatus;
+  referredBy: ReferredByDto;
+  availableActions: string[];
+}
 
-    class StudentHealthProfileEntity {
-        +Long id
-        +Long studentId
-        +RiskStatus riskStatus
-        +List~RiskFlagEntity~ riskFlags
-    }
+export interface StudentDemographicsDto {
+  studentId: string;
+  school: string;
+  grade: string;
+  phone: string;
+  age?: number | null;
+  gender?: string | null;
+}
 
-    UserEntity "1" <-- "1" StudentEntity : extends (user_id)
-    StudentEntity "1" --> "*" AssessmentAssignmentEntity : assignments
-    StudentEntity "1" --> "0..1" ScaleDraftEntity : draft answers
-    StudentEntity "1" <-- "1" StudentHealthProfileEntity : clinical profile
-```
+export interface TriageInfoDto {
+  isFirstVisit: boolean;
+  isMedicated: boolean;
+  priorTherapy: string;
+  scidDiagnosis?: string | null;
+  fullDescription: string;
+}
 
-### 3.2 Table Schema Specifications
+export interface RiskAssessmentDto {
+  ideation: boolean;
+  attempt: boolean;
+  selfHarm: boolean;
+  notes?: string | null;
+}
 
-#### `users` Table Modifications:
-- Add `phone VARCHAR(32) NULL UNIQUE`
-- Add `password_hash VARCHAR(255) NULL`
+export interface AttachmentDto {
+  name: string;
+  size: string;
+  fileId?: number | null;
+}
 
-#### New `scale_drafts` Table:
-```sql
-CREATE TABLE IF NOT EXISTS scale_drafts (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    student_id BIGINT UNSIGNED NOT NULL,
-    scale_code VARCHAR(64) NOT NULL,
-    answers_json MEDIUMTEXT NOT NULL,
-    client_updated_at BIGINT NOT NULL,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY uk_student_scale (student_id, scale_code),
-    INDEX idx_student_id (student_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-```
+export interface FeedbackDto {
+  summary: string;
+  followUp: string;
+  attachments: AttachmentDto[];
+}
 
----
+export interface ReferralDetailsDto {
+  baseInfo: ReferralDto;
+  studentDemographics: StudentDemographicsDto;
+  triageInfo: TriageInfoDto;
+  riskAssessment: RiskAssessmentDto;
+  feedback?: FeedbackDto | null;
+  attachments: AttachmentDto[];
+}
 
-## 4. Assessment Catalog & Engine Architecture
+export interface DestinationDto {
+  hospital: string;
+  department: string;
+  doctor: string;
+  admin: string;
+  transferDate?: string | null;
+  appointmentTime?: string | null;
+}
 
-### 4.1 Catalog Replacement
-- Replace old fragmented scales (`phq_9.json`, `gad_7.json`, `scl_90.json`, etc.) with the 30 standardized scales from `mobile-intake`:
-  - `demographics_survey.json` (58 items, basic & lifestyle demographics)
-  - `general_health_screener.json` (24 items, GHQ-12 + clinical referral items including `ghq_22`)
-  - 28 psychological subscales (`phq_9`, `gad_7`, `sleep_disorder`, `life_events`, `peer_relationship`, `aggression`, `impulsivity`, `childhood_ses`, `self_control`, `loneliness`, `childhood_trauma`, `apq_9_father`, `apq_9_mother`, `nssi`, `social_support`, `emotion_regulation`, `grit`, `coping_styles`, `swls`, `mobile_addiction`, `game_addiction`, `pq16`, `adhd`, `big_five`, `brief_a`, `procrastination`, `eating_habits`, `teacher_relationship`).
-- Single `assessment_groups.json` registering:
-  - Code: `comprehensive_student_intake_survey`
-  - Title: `中南大学学生心身健康综合调查问卷`
-  - Total items: 377
+export interface ReferralStepDto {
+  id: string;
+  type: string; // INITIATION, REVIEW, TRIAGE, SCHEDULING, EVALUATION, FEEDBACK
+  time: string;
+  status: string; // COMPLETED, ACTIVE, PENDING, ISSUE
+  reason?: string | null;
+}
 
-### 4.2 Polymorphic Question Schema Support
-Update `AssessmentScale.kt` and loader:
-```kotlin
-data class AssessmentQuestion(
-    val id: String,
-    val text: String,
-    val type: String? = "single_choice", // single_choice, multiple_choice, slider, number, text, date
-    val min: Double? = null,
-    val max: Double? = null,
-    val step: Double? = null,
-    val unit: String? = null,
-    val options: List<AssessmentOption> = emptyList(),
-    val required: Boolean = true
-)
-
-data class AssessmentOption(
-    val value: Any, // Can be Int or String
-    val label: String,
-    val hasTextInput: Boolean = false,
-    val textInputLabel: String? = null
-)
-```
-
----
-
-## 5. API Contracts
-
-### 5.1 Authentication & Registration (`AuthController.kt`)
-
-#### `POST /api/auth/send-code`
-- **Request**: `{ "phone": "13800000000" }`
-- **Response**: `{ "success": true, "devCode": "123456" }` (in dev/test profile)
-
-#### `POST /api/auth/student-register`
-- **Request**:
-  ```json
-  {
-    "studentNumber": "STU2026999",
-    "fullName": "张明",
-    "phone": "13800000000",
-    "password": "Password123",
-    "verificationCode": "123456"
-  }
-  ```
-- **Action**:
-  - Validates OTP via `OtpService`.
-  - Creates `UserEntity(role=STUDENT, passwordHash=BCrypt(password), phone=phone)`.
-  - Creates `StudentEntity(userId=user.id, studentNumber=studentNumber, name=fullName)`.
-  - Creates initial `StudentHealthProfileEntity`.
-  - Assigns `comprehensive_student_intake_survey` via `AssessmentAssignmentEntity`.
-- **Response**:
-  ```json
-  {
-    "token": "jwt-token-string",
-    "user": {
-      "id": 100,
-      "username": "STU2026999",
-      "name": "张明",
-      "role": "STUDENT"
-    }
-  }
-  ```
-
-#### `POST /api/auth/login` (Unified Password Login)
-- **Request**: `{ "identifier": "STU2026999" /* or phone */, "password": "Password123" }`
-- **Action**: Matches by `username` or `phone`, verifies `BCrypt.checkpw`.
-- **Response**: Session / JWT token and user details.
-
----
-
-### 5.2 Draft & Assessment Sync (`AssessmentController.kt`)
-
-#### `GET /api/assessments/my-assignments`
-- **Action**: Returns active assignment for the authenticated student.
-- **Response**:
-  ```json
-  [
-    {
-      "id": 1,
-      "scaleCode": "comprehensive_student_intake_survey",
-      "title": "中南大学学生心身健康综合调查问卷",
-      "status": "IN_PROGRESS",
-      "progressPercentage": 45,
-      "totalQuestions": 377,
-      "answeredQuestions": 170
-    }
-  ]
-  ```
-
-#### `GET /api/assessments/{assignmentId}/draft`
-- **Action**: Returns saved answers from `scale_drafts`.
-- **Response**: `{ "answers": { "phq9_1": 2, ... }, "clientUpdatedAt": 1729600000000 }`
-
-#### `PUT /api/assessments/{assignmentId}/draft`
-- **Request**: `{ "answers": { ... }, "clientUpdatedAt": 1729600001000 }`
-- **Action**: Upserts into `scale_drafts`, recalculates `progressPercentage` on `AssessmentAssignmentEntity`.
-- **Response**: `{ "progressPercentage": 45, "savedCount": 170 }`
-
-#### `POST /api/assessments/{assignmentId}/submit`
-- **Request**: `{ "answers": { ... } }`
-- **Action**:
-  - Updates assignment status to `COMPLETED`.
-  - Purges draft from `scale_drafts`.
-  - Demographics Projection: populates `StudentDemographicsEntity` from `demographics_survey` answers.
-  - Publishes `AssessmentCompletedEvent`.
-- **Response**: `{ "success": true, "completedAt": "2026-10-22T23:00:00" }`
-
----
-
-## 6. Extensible Clinical Risk Evaluation Boilerplate
-
-```kotlin
-@Component
-class ClinicalRiskEvaluator(
-    private val studentHealthProfileRepository: StudentHealthProfileRepository,
-    private val notificationService: NotificationService
-) {
-    fun evaluate(studentId: Long, assignmentId: Long, rawAnswers: Map<String, Any>) {
-        val acuteFlags = mutableListOf<RiskFlagName>()
-
-        // 1. Critical suicidal ideation / crisis screening items
-        val suicideIdeation = rawAnswers["ghq_22"]?.toString()?.toIntOrNull() == 1
-        val suicideAttempt = rawAnswers["ghq_23"]?.toString()?.toIntOrNull() == 1
-        val phq9Crisis = (rawAnswers["phq9_9"]?.toString()?.toIntOrNull() ?: 0) >= 1
-
-        if (suicideIdeation || phq9Crisis) {
-            acuteFlags.add(RiskFlagName.SUICIDAL_IDEATION)
-        }
-        if (suicideAttempt) {
-            acuteFlags.add(RiskFlagName.SUICIDE_ATTEMPT)
-        }
-
-        // 2. Extensible Subscale Scoring Hook (Placeholder for hospital custom models)
-        val subscaleScores = calculateSubscaleScores(rawAnswers)
-
-        // 3. Risk Status Escalation
-        val riskStatus = when {
-            acuteFlags.isNotEmpty() -> RiskStatus.HIGH
-            subscaleScores.phq9Score >= 15 -> RiskStatus.HIGH
-            subscaleScores.phq9Score >= 10 -> RiskStatus.MEDIUM
-            else -> RiskStatus.NORMAL
-        }
-
-        // 4. Update Profile & Alert Councillors
-        val profile = studentHealthProfileRepository.findByStudentId(studentId)
-        if (riskStatus == RiskStatus.HIGH) {
-            profile.escalateRisk(RiskStatus.HIGH, acuteFlags)
-            notificationService.publishAlert(
-                type = NotificationType.ASSESSMENT_HIGH_RISK_ALERT_HC,
-                targetRole = UserRole.HEAD_COUNSELLOR,
-                studentId = studentId
-            )
-        }
-    }
-
-    private fun calculateSubscaleScores(answers: Map<String, Any>): SubscaleScores {
-        val phq9 = (1..9).sumOf { answers["phq9_$it"]?.toString()?.toIntOrNull() ?: 0 }
-        val gad7 = (1..7).sumOf { answers["gad7_$it"]?.toString()?.toIntOrNull() ?: 0 }
-        return SubscaleScores(phq9Score = phq9, gad7Score = gad7)
-    }
+export interface ReferralTrackingDto {
+  destination?: DestinationDto | null;
+  steps?: ReferralStepDto[] | null;
 }
 ```
 
+### 4.2 API Client Extension
+```typescript
+export const intakeApi = {
+  // Existing Auth & Scales endpoints...
+  getReferrals: () => request<ReferralDto[]>('/api/referrals'),
+  getReferralDetails: (id: string | number) => request<ReferralDetailsDto>(`/api/referrals/${id}`),
+  getReferralTracking: (id: string | number) => request<ReferralTrackingDto>(`/api/referrals/${id}/tracking`),
+};
+```
+
 ---
 
-## 7. Mobile Frontend Configuration
+## 5. Status Pill & Navigation Rules
 
-- `/mobile/vite.config.ts`:
-  ```typescript
-  export default defineConfig({
-    plugins: [react(), tailwindcss()],
-    server: {
-      port: 3005,
-      proxy: {
-        '/api': {
-          target: 'http://localhost:8080',
-          changeOrigin: true
-        }
-      }
-    }
-  });
-  ```
-- Authentication in `mobile/src/api/client.ts`: attaches `Authorization: Bearer ${localStorage.getItem('mobile_intake_token')}` on all requests.
+### 5.1 Clickable Status Badge Routing (`getTargetTabForStatus`)
+- When status is `AWAITING_FEEDBACK_APPROVAL` or `CLOSED` (or `feedback != null`): navigates to `feedback` (`诊疗反馈`).
+- When status is in operational progress (`AWAITING_APPROVAL`, `AWAITING_TRIAGE`, `WAITING_FOR_SCHEDULING`, `WAITING_FOR_APPOINTMENT`, etc.): navigates to `tracker` (`转诊进度`).
+- Default: navigates to `overview` (`转诊概览`).
+
+### 5.2 Header & Navigation Bar in `StudentApp.tsx`
+- **Bottom Navigation Bar**:
+  - Index 0: `问卷测评` (icon: `assignment`)
+  - Index 1: `就医转诊` (icon: `medical_services`)
+  - Index 2: `个人中心` (icon: `account_circle`)
+- **Scroll-Triggered Segmented Filters in Header**:
+  - On Tab 0: shows `ASSESSMENT_FILTER_ITEMS` (`全部`, `待填报`, `已完成`).
+  - On Tab 1: shows `REFERRAL_FILTER_ITEMS` (`全部`, `进行中`, `已结案`).
+  - Smooth animation sliding into top bar header on scroll down, sliding title back on scroll to top.

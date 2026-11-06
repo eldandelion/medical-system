@@ -1,43 +1,46 @@
-# Root Cause Analysis: Cross-Portal Mobile Intake & Medical System Integration Bugs
+# Analysis & Architecture: Mobile Referral View Polish & Bug Fixes
 
-## Locked Human Intent Summary
-1. **Desktop Polymorphic Questionnaire Player**: Upgrade desktop `frontend/src/components/assessments/AssessmentFlow.tsx` (and related types/DTOs/mocks) to render and validate all polymorphic question types (`text`, `number`, `slider`, `date`, `single_choice`, `multiple_choice`, `hasTextInput`, `zeroOptionLabel`) using Material Design 3 Web Components (`<md-outlined-text-field>`, `<md-checkbox>`, `<md-slider>`, etc.), so students can take or resume `comprehensive_student_intake_survey` seamlessly on both desktop and mobile.
-2. **Unified Credentials & Desktop Real Login**:
-   - Seeded (`DataInitializer.kt`) and CSV-imported (`StudentImportService.kt`) students must have `UserEntity.phone` populated from `contactNumber` and `UserEntity.passwordHash` initialized to the BCrypt hash of the last 6 digits of `idCardNumber` (fallback `"123456"`).
-   - `StaffRegistrationService.kt` must hash and persist `request.password` into `UserEntity.passwordHash`.
-   - `AuthService.login` and `AuthController.verifyIdentifier` must support both Student and Staff accounts (login by studentNumber, employeeNumber, email, or phone + password) and return user role/session info so `frontend/` `LoginOverlay.tsx` Step 2 performs real JWT login and updates `AuthContext`, while keeping the dev role-switcher menu intact.
-   - Fix `RecordsView.tsx` and `StudentPage.tsx` to use `session.token` from `useAuth()` in `Authorization` headers and React Query `queryKey`s.
-3. **Bidirectional Draft Sync (`mobile/` <-> `frontend/`)**:
-   - `AssessmentService.recordProgress` (`PUT /api/assessments/{id}/progress`) must also upsert `ScaleDraftEntity` in `scale_drafts` (via `ScaleDraftService.saveDraft`).
-   - `ScaleDraftService.getDraft` and `ScaleController.listScales` must fall back to `assessment_assignments.answers_json` if `scale_drafts` has no record, and both portals must count non-empty answers consistently.
-   - `ScaleDraftEntity.answersJson` must use `@Column(name = "answers_json", nullable = false, columnDefinition = "LONGTEXT")` (without bare `@Lob` `TINYTEXT` truncation in MySQL 8).
-4. **Submission Event Publishing & Psychometric Subscale Scoring**:
-   - Fix `AssessmentAssignmentRepositoryAdapter.save` / `AssessmentService.submitAssessment` so `AssessmentCompletedEvent` is published to `DomainEventPublisher` upon submission.
-   - Fix `AssessmentAssignmentService` / `AssessmentService` so `AssessmentAssignedEvent` is published after saving (when `assignment.id` is non-null).
-   - Implement real psychometric subscale scoring in `AssessmentScoringEngine.scoreSection` for the clinical sections in `comprehensive_student_intake_survey` (`phq9_survey` -> `PHQ_9`, `gad7_survey` -> `GAD_7`, `scl90_survey` -> `SCL_90`, `psqi_survey` -> `PSQI`, plus `isi_survey` / `bssi_survey` / etc. mapped cleanly without duplicate `PHQ_9` fallbacks) so `psychometric_tests` and the Student Details Psychometrics tab & radar chart populate accurately.
-5. **Risk Status Mapping & High-Risk Alert UI**:
-   - Fix `StudentHealthProfileMapper` and `StudentMapper` so `profile.riskStatus` persisted by `ClinicalRiskEvaluator` is preserved on the domain `StudentHealthProfile` and mapped to `Student.riskStatus` (instead of being overwritten with `RiskStatus.LOW` by the stub `StudentRiskEvaluator`).
-   - Update `NotificationsView.tsx` to format `ASSESSMENT_HIGH_RISK_ALERT_HC`, `ASSESSMENT_ASSIGNED_STUDENT`, and `ASSESSMENT_COMPLETED_TEACHER` in Chinese and handle `VIEW_STUDENT` / `VIEW_RECORDS` actions.
-6. **Demographics Projection, DataInitializer & Dashboard Fixes**:
-   - Fix `DataInitializer.kt` to seed `comprehensive_student_intake_survey` instead of legacy `PHQ_9`/`GAD_7`/`MENTAL_HEALTH_ASSESSMENT`, and ensure `"少数民族"` is handled cleanly in `DemographicsProjector.kt` (mapping to `"其他"` if `"少数民族"` is not a distinct row, or seeding `"少数民族"`).
-   - Fix `StudentMapper.kt` to use `MobileNumber.fromOrNull(num)` instead of `MobileNumber(num)` to prevent HTTP 500 on non-standard phone strings.
-   - Fix `DashboardService.getStudentDashboard` to compute real pending `assessmentsCount` for the student.
-7. **Remove Legacy Mobile Admin Portal (`mobile/src/admin/*`)**:
-   - Remove `mobile/src/admin/*` and simplify `mobile/src/App.tsx` so `mobile/` is exclusively the student intake SPA.
+## 1. Problem Statement & Scope
 
----
+1. **Icons Not Loading**:
+   On the mobile intake referral views, icons rendered as plain raw text (e.g. "person", "arrow_forward", "schedule", "circle", "check") instead of vector icon glyphs.
+   *Root Cause*: `mobile/src/main.tsx` imports `material-symbols/outlined.css`, defining `.material-symbols-outlined` with font-family `'Material Symbols Outlined'`. The referral views authored in `mobile/src/components/referrals/*` and `mobile/src/pages/ReferralsPage.tsx` mistakenly used the nonexistent `.material-symbols-rounded` class.
 
-## Root Cause Inventory
+2. **Card Container Outline & Elevation**:
+   `ReferralCard.tsx` used `border border-[var(--md-sys-color-outline-variant)]` and `shadow-sm`. Under Material Design 3 guidelines for mobile flat cards, container color differentiation (`bg-[var(--md-sys-color-surface-container-low)]`) without outlines or drop shadows should be used.
 
-| # | Component | Root Cause | Fix Strategy |
-|---|-----------|------------|--------------|
-| 1 | `ScaleDraftEntity.kt` | `@Lob` on `String` in Hibernate + MySQL 8 generates `TINYTEXT` (255 bytes), truncating 377-question JSON drafts. | Replace `@Lob` with `@Column(name = "answers_json", nullable = false, columnDefinition = "LONGTEXT")`. |
-| 2 | `DataInitializer.kt`, `StudentImportService.kt`, `StaffRegistrationService.kt` | Seeded/imported students have `phone = null, passwordHash = null`; registered staff have `passwordHash = null`; seeded assignments use deleted battery codes (`PHQ_9`, `GAD_7`). | Populate `phone` and BCrypt `passwordHash` (last 6 of ID card or `"123456"`); hash staff password; seed `comprehensive_student_intake_survey`. |
-| 3 | `AuthService.kt`, `AuthController.kt`, `LoginOverlay.tsx`, `AuthContext.tsx` | `LoginOverlay.tsx` Step 2 is a UI stub that never calls `/api/auth/login`; `AuthService.login` only supports students. | Support both staff & student login in `/api/auth/login` and `/api/auth/verify-identifier` (including phone lookup); return user info (`id, name, role, email, token`); wire `LoginOverlay.tsx` to `AuthContext.loginWithSession`. |
-| 4 | `ScaleDraftService.kt`, `AssessmentService.kt`, `ScaleController.kt` | `AssessmentService.recordProgress` only writes to `assessment_assignments.answers_json`, not `scale_drafts`. | Sync `recordProgress` with `ScaleDraftService.saveDraft`; let `ScaleDraftService.getDraft` and `ScaleController.listScales` fall back to assignment `answersJson`. |
-| 5 | `AssessmentService.kt`, `AssessmentScoringEngine.kt`, `AssessmentCompletedListener.kt` | `AssessmentService.submitAssessment` never publishes `AssessmentCompletedEvent`; `scoreSection` returns `Score(0,0)` and maps 28 sections to `PHQ_9`. | Publish domain events in `AssessmentService`; score clinical sections (`PHQ_9`, `GAD_7`, `SCL_90`, `PSQI`) with real point sums and maxima; filter only clinical psychometric sections for `PsychometricTest` persistence. |
-| 6 | `StudentHealthProfile.kt`, `StudentHealthProfileMapper.kt`, `StudentMapper.kt`, `StudentRiskEvaluator.kt` | `StudentHealthProfile` domain model lacks `riskStatus`; `StudentMapper` calls `StudentRiskEvaluator.evaluate()` which hardcodes `RiskStatus.LOW`. | Add `riskStatus: RiskStatus = RiskStatus.LOW` to `StudentHealthProfile` domain model, map it in `StudentHealthProfileMapper`, and use `profile.riskStatus` in `StudentMapper` / `StudentRiskEvaluator`. |
-| 7 | `DemographicsProjector.kt`, `StudentMapper.kt` | `G4` option `"少数民族"` fails lookup in `ethnicities` and falls back to `"汉族"`; `StudentMapper` calls `MobileNumber(num)` throwing `IllegalArgumentException` if malformed. | Map `"少数民族"` to `"少数民族"` (seed in `DataInitializer`) or `"其他"`; use `MobileNumber.fromOrNull(num)` in `StudentMapper`. |
-| 8 | `DashboardService.kt`, `RecordsView.tsx`, `StudentPage.tsx`, `NotificationsView.tsx` | `DashboardService` hardcodes `assessmentsCount = 0L`; `RecordsView` hardcodes `Bearer student_token_chen`; `NotificationsView` lacks cases for `ASSESSMENT_HIGH_RISK_ALERT_HC`, `ASSESSMENT_ASSIGNED_STUDENT`, `ASSESSMENT_COMPLETED_TEACHER` and `VIEW_STUDENT`. | Count pending assignments in `DashboardService`; use `session.token` in `RecordsView` & `StudentPage`; add notification templates and action handlers in `NotificationsView.tsx`. |
-| 9 | `frontend/src/components/assessments/AssessmentFlow.tsx`, `frontend/src/types/index.ts`, `frontend/src/mocks/data/assessments.ts` | `AssessmentFlow.tsx` only renders choice buttons and treats `options: []` as truthy empty array, rendering blank screen on `text`/`number`/`slider`/`date` questions. | Upgrade `AssessmentFlow.tsx` to render `text`, `number`, `slider`, `date`, `single_choice`, `multiple_choice`, `hasTextInput`, and `zeroOptionLabel` using Material Web components (`<md-outlined-text-field>`, `<md-checkbox>`, `<md-slider>`), and align types & MSW mocks with `comprehensive_student_intake_survey`. |
-| 10 | `mobile/src/admin/*`, `mobile/src/App.tsx` | Legacy `/admin` portal in `mobile/` calls 8 non-existent `/api/admin/*` endpoints from the retired SQLite backend. | Delete `mobile/src/admin/*` and render `StudentApp` directly in `mobile/src/App.tsx`. |
+3. **Initiator Placeholder Avatar**:
+   `ReferralCard.tsx` rendered a generic `person` icon for the initiator. The requirement is to replace it with a circular placeholder avatar badge showing the initiator's first character (e.g. "赵" for "赵辅导员", "艾" for "艾米丽") with MD3 primary container styling (`bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]`).
+
+## 2. Technical Solution Design
+
+### 2.1 Material Symbols Outlined Standardization
+Replace all 22 occurrences of `material-symbols-rounded` with `material-symbols-outlined`:
+- `ReferralCard.tsx`: Status navigation arrow, schedule icon, chevron icon.
+- `ReferralDetailsFullScreen.tsx`: Back button arrow, header status pill arrow, error state icon.
+- `ReferralFeedbackTab.tsx`: Empty state icon, repeat icon, attachment icon.
+- `ReferralOverviewTab.tsx`: Triage category icons (first visit, medication, prior therapy), risk assessment icons (psychology, personal injury, healing), quote icon, attachment icon.
+- `ReferralTrackerTab.tsx`: Completed step checkmark, issue step close icon, default step icon, destination output icon, appointment event icon, appointment calendar clock icon.
+- `ReferralsPage.tsx`: Empty state icon.
+
+### 2.2 ReferralCard Styling Modernization
+- **Container**: Strip `border border-[var(--md-sys-color-outline-variant)]` and `shadow-sm`. Maintain `rounded-2xl bg-[var(--md-sys-color-surface-container-low)] p-4`.
+- **Initiator Avatar**: Replace the `person` icon with:
+  ```tsx
+  <span
+    className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[var(--md-sys-color-primary-container)] text-[10px] font-semibold text-[var(--md-sys-color-on-primary-container)] shrink-0 select-none"
+    aria-hidden="true"
+  >
+    {referral.referredBy.name.trim().charAt(0)}
+  </span>
+  ```
+
+## 3. Impacted Files & Regression Invariants
+- `mobile/src/components/referrals/ReferralCard.tsx`
+- `mobile/src/components/referrals/ReferralDetailsFullScreen.tsx`
+- `mobile/src/components/referrals/ReferralFeedbackTab.tsx`
+- `mobile/src/components/referrals/ReferralOverviewTab.tsx`
+- `mobile/src/components/referrals/ReferralTrackerTab.tsx`
+- `mobile/src/pages/ReferralsPage.tsx`
+- `mobile/src/components/referrals/ReferralCard.test.tsx` (new tests for styling & avatar)
+- `mobile/src/pages/ReferralsPage.test.tsx` (updated icon assertions)

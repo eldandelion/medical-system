@@ -3,6 +3,7 @@ import { render, fireEvent, waitFor } from '@testing-library/react';
 import { AppContent } from './StudentApp';
 import { AuthContext } from './contexts/AuthContext';
 import { AssessmentContext } from './contexts/AssessmentContext';
+import { ReferralContext } from './contexts/ReferralContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { SnackbarProvider } from './contexts/SnackbarContext';
 
@@ -53,7 +54,28 @@ describe('teacher tab routing', () => {
                 refreshScales: vi.fn(),
               } as any}
             >
-              <AppContent />
+              <ReferralContext.Provider
+                value={{
+                  referrals: [],
+                  filteredReferrals: [],
+                  totalCount: 0,
+                  inProgressCount: 0,
+                  closedCount: 0,
+                  filter: 'all',
+                  setFilter: vi.fn(),
+                  loading: false,
+                  error: null,
+                  isScrolled: false,
+                  setIsScrolled: vi.fn(),
+                  selectedReferralId: null,
+                  setSelectedReferralId: vi.fn(),
+                  activeDetailsTab: 'overview',
+                  setActiveDetailsTab: vi.fn(),
+                  refreshReferrals: vi.fn(),
+                } as any}
+              >
+                <AppContent />
+              </ReferralContext.Provider>
             </AssessmentContext.Provider>
           </AuthContext.Provider>
         </SnackbarProvider>
@@ -62,12 +84,12 @@ describe('teacher tab routing', () => {
 
     const tabs = document.querySelectorAll('md-navigation-tab');
     const labels = Array.from(tabs).map(t => (t as any).label ?? t.getAttribute('label'));
-    expect(labels).toEqual(['问卷测评', '发放问卷', '转诊进度', '个人中心']);
+    expect(labels).toEqual(['问卷测评', '发放问卷', '就医转诊', '个人中心']);
 
     fireEvent.click(tabs[1]);
     await waitFor(() => expect(document.querySelector('h2')?.textContent).toBe('发放问卷'));
 
     fireEvent.click(tabs[2]);
-    await waitFor(() => expect(document.querySelector('h2')?.textContent).toBe('转诊进度'));
+    await waitFor(() => expect(document.body.textContent).toContain('暂无转诊记录'));
   });
 });

@@ -1,7 +1,9 @@
 // Vitest Test Setup
 import { MotionGlobalConfig } from 'motion/react';
+import { configure } from '@testing-library/react';
 
 MotionGlobalConfig.skipAnimations = true;
+configure({ asyncUtilTimeout: 4000 });
 
 const storageMock = (() => {
   let store: Record<string, string> = {};

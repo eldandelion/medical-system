@@ -111,6 +111,18 @@ declare global {
         badge?: string;
         'active-index'?: number;
       }, HTMLElement>;
+      'md-tabs': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        activeTabIndex?: number;
+        onchange?: (e: any) => void;
+      }, HTMLElement>;
+      'md-secondary-tab': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        active?: boolean;
+        inlineIcon?: boolean;
+      }, HTMLElement>;
+      'md-primary-tab': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+        active?: boolean;
+        inlineIcon?: boolean;
+      }, HTMLElement>;
       'md-radio': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
         checked?: boolean;
         name?: string;

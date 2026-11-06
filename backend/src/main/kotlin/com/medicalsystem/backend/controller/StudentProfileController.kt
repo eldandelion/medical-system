@@ -15,6 +15,7 @@ import com.medicalsystem.backend.model.UserRole
 import com.medicalsystem.backend.exception.ForbiddenException
 import com.medicalsystem.backend.security.CurrentUser
 import org.springframework.http.ResponseEntity
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -62,6 +63,7 @@ class StudentProfileController(
     // Uses a fetch-join query: spring.jpa.open-in-view=false and `major` is a LAZY @ManyToOne,
     // so reading student.major outside a session raised LazyInitializationException (HTTP 500)
     // for freshly registered students.
+    @Transactional(readOnly = true)
     @GetMapping("/me/profile")
     fun getMyProfile(@CurrentUser user: User?): ResponseEntity<StudentProfileResponseDto> {
         val currentUser = user ?: throw UnauthorizedException("Unauthorized")

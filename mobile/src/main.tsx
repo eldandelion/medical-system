@@ -26,6 +26,8 @@ import '@material/web/labs/navigationtab/navigation-tab.js';
 import './utils/navigationTabStyles';
 import '@material/web/progress/linear-progress.js';
 import '@material/web/progress/circular-progress.js';
+import '@material/web/tabs/tabs.js';
+import '@material/web/tabs/secondary-tab.js';
 import '@material/web/dialog/dialog.js';
 import '@material/web/textfield/outlined-text-field.js';
 import '@material/web/select/outlined-select.js';

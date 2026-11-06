@@ -21,53 +21,6 @@ export interface AuthResponse {
   userId?: number;
 }
 
-export interface ReferralDto {
-  id: string;
-  studentId: number;
-  studentName: string;
-  studentNumber: string;
-  type: string;
-  date: string;
-  title: string;
-  description: string;
-  riskLevel: 'HIGH' | 'MEDIUM' | 'LOW';
-  status: string;
-  referredBy: { name: string };
-}
-
-export interface ReferralDetailsDto {
-  baseInfo: ReferralDto;
-  triageInfo: {
-    isFirstVisit: boolean;
-    isMedicated: boolean;
-    priorTherapy: string;
-    scidDiagnosis?: string | null;
-    fullDescription: string;
-  };
-  riskAssessment: {
-    ideation: boolean;
-    attempt: boolean;
-    selfHarm: boolean;
-  };
-  feedback?: { content?: string } | null;
-}
-
-export interface ReferralTrackingDto {
-  destination?: {
-    hospital: string;
-    department: string;
-    doctor: string;
-    transferDate?: string | null;
-    appointmentTime?: string | null;
-  } | null;
-  steps?: {
-    type: string;
-    completedAt?: string | null;
-    operator?: string | null;
-    outcome?: string | null;
-  }[] | null;
-}
-
 export interface AssessmentCatalogItem {
   batteryCode: string;
   title: string;
@@ -129,6 +82,115 @@ export interface ScaleOption {
   hasTextInput?: boolean;
   textInputPlaceholder?: string;
   textInputLabel?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Referral Domain DTOs
+// ---------------------------------------------------------------------------
+
+export type ReferralType = 'INITIAL' | 'FOLLOW_UP' | 'EMERGENCY';
+
+export type ReferralStatus =
+  | 'DRAFT'
+  | 'AWAITING_APPROVAL'
+  | 'AWAITING_REVIEW'
+  | 'AWAITING_TRIAGE'
+  | 'WAITING_FOR_SCHEDULING'
+  | 'WAITING_FOR_APPOINTMENT'
+  | 'AWAITING_FEEDBACK_APPROVAL'
+  | 'NEEDS_REASSIGNMENT'
+  | 'REJECTED'
+  | 'RECALLED'
+  | 'CLOSED'
+  | 'ERROR'
+  | 'PENDING';
+
+export type RiskStatus = 'HIGH' | 'MEDIUM' | 'LOW';
+
+export interface ReferredByDto {
+  name: string;
+}
+
+export interface ReferralDto {
+  id: string;
+  studentId: number;
+  studentName: string;
+  studentNumber: string;
+  type: ReferralType;
+  date: string; // ISO-8601 LocalDateTime
+  title: string;
+  description: string;
+  riskLevel: RiskStatus;
+  status: ReferralStatus;
+  referredBy: ReferredByDto;
+  availableActions: string[];
+}
+
+export interface ReferralStudentDemographicsDto {
+  studentId: string;
+  school: string;
+  grade: string;
+  phone: string;
+  age?: number | null;
+  gender?: string | null;
+}
+
+export interface TriageInfoDto {
+  isFirstVisit: boolean;
+  isMedicated: boolean;
+  priorTherapy: string;
+  scidDiagnosis?: string | null;
+  fullDescription: string;
+}
+
+export interface RiskAssessmentDto {
+  ideation: boolean;
+  attempt: boolean;
+  selfHarm: boolean;
+  notes?: string | null;
+}
+
+export interface AttachmentDto {
+  name: string;
+  size: string;
+  fileId?: number | null;
+}
+
+export interface FeedbackDto {
+  summary: string;
+  followUp: string;
+  attachments: AttachmentDto[];
+}
+
+export interface ReferralDetailsDto {
+  baseInfo: ReferralDto;
+  studentDemographics: ReferralStudentDemographicsDto;
+  triageInfo: TriageInfoDto;
+  riskAssessment: RiskAssessmentDto;
+  feedback?: FeedbackDto | null;
+  attachments: AttachmentDto[];
+}
+
+export interface DestinationDto {
+  hospital: string;
+  department: string;
+  doctor: string;
+  admin: string;
+  transferDate?: string | null;
+  appointmentTime?: string | null;
+}
+
+export interface ReferralStepDto {
+  id: string;
+  type: string; // INITIATION, REVIEW, TRIAGE, SCHEDULING, EVALUATION, FEEDBACK
+  time: string;
+  status: string; // COMPLETED, ACTIVE, PENDING, ISSUE
+  reason?: string | null;
+}
+
+export interface ReferralTrackingDto {
+  destination?: DestinationDto | null;
+  steps?: ReferralStepDto[] | null;
 }
 
 export interface ScaleQuestion {
@@ -342,9 +404,11 @@ export const intakeApi = {
   // Referrals (unified backend)
   getReferrals: () => request<ReferralDto[]>('/api/referrals'),
 
-  getReferralDetails: (id: string) => request<ReferralDetailsDto>(`/api/referrals/${id}`),
+  getReferralDetails: (id: string | number) =>
+    request<ReferralDetailsDto>(`/api/referrals/${id}`),
 
-  getReferralTracking: (id: string) => request<ReferralTrackingDto>(`/api/referrals/${id}/tracking`),
+  getReferralTracking: (id: string | number) =>
+    request<ReferralTrackingDto>(`/api/referrals/${id}/tracking`),
 
   // Teacher assessment dispatch
   getAssessmentCatalog: () => request<AssessmentCatalogItem[]>('/api/assessments/catalog'),
