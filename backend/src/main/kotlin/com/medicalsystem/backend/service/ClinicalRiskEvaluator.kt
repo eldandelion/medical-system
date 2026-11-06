@@ -43,21 +43,21 @@ class ClinicalRiskEvaluator(
     ): ClinicalRiskAssessmentResult {
         val flags = mutableSetOf<RiskFlagName>()
 
-        val ghq22 = answers["ghq_22"]?.toString()?.toIntOrNull() ?: -1
-        val ghq23 = answers["ghq_23"]?.toString()?.toIntOrNull() ?: -1
-        val phq99 = answers["phq9_9"]?.toString()?.toIntOrNull() ?: -1
+        val isSuicidalIdeation = threeTierScreeningEvaluator.isYes(answers["ghq_23"]) ||
+            ((answers["phq9_9"]?.toString()?.toIntOrNull() ?: -1) >= 1)
+        val isSuicideAttempt = threeTierScreeningEvaluator.isYes(answers["ghq_22"])
 
         var isAcute = false
 
         // ghq_23: Suicidal ideation ("过去任何时候您是否想过自杀或故意伤害自己")，甲方编码"是"=0
         // phq9_9 >= 1: Thoughts of hurting oneself
-        if (ghq23 == 0 || phq99 >= 1) {
+        if (isSuicidalIdeation) {
             flags.add(RiskFlagName.SUICIDAL_IDEATION)
             isAcute = true
         }
 
         // ghq_22: Suicide attempt history ("过去任何时候您是否有过喝药、割腕等自伤或自杀行为")，甲方编码"是"=0
-        if (ghq22 == 0) {
+        if (isSuicideAttempt) {
             flags.add(RiskFlagName.SUICIDE_ATTEMPT)
             isAcute = true
         }
@@ -68,6 +68,7 @@ class ClinicalRiskEvaluator(
         }
         if (hasSelfHarm) {
             flags.add(RiskFlagName.SELF_HARM)
+            isAcute = true
         }
 
         val phq9Score = threeTierScreeningEvaluator.phq9Total(answers)
@@ -87,6 +88,7 @@ class ClinicalRiskEvaluator(
         }
 
         val profileOpt = studentHealthProfileJpaRepository.findByStudentId(studentId)
+        val oldStatus = profileOpt.orElse(null)?.riskStatus ?: RiskStatus.LOW
         if (profileOpt.isPresent) {
             val profile = profileOpt.get()
             val currentLevel = riskPriority(profile.riskStatus)
@@ -145,7 +147,7 @@ class ClinicalRiskEvaluator(
                 eventPublisher.publish(
                     com.medicalsystem.backend.event.StudentRiskStatusChangedEvent(
                         studentId = studentId,
-                        oldStatus = profileOpt.orElse(null)?.riskStatus ?: RiskStatus.LOW,
+                        oldStatus = oldStatus,
                         newStatus = evaluatedRisk,
                         riskFlags = riskFlagNames,
                         scaleCode = scaleCode.ifEmpty { null }

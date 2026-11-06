@@ -237,6 +237,9 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
       queryClient.invalidateQueries({ queryKey: ['/api/assessments'] });
       queryClient.invalidateQueries({ queryKey: ['/api/students'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/referrals'] });
+      queryClient.invalidateQueries({ queryKey: ['high-risk-students'] });
+      queryClient.invalidateQueries({ queryKey: ['psychometrics'] });
       clearPosition();
       setAppState('outro');
       showSnackbar({ message: '评估已顺利完成并提交', duration: 3000 });

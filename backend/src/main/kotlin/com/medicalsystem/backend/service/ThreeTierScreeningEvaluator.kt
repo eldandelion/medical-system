@@ -233,7 +233,7 @@ class ThreeTierScreeningEvaluator {
     }
 
     /** 是非题"是"判定：甲方文档编码 "是"=0、"否"=1。多选列表视为"是"（含任一选中项）。 */
-    private fun isYes(value: Any?): Boolean {
+    fun isYes(value: Any?): Boolean {
         if (value == null) return false
         return when (value) {
             is Boolean -> value

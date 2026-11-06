@@ -3,6 +3,7 @@ package com.medicalsystem.backend.event
 import com.medicalsystem.backend.dto.CreateReferralDto
 import com.medicalsystem.backend.model.AccountStatus
 import com.medicalsystem.backend.model.ReferralStatus
+import com.medicalsystem.backend.model.RiskFlagName
 import com.medicalsystem.backend.model.RiskStatus
 import com.medicalsystem.backend.model.UserRole
 import com.medicalsystem.backend.repository.StudentHealthProfileRepository
@@ -106,7 +107,9 @@ class StudentHealthProfileRiskListener(
                 ". Risk flags: $flagsText",
             riskLevel = RiskStatus.HIGH,
             clinicalStatus = emptyList(),
-            severeRiskFactors = emptyList(),
+            severeRiskFactors = event.riskFlags.mapNotNull { flagStr ->
+                runCatching { RiskFlagName.valueOf(flagStr) }.getOrNull()
+            },
             attachments = emptyList()
         )
 

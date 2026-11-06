@@ -26,13 +26,13 @@ export function HighRiskListView({ header }: { header?: (loading: boolean) => Re
   const [includeMedium, setIncludeMedium] = React.useState(false);
 
   const { data: students = [], isLoading, isError, refetch } = useQuery<HighRiskStudentDto[]>({
-    queryKey: ['high-risk-students', includeMedium],
+    queryKey: ['high-risk-students', session?.token, includeMedium],
     queryFn: () => fetchHighRiskStudents(session?.token, includeMedium),
     enabled: !!session?.token,
   });
 
   const handleCreateReferral = (student: HighRiskStudentDto) => {
-    const flags = student.riskFlags.filter((f): f is SevereRiskFactorType => f in RISK_FLAG_LABELS);
+    const flags = (student.riskFlags ?? []).filter((f): f is SevereRiskFactorType => f in RISK_FLAG_LABELS);
     openCreation(
       `发起转诊 - ${student.studentName}`,
       <ReferralCreationForm
@@ -98,11 +98,11 @@ export function HighRiskListView({ header }: { header?: (loading: boolean) => Re
                     </span>
                   </td>
                   <td className="py-2 pr-4">
-                    {s.riskFlags.length === 0 ? (
+                    {(s.riskFlags?.length ?? 0) === 0 ? (
                       <span className="text-[var(--md-sys-color-on-surface-variant)]">—</span>
                     ) : (
                       <span className="inline-flex gap-1 flex-wrap">
-                        {s.riskFlags.map((f) => (
+                        {s.riskFlags?.map((f) => (
                           <span key={f} className="inline-block px-2 py-0.5 rounded text-xs bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]">
                             {RISK_FLAG_LABELS[f] || f}
                           </span>

@@ -102,7 +102,7 @@ class StudentHealthProfileRiskListenerTest {
         assertEquals(RiskStatus.HIGH, dto.riskLevel)
         assertEquals("submit", dto.actionType)
         assertTrue(dto.clinicalStatus.isEmpty())
-        assertTrue(dto.severeRiskFactors.isEmpty())
+        assertEquals(listOf(com.medicalsystem.backend.model.RiskFlagName.SUICIDAL_IDEATION), dto.severeRiskFactors)
         assertTrue(dto.attachments.isEmpty())
         assertTrue(dto.title.isNotBlank())
     }
