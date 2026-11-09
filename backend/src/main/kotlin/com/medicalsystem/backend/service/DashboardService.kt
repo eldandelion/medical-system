@@ -6,6 +6,9 @@ import com.medicalsystem.backend.exception.ResourceNotFoundException
 import com.medicalsystem.backend.model.User
 import com.medicalsystem.backend.model.UserRole
 import com.medicalsystem.backend.repository.*
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -28,8 +31,21 @@ class DashboardService(
     private val assessmentAssignmentRepository: com.medicalsystem.backend.repository.AssessmentAssignmentJpaRepository,
     private val referralJpaRepository: com.medicalsystem.backend.repository.ReferralJpaRepository,
     private val notificationJpaRepository: com.medicalsystem.backend.repository.NotificationJpaRepository,
-    private val entityManager: jakarta.persistence.EntityManager
+    private val entityManager: jakarta.persistence.EntityManager,
+    private val objectMapper: ObjectMapper = ObjectMapper()
 ) {
+    private val logger = LoggerFactory.getLogger(DashboardService::class.java)
+
+    private fun parsePayload(json: String?): Map<String, Any>? {
+        if (json.isNullOrBlank()) return null
+        return try {
+            val typeRef = object : TypeReference<Map<String, Any>>() {}
+            objectMapper.readValue(json, typeRef)
+        } catch (e: Exception) {
+            logger.warn("Failed to deserialize notification payload: {}", json, e)
+            null
+        }
+    }
 
     private fun validateRole(user: User, expectedRole: UserRole) {
         if (user.role != expectedRole) {
@@ -232,19 +248,29 @@ class DashboardService(
                     )
                 })
 
-                val highRisk = entityManager.createQuery("SELECT n FROM NotificationEntity n WHERE n.userId = :userId AND n.messageCode = :code ORDER BY n.createdAt DESC", com.medicalsystem.backend.entity.NotificationEntity::class.java)
+                val highRisk = entityManager.createQuery("SELECT n FROM NotificationEntity n WHERE n.userId = :userId AND n.messageCode IN (:codes) ORDER BY n.createdAt DESC", com.medicalsystem.backend.entity.NotificationEntity::class.java)
                     .setParameter("userId", user.id)
-                    .setParameter("code", com.medicalsystem.backend.model.NotificationMessageCode.ASSESSMENT_COMPLETED_TEACHER)
+                    .setParameter("codes", listOf(
+                        com.medicalsystem.backend.model.NotificationMessageCode.ASSESSMENT_HIGH_RISK_ALERT_TEACHER,
+                        com.medicalsystem.backend.model.NotificationMessageCode.ASSESSMENT_COMPLETED_TEACHER
+                    ))
                     .setMaxResults(5)
                     .resultList
 
                 activities.addAll(highRisk.map {
+                    val activityType = if (it.messageCode == com.medicalsystem.backend.model.NotificationMessageCode.ASSESSMENT_HIGH_RISK_ALERT_TEACHER) {
+                        ActivityType.HIGH_RISK_ASSESSMENT_SUBMITTED
+                    } else {
+                        ActivityType.UNREAD_NOTIFICATION
+                    }
                     DashboardActivityDto(
                         id = "notif-${it.id}",
-                        type = ActivityType.HIGH_RISK_ASSESSMENT_SUBMITTED,
+                        type = activityType,
                         timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
-                        referenceId = it.id!!,
-                        referenceName = null
+                        referenceId = it.id,
+                        referenceName = null,
+                        messageCode = it.messageCode.name,
+                        payload = parsePayload(it.payload)
                     )
                 })
             }
@@ -271,8 +297,10 @@ class DashboardService(
                         id = "notif-hr-${it.id}",
                         type = ActivityType.HIGH_RISK_ASSESSMENT_SUBMITTED,
                         timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
-                        referenceId = it.id!!,
-                        referenceName = null
+                        referenceId = it.id,
+                        referenceName = null,
+                        messageCode = it.messageCode.name,
+                        payload = parsePayload(it.payload)
                     )
                 })
                 
@@ -282,8 +310,10 @@ class DashboardService(
                         id = "notif-sys-${it.id}",
                         type = ActivityType.SYSTEM_NOTIFICATION,
                         timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
-                        referenceId = it.id!!,
-                        referenceName = null
+                        referenceId = it.id,
+                        referenceName = null,
+                        messageCode = it.messageCode.name,
+                        payload = parsePayload(it.payload)
                     )
                 })
             }
@@ -305,8 +335,10 @@ class DashboardService(
                         id = "notif-${it.id}",
                         type = ActivityType.UNREAD_NOTIFICATION,
                         timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
-                        referenceId = it.id!!,
-                        referenceName = null
+                        referenceId = it.id,
+                        referenceName = null,
+                        messageCode = it.messageCode.name,
+                        payload = parsePayload(it.payload)
                     )
                 })
             }
@@ -328,8 +360,10 @@ class DashboardService(
                         id = "notif-${it.id}",
                         type = ActivityType.UNREAD_NOTIFICATION,
                         timestamp = it.createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant(),
-                        referenceId = it.id!!,
-                        referenceName = null
+                        referenceId = it.id,
+                        referenceName = null,
+                        messageCode = it.messageCode.name,
+                        payload = parsePayload(it.payload)
                     )
                 })
             }

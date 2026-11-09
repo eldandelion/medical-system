@@ -1,5 +1,6 @@
 import { DashboardActivityDto, ActivityType } from '../api/dashboard';
 import { ActivityStatusType } from '../config/dashboardConfig';
+import { getNotificationText } from './notificationText';
 
 export interface UIActivityItem {
   id: string;
@@ -11,7 +12,14 @@ export interface UIActivityItem {
 }
 
 export function mapActivityTypeToUI(activity: DashboardActivityDto): UIActivityItem {
-  let title = activity.referenceName || '系统通知';
+  const resolvedNotificationText = activity.messageCode
+    ? getNotificationText({
+        messageCode: activity.messageCode,
+        payload: activity.payload,
+      })
+    : '';
+
+  let title = resolvedNotificationText || activity.referenceName || '系统通知';
   let statusText = '';
   let statusType: ActivityStatusType = 'neutral';
 

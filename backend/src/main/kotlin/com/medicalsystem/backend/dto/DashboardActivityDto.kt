@@ -23,7 +23,9 @@ data class DashboardActivityDto(
     val type: ActivityType,
     val timestamp: Instant,
     val referenceId: Long,
-    val referenceName: String? = null
+    val referenceName: String? = null,
+    val messageCode: String? = null,
+    val payload: Map<String, Any>? = null
 )
 
 data class DashboardActivityFeedDto(

@@ -6,73 +6,13 @@ import { useCreationOverlay } from '../../contexts/CreationContext';
 import { ReferralCreationForm } from '../records/ReferralCreationForm';
 import { NotificationDto } from '../../api/notifications';
 import { SevereRiskFactorType } from '../../types';
+import { getNotificationText } from '../../utils/notificationText';
 
 interface NotificationsViewProps {
   onViewReferral?: (referralId: string) => void;
   onViewRecords?: () => void;
   onViewStudent?: (studentId: string) => void;
 }
-
-// Helper to translate message codes to readable Chinese text
-const getNotificationText = (notification: NotificationDto) => {
-  const studentName = notification.payload?.studentName || '未知学生';
-  const initiatorName = notification.payload?.initiatorName || '教师';
-  
-  switch (notification.messageCode) {
-    case 'REFERRAL_SUBMITTED_STUDENT':
-      return <span>由 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{initiatorName}</span> 发起的转诊申请已成功提交。</span>;
-    case 'REFERRAL_SUBMITTED_INITIATOR': 
-      return <span>您为 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 发起的转诊申请已成功记录，并进入后续评估流程。</span>;
-    case 'REFERRAL_REQUIRES_REVIEW_HC':
-      return <span>由 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{initiatorName}</span> 为 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 发起的转诊申请需要您审核。</span>;
-    case 'REFERRAL_CREATED_FOR_STUDENT_TEACHER':
-      return <span>心理咨询师 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{initiatorName}</span> 为您的学生 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 发起了转诊申请。</span>;
-    case 'REFERRAL_APPROVED_BY_HC_TEACHER':
-    case 'REFERRAL_APPROVED_BY_HC_STUDENT':
-      return <span>转诊中心已审核通过 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 的转诊申请，正在等待医院分诊。</span>;
-    case 'REFERRAL_NEEDS_TRIAGE_ADMIN':
-      return <span>有一份关于 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 的新转诊申请，请及时分配医生。</span>;
-    case 'REFERRAL_DOCTOR_ASSIGNED_DOCTOR':
-      return <span>您被分配了一份关于 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 的转诊申请，请尽快安排就诊时间。</span>;
-    case 'REFERRAL_DOCTOR_ASSIGNED_TEACHER':
-    case 'REFERRAL_DOCTOR_ASSIGNED_STUDENT':
-    case 'REFERRAL_DOCTOR_ASSIGNED_HC':
-      return <span><span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 的转诊申请已分配医生，正在等待排期。</span>;
-    case 'REFERRAL_SCHEDULED_STUDENT':
-    case 'REFERRAL_SCHEDULED_TEACHER':
-    case 'REFERRAL_SCHEDULED_HC':
-    case 'REFERRAL_SCHEDULED_ADMIN':
-      return <span>医生已为 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 安排了就诊时间。</span>;
-    case 'REFERRAL_FEEDBACK_SUBMITTED_HC':
-      return <span>医生已提交 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 的就诊反馈，请审核。</span>;
-    case 'REFERRAL_FEEDBACK_SUBMITTED_TEACHER':
-    case 'REFERRAL_FEEDBACK_SUBMITTED_ADMIN':
-    case 'REFERRAL_FEEDBACK_SUBMITTED_STUDENT':
-      return <span>医生已提交 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 的就诊反馈。</span>;
-    case 'REFERRAL_CLOSED_TEACHER':
-    case 'REFERRAL_CLOSED_STUDENT':
-      return <span><span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 的转诊流程已完成并关闭。</span>;
-    case 'REFERRAL_REJECTED_TEACHER':
-    case 'REFERRAL_REJECTED_STUDENT':
-    case 'REFERRAL_REJECTED_HC':
-      return <span>关于 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 的转诊申请已被拒绝。</span>;
-    case 'REFERRAL_NEEDS_REASSIGNMENT_ADMIN':
-      return <span>医生要求重新分配 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 的转诊申请，请处理。</span>;
-    case 'REFERRAL_RECALLED_HC':
-      return <span>关于 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 的转诊申请已被撤回。</span>;
-    case 'ASSESSMENT_HIGH_RISK_ALERT_HC':
-    case 'ASSESSMENT_HIGH_RISK_ALERT_TEACHER': {
-      const flags = notification.payload?.crisisFlags ? `（${notification.payload.crisisFlags}）` : '';
-      return <span>学生 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 的心理测评结果触发高危预警{flags}，请及时关注并干预处理。</span>;
-    }
-    case 'ASSESSMENT_ASSIGNED_STUDENT':
-      return <span>您收到了一项新的心理健康测评任务，请及时前往完成测评。</span>;
-    case 'ASSESSMENT_COMPLETED_TEACHER':
-      return <span>您的学生 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 已完成心理健康测评。</span>;
-    default:
-      return notification.messageCode.replace(/_/g, ' ');
-  }
-};
 
 const getNotificationTitle = (notification: NotificationDto) => {
   if (notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_HC' || notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_TEACHER') return '高危心理测评预警';

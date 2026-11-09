@@ -1,75 +1,210 @@
-# Architecture: Remove 高危名单 — Notification-Driven High-Risk Workflow
+# Technical & Domain Architecture: Dashboard Recent Activity Notification Resolution
 
-Source requirements: [requirements.md](./requirements.md). Synthesized from the architect design + DDD consultation, with code-verified corrections.
+## 1. Executive Summary & Root Cause
 
-## 1. Summary
-- `ClinicalRiskEvaluator` is the **single source** of high-risk alerts. On HIGH it notifies all head counsellors (`ASSESSMENT_HIGH_RISK_ALERT_HC`) and the student's assigned teacher (new `ASSESSMENT_HIGH_RISK_ALERT_TEACHER`).
-- Both alerts use `actionType = VIEW_STUDENT` (new), `actionTargetId = studentId`, and identical payloads.
-- `NotificationDto.canCreateReferral: Boolean?` is **computed at read time** (null for non-high-risk codes; for high-risk codes `true` iff the student has no open referral). Never stored.
-- Frontend high-risk notifications show `发起转诊` (when `canCreateReferral !== false`) and `查看学生`.
-- Auto-referral on HIGH and the ">80%" HC alert are removed. 高危名单 is removed end to end.
+### 1.1 Problem Statement
+On user dashboards across all roles (Teachers, Head Councillors, Trial Admins, Doctors), the "Recent Activity" (`近期动态`) feed displays the ambiguous generic text `"系统通知"` for notification-based activity items (e.g. high-risk assessment triggers, referral updates, unread alerts).
 
-## 2. Bounded-context decision
-Keep the direct notification send in `ClinicalRiskEvaluator` (minimal diff). Do **not** fan out from `StudentRiskStatusChangedEvent`: it is also published by `StudentProfileController` for manual risk edits, which would violate "only the evaluator emits alerts". The evaluator keeps publishing that event (the listener just ignores HIGH now); fix the stale comment.
+### 1.2 Root Cause
+1. **DTO Truncation**: `DashboardActivityDto` only contained `referenceId` and `referenceName: String?`. When `DashboardService` projected `NotificationEntity`, it set `referenceName = null` because notifications do not have a scalar name attribute.
+2. **Missing Notification Context**: The entity's `messageCode` (enum) and JSON-serialized `payload` were omitted from `/api/dashboard/activity`.
+3. **Teacher Query Limitation**: The Teacher high-risk JPQL query in `DashboardService.kt` only queried `ASSESSMENT_COMPLETED_TEACHER`, failing to include high-priority `ASSESSMENT_HIGH_RISK_ALERT_TEACHER` notifications.
+4. **Presentation Coupling**: In the frontend, localized message formatting was tightly encapsulated inside `NotificationsView.tsx`. `activityMapper.ts` could not resolve notification texts and defaulted to `activity.referenceName || '系统通知'`.
 
-## 3. Contracts
+### 1.3 Architectural Invariant: Language-Agnostic Backend
+Per the architecture rules in `GEMINI.md`:
+> **No Presentation Strings in Backend**: The backend MUST remain strictly language-agnostic. Never create string `message` fields in DTOs intended for direct frontend display (e.g. Chinese toasts/labels). Use booleans, enums, or IDs instead, and let the frontend define the localized UI text.
 
-### Enums (stored via explicit `code` converters — `NotificationMessageCodeConverter`, `NotificationActionTypeConverter`)
-- `NotificationMessageCode`: append `ASSESSMENT_HIGH_RISK_ALERT_TEACHER(34)`. Never rename/remove existing entries (unknown DB codes break `GET /api/notifications`).
-- `NotificationActionType`: append `VIEW_STUDENT(11)` (the frontend already has a `VIEW_STUDENT` branch rendering `查看学生`).
+To respect this invariant, the backend will **not** render or return pre-formatted Chinese messages. Instead, it will project `messageCode: String?` (enum name) and `payload: Map<String, Any>?`, allowing the frontend to resolve localized strings via a shared pure formatter.
 
-### Open-referral definition (single source of truth)
-- `ReferralStatus.companion.TERMINAL_STATUSES = setOf(REJECTED, CLOSED, ERROR)` + `val isTerminal`.
-- Open = not terminal (includes DRAFT and RECALLED — RECALLED can return to AWAITING_APPROVAL). Matches the current `TERMINAL_REFERRAL_STATUSES` in `StudentHealthProfileRiskListener`, which moves into `ReferralStatus`.
-- Repository: `ReferralRepository.findStudentIdsWithOpenReferral(studentIds: Collection<Long>): Set<Long>` (adapter → JPA derived query `findByStudentIdInAndStatusNotIn` or a JPQL `select distinct r.student.id`). Batched — one query per notification list read. Verify the actual student property path on `ReferralEntity`.
+---
 
-### NotificationDto (Kotlin) / TS mirror
+## 2. Bounded Contexts & CQRS Read Model Architecture
+
+In Domain-Driven Design (DDD), **Dashboard is NOT an aggregate root**; it is an **Application-Level Projection / Read Model (CQRS Query Service)** aggregating across 4 Bounded Contexts:
+
+| Bounded Context | Aggregate Root / Entities | Role in Dashboard Projection |
+| :--- | :--- | :--- |
+| **Notification Context** | `Notification` (`NotificationMessageCode`, `NotificationActionType`) | Informs users of asynchronous domain events, state updates, and actionable alerts. |
+| **Referral Context** | `Referral`, `ReferralStep` | Active triage, scheduling, feedback, and student referral lifecycle progress. |
+| **Assessment Context** | `AssessmentAssignment` | Student completion tasks and psychological evaluation progress. |
+| **User & Identity Context** | `User`, Role entities (`Teacher`, `Doctor`, etc.) | Identity profiles and pending account approvals. |
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Teacher / Doctor / Head Councillor
+    participant Page as Dashboard View (React)
+    participant Mapper as activityMapper.ts
+    participant Formatter as notificationText.ts
+    participant Controller as DashboardController (/api/dashboard/activity)
+    participant Service as DashboardService
+    participant DB as MySQL (notifications / referrals)
+
+    User->>Page: Navigates to Dashboard
+    Page->>Controller: GET /api/dashboard/activity (Bearer JWT)
+    Controller->>Service: getRecentActivity(currentUser)
+    Service->>DB: Query notifications (IN (:codes), DESC)
+    DB-->>Service: List<NotificationEntity>
+    Note over Service: Jackson parses JSON payload<br/>Maps to DashboardActivityDto with<br/>messageCode & payload
+    Service-->>Controller: DashboardActivityFeedDto
+    Controller-->>Page: JSON { activities: [...] }
+    Page->>Mapper: mapActivityTypeToUI(activity)
+    alt activity.messageCode is present
+        Mapper->>Formatter: getNotificationText({ messageCode, payload })
+        Formatter-->>Mapper: Localized Chinese text
+        Note over Mapper: Sets title = localized text
+    else Referral / Assessment / User
+        Note over Mapper: Sets title = referenceName || '系统通知'
+    end
+    Mapper-->>Page: UIActivityItem { id, title, statusText, statusType, timestamp }
+    Page-->>User: Displays descriptive notification card in "近期动态"
+```
+
+---
+
+## 3. Detailed Component Contracts & Technical Design
+
+### 3.1 Backend DTO Contract
+
+**File**: `backend/src/main/kotlin/com/medicalsystem/backend/dto/DashboardActivityDto.kt`
+
 ```kotlin
-val canCreateReferral: Boolean? = null   // appended field
+package com.medicalsystem.backend.dto
+
+import java.time.Instant
+
+enum class ActivityType {
+    REFERRAL_PENDING_TRIAGE,
+    REFERRAL_PENDING_SCHEDULING,
+    REFERRAL_PENDING_FEEDBACK,
+    REFERRAL_STATUS_UPDATED,
+    
+    ASSESSMENT_PENDING_COMPLETION,
+    HIGH_RISK_ASSESSMENT_SUBMITTED,
+    
+    USER_APPROVAL_PENDING,
+    
+    UNREAD_NOTIFICATION,
+    SYSTEM_NOTIFICATION,
+    HOSPITAL_CAPACITY_ALERT
+}
+
+data class DashboardActivityDto(
+    val id: String,
+    val type: ActivityType,
+    val timestamp: Instant,
+    val referenceId: Long,
+    val referenceName: String? = null,
+    val messageCode: String? = null,
+    val payload: Map<String, Any>? = null
+)
+
+data class DashboardActivityFeedDto(
+    val activities: List<DashboardActivityDto>
+)
 ```
-```ts
-canCreateReferral?: boolean | null;
+
+### 3.2 Backend Service Refactoring
+
+**File**: `backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt`
+
+#### Safe Jackson Deserialization Helper:
+```kotlin
+private fun parsePayload(json: String?): Map<String, Any>? {
+    if (json.isNullOrBlank()) return null
+    return try {
+        val typeRef = object : com.fasterxml.jackson.core.type.TypeReference<Map<String, Any>>() {}
+        objectMapper.readValue(json, typeRef)
+    } catch (e: Exception) {
+        logger.warn("Failed to deserialize notification payload: {}", json, e)
+        null
+    }
+}
 ```
-Computed in the notification read path (prefer `NotificationService`, so the controller doesn't depend on Referral). Only for messageCodes `ASSESSMENT_HIGH_RISK_ALERT_HC` / `ASSESSMENT_HIGH_RISK_ALERT_TEACHER`, keyed on `actionTargetId` (studentId).
 
-### High-risk alert payload (both codes, identical)
-`studentId, studentNumber, studentName, riskStatus, riskFlags (List<String>), crisisFlags, level="HIGH", scaleCode, screeningReasons`.
+#### Branch-by-Branch Mapping Updates in `getRecentActivity(user: User)`:
+1. **Teacher**:
+   Query both `ASSESSMENT_HIGH_RISK_ALERT_TEACHER` and `ASSESSMENT_COMPLETED_TEACHER`.
+   Attach `messageCode = it.messageCode.name` and `payload = parsePayload(it.payload)`.
+2. **Head Councillor**:
+   Attach `messageCode = it.messageCode.name` and `payload = parsePayload(it.payload)` on high-risk and unread system notifications.
+3. **Trial Admin & Doctor**:
+   Attach `messageCode = it.messageCode.name` and `payload = parsePayload(it.payload)` on unread notifications.
 
-## 4. Backend changes
-| File | Change |
-|---|---|
-| `model/NotificationMessageCode.kt` | append `ASSESSMENT_HIGH_RISK_ALERT_TEACHER(34)` |
-| `model/NotificationActionType.kt` | append `VIEW_STUDENT(11)` |
-| `model/ReferralStatus.kt` | `TERMINAL_STATUSES`, `isTerminal` |
-| `repository/ReferralRepository.kt` (+ adapter, JPA repo) | `findStudentIdsWithOpenReferral` |
-| `dto/NotificationDto.kt` | `canCreateReferral: Boolean? = null` |
-| `service/NotificationService.kt` / `controller/NotificationController.kt` | compute `canCreateReferral` batched at read |
-| `service/ClinicalRiskEvaluator.kt` | HC alert → `VIEW_STUDENT`; add teacher alert to `student?.assignedTeacher?.userId` (skip if null, own try/catch); log ERROR if no recipient at all; fix stale comment |
-| `event/StudentHealthProfileRiskListener.kt` | remove `onStudentRiskStatusChanged`, `createAutoReferral`, `AUTO_REFERRAL_TITLE`, local terminal set, unused deps (`userRepository`, `referralService`); keep `onReferralInitiated`, `onStudentRegistered` |
-| `event/AssessmentEventListener.kt` | remove >80% HC alert + `headCounsellorRepository`; keep `ASSESSMENT_COMPLETED_TEACHER`, drop heuristic `isHighRisk`/`level` payload keys |
-| `controller/StudentController.kt` | remove `GET /api/students/high-risk` |
-| `service/StudentService.kt` | remove `fetchHighRiskStudents` (verify no other callers) |
-| `dto/HighRiskStudentDto.kt` | delete |
+### 3.3 Frontend API Type Contract
 
-## 5. Frontend changes
-| File | Change |
-|---|---|
-| `api/notifications.ts` | `canCreateReferral?: boolean \| null` |
-| `components/notifications/NotificationsView.tsx` | text/title/icon for `ASSESSMENT_HIGH_RISK_ALERT_TEACHER` (reuse HC renderer); for both high-risk codes: `发起转诊` (hidden when `canCreateReferral === false`) opens pre-filled `ReferralCreationForm` via the creation overlay (same mechanism HighRiskListView used: studentId, title `高风险筛查转诊 - {name} ({number})`, riskLevel from `payload.riskStatus`, severeRiskFactors = payload.riskFlags ∩ {SUICIDAL_IDEATION, SUICIDE_ATTEMPT, SELF_HARM}); `查看学生` via existing `VIEW_STUDENT` branch → `onViewStudent(studentId)` |
-| `pages/HeadCouncillorPage.tsx`, `pages/TeacherPage.tsx` | remove HIGH_RISK tab enum/title/nav/render + import; ensure `onViewStudent` opens the student profile in 学生管理; dashboard activity for `ASSESSMENT_*` / `HIGH_RISK_ASSESSMENT_SUBMITTED` → NOTIFICATIONS tab |
-| `components/assessments/AssessmentFlow.tsx` | drop `['high-risk-students']` invalidation |
-| Referral creation success path | invalidate notifications query so `发起转诊` disappears after creating |
-| `components/records/HighRiskListView.tsx`, `api/highRisk.ts` | delete (+ any tests / MSW handlers / mock data for high-risk) |
-| MSW notification mocks | add `canCreateReferral` on high-risk mocks; match backend payload |
+**File**: `frontend/src/api/dashboard.ts`
 
-## 6. Test strategy (write failing first)
-Backend: evaluator alerts HC + teacher with `VIEW_STUDENT`, skips teacher when unassigned; listener no longer creates a referral on HIGH; AssessmentEventListener sends no HC alert; enum codes unique; `@SpringBootTest` for `findStudentIdsWithOpenReferral` (open, DRAFT, RECALLED, CLOSED/REJECTED, none); notification read sets `canCreateReferral` true/false/null.
-Frontend: NotificationsView renders teacher alert, shows/hides `发起转诊` per flag, opens creation with pre-filled data, `查看学生` calls `onViewStudent`; pages no longer render 高危名单 nav.
+```typescript
+export interface DashboardActivityDto {
+  id: string;
+  type: ActivityType;
+  timestamp: string;
+  referenceId: number;
+  referenceName?: string | null;
+  messageCode?: string;
+  payload?: Record<string, any>;
+}
+```
 
-## 7. Open question for sign-off
-DDD consultant recommends **also** enforcing "one open referral per student" server-side (`ReferralService.initiateReferral` → `ConflictException` 409). Locked decision 5 only requires hiding the button. Not included unless approved — it also blocks other initiation paths (e.g. teacher creating a referral manually while one is in DRAFT/RECALLED).
+### 3.4 Shared Notification Formatter Module
 
-## 8. Risks
-- Removing auto-referral: notification becomes the only safety net → ERROR log when no recipients.
-- Teachers receive two notifications per HIGH submission (COMPLETED + HIGH_RISK_ALERT_TEACHER) — intended.
-- HCs re-alerted on each HIGH submission — acceptable; `发起转诊` hidden once referral is open.
+**New File**: `frontend/src/utils/notificationText.ts`
+
+Pure, framework-agnostic function returning `string`:
+```typescript
+export interface NotificationTextParams {
+  messageCode?: string;
+  payload?: Record<string, any>;
+}
+
+export function getNotificationText(notification: NotificationTextParams): string {
+  // Pure string resolution of all NotificationMessageCode values matching PRD / NotificationsView
+}
+```
+
+In `frontend/src/components/notifications/NotificationsView.tsx`, import `getNotificationText` from `../utils/notificationText` to eliminate code duplication.
+
+### 3.5 Frontend Activity Mapper
+
+**File**: `frontend/src/utils/activityMapper.ts`
+
+```typescript
+import { DashboardActivityDto } from '../api/dashboard';
+import { ActivityStatusType } from '../config/dashboardConfig';
+import { getNotificationText } from './notificationText';
+
+export function mapActivityTypeToUI(activity: DashboardActivityDto): UIActivityItem {
+  const resolvedNotificationText = activity.messageCode
+    ? getNotificationText({
+        messageCode: activity.messageCode,
+        payload: activity.payload,
+      })
+    : '';
+
+  let title = resolvedNotificationText || activity.referenceName || '系统通知';
+  // ... maps statusText and statusType per activity.type ...
+}
+```
+
+### 3.6 MSW Mock Parity
+
+**File**: `frontend/src/mocks/data/dashboard.ts`
+Populate `messageCode` and `payload` on mock activities for development and testing parity.
+
+---
+
+## 4. Traceability Matrix & Affected Files
+
+| Component | File Path | Scope of Change |
+|---|---|---|
+| **Backend DTO** | `backend/src/main/kotlin/com/medicalsystem/backend/dto/DashboardActivityDto.kt` | Add `messageCode: String? = null` and `payload: Map<String, Any>? = null`. |
+| **Backend Service** | `backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt` | Inject `ObjectMapper`, implement `parsePayload`, update Teacher high-risk JPQL query with `IN (:codes)`, populate `messageCode` & `payload` across Teacher, Head Councillor, Trial Admin, and Doctor. |
+| **Frontend API** | `frontend/src/api/dashboard.ts` | Add `messageCode?: string;` and `payload?: Record<string, any>;` to `DashboardActivityDto`. |
+| **Shared Formatter** | `frontend/src/utils/notificationText.ts` | **NEW FILE**: Pure string formatter `getNotificationText({ messageCode, payload })`. |
+| **Notification View** | `frontend/src/components/notifications/NotificationsView.tsx` | Import `getNotificationText` from shared formatter instead of defining locally. |
+| **Activity Mapper** | `frontend/src/utils/activityMapper.ts` | Resolve `title` via `getNotificationText` when `messageCode` is present; fallback to `referenceName \|\| '系统通知'`. |
+| **Mock Database** | `frontend/src/mocks/data/dashboard.ts` | Populate `messageCode` and `payload` on mock activities for dev/MSW parity. |
+| **Backend Tests** | `backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt` | Add unit tests asserting `messageCode` and `payload` mapping and Teacher query criteria. |
+| **Frontend Tests** | `frontend/src/utils/activityMapper.test.ts` & `notificationText.test.ts` | **NEW TESTS**: Unit test mapper resolutions, fallbacks, and notification text dictionary branches. |

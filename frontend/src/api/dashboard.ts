@@ -18,6 +18,8 @@ export interface DashboardActivityDto {
   timestamp: string;
   referenceId: number;
   referenceName?: string | null;
+  messageCode?: string;
+  payload?: Record<string, any>;
 }
 
 export interface DashboardActivityFeedDto {

@@ -315,4 +315,69 @@ class DashboardServiceTest {
         val result = dashboardService.getRecentActivity(mockUser)
         assertEquals(0, result.activities.size)
     }
+
+    @Test
+    fun `getRecentActivity for TEACHER populates messageCode and payload from notification`() {
+        val mockUser = User(id = 2L, name = "Jane Smith", email = EmailAddress("jane@univ.edu.cn"), role = UserRole.TEACHER)
+        
+        val spec = org.mockito.kotlin.any<org.springframework.data.jpa.domain.Specification<com.medicalsystem.backend.entity.ReferralEntity>>()
+        val pageable = org.mockito.kotlin.any<org.springframework.data.domain.Pageable>()
+        val page = org.springframework.data.domain.PageImpl<com.medicalsystem.backend.entity.ReferralEntity>(emptyList())
+        `when`(referralJpaRepository.findAll(spec, pageable)).thenReturn(page)
+
+        val notification = com.medicalsystem.backend.entity.NotificationEntity(
+            id = 55L,
+            userId = 2L,
+            messageCode = NotificationMessageCode.ASSESSMENT_HIGH_RISK_ALERT_TEACHER,
+            payload = """{"studentName":"张三","crisisFlags":"自杀倾向"}""",
+            isRead = false
+        )
+
+        val query = org.mockito.Mockito.mock(jakarta.persistence.TypedQuery::class.java) as jakarta.persistence.TypedQuery<com.medicalsystem.backend.entity.NotificationEntity>
+        `when`(entityManager.createQuery(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.eq(com.medicalsystem.backend.entity.NotificationEntity::class.java))).thenReturn(query)
+        `when`(query.setParameter(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(query)
+        `when`(query.setMaxResults(org.mockito.ArgumentMatchers.anyInt())).thenReturn(query)
+        `when`(query.resultList).thenReturn(listOf(notification))
+
+        val result = dashboardService.getRecentActivity(mockUser)
+        assertEquals(1, result.activities.size)
+        val activity = result.activities[0]
+        assertEquals("notif-55", activity.id)
+        assertEquals(ActivityType.HIGH_RISK_ASSESSMENT_SUBMITTED, activity.type)
+        assertEquals("ASSESSMENT_HIGH_RISK_ALERT_TEACHER", activity.messageCode)
+        assertEquals("张三", activity.payload?.get("studentName"))
+        assertEquals("自杀倾向", activity.payload?.get("crisisFlags"))
+    }
+
+    @Test
+    fun `getRecentActivity safely handles corrupted or blank notification payload`() {
+        val mockUser = User(id = 2L, name = "Jane Smith", email = EmailAddress("jane@univ.edu.cn"), role = UserRole.TEACHER)
+        
+        val spec = org.mockito.kotlin.any<org.springframework.data.jpa.domain.Specification<com.medicalsystem.backend.entity.ReferralEntity>>()
+        val pageable = org.mockito.kotlin.any<org.springframework.data.domain.Pageable>()
+        val page = org.springframework.data.domain.PageImpl<com.medicalsystem.backend.entity.ReferralEntity>(emptyList())
+        `when`(referralJpaRepository.findAll(spec, pageable)).thenReturn(page)
+
+        val notification = com.medicalsystem.backend.entity.NotificationEntity(
+            id = 56L,
+            userId = 2L,
+            messageCode = NotificationMessageCode.ASSESSMENT_COMPLETED_TEACHER,
+            payload = "invalid-corrupted-json",
+            isRead = false
+        )
+
+        val query = org.mockito.Mockito.mock(jakarta.persistence.TypedQuery::class.java) as jakarta.persistence.TypedQuery<com.medicalsystem.backend.entity.NotificationEntity>
+        `when`(entityManager.createQuery(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.eq(com.medicalsystem.backend.entity.NotificationEntity::class.java))).thenReturn(query)
+        `when`(query.setParameter(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(query)
+        `when`(query.setMaxResults(org.mockito.ArgumentMatchers.anyInt())).thenReturn(query)
+        `when`(query.resultList).thenReturn(listOf(notification))
+
+        val result = dashboardService.getRecentActivity(mockUser)
+        assertEquals(1, result.activities.size)
+        val activity = result.activities[0]
+        assertEquals("notif-56", activity.id)
+        assertEquals(ActivityType.UNREAD_NOTIFICATION, activity.type)
+        assertEquals("ASSESSMENT_COMPLETED_TEACHER", activity.messageCode)
+        assertNull(activity.payload)
+    }
 }
