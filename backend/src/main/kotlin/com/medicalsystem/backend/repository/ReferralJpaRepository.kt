@@ -22,4 +22,10 @@ interface ReferralJpaRepository : JpaRepository<ReferralEntity, Long>, JpaSpecif
     fun countByDestinationDepartmentId(departmentId: Long): Long
 
     fun findTop5ByStatusInOrderByCreatedAtDesc(statuses: List<com.medicalsystem.backend.model.ReferralStatus>): List<ReferralEntity>
+
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT r.studentId FROM ReferralEntity r WHERE r.studentId IN :studentIds AND r.status NOT IN :terminalStatuses")
+    fun findStudentIdsWithOpenReferral(
+        @org.springframework.data.repository.query.Param("studentIds") studentIds: Collection<Long>,
+        @org.springframework.data.repository.query.Param("terminalStatuses") terminalStatuses: Collection<com.medicalsystem.backend.model.ReferralStatus>
+    ): Set<Long>
 }

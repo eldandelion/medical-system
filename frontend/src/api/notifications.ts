@@ -10,6 +10,7 @@ export interface NotificationDto {
   isRead: boolean;
   createdAt: string;
   isActionAvailable: boolean;
+  canCreateReferral?: boolean | null;
 }
 
 export const fetchNotifications = async (token: string): Promise<NotificationDto[]> => {

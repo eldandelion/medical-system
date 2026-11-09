@@ -2,7 +2,10 @@ import React from 'react';
 import { NotificationItem } from './NotificationItem';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCreationOverlay } from '../../contexts/CreationContext';
+import { ReferralCreationForm } from '../records/ReferralCreationForm';
 import { NotificationDto } from '../../api/notifications';
+import { SevereRiskFactorType } from '../../types';
 
 interface NotificationsViewProps {
   onViewReferral?: (referralId: string) => void;
@@ -57,7 +60,8 @@ const getNotificationText = (notification: NotificationDto) => {
       return <span>医生要求重新分配 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 的转诊申请，请处理。</span>;
     case 'REFERRAL_RECALLED_HC':
       return <span>关于 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 的转诊申请已被撤回。</span>;
-    case 'ASSESSMENT_HIGH_RISK_ALERT_HC': {
+    case 'ASSESSMENT_HIGH_RISK_ALERT_HC':
+    case 'ASSESSMENT_HIGH_RISK_ALERT_TEACHER': {
       const flags = notification.payload?.crisisFlags ? `（${notification.payload.crisisFlags}）` : '';
       return <span>学生 <span className="font-medium text-[var(--md-sys-color-on-surface)]">{studentName}</span> 的心理测评结果触发高危预警{flags}，请及时关注并干预处理。</span>;
     }
@@ -71,7 +75,7 @@ const getNotificationText = (notification: NotificationDto) => {
 };
 
 const getNotificationTitle = (notification: NotificationDto) => {
-  if (notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_HC') return '高危心理测评预警';
+  if (notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_HC' || notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_TEACHER') return '高危心理测评预警';
   if (notification.messageCode === 'ASSESSMENT_ASSIGNED_STUDENT') return '新测评任务提醒';
   if (notification.messageCode === 'ASSESSMENT_COMPLETED_TEACHER') return '学生已完成测评';
   if (notification.messageCode === 'REFERRAL_SUBMITTED_INITIATOR') return '转诊申请提交成功';
@@ -89,7 +93,7 @@ const getNotificationTitle = (notification: NotificationDto) => {
 };
 
 const getNotificationIcon = (notification: NotificationDto) => {
-  if (notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_HC') return 'warning';
+  if (notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_HC' || notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_TEACHER') return 'warning';
   if (notification.messageCode.startsWith('ASSESSMENT_')) return 'assignment';
   if (notification.actionType === 'REVIEW_REFERRAL') return 'assignment_turned_in';
   if (notification.actionType === 'ASSIGN_DOCTOR') return 'person_add';
@@ -108,7 +112,34 @@ const getNotificationIcon = (notification: NotificationDto) => {
 
 export function NotificationsView({ onViewReferral, onViewRecords, onViewStudent }: NotificationsViewProps) {
   const { session } = useAuth();
+  const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
   const { notifications, markAsRead, isLoading } = useNotifications(session?.token);
+
+  const handleInitiateReferral = (notification: NotificationDto) => {
+    const studentId = notification.payload?.studentId || notification.actionTargetId;
+    const studentName = notification.payload?.studentName || '未知学生';
+    const studentNumber = notification.payload?.studentNumber || '';
+    const riskStatus = notification.payload?.riskStatus || 'HIGH';
+    const rawFlags: string[] = Array.isArray(notification.payload?.riskFlags)
+      ? notification.payload.riskFlags
+      : [];
+    const severeRiskFactors = rawFlags.filter((f): f is SevereRiskFactorType =>
+      ['SUICIDAL_IDEATION', 'SUICIDE_ATTEMPT', 'SELF_HARM'].includes(f)
+    );
+    openCreation(
+      `发起转诊 - ${studentName}`,
+      <ReferralCreationForm
+        onClose={closeCreation}
+        initialData={{
+          studentId: studentId ? String(studentId) : '',
+          title: studentNumber ? `高风险筛查转诊 - ${studentName} (${studentNumber})` : `高风险筛查转诊 - ${studentName}`,
+          riskLevel: riskStatus,
+          severeRiskFactors,
+        }}
+      />
+    );
+    setTimeout(expandToFullscreen, 10);
+  };
 
   if (isLoading) {
     return (
@@ -137,6 +168,11 @@ export function NotificationsView({ onViewReferral, onViewRecords, onViewStudent
               time={new Date(notification.createdAt).toLocaleString()}
               body={getNotificationText(notification)}
               actions={[
+                ...((notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_HC' || notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_TEACHER') && notification.canCreateReferral !== false ? [{
+                  label: '发起转诊',
+                  variant: 'filled' as const,
+                  onClick: () => handleInitiateReferral(notification)
+                }] : []),
                 ...(['VIEW_REFERRAL', 'REVIEW_REFERRAL'].includes(notification.actionType) ? [{
                   label: '查看详情',
                   variant: 'text' as const,

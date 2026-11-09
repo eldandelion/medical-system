@@ -12,20 +12,8 @@ class NotificationController(
 ) {
     @GetMapping
     fun getNotifications(@com.medicalsystem.backend.security.CurrentUser user: com.medicalsystem.backend.model.User): ResponseEntity<List<NotificationDto>> {
-        val notifications = notificationService.getNotificationsForUser(user.id)
-        return ResponseEntity.ok(notifications.map { 
-            NotificationDto(
-                id = it.id!!,
-                userId = it.userId,
-                messageCode = it.messageCode.name,
-                payload = it.payload,
-                isRead = it.isRead,
-                createdAt = it.createdAt,
-                actionType = it.actionType.name,
-                actionTargetId = it.actionTargetId,
-                isActionAvailable = it.isActionAvailable
-            ) 
-        })
+        val dtos = notificationService.getNotificationDtosForUser(user.id)
+        return ResponseEntity.ok(dtos)
     }
 
     @PatchMapping("/{id}/read")

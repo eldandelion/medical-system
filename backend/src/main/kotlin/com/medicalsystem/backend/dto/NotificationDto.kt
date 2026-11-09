@@ -13,5 +13,6 @@ data class NotificationDto(
     val createdAt: LocalDateTime,
     val actionType: String,
     val actionTargetId: Long?,
-    val isActionAvailable: Boolean
+    val isActionAvailable: Boolean,
+    val canCreateReferral: Boolean? = null
 )

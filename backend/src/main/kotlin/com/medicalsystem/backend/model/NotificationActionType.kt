@@ -11,7 +11,8 @@ enum class NotificationActionType(val code: Int) {
     WRITE_FEEDBACK(7),
     APPROVE_FEEDBACK(8),
     ASSIGN_DOCTOR(9),
-    VIEW_RECORDS(10);
+    VIEW_RECORDS(10),
+    VIEW_STUDENT(11);
 
     companion object {
         fun fromCode(code: Int): NotificationActionType = entries.find { it.code == code }

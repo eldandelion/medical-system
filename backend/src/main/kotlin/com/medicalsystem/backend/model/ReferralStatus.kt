@@ -15,6 +15,12 @@ enum class ReferralStatus(
     CLOSED(null),
     ERROR(null);
 
+    companion object {
+        val TERMINAL_STATUSES: Set<ReferralStatus> = setOf(REJECTED, CLOSED, ERROR)
+    }
+
+    val isTerminal: Boolean get() = this in TERMINAL_STATUSES
+
     fun canTransitionFrom(previousStatus: ReferralStatus?): Boolean {
         // null means initial creation
         if (previousStatus == null) return this == DRAFT || this == AWAITING_APPROVAL

@@ -238,7 +238,8 @@ export function AssessmentFlow({ isOpen, onClose, assessmentId, assessmentTitle,
       queryClient.invalidateQueries({ queryKey: ['/api/students'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['/api/referrals'] });
-      queryClient.invalidateQueries({ queryKey: ['high-risk-students'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['psychometrics'] });
       clearPosition();
       setAppState('outro');

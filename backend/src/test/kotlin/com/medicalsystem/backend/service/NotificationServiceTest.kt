@@ -4,21 +4,25 @@ import com.medicalsystem.backend.model.Notification
 import com.medicalsystem.backend.model.NotificationActionType
 import com.medicalsystem.backend.model.NotificationMessageCode
 import com.medicalsystem.backend.repository.NotificationRepository
+import com.medicalsystem.backend.repository.ReferralRepository
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.*
+import java.time.LocalDateTime
 
 class NotificationServiceTest {
 
     private lateinit var notificationRepository: NotificationRepository
+    private lateinit var referralRepository: ReferralRepository
     private lateinit var notificationService: NotificationService
 
     @BeforeEach
     fun setUp() {
         notificationRepository = mock(NotificationRepository::class.java)
-        notificationService = NotificationService(notificationRepository)
+        referralRepository = mock(ReferralRepository::class.java)
+        notificationService = NotificationService(notificationRepository, referralRepository)
     }
 
     @Test
@@ -81,5 +85,62 @@ class NotificationServiceTest {
         
         verify(notificationRepository).save(notification)
         assertTrue(notification.isRead)
+    }
+
+    @Test
+    fun `getNotificationDtosForUser computes canCreateReferral dynamically`() {
+        val userId = 10L
+
+        val notifNormal = Notification(
+            id = 1L,
+            userId = userId,
+            messageCode = NotificationMessageCode.REFERRAL_SUBMITTED_INITIATOR,
+            payload = mapOf("info" to "test"),
+            actionType = NotificationActionType.VIEW_REFERRAL,
+            actionTargetId = 999L,
+            createdAt = LocalDateTime.now()
+        )
+
+        val notifHcHighRisk = Notification(
+            id = 2L,
+            userId = userId,
+            messageCode = NotificationMessageCode.ASSESSMENT_HIGH_RISK_ALERT_HC,
+            payload = mapOf("studentId" to "201"),
+            actionType = NotificationActionType.VIEW_STUDENT,
+            actionTargetId = 201L,
+            createdAt = LocalDateTime.now()
+        )
+
+        val notifTeacherHighRisk = Notification(
+            id = 3L,
+            userId = userId,
+            messageCode = NotificationMessageCode.ASSESSMENT_HIGH_RISK_ALERT_TEACHER,
+            payload = mapOf("studentId" to "202"),
+            actionType = NotificationActionType.VIEW_STUDENT,
+            actionTargetId = 202L,
+            createdAt = LocalDateTime.now()
+        )
+
+        `when`(notificationRepository.findByUserIdOrderByCreatedAtDesc(userId)).thenReturn(
+            listOf(notifNormal, notifHcHighRisk, notifTeacherHighRisk)
+        )
+        `when`(referralRepository.findStudentIdsWithOpenReferral(setOf(201L, 202L))).thenReturn(
+            setOf(202L)
+        )
+
+        val dtos = notificationService.getNotificationDtosForUser(userId)
+
+        assertEquals(3, dtos.size)
+
+        val dtoNormal = dtos.first { it.id == 1L }
+        assertNull(dtoNormal.canCreateReferral)
+
+        val dtoHc = dtos.first { it.id == 2L }
+        assertEquals(true, dtoHc.canCreateReferral)
+
+        val dtoTeacher = dtos.first { it.id == 3L }
+        assertEquals(false, dtoTeacher.canCreateReferral)
+
+        verify(referralRepository, times(1)).findStudentIdsWithOpenReferral(setOf(201L, 202L))
     }
 }

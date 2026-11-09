@@ -1,5 +1,6 @@
 package com.medicalsystem.backend.controller
 
+import com.medicalsystem.backend.dto.NotificationDto
 import com.medicalsystem.backend.model.EmailAddress
 import com.medicalsystem.backend.model.Notification
 import com.medicalsystem.backend.model.NotificationActionType
@@ -46,9 +47,20 @@ class NotificationControllerTest {
     fun `GET api notifications returns current user notifications`() {
         val user = User(id = 1L, name = "Test User", email = EmailAddress("test@test.com"), role = UserRole.TEACHER)
         val notifications = listOf(
-            Notification(id = 1, userId = user.id, messageCode = NotificationMessageCode.REFERRAL_SUBMITTED_INITIATOR, actionType = NotificationActionType.NONE, actionTargetId = 1L, isRead = false, createdAt = LocalDateTime.now())
+            NotificationDto(
+                id = 1L,
+                userId = user.id,
+                messageCode = NotificationMessageCode.REFERRAL_SUBMITTED_INITIATOR.name,
+                payload = emptyMap(),
+                isRead = false,
+                createdAt = LocalDateTime.now(),
+                actionType = NotificationActionType.NONE.name,
+                actionTargetId = 1L,
+                isActionAvailable = false,
+                canCreateReferral = null
+            )
         )
-        `when`(notificationService.getNotificationsForUser(user.id)).thenReturn(notifications)
+        `when`(notificationService.getNotificationDtosForUser(user.id)).thenReturn(notifications)
 
         mockMvc.perform(get("/api/notifications").requestAttr("currentUser", user))
             .andExpect(status().isOk)

@@ -36,6 +36,9 @@ class ClinicalRiskEvaluatorTest {
     @Autowired
     private lateinit var collegeJpaRepository: CollegeJpaRepository
 
+    @Autowired
+    private lateinit var teacherJpaRepository: TeacherJpaRepository
+
     private lateinit var studentUser: UserEntity
     private lateinit var headCouncillorUser: UserEntity
 
@@ -100,6 +103,65 @@ class ClinicalRiskEvaluatorTest {
         assertTrue(profile.riskFlags.any { it.name == RiskFlagName.SUICIDAL_IDEATION })
 
         // Verify notification delivered to Head Councillor
+        val hcNotifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(headCouncillorUser.id)
+        val hcNotif = hcNotifications.firstOrNull { it.messageCode == NotificationMessageCode.ASSESSMENT_HIGH_RISK_ALERT_HC }
+        assertNotNull(hcNotif)
+        assertEquals(NotificationActionType.VIEW_STUDENT, hcNotif!!.actionType)
+        assertEquals(studentUser.id, hcNotif.actionTargetId)
+    }
+
+    @Test
+    fun `testAcuteSuicidalIdeation_AlertsAssignedTeacher`() {
+        val college = collegeJpaRepository.findAll().first()
+        val teacherUser = userJpaRepository.save(
+            UserEntity(
+                name = "班主任李老师",
+                role = UserRole.TEACHER,
+                email = EmailAddress("teacher_${System.currentTimeMillis()}@univ.edu.cn"),
+                status = AccountStatus.ACTIVE
+            )
+        )
+        val teacherEntity = teacherJpaRepository.save(
+            TeacherEntity(
+                userId = teacherUser.id,
+                employeeNumber = "TEA_001",
+                college = college
+            )
+        )
+
+        // Assign teacher to student
+        val student = studentJpaRepository.findById(studentUser.id).get()
+        student.assignedTeacher = teacherEntity
+        studentJpaRepository.save(student)
+
+        val answers = mapOf<String, Any>(
+            "ghq_23" to 0,
+            "phq9_1" to 0
+        )
+
+        val result = clinicalRiskEvaluator.evaluateRisk(studentUser.id, answers)
+        assertEquals(RiskStatus.HIGH, result.riskStatus)
+
+        // Verify notification delivered to assigned teacher
+        val teacherNotifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(teacherUser.id)
+        val teacherNotif = teacherNotifications.firstOrNull { it.messageCode == NotificationMessageCode.ASSESSMENT_HIGH_RISK_ALERT_TEACHER }
+        assertNotNull(teacherNotif)
+        assertEquals(NotificationActionType.VIEW_STUDENT, teacherNotif!!.actionType)
+        assertEquals(studentUser.id, teacherNotif.actionTargetId)
+        assertEquals("HIGH", teacherNotif.payload["level"])
+        assertEquals("STU_RISK_001", teacherNotif.payload["studentNumber"])
+    }
+
+    @Test
+    fun `testHighRisk_WhenTeacherUnassigned_SkipsTeacherNotificationWithoutError`() {
+        val answers = mapOf<String, Any>(
+            "ghq_23" to 0
+        )
+
+        val result = clinicalRiskEvaluator.evaluateRisk(studentUser.id, answers)
+        assertEquals(RiskStatus.HIGH, result.riskStatus)
+
+        // Head councillor notified
         val hcNotifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(headCouncillorUser.id)
         assertTrue(hcNotifications.any { it.messageCode == NotificationMessageCode.ASSESSMENT_HIGH_RISK_ALERT_HC })
     }

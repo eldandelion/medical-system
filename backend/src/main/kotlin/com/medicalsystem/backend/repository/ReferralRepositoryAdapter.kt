@@ -80,4 +80,12 @@ class ReferralRepositoryAdapter(
         }
         return jpaRepository.count(visibilitySpec.and(statusSpec))
     }
+
+    override fun findStudentIdsWithOpenReferral(studentIds: Collection<Long>): Set<Long> {
+        if (studentIds.isEmpty()) return emptySet()
+        return jpaRepository.findStudentIdsWithOpenReferral(
+            studentIds,
+            com.medicalsystem.backend.model.ReferralStatus.TERMINAL_STATUSES
+        )
+    }
 }

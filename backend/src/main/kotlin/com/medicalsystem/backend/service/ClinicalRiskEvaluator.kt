@@ -113,36 +113,62 @@ class ClinicalRiskEvaluator(
         }
 
         if (evaluatedRisk == RiskStatus.HIGH) {
-            val studentName = student?.name ?: "学生"
+            val studentName = student?.name ?: ""
             val scaleCode = completedTests.map { it.testType.name }.distinct().joinToString(",")
             val riskFlagNames = flags.map { it.name }
+            val payload = mapOf(
+                "studentId" to studentId.toString(),
+                "studentNumber" to (student?.studentNumber ?: ""),
+                "studentName" to studentName,
+                "riskStatus" to evaluatedRisk.name,
+                "riskFlags" to riskFlagNames,
+                "crisisFlags" to flags.joinToString { it.name },
+                "level" to "HIGH",
+                "scaleCode" to scaleCode,
+                "screeningReasons" to screening.screeningReasonsJoined
+            )
+
+            var notifiedCount = 0
+
+            // 1. Alert Head Councillors
             val headCouncillors = userJpaRepository.findAll().filter { it.role == UserRole.HEAD_COUNSELLOR }
             for (hc in headCouncillors) {
                 try {
                     notificationService.createNotification(
                         userId = hc.id,
                         messageCode = NotificationMessageCode.ASSESSMENT_HIGH_RISK_ALERT_HC,
-                        payload = mapOf(
-                            "studentId" to studentId.toString(),
-                            "studentNumber" to (student?.studentNumber ?: ""),
-                            "studentName" to studentName,
-                            "riskStatus" to evaluatedRisk.name,
-                            "riskFlags" to riskFlagNames,
-                            "crisisFlags" to flags.joinToString { it.name },
-                            "level" to "HIGH",
-                            "scaleCode" to scaleCode,
-                            "screeningReasons" to screening.screeningReasonsJoined
-                        ),
-                        actionType = NotificationActionType.VIEW_RECORDS,
+                        payload = payload,
+                        actionType = NotificationActionType.VIEW_STUDENT,
                         actionTargetId = studentId
                     )
+                    notifiedCount++
                 } catch (e: Exception) {
                     logger.error("Failed to notify Head Councillor ${hc.id}: ${e.message}")
                 }
             }
 
-            // Notify the risk pipeline: a HIGH-risk event must auto-create a referral for the
-            // HEAD_COUNSELLOR. The listener is fail-open — it must never break the submission.
+            // 2. Alert Assigned Teacher
+            val teacherUserId = student?.assignedTeacher?.userId
+            if (teacherUserId != null) {
+                try {
+                    notificationService.createNotification(
+                        userId = teacherUserId,
+                        messageCode = NotificationMessageCode.ASSESSMENT_HIGH_RISK_ALERT_TEACHER,
+                        payload = payload,
+                        actionType = NotificationActionType.VIEW_STUDENT,
+                        actionTargetId = studentId
+                    )
+                    notifiedCount++
+                } catch (e: Exception) {
+                    logger.error("Failed to notify Teacher $teacherUserId: ${e.message}")
+                }
+            }
+
+            if (notifiedCount == 0) {
+                logger.error("No recipient notified for high-risk alert for student $studentId")
+            }
+
+            // Publish StudentRiskStatusChangedEvent for downstream listeners
             try {
                 eventPublisher.publish(
                     com.medicalsystem.backend.event.StudentRiskStatusChangedEvent(

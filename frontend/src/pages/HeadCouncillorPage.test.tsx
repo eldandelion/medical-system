@@ -1,0 +1,102 @@
+import React from 'react';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { HeadCouncillorPage } from './HeadCouncillorPage';
+import { AuthProvider } from '../contexts/AuthContext';
+import { CreationOverlayProvider } from '../contexts/CreationContext';
+import { ThemeProvider } from '../contexts/ThemeContext';
+import { SnackbarProvider } from '../contexts/SnackbarContext';
+
+afterEach(() => {
+  cleanup();
+});
+
+describe('HeadCouncillorPage High Risk Roster Removal', () => {
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/api/dashboard/activity')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            activities: [
+              {
+                id: 'act-1',
+                type: 'HIGH_RISK_ASSESSMENT_SUBMITTED',
+                referenceId: 101,
+                referenceName: '学生 陈明 触发高危预警',
+                timestamp: '2026-10-25T10:00:00Z',
+              },
+            ],
+          }),
+        });
+      }
+      if (url.includes('/api/dashboard')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            metrics: { studentsCount: 10, notificationsCount: 2, referralsCount: 1 },
+          }),
+        });
+      }
+      if (url.includes('/api/notifications')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
+    });
+  });
+
+  const renderComponent = () => {
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <SnackbarProvider>
+            <AuthProvider>
+              <CreationOverlayProvider>
+                <HeadCouncillorPage />
+              </CreationOverlayProvider>
+            </AuthProvider>
+          </SnackbarProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    );
+  };
+
+  it('does NOT render 高危名单 in navigation sidebar', async () => {
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('控制面板').length).toBeGreaterThan(0);
+    });
+
+    expect(screen.queryByText('高危名单')).toBeNull();
+  });
+
+  it('routes high-risk assessment activity click to 通知中心 instead of removed roster', async () => {
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('学生 陈明 触发高危预警')).toBeDefined();
+    });
+
+    const activityItem = screen.getByText('学生 陈明 触发高危预警');
+    fireEvent.click(activityItem);
+
+    await waitFor(() => {
+      expect(screen.getByText('所有通知')).toBeDefined();
+    });
+  });
+});
