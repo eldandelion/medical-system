@@ -1,6 +1,20 @@
+import { RISK_FACTOR_LABELS } from '../config/referralConstants';
+
 export interface NotificationTextParams {
   messageCode?: string;
   payload?: Record<string, any>;
+}
+
+export function formatCrisisFlags(flags?: string | string[]): string {
+  if (!flags) return '';
+  const flagList = Array.isArray(flags)
+    ? flags
+    : typeof flags === 'string'
+      ? flags.split(/[,，]\s*/).map(s => s.trim()).filter(Boolean)
+      : [];
+
+  if (flagList.length === 0) return '';
+  return flagList.map(flag => RISK_FACTOR_LABELS[flag] || flag).join('、');
 }
 
 export function getNotificationText(notification?: NotificationTextParams): string {
@@ -12,6 +26,14 @@ export function getNotificationText(notification?: NotificationTextParams): stri
   const initiatorName = notification.payload?.initiatorName || '教师';
 
   switch (notification.messageCode) {
+    case 'REFERRAL_INITIATED':
+      return `关于 ${studentName} 的新转诊申请已发起，等待后续处理。`;
+    case 'REFERRAL_STATUS_CHANGED':
+      return `关于 ${studentName} 的转诊申请状态已发生变更，请进入系统查看最新进展。`;
+    case 'APPOINTMENT_SCHEDULED':
+      return `医生已为 ${studentName} 安排了预约就诊时间。`;
+    case 'EVALUATION_COMPLETED':
+      return `医生已完成对 ${studentName} 的就诊评估与随访建议。`;
     case 'REFERRAL_SUBMITTED_STUDENT':
       return `由 ${initiatorName} 发起的转诊申请已成功提交。`;
     case 'REFERRAL_SUBMITTED_INITIATOR':
@@ -55,7 +77,8 @@ export function getNotificationText(notification?: NotificationTextParams): stri
       return `关于 ${studentName} 的转诊申请已被撤回。`;
     case 'ASSESSMENT_HIGH_RISK_ALERT_HC':
     case 'ASSESSMENT_HIGH_RISK_ALERT_TEACHER': {
-      const flags = notification.payload?.crisisFlags ? `（${notification.payload.crisisFlags}）` : '';
+      const formattedFlags = formatCrisisFlags(notification.payload?.crisisFlags);
+      const flags = formattedFlags ? `（${formattedFlags}）` : '';
       return `学生 ${studentName} 的心理测评结果触发高危预警${flags}，请及时关注并干预处理。`;
     }
     case 'ASSESSMENT_ASSIGNED_STUDENT':

@@ -222,8 +222,17 @@ export function AdminPage() {
                   if (match) handlePageChange(match);
                 }
               }))}
-              activityTitle={dashboardData?.activityTitle}
-              activities={dashboardData?.activities ?? []}
+              activityTitle={dashboardData?.activityTitle || "近期动态"}
+              activities={activityData?.activities?.map(a => {
+                const ui = mapActivityTypeToUI(a);
+                return {
+                  id: ui.id,
+                  title: ui.title,
+                  timestamp: new Date(ui.timestamp).toLocaleString(),
+                  statusText: ui.statusText,
+                  statusType: ui.statusType
+                };
+              }) ?? []}
             />
           </>
         );

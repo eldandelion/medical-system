@@ -94,6 +94,37 @@ describe('activityMapper', () => {
       expect(result.statusType).toBe('neutral');
     });
 
+    it('translates raw enum batteryCode in ASSESSMENT_PENDING_COMPLETION to friendly title', () => {
+      const activityIntake: DashboardActivityDto = {
+        id: 'assess-intake',
+        type: 'ASSESSMENT_PENDING_COMPLETION',
+        timestamp: '2026-11-09T15:00:00Z',
+        referenceId: 402,
+        referenceName: 'comprehensive_student_intake_survey',
+      };
+      expect(mapActivityTypeToUI(activityIntake).title).toBe('测评: 大学生心理健康综合测评问卷');
+
+      const activityPhq: DashboardActivityDto = {
+        id: 'assess-phq',
+        type: 'ASSESSMENT_PENDING_COMPLETION',
+        timestamp: '2026-11-09T15:00:00Z',
+        referenceId: 403,
+        referenceName: 'PHQ_9',
+      };
+      expect(mapActivityTypeToUI(activityPhq).title).toBe('测评: PHQ-9 抑郁症筛查量表');
+    });
+
+    it('translates raw reference name enums like SYSTEM_ALERT', () => {
+      const activity: DashboardActivityDto = {
+        id: 'sys-alert',
+        type: 'SYSTEM_NOTIFICATION',
+        timestamp: '2026-11-09T15:00:00Z',
+        referenceId: 404,
+        referenceName: 'SYSTEM_ALERT',
+      };
+      expect(mapActivityTypeToUI(activity).title).toBe('系统安全提醒');
+    });
+
     it('formats ASSESSMENT_PENDING_COMPLETION with prefix', () => {
       const activity: DashboardActivityDto = {
         id: 'assess-1',

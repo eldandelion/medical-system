@@ -18,6 +18,10 @@ const getNotificationTitle = (notification: NotificationDto) => {
   if (notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_HC' || notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_TEACHER') return '高危心理测评预警';
   if (notification.messageCode === 'ASSESSMENT_ASSIGNED_STUDENT') return '新测评任务提醒';
   if (notification.messageCode === 'ASSESSMENT_COMPLETED_TEACHER') return '学生已完成测评';
+  if (notification.messageCode === 'REFERRAL_INITIATED') return '转诊申请已发起';
+  if (notification.messageCode === 'REFERRAL_STATUS_CHANGED') return '转诊状态更新';
+  if (notification.messageCode === 'APPOINTMENT_SCHEDULED') return '就诊预约已确认';
+  if (notification.messageCode === 'EVALUATION_COMPLETED') return '就诊评估完成';
   if (notification.messageCode === 'REFERRAL_SUBMITTED_INITIATOR') return '转诊申请提交成功';
   if (notification.messageCode === 'REFERRAL_CREATED_FOR_STUDENT_TEACHER') return '学生转诊申请已创建';
   if (notification.messageCode.includes('SUBMITTED')) return '转诊申请已提交';
@@ -29,7 +33,7 @@ const getNotificationTitle = (notification: NotificationDto) => {
   if (notification.messageCode.includes('CLOSED')) return '转诊已完成';
   if (notification.messageCode.includes('REJECTED')) return '转诊被拒绝';
   if (notification.messageCode.includes('RECALLED')) return '转诊已撤回';
-  return '新通知';
+  return '系统通知';
 };
 
 const getNotificationIcon = (notification: NotificationDto) => {

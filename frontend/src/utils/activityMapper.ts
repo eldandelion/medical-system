@@ -1,5 +1,6 @@
 import { DashboardActivityDto, ActivityType } from '../api/dashboard';
 import { ActivityStatusType } from '../config/dashboardConfig';
+import { TEST_NAME_LABELS } from '../config/referralConstants';
 import { getNotificationText } from './notificationText';
 
 export interface UIActivityItem {
@@ -11,6 +12,12 @@ export interface UIActivityItem {
   originalData: DashboardActivityDto;
 }
 
+const COMMON_REFERENCE_LABELS: Record<string, string> = {
+  SYSTEM_ALERT: '系统安全提醒',
+  STUDENT_RISK: '学生高危预警',
+  HOSPITAL_ALERT: '医院号源预警',
+};
+
 export function mapActivityTypeToUI(activity: DashboardActivityDto): UIActivityItem {
   const resolvedNotificationText = activity.messageCode
     ? getNotificationText({
@@ -19,7 +26,12 @@ export function mapActivityTypeToUI(activity: DashboardActivityDto): UIActivityI
       })
     : '';
 
-  let title = resolvedNotificationText || activity.referenceName || '系统通知';
+  let resolvedReferenceName = activity.referenceName;
+  if (resolvedReferenceName && COMMON_REFERENCE_LABELS[resolvedReferenceName]) {
+    resolvedReferenceName = COMMON_REFERENCE_LABELS[resolvedReferenceName];
+  }
+
+  let title = resolvedNotificationText || resolvedReferenceName || '系统通知';
   let statusText = '';
   let statusType: ActivityStatusType = 'neutral';
 
@@ -44,11 +56,13 @@ export function mapActivityTypeToUI(activity: DashboardActivityDto): UIActivityI
       statusType = 'info';
       title = `转诊单: ${title}`;
       break;
-    case 'ASSESSMENT_PENDING_COMPLETION':
+    case 'ASSESSMENT_PENDING_COMPLETION': {
       statusText = '待完成';
       statusType = 'warning';
-      title = `测评: ${title}`;
+      const scaleName = TEST_NAME_LABELS[title] || title;
+      title = `测评: ${scaleName}`;
       break;
+    }
     case 'HIGH_RISK_ASSESSMENT_SUBMITTED':
       statusText = '高危预警';
       statusType = 'error';

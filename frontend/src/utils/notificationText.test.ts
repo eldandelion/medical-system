@@ -1,8 +1,63 @@
 import { describe, it, expect } from 'vitest';
-import { getNotificationText } from './notificationText';
+import { getNotificationText, formatCrisisFlags } from './notificationText';
 
 describe('notificationText', () => {
+  describe('formatCrisisFlags', () => {
+    it('translates raw enum strings to localized Chinese separated by dunhao', () => {
+      expect(formatCrisisFlags('SUICIDAL_IDEATION, SELF_HARM')).toBe('自杀意念、自残行为');
+      expect(formatCrisisFlags('SUICIDAL_IDEATION, SUICIDE_ATTEMPT')).toBe('自杀意念、自杀企图');
+      expect(formatCrisisFlags('SUBSTANCE_ABUSE, HIGH_RISK_FLAG')).toBe('物质滥用、高危预警标识');
+    });
+
+    it('translates string array of enums', () => {
+      expect(formatCrisisFlags(['SUICIDAL_IDEATION', 'SELF_HARM'])).toBe('自杀意念、自残行为');
+    });
+
+    it('preserves already translated or custom flags', () => {
+      expect(formatCrisisFlags('自杀意念')).toBe('自杀意念');
+      expect(formatCrisisFlags('重度自伤倾向')).toBe('重度自伤倾向');
+    });
+
+    it('returns empty string for null, undefined, or empty flags', () => {
+      expect(formatCrisisFlags(undefined)).toBe('');
+      expect(formatCrisisFlags('')).toBe('');
+      expect(formatCrisisFlags([])).toBe('');
+    });
+  });
+
   describe('referral notification codes', () => {
+    it('formats REFERRAL_INITIATED and REFERRAL_STATUS_CHANGED', () => {
+      expect(
+        getNotificationText({
+          messageCode: 'REFERRAL_INITIATED',
+          payload: { studentName: '赵小明' },
+        })
+      ).toBe('关于 赵小明 的新转诊申请已发起，等待后续处理。');
+
+      expect(
+        getNotificationText({
+          messageCode: 'REFERRAL_STATUS_CHANGED',
+          payload: { studentName: '赵小明' },
+        })
+      ).toBe('关于 赵小明 的转诊申请状态已发生变更，请进入系统查看最新进展。');
+    });
+
+    it('formats APPOINTMENT_SCHEDULED and EVALUATION_COMPLETED', () => {
+      expect(
+        getNotificationText({
+          messageCode: 'APPOINTMENT_SCHEDULED',
+          payload: { studentName: '钱小华' },
+        })
+      ).toBe('医生已为 钱小华 安排了预约就诊时间。');
+
+      expect(
+        getNotificationText({
+          messageCode: 'EVALUATION_COMPLETED',
+          payload: { studentName: '钱小华' },
+        })
+      ).toBe('医生已完成对 钱小华 的就诊评估与随访建议。');
+    });
+
     it('formats REFERRAL_SUBMITTED_STUDENT with default initiator', () => {
       const text = getNotificationText({
         messageCode: 'REFERRAL_SUBMITTED_STUDENT',
@@ -168,6 +223,15 @@ describe('notificationText', () => {
           })
         ).toBe('学生 蒋十七 的心理测评结果触发高危预警（自杀意念），请及时关注并干预处理。');
       });
+    });
+
+    it('translates raw backend enum crisis flags in ASSESSMENT_HIGH_RISK_ALERT', () => {
+      expect(
+        getNotificationText({
+          messageCode: 'ASSESSMENT_HIGH_RISK_ALERT_TEACHER',
+          payload: { studentName: '蒋十七', crisisFlags: 'SUICIDAL_IDEATION, SELF_HARM' },
+        })
+      ).toBe('学生 蒋十七 的心理测评结果触发高危预警（自杀意念、自残行为），请及时关注并干预处理。');
     });
 
     it('formats ASSESSMENT_HIGH_RISK_ALERT without crisis flags', () => {
