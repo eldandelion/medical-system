@@ -42,7 +42,7 @@ class DashboardService(
             val typeRef = object : TypeReference<Map<String, Any>>() {}
             objectMapper.readValue(json, typeRef)
         } catch (e: Exception) {
-            logger.warn("Failed to deserialize notification payload: {}", json, e)
+            logger.warn("Failed to deserialize notification payload: {}", e.message)
             null
         }
     }

@@ -77,7 +77,8 @@ export function getNotificationText(notification?: NotificationTextParams): stri
       return `关于 ${studentName} 的转诊申请已被撤回。`;
     case 'ASSESSMENT_HIGH_RISK_ALERT_HC':
     case 'ASSESSMENT_HIGH_RISK_ALERT_TEACHER': {
-      const formattedFlags = formatCrisisFlags(notification.payload?.crisisFlags);
+      const rawFlags = notification.payload?.crisisFlags || notification.payload?.riskFlags;
+      const formattedFlags = formatCrisisFlags(rawFlags);
       const flags = formattedFlags ? `（${formattedFlags}）` : '';
       return `学生 ${studentName} 的心理测评结果触发高危预警${flags}，请及时关注并干预处理。`;
     }

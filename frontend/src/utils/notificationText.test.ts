@@ -234,6 +234,15 @@ describe('notificationText', () => {
       ).toBe('学生 蒋十七 的心理测评结果触发高危预警（自杀意念、自残行为），请及时关注并干预处理。');
     });
 
+    it('falls back to riskFlags array in ASSESSMENT_HIGH_RISK_ALERT when crisisFlags string is absent', () => {
+      expect(
+        getNotificationText({
+          messageCode: 'ASSESSMENT_HIGH_RISK_ALERT_HC',
+          payload: { studentName: '蒋十七', riskFlags: ['SUICIDAL_IDEATION', 'SUICIDE_ATTEMPT'] },
+        })
+      ).toBe('学生 蒋十七 的心理测评结果触发高危预警（自杀意念、自杀企图），请及时关注并干预处理。');
+    });
+
     it('formats ASSESSMENT_HIGH_RISK_ALERT without crisis flags', () => {
       expect(
         getNotificationText({
