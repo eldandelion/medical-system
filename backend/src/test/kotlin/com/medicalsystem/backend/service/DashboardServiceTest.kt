@@ -350,6 +350,94 @@ class DashboardServiceTest {
     }
 
     @Test
+    fun `getRecentActivity for TEACHER populates actionTargetId and actionType from notification`() {
+        val mockUser = User(id = 2L, name = "Jane Smith", email = EmailAddress("jane@univ.edu.cn"), role = UserRole.TEACHER)
+        
+        val spec = org.mockito.kotlin.any<org.springframework.data.jpa.domain.Specification<com.medicalsystem.backend.entity.ReferralEntity>>()
+        val pageable = org.mockito.kotlin.any<org.springframework.data.domain.Pageable>()
+        val page = org.springframework.data.domain.PageImpl<com.medicalsystem.backend.entity.ReferralEntity>(emptyList())
+        `when`(referralJpaRepository.findAll(spec, pageable)).thenReturn(page)
+
+        val notification = com.medicalsystem.backend.entity.NotificationEntity(
+            id = 58L,
+            userId = 2L,
+            messageCode = NotificationMessageCode.ASSESSMENT_HIGH_RISK_ALERT_TEACHER,
+            payload = """{"studentName":"张三","crisisFlags":"自杀倾向"}""",
+            isRead = false,
+            actionType = NotificationActionType.VIEW_STUDENT,
+            actionTargetId = 42L
+        )
+
+        val query = org.mockito.Mockito.mock(jakarta.persistence.TypedQuery::class.java) as jakarta.persistence.TypedQuery<com.medicalsystem.backend.entity.NotificationEntity>
+        `when`(entityManager.createQuery(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.eq(com.medicalsystem.backend.entity.NotificationEntity::class.java))).thenReturn(query)
+        `when`(query.setParameter(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(query)
+        `when`(query.setMaxResults(org.mockito.ArgumentMatchers.anyInt())).thenReturn(query)
+        `when`(query.resultList).thenReturn(listOf(notification))
+
+        val result = dashboardService.getRecentActivity(mockUser)
+        assertEquals(1, result.activities.size)
+        val activity = result.activities[0]
+        assertEquals("notif-58", activity.id)
+        assertEquals(42L, activity.actionTargetId)
+        assertEquals("VIEW_STUDENT", activity.actionType)
+    }
+
+    @Test
+    fun `getRecentActivity for HEAD_COUNSELLOR populates actionTargetId and actionType from system notification`() {
+        val mockUser = User(id = 3L, name = "HC User", email = EmailAddress("hc@univ.edu.cn"), role = UserRole.HEAD_COUNSELLOR)
+        `when`(referralJpaRepository.findTop5ByStatusInOrderByCreatedAtDesc(org.mockito.kotlin.any())).thenReturn(emptyList())
+
+        val query = org.mockito.Mockito.mock(jakarta.persistence.TypedQuery::class.java) as jakarta.persistence.TypedQuery<com.medicalsystem.backend.entity.NotificationEntity>
+        `when`(entityManager.createQuery(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.eq(com.medicalsystem.backend.entity.NotificationEntity::class.java))).thenReturn(query)
+        `when`(query.setParameter(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(query)
+        `when`(query.setMaxResults(org.mockito.ArgumentMatchers.anyInt())).thenReturn(query)
+        `when`(query.resultList).thenReturn(emptyList())
+
+        val sysNotif = com.medicalsystem.backend.entity.NotificationEntity(
+            id = 77L,
+            userId = 3L,
+            messageCode = NotificationMessageCode.REFERRAL_REQUIRES_REVIEW_HC,
+            payload = """{"studentName":"李娜","initiatorName":"张老师"}""",
+            isRead = false,
+            actionType = NotificationActionType.REVIEW_REFERRAL,
+            actionTargetId = 101L
+        )
+        `when`(notificationJpaRepository.findTop5ByUserIdAndIsReadFalseOrderByCreatedAtDesc(3L)).thenReturn(listOf(sysNotif))
+
+        val result = dashboardService.getRecentActivity(mockUser)
+        assertEquals(1, result.activities.size)
+        val activity = result.activities[0]
+        assertEquals("notif-sys-77", activity.id)
+        assertEquals(ActivityType.SYSTEM_NOTIFICATION, activity.type)
+        assertEquals(101L, activity.actionTargetId)
+        assertEquals("REVIEW_REFERRAL", activity.actionType)
+    }
+
+    @Test
+    fun `getRecentActivity for DOCTOR and TRIAL_ADMIN populates actionTargetId and actionType`() {
+        val doctorUser = User(id = 4L, name = "Dr. Chen", email = EmailAddress("chen@hosp.cn"), role = UserRole.DOCTOR)
+        `when`(referralJpaRepository.findTop5ByStatusInOrderByCreatedAtDesc(org.mockito.kotlin.any())).thenReturn(emptyList())
+
+        val doctorNotif = com.medicalsystem.backend.entity.NotificationEntity(
+            id = 88L,
+            userId = 4L,
+            messageCode = NotificationMessageCode.REFERRAL_DOCTOR_ASSIGNED_DOCTOR,
+            payload = """{"studentName":"王强"}""",
+            isRead = false,
+            actionType = NotificationActionType.VIEW_APPOINTMENT,
+            actionTargetId = 202L
+        )
+        `when`(notificationJpaRepository.findTop5ByUserIdAndIsReadFalseOrderByCreatedAtDesc(4L)).thenReturn(listOf(doctorNotif))
+
+        val result = dashboardService.getRecentActivity(doctorUser)
+        assertEquals(1, result.activities.size)
+        val activity = result.activities[0]
+        assertEquals("notif-88", activity.id)
+        assertEquals(202L, activity.actionTargetId)
+        assertEquals("VIEW_APPOINTMENT", activity.actionType)
+    }
+
+    @Test
     fun `getRecentActivity safely handles corrupted or blank notification payload`() {
         val mockUser = User(id = 2L, name = "Jane Smith", email = EmailAddress("jane@univ.edu.cn"), role = UserRole.TEACHER)
         

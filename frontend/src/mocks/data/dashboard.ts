@@ -222,35 +222,35 @@ export const mockDashboardActivities: Record<string, DashboardActivityFeedDto> =
   student: {
     activities: [
       { id: 'assess-1', type: 'ASSESSMENT_PENDING_COMPLETION', timestamp: new Date().toISOString(), referenceId: 1, referenceName: '期中自我测评' },
-      { id: 'ref-1', type: 'REFERRAL_STATUS_UPDATED', timestamp: new Date(Date.now() - 3600000).toISOString(), referenceId: 101, referenceName: '焦虑情绪转诊' },
-      { id: 'notif-1', type: 'UNREAD_NOTIFICATION', timestamp: new Date(Date.now() - 86400000).toISOString(), referenceId: 2, referenceName: null, messageCode: 'ASSESSMENT_ASSIGNED_STUDENT', payload: {} }
+      { id: 'ref-1', type: 'REFERRAL_STATUS_UPDATED', timestamp: new Date(Date.now() - 3600000).toISOString(), referenceId: 1, referenceName: '期中考试后急性焦虑' },
+      { id: 'notif-1', type: 'UNREAD_NOTIFICATION', timestamp: new Date(Date.now() - 86400000).toISOString(), referenceId: 1, referenceName: null, messageCode: 'ASSESSMENT_ASSIGNED_STUDENT', payload: {}, actionTargetId: null, actionType: 'NONE' }
     ]
   },
   teacher: {
     activities: [
-      { id: 'hr-1', type: 'HIGH_RISK_ASSESSMENT_SUBMITTED', timestamp: new Date(Date.now() - 1800000).toISOString(), referenceId: 201, referenceName: null, messageCode: 'ASSESSMENT_HIGH_RISK_ALERT_TEACHER', payload: { studentName: '张三', crisisFlags: '自杀倾向' } },
-      { id: 'ref-2', type: 'REFERRAL_STATUS_UPDATED', timestamp: new Date(Date.now() - 3600000).toISOString(), referenceId: 202, referenceName: '李四的转诊' },
-      { id: 'notif-2', type: 'UNREAD_NOTIFICATION', timestamp: new Date(Date.now() - 7200000).toISOString(), referenceId: 3, referenceName: null, messageCode: 'REFERRAL_CREATED_FOR_STUDENT_TEACHER', payload: { studentName: '李四', initiatorName: '张老师' } }
+      { id: 'hr-1', type: 'HIGH_RISK_ASSESSMENT_SUBMITTED', timestamp: new Date(Date.now() - 1800000).toISOString(), referenceId: 1, referenceName: null, messageCode: 'ASSESSMENT_HIGH_RISK_ALERT_TEACHER', payload: { studentId: 1, studentName: '张伟', crisisFlags: '自杀倾向' }, actionTargetId: 1, actionType: 'VIEW_STUDENT' },
+      { id: 'ref-2', type: 'REFERRAL_STATUS_UPDATED', timestamp: new Date(Date.now() - 3600000).toISOString(), referenceId: 2, referenceName: '每周治疗随访' },
+      { id: 'notif-2', type: 'UNREAD_NOTIFICATION', timestamp: new Date(Date.now() - 7200000).toISOString(), referenceId: 2, referenceName: null, messageCode: 'REFERRAL_CREATED_FOR_STUDENT_TEACHER', payload: { referralId: 2, studentName: '李娜', initiatorName: '张老师' }, actionTargetId: 2, actionType: 'VIEW_REFERRAL' }
     ]
   },
   'head-councillor': {
     activities: [
-      { id: 'ref-1', type: 'REFERRAL_PENDING_TRIAGE', timestamp: new Date(Date.now() - 7200000).toISOString(), referenceId: 4, referenceName: '转诊申请 - 高风险' },
-      { id: 'hr-2', type: 'HIGH_RISK_ASSESSMENT_SUBMITTED', timestamp: new Date(Date.now() - 86400000).toISOString(), referenceId: 203, referenceName: null, messageCode: 'ASSESSMENT_HIGH_RISK_ALERT_HC', payload: { studentName: '王五', crisisFlags: '高危预警' } },
-      { id: 'sys-1', type: 'SYSTEM_NOTIFICATION', timestamp: new Date(Date.now() - 172800000).toISOString(), referenceId: 204, referenceName: null, messageCode: 'REFERRAL_REQUIRES_REVIEW_HC', payload: { studentName: '赵六', initiatorName: '李老师' } }
+      { id: 'ref-1', type: 'REFERRAL_PENDING_TRIAGE', timestamp: new Date(Date.now() - 7200000).toISOString(), referenceId: 2, referenceName: '每周治疗随访' },
+      { id: 'hr-2', type: 'HIGH_RISK_ASSESSMENT_SUBMITTED', timestamp: new Date(Date.now() - 86400000).toISOString(), referenceId: 1, referenceName: null, messageCode: 'ASSESSMENT_HIGH_RISK_ALERT_HC', payload: { studentId: 1, studentName: '张伟', crisisFlags: '高危预警' }, actionTargetId: 1, actionType: 'VIEW_STUDENT' },
+      { id: 'sys-1', type: 'SYSTEM_NOTIFICATION', timestamp: new Date(Date.now() - 172800000).toISOString(), referenceId: 4, referenceName: null, messageCode: 'REFERRAL_REQUIRES_REVIEW_HC', payload: { referralId: 4, studentName: '陈思宇', initiatorName: '李老师' }, actionTargetId: 4, actionType: 'REVIEW_REFERRAL' }
     ]
   },
   'trial-admin': {
     activities: [
       { id: 'ref-2', type: 'REFERRAL_PENDING_SCHEDULING', timestamp: new Date(Date.now() - 3600000).toISOString(), referenceId: 5, referenceName: '转诊申请 - 中风险' },
-      { id: 'cap-1', type: 'HOSPITAL_CAPACITY_ALERT', timestamp: new Date(Date.now() - 7200000).toISOString(), referenceId: 205, referenceName: '心理科号源紧张' },
-      { id: 'notif-3', type: 'UNREAD_NOTIFICATION', timestamp: new Date(Date.now() - 86400000).toISOString(), referenceId: 206, referenceName: null, messageCode: 'REFERRAL_NEEDS_TRIAGE_ADMIN', payload: { studentName: '孙七' } }
+      { id: 'cap-1', type: 'HOSPITAL_CAPACITY_ALERT', timestamp: new Date(Date.now() - 7200000).toISOString(), referenceId: 1, referenceName: '心理科号源紧张' },
+      { id: 'notif-3', type: 'UNREAD_NOTIFICATION', timestamp: new Date(Date.now() - 86400000).toISOString(), referenceId: 5, referenceName: null, messageCode: 'REFERRAL_NEEDS_TRIAGE_ADMIN', payload: { referralId: 5, studentName: '孙七' }, actionTargetId: 5, actionType: 'CREATE_APPOINTMENT' }
     ]
   },
   doctor: {
     activities: [
       { id: 'ref-3', type: 'REFERRAL_PENDING_FEEDBACK', timestamp: new Date(Date.now() - 1800000).toISOString(), referenceId: 6, referenceName: '转诊报告需出具' },
-      { id: 'notif-4', type: 'UNREAD_NOTIFICATION', timestamp: new Date(Date.now() - 86400000).toISOString(), referenceId: 207, referenceName: null, messageCode: 'REFERRAL_DOCTOR_ASSIGNED_DOCTOR', payload: { studentName: '周八' } }
+      { id: 'notif-4', type: 'UNREAD_NOTIFICATION', timestamp: new Date(Date.now() - 86400000).toISOString(), referenceId: 6, referenceName: null, messageCode: 'REFERRAL_DOCTOR_ASSIGNED_DOCTOR', payload: { referralId: 6, studentName: '周八' }, actionTargetId: 6, actionType: 'VIEW_APPOINTMENT' }
     ]
   },
   admin: {

@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HeadCouncillorPage } from './HeadCouncillorPage';
 import { AuthProvider } from '../contexts/AuthContext';
+import { NavigationProvider } from '../contexts/NavigationContext';
 import { CreationOverlayProvider } from '../contexts/CreationContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { SnackbarProvider } from '../contexts/SnackbarContext';
@@ -65,9 +66,11 @@ describe('HeadCouncillorPage High Risk Roster Removal', () => {
         <ThemeProvider>
           <SnackbarProvider>
             <AuthProvider>
-              <CreationOverlayProvider>
-                <HeadCouncillorPage />
-              </CreationOverlayProvider>
+              <NavigationProvider>
+                <CreationOverlayProvider>
+                  <HeadCouncillorPage />
+                </CreationOverlayProvider>
+              </NavigationProvider>
             </AuthProvider>
           </SnackbarProvider>
         </ThemeProvider>
@@ -85,7 +88,7 @@ describe('HeadCouncillorPage High Risk Roster Removal', () => {
     expect(screen.queryByText('高危名单')).toBeNull();
   });
 
-  it('routes high-risk assessment activity click to 通知中心 instead of removed roster', async () => {
+  it('routes high-risk assessment activity click to 学生管理 instead of removed roster', async () => {
     renderComponent();
 
     await waitFor(() => {
@@ -96,7 +99,7 @@ describe('HeadCouncillorPage High Risk Roster Removal', () => {
     fireEvent.click(activityItem);
 
     await waitFor(() => {
-      expect(screen.getByText('所有通知')).toBeDefined();
+      expect(screen.getAllByText('学生管理').length).toBeGreaterThan(1);
     });
   });
 });

@@ -66,7 +66,7 @@ export function HeadCouncillorPage() {
   const [activeTab, setActiveTab] = React.useState('overview');
   const { session } = useAuth();
   const { unreadCount } = useNotifications(session?.token);
-  const { lastEvent } = useNavigation();
+  const { lastEvent, navigateToTab } = useNavigation();
   const { showSnackbar } = useSnackbar();
 
   React.useEffect(() => {
@@ -207,11 +207,8 @@ export function HeadCouncillorPage() {
           <>
             <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage]} />
             <NotificationsView
-              onViewReferral={handleViewReferral}
-              onViewStudent={(studentId) => {
-                handlePageChange(HeadCouncillorTabs.STUDENTS);
-                setSelectedItem({ id: studentId });
-              }}
+              onViewReferral={(referralId) => navigateToTab(HeadCouncillorTabs.REFERRAL_MANAGEMENT, String(referralId))}
+              onViewStudent={(studentId) => navigateToTab(HeadCouncillorTabs.STUDENTS, String(studentId))}
             />
           </>
         );
@@ -291,14 +288,7 @@ export function HeadCouncillorPage() {
               const raw = activityData?.activities?.find(a => String(a.id) === item.id);
               if (!raw) return;
               const target = resolveActivityNavigation(raw, 'head-councillor');
-              if (target.viewReferralId) {
-                handleViewReferral(String(target.viewReferralId));
-              } else if (target.viewStudentId) {
-                handlePageChange(HeadCouncillorTabs.STUDENTS);
-                setSelectedItem({ id: target.viewStudentId });
-              } else {
-                handlePageChange(target.tab as HeadCouncillorPageName);
-              }
+              navigateToTab(target.tab, target.entityId != null ? String(target.entityId) : undefined);
             }}
           />
         </>) : null;

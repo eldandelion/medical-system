@@ -56,7 +56,7 @@ export function TrialAdminPage() {
   const [activeTab, setActiveTab] = React.useState('overview');
 
   const { session } = useAuth();
-  const { lastEvent } = useNavigation();
+  const { lastEvent, navigateToTab } = useNavigation();
   const { showSnackbar } = useSnackbar();
 
   React.useEffect(() => {
@@ -234,12 +234,7 @@ export function TrialAdminPage() {
               const raw = activityData?.activities?.find(a => String(a.id) === item.id);
               if (!raw) return;
               const target = resolveActivityNavigation(raw, 'trial-admin');
-              if (target.entityId && target.tab === 'Referral Management') {
-                setActivePage(TrialAdminTabs.REFERRAL_MANAGEMENT);
-                setSelectedItem({ id: target.entityId });
-              } else {
-                handlePageChange(target.tab as TrialAdminPageName);
-              }
+              navigateToTab(target.tab, target.entityId != null ? String(target.entityId) : undefined);
             }}
           />
         </>) : null;

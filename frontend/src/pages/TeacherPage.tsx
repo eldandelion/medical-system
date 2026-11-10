@@ -63,7 +63,7 @@ export function TeacherPage() {
   const [activeTab, setActiveTab] = React.useState('overview');
   const { session } = useAuth();
   const { unreadCount } = useNotifications(session?.token);
-  const { lastEvent } = useNavigation();
+  const { lastEvent, navigateToTab } = useNavigation();
   const { showSnackbar } = useSnackbar();
 
   React.useEffect(() => {
@@ -226,11 +226,8 @@ export function TeacherPage() {
           <>
             <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} />
             <NotificationsView
-              onViewReferral={handleViewReferral}
-              onViewStudent={(studentId) => {
-                handlePageChange(TeacherTabs.STUDENTS);
-                setSelectedItem({ id: studentId });
-              }}
+              onViewReferral={(referralId) => navigateToTab(TeacherTabs.REFERRAL_MANAGEMENT, String(referralId))}
+              onViewStudent={(studentId) => navigateToTab(TeacherTabs.STUDENTS, String(studentId))}
             />
           </>
         );
@@ -303,14 +300,7 @@ export function TeacherPage() {
               const raw = activityData?.activities?.find(a => String(a.id) === item.id);
               if (!raw) return;
               const target = resolveActivityNavigation(raw, 'teacher');
-              if (target.viewReferralId) {
-                handleViewReferral(String(target.viewReferralId));
-              } else if (target.viewStudentId) {
-                handlePageChange(TeacherTabs.STUDENTS);
-                setSelectedItem({ id: target.viewStudentId });
-              } else {
-                handlePageChange(target.tab as TeacherPageName);
-              }
+              navigateToTab(target.tab, target.entityId != null ? String(target.entityId) : undefined);
             }}
           />
         </>) : null;

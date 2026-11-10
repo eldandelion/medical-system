@@ -67,7 +67,7 @@ export function AdminPage() {
 
   const { session } = useAuth();
   const { unreadCount } = useNotifications(session?.token);
-  const { lastEvent } = useNavigation();
+  const { lastEvent, navigateToTab } = useNavigation();
   const { showSnackbar } = useSnackbar();
 
   React.useEffect(() => {
@@ -87,6 +87,10 @@ export function AdminPage() {
               endpoint = `/api/users/${lastEvent.entityId}`;
             } else if (tabMatch === AdminTabs.ASSESSMENTS) {
               endpoint = `/api/assessments/${lastEvent.entityId}`;
+            } else if (tabMatch === AdminTabs.REFERRALS) {
+              endpoint = `/api/referrals/${lastEvent.entityId}`;
+            } else if (tabMatch === AdminTabs.STUDENTS) {
+              endpoint = `/api/students/${lastEvent.entityId}`;
             }
             
             if (endpoint) {
@@ -238,13 +242,7 @@ export function AdminPage() {
                 const raw = activityData?.activities?.find(a => String(a.id) === item.id);
                 if (!raw) return;
                 const target = resolveActivityNavigation(raw, 'admin');
-                const matchedTab = Object.values(AdminTabs).find(t => t.toLowerCase() === target.tab.toLowerCase());
-                if (matchedTab) {
-                  handlePageChange(matchedTab);
-                  if (target.entityId) {
-                    setSelectedItem({ id: target.entityId });
-                  }
-                }
+                navigateToTab(target.tab, target.entityId != null ? String(target.entityId) : undefined);
               }}
             />
           </>

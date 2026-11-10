@@ -49,7 +49,7 @@ export function StudentPage() {
   const [showProfileDetails, setShowProfileDetails] = React.useState(false);
   const { session } = useAuth();
   const { unreadCount } = useNotifications(session?.token);
-  const { lastEvent } = useNavigation();
+  const { lastEvent, navigateToTab } = useNavigation();
   const { showSnackbar } = useSnackbar();
 
   React.useEffect(() => {
@@ -197,7 +197,7 @@ export function StudentPage() {
                 const raw = activityData?.activities?.find(a => String(a.id) === item.id);
                 if (!raw) return;
                 const target = resolveActivityNavigation(raw, 'student');
-                handlePageChange(target.tab as StudentTab);
+                navigateToTab(target.tab, target.entityId != null ? String(target.entityId) : undefined);
               }}
             />
         </>) : null;

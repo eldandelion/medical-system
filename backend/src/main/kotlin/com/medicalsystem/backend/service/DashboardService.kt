@@ -270,7 +270,9 @@ class DashboardService(
                         referenceId = it.id,
                         referenceName = null,
                         messageCode = it.messageCode.name,
-                        payload = parsePayload(it.payload)
+                        payload = parsePayload(it.payload),
+                        actionTargetId = it.actionTargetId,
+                        actionType = it.actionType.name
                     )
                 })
             }
@@ -300,7 +302,9 @@ class DashboardService(
                         referenceId = it.id,
                         referenceName = null,
                         messageCode = it.messageCode.name,
-                        payload = parsePayload(it.payload)
+                        payload = parsePayload(it.payload),
+                        actionTargetId = it.actionTargetId,
+                        actionType = it.actionType.name
                     )
                 })
                 
@@ -313,7 +317,9 @@ class DashboardService(
                         referenceId = it.id,
                         referenceName = null,
                         messageCode = it.messageCode.name,
-                        payload = parsePayload(it.payload)
+                        payload = parsePayload(it.payload),
+                        actionTargetId = it.actionTargetId,
+                        actionType = it.actionType.name
                     )
                 })
             }
@@ -338,7 +344,9 @@ class DashboardService(
                         referenceId = it.id,
                         referenceName = null,
                         messageCode = it.messageCode.name,
-                        payload = parsePayload(it.payload)
+                        payload = parsePayload(it.payload),
+                        actionTargetId = it.actionTargetId,
+                        actionType = it.actionType.name
                     )
                 })
             }
@@ -363,7 +371,9 @@ class DashboardService(
                         referenceId = it.id,
                         referenceName = null,
                         messageCode = it.messageCode.name,
-                        payload = parsePayload(it.payload)
+                        payload = parsePayload(it.payload),
+                        actionTargetId = it.actionTargetId,
+                        actionType = it.actionType.name
                     )
                 })
             }

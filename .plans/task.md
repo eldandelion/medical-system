@@ -1,158 +1,154 @@
-# Implementation Plan: Dashboard Recent Activity Notification Resolution
+# Task Execution Plan: Recent Activity Deep-Linking & Entity Hydration
 
-## Overview
-This implementation plan resolves the issue where the "Recent Activity" (`近期动态`) feed on user dashboards (Teachers, Head Councillors, Trial Admins, Doctors) displays ambiguous generic text `"系统通知"` instead of the actual notification message.
-To uphold the `GEMINI.md` architectural invariant of a **Language-Agnostic Backend**, the backend projects the notification enum `messageCode: String?` and parsed JSON `payload: Map<String, Any>?`. The frontend resolves localized Chinese presentation strings through a single, shared, framework-agnostic text formatter (`notificationText.ts`), used by both `activityMapper.ts` and `NotificationsView.tsx`.
-
----
-
-## Strict Writable Files Boundary
-
-The execution agent MUST operate strictly within this exhaustive whitelist of 10 files (3 created, 7 modified). No other files may be created, edited, or deleted.
-
-### 1. Created Files (3)
-- `frontend/src/utils/notificationText.test.ts`
-- `frontend/src/utils/notificationText.ts`
-- `frontend/src/utils/activityMapper.test.ts`
-
-### 2. Modified Files (7)
-- `frontend/src/utils/activityMapper.ts`
-- `frontend/src/components/notifications/NotificationsView.tsx`
-- `frontend/src/api/dashboard.ts`
-- `frontend/src/mocks/data/dashboard.ts`
-- `backend/src/main/kotlin/com/medicalsystem/backend/dto/DashboardActivityDto.kt`
-- `backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt`
-- `backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt`
+## 1. Explicit Writable Files List
+Only the following 14 files are permitted to be created or modified:
+1. `backend/src/main/kotlin/com/medicalsystem/backend/dto/DashboardActivityDto.kt`
+2. `backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt`
+3. `backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt`
+4. `frontend/src/api/dashboard.ts`
+5. `frontend/src/mocks/data/dashboard.ts`
+6. `frontend/src/utils/activityNavigation.ts`
+7. `frontend/src/utils/activityNavigation.test.ts`
+8. `frontend/src/pages/TeacherPage.tsx`
+9. `frontend/src/pages/HeadCouncillorPage.tsx`
+10. `frontend/src/pages/DoctorPage.tsx`
+11. `frontend/src/pages/TrialAdminPage.tsx`
+12. `frontend/src/pages/StudentPage.tsx`
+13. `frontend/src/pages/AdminPage.tsx`
+14. `frontend/src/pages/PageNavigation.test.tsx`
+15. `frontend/src/pages/TeacherPage.test.tsx`
+16. `frontend/src/pages/HeadCouncillorPage.test.tsx`
 
 ---
 
-## Detailed TDD Task Sequence (Red-Green-Refactor)
+## 2. Task Order & File-by-File Roadmap
 
-### Task 1: Shared Notification Formatter (`notificationText.ts`)
-
-#### 1.1 Red — Write Failing Unit Test
-- **File**: `frontend/src/utils/notificationText.test.ts` (NEW)
-- **Action**: Create comprehensive test suite testing pure function `getNotificationText`:
-  - Test referral notification codes:
-    - `REFERRAL_SUBMITTED_STUDENT`: "由 教师 发起的转诊申请已成功提交。" (or custom `initiatorName`).
-    - `REFERRAL_SUBMITTED_INITIATOR`: "您为 张三 发起的转诊申请已成功记录，并进入后续评估流程。"
-    - `REFERRAL_REQUIRES_REVIEW_HC`: "由 教师 为 李四 发起的转诊申请需要您审核。"
-    - `REFERRAL_CREATED_FOR_STUDENT_TEACHER`: "心理咨询师 王五 为您的学生 赵六 发起了转诊申请。"
-    - `REFERRAL_APPROVED_BY_HC_TEACHER` and `REFERRAL_APPROVED_BY_HC_STUDENT`: "转诊中心已审核通过 钱七 的转诊申请，正在等待医院分诊。"
-    - `REFERRAL_NEEDS_TRIAGE_ADMIN`: "有一份关于 孙八 的新转诊申请，请及时分配医生。"
-    - `REFERRAL_DOCTOR_ASSIGNED_DOCTOR`: "您被分配了一份关于 周九 的转诊申请，请尽快安排就诊时间。"
-    - `REFERRAL_DOCTOR_ASSIGNED_*` (`TEACHER`, `STUDENT`, `HC`): "吴十 的转诊申请已分配医生，正在等待排期。"
-    - `REFERRAL_SCHEDULED_*`: "医生已为 郑十一 安排了就诊时间。"
-    - `REFERRAL_FEEDBACK_SUBMITTED_HC`: "医生已提交 王十二 的就诊反馈，请审核。"
-    - `REFERRAL_FEEDBACK_SUBMITTED_*` (`TEACHER`, `ADMIN`, `STUDENT`): "医生已提交 王十二 的就诊反馈。"
-    - `REFERRAL_CLOSED_*`: "冯十三 的转诊流程已完成并关闭。"
-    - `REFERRAL_REJECTED_*`: "关于 陈十四 的转诊申请已被拒绝。"
-    - `REFERRAL_NEEDS_REASSIGNMENT_ADMIN`: "医生要求重新分配 褚十五 的转诊申请，请处理。"
-    - `REFERRAL_RECALLED_HC`: "关于 卫十六 的转诊申请已被撤回。"
-  - Test assessment notification codes:
-    - `ASSESSMENT_HIGH_RISK_ALERT_HC` and `ASSESSMENT_HIGH_RISK_ALERT_TEACHER`:
-      - With `crisisFlags`: "学生 蒋十七 的心理测评结果触发高危预警（自杀意念），请及时关注并干预处理。"
-      - Without `crisisFlags`: "学生 蒋十七 的心理测评结果触发高危预警，请及时关注并干预处理。"
-    - `ASSESSMENT_ASSIGNED_STUDENT`: "您收到了一项新的心理健康测评任务，请及时前往完成测评。"
-    - `ASSESSMENT_COMPLETED_TEACHER`: "您的学生 沈十八 已完成心理健康测评。"
-  - Test fallback and edge cases:
-    - Missing or null `studentName`: defaults to `'未知学生'`.
-    - Missing or null `initiatorName`: defaults to `'教师'`.
-    - Unknown or unmapped `messageCode`: formats underscore-separated code (e.g. `'SOME_UNKNOWN_CODE'` -> `'SOME UNKNOWN CODE'`).
-    - Missing `messageCode` or undefined parameter: returns empty string `""`.
-- **Dependencies**: None.
-
-#### 1.2 Green — Implement Formatter
-- **File**: `frontend/src/utils/notificationText.ts` (NEW)
-- **Action**: Implement pure, framework-agnostic string formatter matching all message codes and fallbacks.
-- **Verification**: Run `npx vitest run src/utils/notificationText.test.ts`.
+### Task 1: Backend `DashboardActivityDto` & `DashboardService` (TDD)
+- **Goal**: Expose `actionTargetId` and `actionType` from `NotificationEntity` in `DashboardActivityDto` so the frontend receives target referral/student IDs for lifecycle notifications.
+- **File 1 (Test - RED)**: `backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt`
+  - Write test `getRecentActivity for TEACHER populates actionTargetId and actionType from notification`: Verify a notification with `actionTargetId = 42L` and `actionType = NotificationActionType.VIEW_STUDENT` produces `DashboardActivityDto` with `actionTargetId == 42L` and `actionType == "VIEW_STUDENT"`.
+  - Write test `getRecentActivity for HEAD_COUNSELLOR populates actionTargetId and actionType`: Verify high-risk alert and system notification mappings populate `actionTargetId = 101L` and `actionType == "REVIEW_REFERRAL"`.
+  - Write test `getRecentActivity for DOCTOR and TRIAL_ADMIN populates actionTargetId and actionType`: Verify unread notifications propagate target entity IDs.
+- **File 2 (DTO - GREEN)**: `backend/src/main/kotlin/com/medicalsystem/backend/dto/DashboardActivityDto.kt`
+  - Add `val actionTargetId: Long? = null` and `val actionType: String? = null` to `DashboardActivityDto`.
+- **File 3 (Service - GREEN)**: `backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt`
+  - In `getRecentActivity`, update notification mapping across all roles (`STUDENT`, `TEACHER`, `HEAD_COUNSELLOR`, `TRIAL_ADMIN`, `DOCTOR`):
+    - Set `actionTargetId = it.actionTargetId`.
+    - Set `actionType = it.actionType.name`.
+- **Verification Gate**:
+  ```bash
+  cd /Volumes/Files/Programming/medical-system/backend && ./mvnw test -Dtest=DashboardServiceTest
+  ```
 
 ---
 
-### Task 2: Activity Mapper Integration (`activityMapper.ts`)
-
-#### 2.1 Red — Write Failing Unit Test
-- **File**: `frontend/src/utils/activityMapper.test.ts` (NEW)
-- **Action**: Test `mapActivityTypeToUI`:
-  - When `activity.messageCode` is present:
-    - High-risk alert activity (`HIGH_RISK_ASSESSMENT_SUBMITTED`) with `messageCode: 'ASSESSMENT_HIGH_RISK_ALERT_TEACHER'` and `payload: { studentName: '李华', crisisFlags: '高危预警' }`:
-      - Asserts `title` is `"学生 李华 的心理测评结果触发高危预警（高危预警），请及时关注并干预处理。"`
-      - Asserts `statusText` is `"高危预警"` and `statusType` is `"error"`.
-    - Unread notification activity (`UNREAD_NOTIFICATION`) with `messageCode: 'REFERRAL_DOCTOR_ASSIGNED_DOCTOR'` and `payload: { studentName: '王五' }`:
-      - Asserts `title` is `"您被分配了一份关于 王五 的转诊申请，请尽快安排就诊时间。"`
-      - Asserts `statusText` is `"未读"` and `statusType` is `"info"`.
-    - System notification activity (`SYSTEM_NOTIFICATION`) with `messageCode: 'REFERRAL_NEEDS_TRIAGE_ADMIN'` and `payload: { studentName: '张三' }`:
-      - Asserts `title` is `"有一份关于 张三 的新转诊申请，请及时分配医生。"`
-      - Asserts `statusText` is `"系统"` and `statusType` is `"neutral"`.
-  - When `activity.messageCode` is NOT present:
-    - Activity with `referenceName = '焦虑情绪转诊'` and `type = 'REFERRAL_PENDING_TRIAGE'`:
-      - Asserts `title` is `"转诊单: 焦虑情绪转诊"`.
-    - Activity with `referenceName = null` and no `messageCode`:
-      - Asserts `title` falls back to `'系统通知'`.
-  - Other entity activities retain prefix rules:
-    - `ASSESSMENT_PENDING_COMPLETION` prefixes `测评: ${title}`.
-    - `USER_APPROVAL_PENDING` prefixes `用户注册: ${title}`.
-- **Dependencies**: Task 1.
-
-#### 2.2 Green — Integrate Shared Formatter into Mapper
-- **File**: `frontend/src/utils/activityMapper.ts`
-- **Action**: Import `getNotificationText` and resolve title.
-- **Verification**: Run `npx vitest run src/utils/activityMapper.test.ts`.
-
----
-
-### Task 3: Refactor `NotificationsView.tsx` to Use Shared Formatter
-
-#### 3.1 Verification of Existing Tests
-- Ensure `src/components/notifications/NotificationsView.test.tsx` passes prior to refactoring.
-
-#### 3.2 Refactor Implementation
-- **File**: `frontend/src/components/notifications/NotificationsView.tsx`
-- **Action**:
-  - Import `getNotificationText` from `../../utils/notificationText`.
-  - Remove redundant local `getNotificationText` declaration (lines 17–75).
-- **Verification**: Run `npx vitest run src/components/notifications/NotificationsView.test.tsx`.
+### Task 2: Frontend DTO & MSW Mock Parity
+- **Goal**: Align frontend TypeScript interface with the backend Kotlin DTO and synchronize MSW mocks with valid entity references (referrals 1..6, students 1..6) and target IDs.
+- **File 1**: `frontend/src/api/dashboard.ts`
+  - Update `DashboardActivityDto`:
+    ```typescript
+    export interface DashboardActivityDto {
+      id: string;
+      type: ActivityType;
+      timestamp: string;
+      referenceId: number;
+      referenceName?: string | null;
+      messageCode?: string;
+      payload?: Record<string, any>;
+      actionTargetId?: number | null;
+      actionType?: string | null;
+    }
+    ```
+- **File 2**: `frontend/src/mocks/data/dashboard.ts`
+  - In `mockDashboardActivities`:
+    - `student`: Point `ref-1` to `referenceId: 1` (`期中考试后急性焦虑`); point `notif-1` to `referenceId: 1`, `actionTargetId: 1`, `actionType: 'VIEW_REFERRAL'`, `payload: { referralId: 1 }`.
+    - `teacher`: Set `hr-1` to `referenceId: 1`, `actionTargetId: 1`, `actionType: 'VIEW_STUDENT'`, `payload: { studentId: 1, studentName: '张伟', crisisFlags: '自杀倾向' }`; set `ref-2` to `referenceId: 2` (`李娜`); set `notif-2` to `referenceId: 2`, `actionTargetId: 2`, `actionType: 'VIEW_REFERRAL'`, `payload: { referralId: 2, studentName: '李娜', initiatorName: '张老师' }`.
+    - `head-councillor`: Set `ref-1` to `referenceId: 2` (`李娜`, `AWAITING_TRIAGE`); set `hr-2` to `referenceId: 1`, `actionTargetId: 1`, `actionType: 'VIEW_STUDENT'`, `payload: { studentId: 1, studentName: '张伟' }`; set `sys-1` to `referenceId: 4`, `actionTargetId: 4`, `actionType: 'REVIEW_REFERRAL'`, `payload: { referralId: 4, studentName: '陈思宇', initiatorName: '李老师' }`.
+    - `trial-admin`: Set `ref-2` to `referenceId: 5`; set `cap-1` to `referenceId: 1`; set `notif-3` to `referenceId: 5`, `actionTargetId: 5`, `actionType: 'CREATE_APPOINTMENT'`, `payload: { referralId: 5, studentName: '孙七' }`.
+    - `doctor`: Set `ref-3` to `referenceId: 6`; set `notif-4` to `referenceId: 6`, `actionTargetId: 6`, `actionType: 'VIEW_APPOINTMENT'`, `payload: { referralId: 6, studentName: '周八' }`.
+    - `admin`: Ensure all activities reference valid users/entities.
+- **Verification Gate**:
+  ```bash
+  cd /Volumes/Files/Programming/medical-system/frontend && npm run lint
+  ```
 
 ---
 
-### Task 4: Frontend API DTO & Mock Parity
-
-#### 4.1 Update Frontend DTO Interface
-- **File**: `frontend/src/api/dashboard.ts`
-- **Action**: Add `messageCode?: string;` and `payload?: Record<string, any>;` to `DashboardActivityDto`.
-
-#### 4.2 Synchronize MSW Mock Database
-- **File**: `frontend/src/mocks/data/dashboard.ts`
-- **Action**: Populate `messageCode` and `payload` for notification-backed activities across all roles.
-- **Verification**: Run `npm run lint` (`tsc --noEmit`).
+### Task 3: Activity Navigation Resolver (TDD)
+- **Goal**: Upgrade `resolveActivityNavigation` to route high-risk/student alerts directly to the Students tab and resolve entity IDs through both `payload` and `actionTargetId` / `actionType`.
+- **File 1 (Test - RED)**: `frontend/src/utils/activityNavigation.test.ts`
+  - Update existing test: `HIGH_RISK_ASSESSMENT_SUBMITTED` must route to `{ tab: 'Students', entityId: studentId, viewStudentId: studentId }` for roles `teacher`, `head-councillor`, `admin`.
+  - Add test: `HIGH_RISK_ASSESSMENT_SUBMITTED` extracts student ID from `actionTargetId` when `payload.studentId` is absent.
+  - Add test: `ASSESSMENT_HIGH_RISK_ALERT_*` and `ASSESSMENT_COMPLETED_TEACHER` route to `{ tab: 'Students', entityId: studentId, viewStudentId: studentId }` using `actionTargetId` or `payload.studentId`.
+  - Add test: `SYSTEM_NOTIFICATION` and `UNREAD_NOTIFICATION` fall back to `activity.actionTargetId` when `payload.referralId` is missing and `actionType` is a referral action (`VIEW_REFERRAL`, `REVIEW_REFERRAL`, `ASSIGN_DOCTOR`, `CREATE_APPOINTMENT`, `VIEW_APPOINTMENT`, `APPROVE_FEEDBACK`) or `messageCode` starts with `REFERRAL_`.
+  - Add test: `SYSTEM_NOTIFICATION` and `UNREAD_NOTIFICATION` fall back to `activity.actionTargetId` when `payload.studentId` is missing and `actionType === 'VIEW_STUDENT'` or message code is student-related.
+- **File 2 (Implementation - GREEN)**: `frontend/src/utils/activityNavigation.ts`
+  - Identify referral actions:
+    ```typescript
+    const isReferralAction = 
+      ['VIEW_REFERRAL', 'REVIEW_REFERRAL', 'ASSIGN_DOCTOR', 'CREATE_APPOINTMENT', 'VIEW_APPOINTMENT', 'APPROVE_FEEDBACK'].includes(activity.actionType || '') ||
+      Boolean(activity.messageCode?.startsWith('REFERRAL_'));
+    ```
+  - Identify student actions:
+    ```typescript
+    const isStudentAction = 
+      activity.actionType === 'VIEW_STUDENT' ||
+      Boolean(activity.messageCode?.startsWith('ASSESSMENT_HIGH_RISK_ALERT_')) ||
+      activity.messageCode === 'ASSESSMENT_COMPLETED_TEACHER' ||
+      activity.messageCode === 'STUDENT_PROFILE_UPDATED';
+    ```
+  - Resolve IDs:
+    ```typescript
+    const referralId = payload?.referralId ?? (isReferralAction ? activity.actionTargetId : undefined);
+    const studentId = payload?.studentId ?? (isStudentAction ? activity.actionTargetId : undefined);
+    ```
+  - Direct High-Risk Assessment routing:
+    ```typescript
+    if (type === 'HIGH_RISK_ASSESSMENT_SUBMITTED') {
+      const targetStudentId = studentId ?? activity.referenceId;
+      if (['teacher', 'head-councillor', 'admin'].includes(role)) {
+        return { tab: 'Students', entityId: targetStudentId, viewStudentId: targetStudentId };
+      }
+      return { tab: 'Notifications', viewStudentId: targetStudentId };
+    }
+    ```
+  - Direct Notification routing:
+    - Route referral activities to `{ tab: role === 'student' ? 'My Records' : 'Referral Management', entityId: referralId, viewReferralId: referralId }`.
+    - Route student activities to `{ tab: 'Students', entityId: studentId, viewStudentId: studentId }` for roles with a Students tab.
+- **Verification Gate**:
+  ```bash
+  cd /Volumes/Files/Programming/medical-system/frontend && npx vitest run src/utils/activityNavigation.test.ts
+  ```
 
 ---
 
-### Task 5: Backend DTO & Service (`DashboardActivityDto.kt` & `DashboardService.kt`)
-
-#### 5.1 Red — Write Unit Tests for Backend Projection
-- **File**: `backend/src/test/kotlin/com/medicalsystem/backend/service/DashboardServiceTest.kt`
-- **Action**:
-  - Update `setup()` to supply `ObjectMapper()` when instantiating `DashboardService`.
-  - Add test: `getRecentActivity for TEACHER populates messageCode and payload from notification`.
-  - Add test: `getRecentActivity for TEACHER includes both high-risk alert and completed codes in query`.
-  - Add test: `getRecentActivity for HEAD_COUNSELLOR populates messageCode and payload for high-risk and unread system notifications`.
-  - Add test: `getRecentActivity for DOCTOR and TRIAL_ADMIN populates messageCode and payload for unread notifications`.
-  - Add test: `getRecentActivity safely handles corrupted or blank notification payload`.
-
-#### 5.2 Green — Implement Backend DTO and Service Mapping
-- **File**: `backend/src/main/kotlin/com/medicalsystem/backend/dto/DashboardActivityDto.kt`:
-  - Add `messageCode: String? = null` and `payload: Map<String, Any>? = null`.
-- **File**: `backend/src/main/kotlin/com/medicalsystem/backend/service/DashboardService.kt`:
-  - Inject `ObjectMapper`.
-  - Implement safe parsing helper `parsePayload(json: String?): Map<String, Any>?`.
-  - Update Teacher high-risk query to check `IN (:codes)` with both `ASSESSMENT_HIGH_RISK_ALERT_TEACHER` and `ASSESSMENT_COMPLETED_TEACHER`.
-  - Populate `messageCode = it.messageCode.name` and `payload = parsePayload(it.payload)` across Teacher, Head Councillor, Trial Admin, and Doctor.
-- **Verification**: Run `./mvnw test -Dtest=DashboardServiceTest`.
+### Task 4: Role Pages Unified Deep-Linking via `navigateToTab` & Regression Tests
+- **Goal**: Replace fragmented ad-hoc `onActivityClick` implementations across all 6 role pages with unified delegation to `navigateToTab(target.tab, target.entityId != null ? String(target.entityId) : undefined)`, trigger existing query-cached entity fetches with `baseInfo` unwrapping, and show `无法加载数据详情，请重试` on network failures.
+- **File 1**: `frontend/src/pages/TeacherPage.tsx`
+- **File 2**: `frontend/src/pages/HeadCouncillorPage.tsx`
+- **File 3**: `frontend/src/pages/DoctorPage.tsx`
+- **File 4**: `frontend/src/pages/TrialAdminPage.tsx`
+- **File 5**: `frontend/src/pages/StudentPage.tsx`
+- **File 6**: `frontend/src/pages/AdminPage.tsx`
+- **File 7 (Test - Regression & Deep-Linking)**: `frontend/src/pages/PageNavigation.test.tsx`
+- **Verification Gate**:
+  ```bash
+  cd /Volumes/Files/Programming/medical-system/frontend && npx vitest run src/pages/PageNavigation.test.tsx
+  cd /Volumes/Files/Programming/medical-system/frontend && npm run lint
+  cd /Volumes/Files/Programming/medical-system/frontend && npm run build
+  ```
 
 ---
 
-## Verification Commands
-1. Frontend Tests: `cd frontend && npm run test`
-2. Frontend Type Check: `cd frontend && npm run lint`
-3. Backend Test Suite: `cd backend && ./mvnw test`
+## 3. TDD Test Cases & Verification Gate Commands Summary
+
+| Step | Scope | Red/Green Command | Expected Outcome |
+|------|-------|-------------------|------------------|
+| **1.1** | Backend Tests Red | `./mvnw test -Dtest=DashboardServiceTest` | Fails because `actionTargetId`/`actionType` are missing |
+| **1.2** | Backend Impl Green | `./mvnw test -Dtest=DashboardServiceTest` | Passes: notification mapping outputs `actionTargetId` and `actionType` |
+| **2.1** | Frontend Types & Mocks | `npm run lint` | TypeScript passes with new DTO fields and mock parity |
+| **3.1** | Resolver Tests Red | `npx vitest run src/utils/activityNavigation.test.ts` | Fails on new high-risk routing and actionTargetId fallback |
+| **3.2** | Resolver Impl Green | `npx vitest run src/utils/activityNavigation.test.ts` | All resolver unit tests pass (100% green) |
+| **4.1** | Page Deep-Linking Tests | `npx vitest run src/pages/PageNavigation.test.tsx` | All page navigation and error fallback tests pass |
+| **Gate** | Full Frontend Verification | `npm run lint && npm run test && npm run build` | Zero TS errors, all tests pass, build succeeds |
+| **Gate** | Full Backend Verification | `./mvnw test` | All backend unit and integration tests pass |

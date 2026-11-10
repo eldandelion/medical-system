@@ -20,6 +20,8 @@ export interface DashboardActivityDto {
   referenceName?: string | null;
   messageCode?: string;
   payload?: Record<string, any>;
+  actionTargetId?: number | null;
+  actionType?: string | null;
 }
 
 export interface DashboardActivityFeedDto {

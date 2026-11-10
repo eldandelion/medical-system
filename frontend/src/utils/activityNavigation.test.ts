@@ -66,6 +66,60 @@ describe('activityNavigation', () => {
       expect(result.tab).toBe('Referral Management');
     });
 
+    it('falls back to actionTargetId for referral notifications when payload.referralId is absent', () => {
+      const activity: DashboardActivityDto = {
+        id: 'notif-sys-4b',
+        type: 'SYSTEM_NOTIFICATION',
+        timestamp: '2026-11-10T10:00:00Z',
+        referenceId: 504,
+        messageCode: 'REFERRAL_REQUIRES_REVIEW_HC',
+        payload: { studentName: '陈思宇', initiatorName: '李老师' },
+        actionTargetId: 4,
+        actionType: 'REVIEW_REFERRAL',
+      };
+
+      const result = resolveActivityNavigation(activity, 'head-councillor');
+      expect(result.tab).toBe('Referral Management');
+      expect(result.entityId).toBe(4);
+      expect(result.viewReferralId).toBe(4);
+    });
+
+    it('falls back to actionTargetId for student notifications (ASSESSMENT_COMPLETED_TEACHER) when payload.studentId is absent', () => {
+      const activity: DashboardActivityDto = {
+        id: 'notif-teacher-assess-1',
+        type: 'UNREAD_NOTIFICATION',
+        timestamp: '2026-11-10T10:00:00Z',
+        referenceId: 510,
+        messageCode: 'ASSESSMENT_COMPLETED_TEACHER',
+        payload: { studentName: '张伟', batteryTitle: 'PHQ-9' },
+        actionTargetId: 1,
+        actionType: 'VIEW_STUDENT',
+      };
+
+      const result = resolveActivityNavigation(activity, 'teacher');
+      expect(result.tab).toBe('Students');
+      expect(result.entityId).toBe(1);
+      expect(result.viewStudentId).toBe(1);
+    });
+
+    it('routes ASSESSMENT_HIGH_RISK_ALERT_HC notification directly to Students with entityId', () => {
+      const activity: DashboardActivityDto = {
+        id: 'notif-hc-alert-1',
+        type: 'SYSTEM_NOTIFICATION',
+        timestamp: '2026-11-10T10:00:00Z',
+        referenceId: 511,
+        messageCode: 'ASSESSMENT_HIGH_RISK_ALERT_HC',
+        payload: { studentName: '张伟' },
+        actionTargetId: 1,
+        actionType: 'VIEW_STUDENT',
+      };
+
+      const result = resolveActivityNavigation(activity, 'head-councillor');
+      expect(result.tab).toBe('Students');
+      expect(result.entityId).toBe(1);
+      expect(result.viewStudentId).toBe(1);
+    });
+
     it('routes to Assessments for student when messageCode starts with ASSESSMENT_', () => {
       const activity: DashboardActivityDto = {
         id: 'notif-sys-5',
@@ -124,7 +178,7 @@ describe('activityNavigation', () => {
       expect(result.entityId).toBe(99);
     });
 
-    it('routes HIGH_RISK_ASSESSMENT_SUBMITTED to Notifications with studentId if present', () => {
+    it('routes HIGH_RISK_ASSESSMENT_SUBMITTED directly to Students with entityId for teacher, head-councillor, and admin', () => {
       const activity: DashboardActivityDto = {
         id: 'hr-1',
         type: 'HIGH_RISK_ASSESSMENT_SUBMITTED',
@@ -133,9 +187,36 @@ describe('activityNavigation', () => {
         payload: { studentId: 12 },
       };
 
+      const teacherResult = resolveActivityNavigation(activity, 'teacher');
+      expect(teacherResult.tab).toBe('Students');
+      expect(teacherResult.entityId).toBe(12);
+      expect(teacherResult.viewStudentId).toBe(12);
+
+      const hcResult = resolveActivityNavigation(activity, 'head-councillor');
+      expect(hcResult.tab).toBe('Students');
+      expect(hcResult.entityId).toBe(12);
+
+      const adminResult = resolveActivityNavigation(activity, 'admin');
+      expect(adminResult.tab).toBe('Students');
+      expect(adminResult.entityId).toBe(12);
+    });
+
+    it('routes HIGH_RISK_ASSESSMENT_SUBMITTED to Students using actionTargetId when payload.studentId is absent', () => {
+      const activity: DashboardActivityDto = {
+        id: 'hr-2',
+        type: 'HIGH_RISK_ASSESSMENT_SUBMITTED',
+        timestamp: '2026-11-10T10:00:00Z',
+        referenceId: 509,
+        messageCode: 'ASSESSMENT_HIGH_RISK_ALERT_TEACHER',
+        payload: { studentName: '张伟', crisisFlags: '自杀倾向' },
+        actionTargetId: 1,
+        actionType: 'VIEW_STUDENT',
+      };
+
       const result = resolveActivityNavigation(activity, 'teacher');
-      expect(result.tab).toBe('Notifications');
-      expect(result.viewStudentId).toBe(12);
+      expect(result.tab).toBe('Students');
+      expect(result.entityId).toBe(1);
+      expect(result.viewStudentId).toBe(1);
     });
 
     it('routes USER_APPROVAL_PENDING to User Management for admin and Staff for head-councillor', () => {

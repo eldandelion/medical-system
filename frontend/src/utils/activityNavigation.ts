@@ -11,7 +11,20 @@ export function resolveActivityNavigation(
   activity: DashboardActivityDto,
   role: string
 ): ActivityNavigationTarget {
-  const { type, referenceId, messageCode, payload } = activity;
+  const { type, referenceId, messageCode, payload, actionTargetId, actionType } = activity;
+
+  const isReferralAction =
+    ['VIEW_REFERRAL', 'REVIEW_REFERRAL', 'ASSIGN_DOCTOR', 'CREATE_APPOINTMENT', 'VIEW_APPOINTMENT', 'APPROVE_FEEDBACK'].includes(actionType || '') ||
+    Boolean(messageCode?.startsWith('REFERRAL_'));
+
+  const isStudentAction =
+    actionType === 'VIEW_STUDENT' ||
+    Boolean(messageCode?.startsWith('ASSESSMENT_HIGH_RISK_ALERT_')) ||
+    messageCode === 'ASSESSMENT_COMPLETED_TEACHER' ||
+    messageCode === 'STUDENT_PROFILE_UPDATED';
+
+  const referralId = payload?.referralId ?? (isReferralAction ? actionTargetId ?? undefined : undefined);
+  const studentId = payload?.studentId ?? (isStudentAction ? actionTargetId ?? undefined : undefined);
 
   // 1. Direct Referral Activities
   if (type.startsWith('REFERRAL_')) {
@@ -31,9 +44,17 @@ export function resolveActivityNavigation(
     };
   }
   if (type === 'HIGH_RISK_ASSESSMENT_SUBMITTED') {
+    const targetStudentId = studentId ?? actionTargetId ?? referenceId;
+    if (['teacher', 'head-councillor', 'admin'].includes(role)) {
+      return {
+        tab: 'Students',
+        entityId: targetStudentId,
+        viewStudentId: targetStudentId,
+      };
+    }
     return {
       tab: 'Notifications',
-      viewStudentId: payload?.studentId,
+      viewStudentId: targetStudentId,
     };
   }
 
@@ -46,10 +67,7 @@ export function resolveActivityNavigation(
 
   // 4. Notifications (SYSTEM_NOTIFICATION & UNREAD_NOTIFICATION)
   if (type === 'SYSTEM_NOTIFICATION' || type === 'UNREAD_NOTIFICATION') {
-    const referralId = payload?.referralId;
-    const studentId = payload?.studentId;
-
-    if (referralId) {
+    if (referralId != null) {
       const targetTab = role === 'student' ? 'My Records' : 'Referral Management';
       return {
         tab: targetTab,
@@ -58,7 +76,7 @@ export function resolveActivityNavigation(
       };
     }
 
-    if (studentId && ['teacher', 'head-councillor', 'admin'].includes(role)) {
+    if (studentId != null && ['teacher', 'head-councillor', 'admin'].includes(role)) {
       return {
         tab: 'Students',
         entityId: studentId,
@@ -66,9 +84,13 @@ export function resolveActivityNavigation(
       };
     }
 
-    if (messageCode?.startsWith('REFERRAL_')) {
+    if (messageCode?.startsWith('REFERRAL_') || isReferralAction) {
       const targetTab = role === 'student' ? 'My Records' : 'Referral Management';
       return { tab: targetTab };
+    }
+
+    if (isStudentAction && ['teacher', 'head-councillor', 'admin'].includes(role)) {
+      return { tab: 'Students' };
     }
 
     if (messageCode?.startsWith('ASSESSMENT_')) {
