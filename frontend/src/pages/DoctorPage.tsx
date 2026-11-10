@@ -30,6 +30,7 @@ import { roleTranslations } from '../utils/roleTranslations';
 import { DashboardResponseDto, DoctorMetricsDto } from '../types';
 import { useDashboardActivity } from '../hooks/useDashboardActivity';
 import { mapActivityTypeToUI } from '../utils/activityMapper';
+import { resolveActivityNavigation } from '../utils/activityNavigation';
 
 export const DoctorTabs = {
   DASHBOARD: 'Dashboard',
@@ -233,6 +234,17 @@ export function DoctorPage() {
                 statusType: ui.statusType
               };
             }) ?? []}
+            onActivityClick={item => {
+              const raw = activityData?.activities?.find(a => String(a.id) === item.id);
+              if (!raw) return;
+              const target = resolveActivityNavigation(raw, 'doctor');
+              if (target.entityId && target.tab === 'Referral Management') {
+                setActivePage(DoctorTabs.REFERRAL_MANAGEMENT);
+                setSelectedItem({ id: target.entityId });
+              } else {
+                handlePageChange(target.tab as DoctorPageName);
+              }
+            }}
             rightWidget={<DashboardCalendarWidget doctorId={String(profileSummaryData?.employeeId || '1')} />}
           />
         </>) : null;

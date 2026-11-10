@@ -29,6 +29,7 @@ import { TRIAL_ADMIN_METRICS_CONFIG } from '../config/dashboardConfig';
 import { DashboardResponseDto, TrialAdminMetricsDto } from '../types';
 import { useDashboardActivity } from '../hooks/useDashboardActivity';
 import { mapActivityTypeToUI } from '../utils/activityMapper';
+import { resolveActivityNavigation } from '../utils/activityNavigation';
 
 export const TrialAdminTabs = {
   DASHBOARD: 'Dashboard',
@@ -229,6 +230,17 @@ export function TrialAdminPage() {
                 statusType: ui.statusType
               };
             }) ?? []}
+            onActivityClick={item => {
+              const raw = activityData?.activities?.find(a => String(a.id) === item.id);
+              if (!raw) return;
+              const target = resolveActivityNavigation(raw, 'trial-admin');
+              if (target.entityId && target.tab === 'Referral Management') {
+                setActivePage(TrialAdminTabs.REFERRAL_MANAGEMENT);
+                setSelectedItem({ id: target.entityId });
+              } else {
+                handlePageChange(target.tab as TrialAdminPageName);
+              }
+            }}
           />
         </>) : null;
       default:

@@ -24,6 +24,7 @@ import { useNotifications } from '../hooks/useNotifications';
 import { useDashboardActivity } from '../hooks/useDashboardActivity';
 import { DashboardResponseDto, StudentMetricsDto } from '../types';
 import { mapActivityTypeToUI } from '../utils/activityMapper';
+import { resolveActivityNavigation } from '../utils/activityNavigation';
 export const StudentTabs = {
   DASHBOARD: 'Dashboard',
   NOTIFICATIONS: 'Notifications',
@@ -192,6 +193,12 @@ export function StudentPage() {
                   statusType: ui.statusType
                 };
               }) ?? []}
+              onActivityClick={item => {
+                const raw = activityData?.activities?.find(a => String(a.id) === item.id);
+                if (!raw) return;
+                const target = resolveActivityNavigation(raw, 'student');
+                handlePageChange(target.tab as StudentTab);
+              }}
             />
         </>) : null;
       default:

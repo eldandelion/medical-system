@@ -34,6 +34,7 @@ import { HEAD_COUNCILLOR_METRICS_CONFIG } from '../config/dashboardConfig';
 import { DashboardResponseDto, HeadCouncillorMetricsDto } from '../types';
 import { useDashboardActivity } from '../hooks/useDashboardActivity';
 import { mapActivityTypeToUI } from '../utils/activityMapper';
+import { resolveActivityNavigation } from '../utils/activityNavigation';
 
 export const HeadCouncillorTabs = {
   DASHBOARD: 'Dashboard',
@@ -288,11 +289,16 @@ export function HeadCouncillorPage() {
             }) ?? []}
             onActivityClick={item => {
               const raw = activityData?.activities?.find(a => String(a.id) === item.id);
-              const type = raw?.type;
-              if (type?.startsWith('REFERRAL_')) handlePageChange(HeadCouncillorTabs.REFERRAL_MANAGEMENT);
-              else if (type?.startsWith('ASSESSMENT_') || type === 'HIGH_RISK_ASSESSMENT_SUBMITTED') handlePageChange(HeadCouncillorTabs.NOTIFICATIONS);
-              else if (type === 'USER_APPROVAL_PENDING') handlePageChange(HeadCouncillorTabs.STAFF);
-              else if (type === 'UNREAD_NOTIFICATION') handlePageChange(HeadCouncillorTabs.NOTIFICATIONS);
+              if (!raw) return;
+              const target = resolveActivityNavigation(raw, 'head-councillor');
+              if (target.viewReferralId) {
+                handleViewReferral(String(target.viewReferralId));
+              } else if (target.viewStudentId) {
+                handlePageChange(HeadCouncillorTabs.STUDENTS);
+                setSelectedItem({ id: target.viewStudentId });
+              } else {
+                handlePageChange(target.tab as HeadCouncillorPageName);
+              }
             }}
           />
         </>) : null;

@@ -33,6 +33,7 @@ import { ADMIN_METRICS_CONFIG } from '../config/dashboardConfig';
 import { queryClient } from '../utils/queryClient';
 import { useDashboardActivity } from '../hooks/useDashboardActivity';
 import { mapActivityTypeToUI } from '../utils/activityMapper';
+import { resolveActivityNavigation } from '../utils/activityNavigation';
 
 export const AdminTabs = {
   DASHBOARD: 'Dashboard',
@@ -233,6 +234,18 @@ export function AdminPage() {
                   statusType: ui.statusType
                 };
               }) ?? []}
+              onActivityClick={item => {
+                const raw = activityData?.activities?.find(a => String(a.id) === item.id);
+                if (!raw) return;
+                const target = resolveActivityNavigation(raw, 'admin');
+                const matchedTab = Object.values(AdminTabs).find(t => t.toLowerCase() === target.tab.toLowerCase());
+                if (matchedTab) {
+                  handlePageChange(matchedTab);
+                  if (target.entityId) {
+                    setSelectedItem({ id: target.entityId });
+                  }
+                }
+              }}
             />
           </>
         );

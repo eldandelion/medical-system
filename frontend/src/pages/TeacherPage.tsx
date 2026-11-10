@@ -31,6 +31,7 @@ import { enrichReferralStatus } from '../utils/referralUtils';
 import { Referral, DashboardResponseDto, TeacherMetricsDto } from '../types';
 import { useDashboardActivity } from '../hooks/useDashboardActivity';
 import { mapActivityTypeToUI } from '../utils/activityMapper';
+import { resolveActivityNavigation } from '../utils/activityNavigation';
 
 import { TEACHER_METRICS_CONFIG } from '../config/dashboardConfig';
 
@@ -300,10 +301,16 @@ export function TeacherPage() {
             }) ?? []}
             onActivityClick={item => {
               const raw = activityData?.activities?.find(a => String(a.id) === item.id);
-              const type = raw?.type;
-              if (type?.startsWith('REFERRAL_')) handlePageChange(TeacherTabs.REFERRAL_MANAGEMENT);
-              else if (type?.startsWith('ASSESSMENT_') || type === 'HIGH_RISK_ASSESSMENT_SUBMITTED') handlePageChange(TeacherTabs.NOTIFICATIONS);
-              else if (type === 'UNREAD_NOTIFICATION') handlePageChange(TeacherTabs.NOTIFICATIONS);
+              if (!raw) return;
+              const target = resolveActivityNavigation(raw, 'teacher');
+              if (target.viewReferralId) {
+                handleViewReferral(String(target.viewReferralId));
+              } else if (target.viewStudentId) {
+                handlePageChange(TeacherTabs.STUDENTS);
+                setSelectedItem({ id: target.viewStudentId });
+              } else {
+                handlePageChange(target.tab as TeacherPageName);
+              }
             }}
           />
         </>) : null;
