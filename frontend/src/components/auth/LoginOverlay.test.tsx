@@ -892,4 +892,30 @@ describe('LoginOverlay Component', () => {
     expect(card).toBeDefined();
     expect(screen.getByText('输入您的出生日期和民族')).toBeDefined();
   });
+
+  it('switches to the SMS login form and back to password login', () => {
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+
+    fireEvent.click(screen.getByTestId('switch-to-sms-login'));
+
+    // SMS form is shown instead of the password step 1 form
+    expect(screen.getByText('短信登录')).toBeDefined();
+    expect(screen.getByText('使用手机验证码登录')).toBeDefined();
+    expect(document.querySelector('md-outlined-text-field[label="手机号"]')).toBeDefined();
+    expect(document.querySelector('md-outlined-text-field[label="验证码"]')).toBeDefined();
+    expect(screen.queryByText('电子邮件或学工号')).toBeNull();
+
+    fireEvent.click(screen.getByTestId('sms-back-to-password'));
+
+    expect(document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]')).toBeDefined();
+    expect(screen.queryByTestId('sms-send-code-button')).toBeNull();
+  });
+
+  it('SMS login form is not rendered in password login view', () => {
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+
+    expect(screen.queryByText('短信登录')).toBeNull();
+    expect(screen.queryByTestId('sms-send-code-button')).toBeNull();
+    expect(screen.getByTestId('switch-to-sms-login')).toBeDefined();
+  });
 });

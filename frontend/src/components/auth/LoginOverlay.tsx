@@ -14,6 +14,7 @@ import { useRegistrationDraft } from './useRegistrationDraft';
 import { useEthnicities } from '../../hooks/useEthnicities';
 import { useSchools, useHospitals } from '../../hooks/useAffiliations';
 import { authApi } from '../../api/auth';
+import { SmsLoginForm } from './SmsLoginForm';
 import { UserRole } from '../../types';
 import { useAuth, Role } from '../../contexts/AuthContext';
 
@@ -36,6 +37,7 @@ function useOptionalAuth() {
 
 export type AuthView =
   | 'login'
+  | 'sms-login'
   | 'register-role-select'
   | 'register-student-notice'
   | 'register-basic-info'
@@ -306,6 +308,20 @@ export function LoginOverlay({
     }
   };
 
+  const handleSmsLoginSuccess = (loginRes: { token: string; role?: UserRole }) => {
+    if (loginRes && loginRes.token && authContext?.loginWithSession) {
+      const mappedRole: Role =
+        (loginRes.role && USER_ROLE_TO_SESSION_ROLE[loginRes.role]) ||
+        authContext.session.role;
+      authContext.loginWithSession({
+        role: mappedRole,
+        token: loginRes.token,
+      });
+    }
+    onSuccess?.();
+    onClose();
+  };
+
   const handleRegisterSubmit = async (passwordData: RegisterPasswordData) => {
     if (!selectedRole || selectedRole === 'student') return;
 
@@ -554,7 +570,16 @@ export function LoginOverlay({
                     <CsuLogo />
                   </div>
 
-                  {step === 1 ? (
+                  {view === 'sms-login' ? (
+                    <div className="mt-6">
+                      <h1 className="text-[36px] leading-[44px] font-normal text-[var(--md-sys-color-on-surface)] tracking-tight">
+                        短信登录
+                      </h1>
+                      <p className="text-[16px] leading-[24px] text-[var(--md-sys-color-on-surface-variant)] mt-3 font-normal">
+                        使用手机验证码登录
+                      </p>
+                    </div>
+                  ) : step === 1 ? (
                     <div className="mt-6">
                       <h1 className="text-[36px] leading-[44px] font-normal text-[var(--md-sys-color-on-surface)] tracking-tight">
                         登录
@@ -589,7 +614,12 @@ export function LoginOverlay({
                   <div className="hidden md:flex h-[32px] items-center" />
 
                   <div className="mt-0 md:mt-6 flex flex-col justify-between flex-1">
-                    {step === 1 ? (
+                    {view === 'sms-login' ? (
+                      <SmsLoginForm
+                        onBackToPassword={() => setView('login')}
+                        onLoginSuccess={handleSmsLoginSuccess}
+                      />
+                    ) : step === 1 ? (
                       /* Step 1 Form */
                       <div
                         key="step1-form"
@@ -619,13 +649,21 @@ export function LoginOverlay({
                             </md-outlined-text-field>
                           </div>
 
-                          <div className="pt-1">
+                          <div className="pt-1 flex flex-col gap-1">
                             <button
                               type="button"
                               onClick={() => {}}
                               className="text-[14px] font-medium text-[var(--md-sys-color-primary)] hover:underline transition-colors"
                             >
                               忘记了电子邮件地址？
+                            </button>
+                            <button
+                              type="button"
+                              data-testid="switch-to-sms-login"
+                              onClick={() => setView('sms-login')}
+                              className="text-[14px] font-medium text-[var(--md-sys-color-primary)] hover:underline transition-colors w-fit"
+                            >
+                              使用短信验证码登录
                             </button>
                           </div>
                         </div>
