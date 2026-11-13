@@ -268,6 +268,95 @@ export const handlers = [
     });
   }),
 
+  http.post(api('/api/auth/send-code'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status !== 404) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn('Could not send SMS code against real backend, falling back to mock', e);
+      }
+    }
+
+    const body = (await request.json().catch(() => ({}))) as { phone?: string };
+    const phone = (body.phone || '').trim();
+    if (!/^1[3-9]\d{9}$/.test(phone)) {
+      return HttpResponse.json({ error: 'Invalid Chinese mobile phone number format' }, { status: 400 });
+    }
+
+    return HttpResponse.json({
+      phone,
+      devCode: '123456',
+      expiresInSeconds: 300,
+    });
+  }),
+
+  http.post(api('/api/auth/verify-code'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status !== 404) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn('Could not verify SMS code against real backend, falling back to mock', e);
+      }
+    }
+
+    const body = (await request.json().catch(() => ({}))) as { phone?: string; code?: string };
+    if (!body.code || body.code.trim() !== '123456') {
+      return HttpResponse.json({ error: '验证码错误，还剩 4 次尝试机会' }, { status: 400 });
+    }
+    return HttpResponse.json({ valid: true });
+  }),
+
+  http.post(api('/api/auth/login-sms'), async ({ request }) => {
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status !== 404) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn('Could not login via SMS against real backend, falling back to mock', e);
+      }
+    }
+
+    const body = (await request.json().catch(() => ({}))) as { phone?: string; code?: string };
+    if (!body.code || body.code.trim() !== '123456') {
+      return HttpResponse.json({ error: '验证码错误，还剩 4 次尝试机会' }, { status: 400 });
+    }
+
+    const phone = (body.phone || '').trim();
+    return HttpResponse.json({
+      token: 'mock_student_token',
+      role: 'STUDENT',
+      name: '短信用户',
+      student: {
+        studentNumber: phone,
+        fullName: '短信用户',
+        phone,
+      },
+    });
+  }),
+
   http.post(api('/api/auth/register'), async ({ request }) => {
     if (import.meta.env.MODE !== 'test') {
       try {

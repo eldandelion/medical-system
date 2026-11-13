@@ -54,6 +54,12 @@ class GlobalExceptionHandler {
             .body(mapOf("error" to (e.message ?: "Unauthorized")))
     }
 
+    @ExceptionHandler(TooManyRequestsException::class)
+    fun handleTooManyRequests(e: TooManyRequestsException): ResponseEntity<Map<String, String>> {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+            .body(mapOf("error" to (e.message ?: "请求过于频繁，请稍后再试")))
+    }
+
     @ExceptionHandler(ValidationException::class)
     fun handleValidation(e: ValidationException): ResponseEntity<Map<String, String>> {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)

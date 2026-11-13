@@ -68,6 +68,15 @@ export interface LoginResponseDto {
   };
 }
 
+export type SmsOtpPurpose = 'LOGIN' | 'REGISTRATION';
+
+export interface SendSmsCodeResponse {
+  phone: string;
+  /** Present only when the backend runs the mock SMS sender (development). */
+  devCode?: string | null;
+  expiresInSeconds?: number;
+}
+
 export const authApi = {
   verifyIdentifier: async (identifier: string): Promise<VerifyIdentifierResponse> => {
     return apiFetch<VerifyIdentifierResponse>('/api/auth/verify-identifier', {
@@ -94,6 +103,30 @@ export const authApi = {
     return apiFetch<RegisterResponse>('/api/auth/register', {
       method: 'POST',
       body: payload,
+    });
+  },
+
+  /** Requests an SMS OTP. The backend enforces 60s cooldown and per-IP rate limits. */
+  sendSmsCode: async (phone: string, purpose: SmsOtpPurpose = 'LOGIN'): Promise<SendSmsCodeResponse> => {
+    return apiFetch<SendSmsCodeResponse>('/api/auth/send-code', {
+      method: 'POST',
+      body: { phone, purpose },
+    });
+  },
+
+  /** Pre-checks an SMS OTP without consuming it. */
+  verifySmsCode: async (phone: string, code: string, purpose: SmsOtpPurpose = 'LOGIN'): Promise<{ valid: boolean }> => {
+    return apiFetch<{ valid: boolean }>('/api/auth/verify-code', {
+      method: 'POST',
+      body: { phone, code, purpose },
+    });
+  },
+
+  /** Verifies and consumes the SMS OTP, returning a session token. */
+  loginWithSms: async (phone: string, code: string): Promise<LoginResponseDto> => {
+    return apiFetch<LoginResponseDto>('/api/auth/login-sms', {
+      method: 'POST',
+      body: { phone, code },
     });
   },
 };
