@@ -7,6 +7,7 @@ import com.medicalsystem.backend.model.UserRole
 import com.medicalsystem.backend.service.EmailOtpService
 import com.medicalsystem.backend.service.StaffRegistrationService
 import com.medicalsystem.backend.service.UserVerificationService
+import com.medicalsystem.backend.service.sms.SmsRateLimitService
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -30,6 +31,9 @@ class AuthControllerTest {
 
     @Mock
     private lateinit var authService: com.medicalsystem.backend.service.AuthService
+
+    @Mock
+    private lateinit var smsRateLimitService: SmsRateLimitService
 
     @InjectMocks
     private lateinit var authController: AuthController
