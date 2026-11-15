@@ -36,3 +36,21 @@ data class AliyunSmsProperties(
         }
     }
 }
+
+internal object SmsLogMasking {
+    fun maskAccessKey(accessKeyId: String): String {
+        return when {
+            accessKeyId.isBlank() -> "(unset)"
+            accessKeyId.length > 8 -> "${accessKeyId.take(4)}****${accessKeyId.takeLast(4)}"
+            else -> "****"
+        }
+    }
+
+    fun maskPhone(phone: String): String {
+        return when {
+            phone.length == 11 -> "${phone.substring(0, 3)}****${phone.substring(7)}"
+            phone.length > 4 -> "${phone.take(2)}****${phone.takeLast(2)}"
+            else -> "****"
+        }
+    }
+}
