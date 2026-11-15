@@ -17,6 +17,11 @@ import { roleTranslations } from '../utils/roleTranslations';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { StudentDetailsView, STUDENT_DETAILS_TABS } from '../components/students/StudentDetailsView';
 import { ReferralDetailsView, REFERRAL_DETAILS_TABS } from '../components/records/ReferralDetailsView';
+import {
+  getAssessmentCatalogProps,
+  getAssessmentDetailsPanelProps,
+  renderAssessmentDetailsPanelContent,
+} from '../components/assessments/assessmentPanelConfig';
 import { REFERRAL_TYPE_LABELS } from '../config/styleConstants';
 import { useCreationOverlay } from '../contexts/CreationContext';
 import { ReferralCreationForm } from '../components/records/ReferralCreationForm';
@@ -158,6 +163,8 @@ export function TeacherPage() {
     switch (activePage) {
       case TeacherTabs.STUDENTS:
         return STUDENT_DETAILS_TABS;
+      case TeacherTabs.ASSESSMENTS:
+        return getAssessmentDetailsPanelProps(selectedItem).tabs;
       case TeacherTabs.REFERRAL_MANAGEMENT:
         return REFERRAL_DETAILS_TABS;
       default:
@@ -237,7 +244,9 @@ export function TeacherPage() {
         return (
           <>
             <CanvasHeader title={TEACHER_TAB_TITLES[activePage]} />
-            <AssessmentCatalogManagementView />
+            <AssessmentCatalogManagementView
+              {...getAssessmentCatalogProps(selectedItem, setSelectedItem, setActiveTab)}
+            />
           </>
         );
       case TeacherTabs.REFERRAL_MANAGEMENT:
@@ -313,6 +322,11 @@ export function TeacherPage() {
     }
   };
 
+  const assessmentsPanelProps =
+    activePage === TeacherTabs.ASSESSMENTS && selectedItem
+      ? getAssessmentDetailsPanelProps(selectedItem)
+      : null;
+
   return (
     <div
       className="flex h-screen overflow-hidden transition-colors duration-300"
@@ -340,16 +354,26 @@ export function TeacherPage() {
             <DetailsPanel
               isOpen={!!selectedItem}
               onClose={() => setSelectedItem(null)}
-              title={selectedItem?.name ? '学生详情' : (selectedItem?.type ? (REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type) : '转诊详情')}
-              subtitle={selectedItem?.studentNumber || (selectedItem?.studentId ? String(selectedItem.studentId) : '') || (selectedItem?.type ? REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type : '') || selectedItem?.major || selectedItem?.department || ''}
-              headerAvatar={
-                (selectedItem?.name || selectedItem?.studentName) ? (
-                  <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[14px] font-medium">
-                    {(selectedItem?.name || selectedItem?.studentName || '?').charAt(0)}
-                  </div>
-                ) : null
+              title={
+                assessmentsPanelProps
+                  ? assessmentsPanelProps.title
+                  : selectedItem?.name ? '学生详情' : (selectedItem?.type ? (REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type) : '转诊详情')
               }
-              icon={selectedItem?.name ? 'person' : 'description'}
+              subtitle={
+                assessmentsPanelProps
+                  ? assessmentsPanelProps.subtitle
+                  : selectedItem?.studentNumber || (selectedItem?.studentId ? String(selectedItem.studentId) : '') || (selectedItem?.type ? REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type : '') || selectedItem?.major || selectedItem?.department || ''
+              }
+              headerAvatar={
+                assessmentsPanelProps
+                  ? assessmentsPanelProps.headerAvatar
+                  : (selectedItem?.name || selectedItem?.studentName) ? (
+                      <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[14px] font-medium">
+                        {(selectedItem?.name || selectedItem?.studentName || '?').charAt(0)}
+                      </div>
+                    ) : null
+              }
+              icon={assessmentsPanelProps ? assessmentsPanelProps.icon : selectedItem?.name ? 'person' : 'description'}
               tabs={tabs}
               activeTab={activeTab}
               onTabChange={setActiveTab}
@@ -359,6 +383,13 @@ export function TeacherPage() {
                   {activePage === TeacherTabs.STUDENTS && (
                     <StudentDetailsView student={selectedItem} activeTab={activeTab} onTabChange={setActiveTab} />
                   )}
+                  {activePage === TeacherTabs.ASSESSMENTS &&
+                    renderAssessmentDetailsPanelContent(
+                      selectedItem,
+                      activeTab,
+                      setActiveTab,
+                      setSelectedItem
+                    )}
                   {activePage === TeacherTabs.REFERRAL_MANAGEMENT && (
                     <ReferralDetailsView 
                       referral={selectedItem} 

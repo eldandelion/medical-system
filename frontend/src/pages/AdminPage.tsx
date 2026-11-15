@@ -18,6 +18,11 @@ import { UserManagementView } from '../components/admin/UserManagementView';
 import { UserDetailsView } from '../components/admin/UserDetailsView';
 import { UserGovernanceFooter } from '../components/admin/UserGovernanceFooter';
 import { AssessmentCatalogManagementView } from '../components/admin/AssessmentCatalogManagementView';
+import {
+  getAssessmentCatalogProps,
+  getAssessmentDetailsPanelProps,
+  renderAssessmentDetailsPanelContent,
+} from '../components/assessments/assessmentPanelConfig';
 import { EssentialsManagementView } from '../components/admin/EssentialsManagementView';
 import { REFERRAL_TYPE_LABELS } from '../config/styleConstants';
 import { useCreationOverlay } from '../contexts/CreationContext';
@@ -169,8 +174,9 @@ export function AdminPage() {
         }
         return [];
       case AdminTabs.STUDENTS:
-      case AdminTabs.ASSESSMENTS:
         return STUDENT_DETAILS_TABS;
+      case AdminTabs.ASSESSMENTS:
+        return getAssessmentDetailsPanelProps(selectedItem).tabs;
       case AdminTabs.REFERRALS:
         return REFERRAL_DETAILS_TABS;
       default:
@@ -276,12 +282,8 @@ export function AdminPage() {
         return (
           <>
             <CanvasHeader title={ADMIN_TAB_TITLES[activePage]} />
-            <AssessmentCatalogManagementView 
-              onStudentSelect={(student) => {
-                setSelectedItem(student);
-                setActiveTab(StudentDetailsTabs.HISTORY);
-              }}
-              selectedStudentId={selectedItem?.id}
+            <AssessmentCatalogManagementView
+              {...getAssessmentCatalogProps(selectedItem, setSelectedItem, setActiveTab)}
             />
           </>
         );
@@ -333,6 +335,11 @@ export function AdminPage() {
         );
     }
   };
+
+  const assessmentsPanelProps =
+    activePage === AdminTabs.ASSESSMENTS && selectedItem
+      ? getAssessmentDetailsPanelProps(selectedItem)
+      : null;
 
   return (
     <div
@@ -404,34 +411,42 @@ export function AdminPage() {
               isOpen={!!selectedItem}
               onClose={() => setSelectedItem(null)}
               title={
-                activePage === AdminTabs.USERS
+                assessmentsPanelProps
+                  ? assessmentsPanelProps.title
+                  : activePage === AdminTabs.USERS
                   ? selectedItem?.name || (selectedItem?.role === 'STUDENT' ? '学生详情' : '用户详情')
-                  : (activePage === AdminTabs.STUDENTS || activePage === AdminTabs.ASSESSMENTS)
+                  : activePage === AdminTabs.STUDENTS
                   ? selectedItem?.name || '学生详情'
                   : selectedItem?.title || (selectedItem?.type ? REFERRAL_TYPE_LABELS[selectedItem.type] : '转诊详情')
               }
               subtitle={
-                activePage === AdminTabs.USERS
+                assessmentsPanelProps
+                  ? assessmentsPanelProps.subtitle
+                  : activePage === AdminTabs.USERS
                   ? selectedItem?.role === 'STUDENT'
                     ? selectedItem?.employeeOrStudentId || selectedItem?.studentNumber || selectedItem?.studentId || selectedItem?.departmentOrCollege || selectedItem?.email || ''
                     : selectedItem?.email || selectedItem?.departmentOrCollege || ''
-                  : (activePage === AdminTabs.STUDENTS || activePage === AdminTabs.ASSESSMENTS)
+                  : activePage === AdminTabs.STUDENTS
                   ? selectedItem?.studentNumber || selectedItem?.studentId || selectedItem?.major || ''
                   : selectedItem?.studentNumber || (selectedItem?.studentId ? String(selectedItem.studentId) : '') || selectedItem?.studentName || ''
               }
               headerAvatar={
-                selectedItem?.name || selectedItem?.studentName ? (
-                  <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[14px] font-medium">
-                    {(selectedItem?.name || selectedItem?.studentName || '?').charAt(0)}
-                  </div>
-                ) : null
+                assessmentsPanelProps
+                  ? assessmentsPanelProps.headerAvatar
+                  : selectedItem?.name || selectedItem?.studentName ? (
+                      <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[14px] font-medium">
+                        {(selectedItem?.name || selectedItem?.studentName || '?').charAt(0)}
+                      </div>
+                    ) : null
               }
               icon={
-                activePage === AdminTabs.USERS
+                assessmentsPanelProps
+                  ? assessmentsPanelProps.icon
+                  : activePage === AdminTabs.USERS
                   ? selectedItem?.role === 'STUDENT'
                     ? 'person'
                     : 'manage_accounts'
-                  : (activePage === AdminTabs.STUDENTS || activePage === AdminTabs.ASSESSMENTS)
+                  : activePage === AdminTabs.STUDENTS
                   ? 'person'
                   : 'description'
               }
@@ -482,14 +497,21 @@ export function AdminPage() {
                       />
                     )
                   )}
-                  {(activePage === AdminTabs.STUDENTS || activePage === AdminTabs.ASSESSMENTS) && (
+                  {activePage === AdminTabs.STUDENTS && (
                     <StudentDetailsView
                       student={selectedItem}
-                      defaultTab={activePage === AdminTabs.ASSESSMENTS ? StudentDetailsTabs.HISTORY : StudentDetailsTabs.OVERVIEW}
+                      defaultTab={StudentDetailsTabs.OVERVIEW}
                       activeTab={activeTab}
                       onTabChange={setActiveTab}
                     />
                   )}
+                  {activePage === AdminTabs.ASSESSMENTS &&
+                    renderAssessmentDetailsPanelContent(
+                      selectedItem,
+                      activeTab,
+                      setActiveTab,
+                      setSelectedItem
+                    )}
                   {activePage === AdminTabs.REFERRALS && (
                     <ReferralDetailsView
                       referral={selectedItem}

@@ -92,19 +92,47 @@ describe('AssessmentCatalogManagementView', () => {
     expect(document.querySelectorAll('md-icon-button[aria-label="指派测评"]').length).toBe(2);
   });
 
-  it('opens full-screen details view when clicking on a row', () => {
-    render(<AssessmentCatalogManagementView />);
+  it('invokes onScaleSelect when clicking a scale row and does not open obsolete fullscreen placeholder', () => {
+    const mockOnScaleSelect = vi.fn();
+    render(
+      <AssessmentCatalogManagementView
+        onScaleSelect={mockOnScaleSelect}
+        selectedScaleCode="PHQ-9"
+      />
+    );
 
     const rowItem = screen.getByText('抑郁症筛查量表 (PHQ-9)');
     fireEvent.click(rowItem);
 
-    // Full screen view is opened
-    expect(screen.getByText('量表题目明细与临床常模配置')).toBeDefined();
-    expect(screen.getByText('完成')).toBeDefined();
-
-    // Close full screen
-    fireEvent.click(screen.getByText('完成'));
+    expect(mockOnScaleSelect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        batteryCode: 'PHQ-9',
+        title: '抑郁症筛查量表 (PHQ-9)',
+      })
+    );
     expect(screen.queryByText('量表题目明细与临床常模配置')).toBeNull();
+  });
+
+  it('clears active scale and student selections when switching sub-tabs', () => {
+    const mockOnScaleSelect = vi.fn();
+    const mockOnStudentSelect = vi.fn();
+    render(
+      <AssessmentCatalogManagementView
+        onScaleSelect={mockOnScaleSelect}
+        onStudentSelect={mockOnStudentSelect}
+      />
+    );
+
+    fireEvent.click(screen.getByText('指派历史'));
+    expect(mockOnScaleSelect).toHaveBeenCalledWith(null);
+    expect(mockOnStudentSelect).toHaveBeenCalledWith(null);
+
+    mockOnScaleSelect.mockClear();
+    mockOnStudentSelect.mockClear();
+
+    fireEvent.click(screen.getByText('量表列表'));
+    expect(mockOnScaleSelect).toHaveBeenCalledWith(null);
+    expect(mockOnStudentSelect).toHaveBeenCalledWith(null);
   });
 
   it('opens creation overlay when clicking 指派测评 icon on an available scale', () => {

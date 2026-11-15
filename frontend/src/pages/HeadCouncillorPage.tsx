@@ -20,6 +20,11 @@ import { REFERRAL_TYPE_LABELS } from '../config/styleConstants';
 import { StaffManagementView } from '../components/staff/StaffManagementView';
 import { StaffDetailsView, STAFF_DETAILS_TABS } from '../components/staff/StaffDetailsView';
 import { AssessmentCatalogManagementView } from '../components/admin/AssessmentCatalogManagementView';
+import {
+  getAssessmentCatalogProps,
+  getAssessmentDetailsPanelProps,
+  renderAssessmentDetailsPanelContent,
+} from '../components/assessments/assessmentPanelConfig';
 import { useCreationOverlay } from '../contexts/CreationContext';
 import { ReferralCreationForm } from '../components/records/ReferralCreationForm';
 import { TertiaryFab } from '../components/common/Buttons';
@@ -186,6 +191,8 @@ export function HeadCouncillorPage() {
         return REFERRAL_DETAILS_TABS;
       case HeadCouncillorTabs.STAFF:
         return STAFF_DETAILS_TABS;
+      case HeadCouncillorTabs.ASSESSMENTS:
+        return getAssessmentDetailsPanelProps(selectedItem).tabs;
       default:
         return [];
     }
@@ -225,7 +232,9 @@ export function HeadCouncillorPage() {
         return (
           <>
             <CanvasHeader title={HEAD_COUNCILLOR_TAB_TITLES[activePage]} />
-            <AssessmentCatalogManagementView />
+            <AssessmentCatalogManagementView
+              {...getAssessmentCatalogProps(selectedItem, setSelectedItem, setActiveTab)}
+            />
           </>
         );
       case HeadCouncillorTabs.REFERRAL_MANAGEMENT:
@@ -301,6 +310,11 @@ export function HeadCouncillorPage() {
     }
   };
 
+  const assessmentsPanelProps =
+    activePage === HeadCouncillorTabs.ASSESSMENTS && selectedItem
+      ? getAssessmentDetailsPanelProps(selectedItem)
+      : null;
+
   return (
     <div
       className="flex h-screen overflow-hidden transition-colors duration-300"
@@ -329,16 +343,26 @@ export function HeadCouncillorPage() {
             <DetailsPanel
               isOpen={!!selectedItem}
               onClose={() => setSelectedItem(null)}
-              title={selectedItem?.employeeId ? '人员详情' : (selectedItem?.name ? '学生详情' : (selectedItem?.type ? (REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type) : '转诊详情'))}
-              subtitle={selectedItem?.studentNumber || (selectedItem?.studentId ? String(selectedItem.studentId) : '') || (selectedItem?.employeeId ? selectedItem?.department : '') || (selectedItem?.type ? REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type : '') || selectedItem?.major || selectedItem?.department || ''}
-              headerAvatar={
-                (selectedItem?.name || selectedItem?.studentName) ? (
-                  <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[14px] font-medium">
-                    {(selectedItem?.name || selectedItem?.studentName || '?').charAt(0)}
-                  </div>
-                ) : null
+              title={
+                assessmentsPanelProps
+                  ? assessmentsPanelProps.title
+                  : selectedItem?.employeeId ? '人员详情' : (selectedItem?.name ? '学生详情' : (selectedItem?.type ? (REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type) : '转诊详情'))
               }
-              icon={selectedItem?.name ? 'person' : 'description'}
+              subtitle={
+                assessmentsPanelProps
+                  ? assessmentsPanelProps.subtitle
+                  : selectedItem?.studentNumber || (selectedItem?.studentId ? String(selectedItem.studentId) : '') || (selectedItem?.employeeId ? selectedItem?.department : '') || (selectedItem?.type ? REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type : '') || selectedItem?.major || selectedItem?.department || ''
+              }
+              headerAvatar={
+                assessmentsPanelProps
+                  ? assessmentsPanelProps.headerAvatar
+                  : (selectedItem?.name || selectedItem?.studentName) ? (
+                      <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center text-[14px] font-medium">
+                        {(selectedItem?.name || selectedItem?.studentName || '?').charAt(0)}
+                      </div>
+                    ) : null
+              }
+              icon={assessmentsPanelProps ? assessmentsPanelProps.icon : selectedItem?.name ? 'person' : 'description'}
               tabs={tabs}
               activeTab={activeTab}
               onTabChange={setActiveTab}
@@ -351,6 +375,13 @@ export function HeadCouncillorPage() {
                   {activePage === HeadCouncillorTabs.STAFF && (
                     <StaffDetailsView staff={selectedItem} activeTab={activeTab} onTabChange={setActiveTab} />
                   )}
+                  {activePage === HeadCouncillorTabs.ASSESSMENTS &&
+                    renderAssessmentDetailsPanelContent(
+                      selectedItem,
+                      activeTab,
+                      setActiveTab,
+                      setSelectedItem
+                    )}
                   {activePage === HeadCouncillorTabs.REFERRAL_MANAGEMENT && (
                     <ReferralDetailsView 
                       referral={selectedItem} 
