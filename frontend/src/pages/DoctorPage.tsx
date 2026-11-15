@@ -24,6 +24,7 @@ import { DOCTOR_METRICS_CONFIG } from '../config/dashboardConfig';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useDoctorProfileSummary } from '../hooks/useProfileSummary';
+import { useUserProfile } from '../hooks/useUserProfile';
 import { ProfileDetailsView } from '../components/profile/ProfileDetailsView';
 import { ReferralDetailsView } from '../components/records/ReferralDetailsView';
 import { roleTranslations } from '../utils/roleTranslations';
@@ -121,6 +122,7 @@ export function DoctorPage() {
   });
   
   const { data: profileSummaryData, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useDoctorProfileSummary(session?.token);
+  const { data: userProfile } = useUserProfile(session?.token);
   const { openCreation, closeCreation, expandToFullscreen } = useCreationOverlay();
   const { data: activityData } = useDashboardActivity();
 
@@ -240,7 +242,7 @@ export function DoctorPage() {
               const target = resolveActivityNavigation(raw, 'doctor');
               navigateToTab(target.tab, target.entityId != null ? String(target.entityId) : undefined);
             }}
-            rightWidget={<DashboardCalendarWidget doctorId={String(profileSummaryData?.employeeId || '1')} />}
+            rightWidget={<DashboardCalendarWidget doctorId={userProfile?.id != null ? String(userProfile.id) : ''} />}
           />
         </>) : null;
       default:

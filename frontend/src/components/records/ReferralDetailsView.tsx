@@ -18,6 +18,7 @@ import { ReferralActionFooter } from './ReferralActionFooter';
 import { GenericDialog } from '../common/GenericDialog';
 import { RISK_LEVEL_STYLES, RISK_LEVEL_LABELS, REFERRAL_TYPE_LABELS, STATUS_LABELS } from '../../config/styleConstants';
 import { DoctorScheduleCalendar } from '../common/DoctorScheduleCalendar';
+import { useUserProfile } from '../../hooks/useUserProfile';
 
 import { Referral, ReferralDetails } from '../../types';
 
@@ -159,6 +160,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
   const { state, actions } = useReferralActions({ referralId: referral.id, onUpdate });
 
   const { session } = useAuth();
+  const { data: userProfile } = useUserProfile(session?.token);
   const queryClient = useQueryClient();
   
   const { data: doctors = [] } = useQuery({
@@ -585,7 +587,11 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
           )}
           <div className="mt-2">
             <DoctorScheduleCalendar 
-              doctorId={state.selectedDoctorId || String((referralDetails as any).extendedData?.destination?.doctor || (referral as any).extendedData?.destination?.doctor || '1')}
+              doctorId={
+                state.selectedDoctorId ||
+                (userProfile?.role === 'DOCTOR' && userProfile.id != null ? String(userProfile.id) : '') ||
+                String((referralDetails as any).extendedData?.destination?.doctorId || '')
+              }
               selectedDateTime={state.scheduleDateTime}
               onSelectDateTime={(val) => state.setScheduleDateTime(val)}
             />

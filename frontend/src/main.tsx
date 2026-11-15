@@ -52,6 +52,25 @@ async function enableMocking() {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
     return;
   }
+  // Only enable MSW when explicitly opted in; default to connecting directly to the backend.
+  if (import.meta.env.VITE_ENABLE_MOCK !== 'true') {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(
+        registrations
+          .filter(
+            (reg) =>
+              reg.active?.scriptURL.includes('mockServiceWorker.js') ||
+              reg.installing?.scriptURL.includes('mockServiceWorker.js') ||
+              reg.waiting?.scriptURL.includes('mockServiceWorker.js'),
+          )
+          .map((reg) => reg.unregister()),
+      );
+    } catch (err) {
+      console.warn('Failed to unregister existing MSW service worker:', err);
+    }
+    return;
+  }
   try {
     const { worker } = await import('./mocks/browser');
     await worker.start({

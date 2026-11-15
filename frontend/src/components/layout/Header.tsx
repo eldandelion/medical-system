@@ -1,11 +1,10 @@
 import * as React from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { AccountMenu } from './AccountMenu';
 import { LoginOverlay } from '../auth/LoginOverlay';
 import { useTheme } from '../../contexts/ThemeContext';
 import { GlobalSearch } from './GlobalSearch';
 import { useAuth, type Role } from '../../contexts/AuthContext';
-import { UserProfileDto } from '../../types';
+import { useUserProfile } from '../../hooks/useUserProfile';
 
 interface HeaderProps {
   searchPlaceholder?: string;
@@ -29,24 +28,7 @@ export function Header({ searchPlaceholder, onProfileClick }: HeaderProps) {
   const [isLoginOpen, setIsLoginOpen] = React.useState(false);
   const { theme, setTheme } = useTheme();
 
-  const { data: userProfile } = useQuery<UserProfileDto | null>({
-    queryKey: ['/api/user/profile', session?.token],
-    queryFn: async () => {
-      try {
-        const res = await fetch(`${import.meta.env.BASE_URL}api/user/profile`.replace('//api', '/api'), {
-          headers: {
-            'Authorization': `Bearer ${session?.token || ''}`,
-          },
-        });
-        if (!res.ok) return null;
-        return res.json();
-      } catch {
-        return null;
-      }
-    },
-    enabled: !!session?.token,
-    retry: false,
-  });
+  const { data: userProfile } = useUserProfile(session?.token);
 
   const displayAvatarInitial = userProfile?.avatarInitial || userProfile?.name?.charAt(0) || '李';
   const displayAvatarBg = userProfile?.avatarBg || '#E47035';
