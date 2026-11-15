@@ -82,8 +82,8 @@ describe('assessmentPanelConfig', () => {
   });
 
   it('formats scale subtitle safely even when duration is missing', () => {
-    expect(formatScaleSubtitle(sampleScale)).toBe('PHQ_9 · 5 分钟 · 9 题');
-    expect(formatScaleSubtitle({ ...sampleScale, duration: '' })).toBe('PHQ_9 · 9 题');
+    expect(formatScaleSubtitle(sampleScale)).toBe('5 分钟 · 9 题');
+    expect(formatScaleSubtitle({ ...sampleScale, duration: '' })).toBe('9 题');
   });
 
   it('wires scale and student selection callbacks cleanly via getAssessmentCatalogProps', () => {
@@ -107,7 +107,7 @@ describe('assessmentPanelConfig', () => {
     const props = getAssessmentDetailsPanelProps(sampleScale);
 
     expect(props.title).toBe('情绪状况评估 (PHQ-9)');
-    expect(props.subtitle).toBe('PHQ_9 · 5 分钟 · 9 题');
+    expect(props.subtitle).toBe('5 分钟 · 9 题');
     expect(props.tabs).toEqual(SCALE_DETAILS_TABS);
     expect(props.headerAvatar).not.toBeNull();
   });

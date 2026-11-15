@@ -147,7 +147,7 @@ describe('AssessmentScaleDetailsView', () => {
     expect(setHeaderOverride).toHaveBeenCalled();
     const lastCall = setHeaderOverride.mock.calls[setHeaderOverride.mock.calls.length - 1][0] as DetailsHeaderOverride;
     expect(lastCall.title).toBe('情绪状况评估 (PHQ-9)');
-    expect(lastCall.subtitle).toBe('PHQ_9 · 5 分钟 · 9 题');
+    expect(lastCall.subtitle).toBe('5 分钟 · 9 题');
 
     unmount();
     expect(setHeaderOverride).toHaveBeenLastCalledWith(null);

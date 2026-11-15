@@ -26,7 +26,7 @@ export const SCALE_DETAILS_TABS = [
 ];
 
 export function formatScaleSubtitle(scale: AssessmentCatalogItemDto): string {
-  return [scale.batteryCode, scale.duration, `${scale.questionCount ?? 0} 题`]
+  return [scale.duration, `${scale.questionCount ?? 0} 题`]
     .filter(Boolean)
     .join(' · ');
 }

@@ -53,7 +53,7 @@ export const QuestionPreviewCard = React.memo(function QuestionPreviewCard({
   const displayOrder = question.orderNum ?? index + 1;
 
   return (
-    <div className="p-3.5 rounded-xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)] border-opacity-30 space-y-2.5">
+    <div className="p-3.5 rounded-xl bg-[var(--md-sys-color-surface)] space-y-2.5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-2 min-w-0 flex-1">
           <span className="text-xs font-mono font-semibold text-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary-container)] bg-opacity-40 px-2 py-0.5 rounded-md shrink-0 mt-0.5 tabular-nums">
@@ -212,7 +212,7 @@ export function AssessmentScaleQuestionsTab({ scale }: AssessmentScaleQuestionsT
           return (
             <div
               key={sectionKey}
-              className="rounded-2xl bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline-variant)] border-opacity-30 overflow-hidden"
+              className="rounded-2xl bg-[var(--md-sys-color-surface-container-low)] overflow-hidden"
             >
               <button
                 type="button"
@@ -250,9 +250,9 @@ export function AssessmentScaleQuestionsTab({ scale }: AssessmentScaleQuestionsT
               </button>
 
               {isExpanded && (
-                <div className="px-4 pb-4 pt-1 space-y-2.5 border-t border-[var(--md-sys-color-outline-variant)] border-opacity-20">
+                <div className="p-4 space-y-2.5 border-t border-[var(--md-sys-color-outline-variant)]/25">
                   {section.description && (
-                    <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed px-1 pt-1">
+                    <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed px-1">
                       {section.description}
                     </p>
                   )}

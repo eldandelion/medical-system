@@ -171,4 +171,24 @@ describe('AssessmentScaleQuestionsTab', () => {
     expect(screen.getByText('新量表第一题')).toBeDefined();
     expect(screen.queryByText('新量表第二题')).toBeNull();
   });
+
+  it('renders outlineless category and question containers with matching top and bottom dropdown padding', () => {
+    render(<AssessmentScaleQuestionsTab scale={sampleScale} />);
+
+    const sectionBtn = screen.getByRole('button', { name: /第一部分：情绪与行为/ });
+    const categoryContainer = sectionBtn.parentElement;
+    expect(categoryContainer).not.toBeNull();
+    expect(categoryContainer?.className).not.toContain('border ');
+    expect(categoryContainer?.className).not.toContain('border-[');
+
+    const dropdownContainer = sectionBtn.nextElementSibling;
+    expect(dropdownContainer).not.toBeNull();
+    expect(dropdownContainer?.className).toContain('p-4');
+    expect(dropdownContainer?.className).not.toContain('pt-1');
+
+    const questionText = screen.getByText('感到心情低落或绝望');
+    const questionCard = questionText.closest('.rounded-xl');
+    expect(questionCard).not.toBeNull();
+    expect(questionCard?.className).not.toContain('border');
+  });
 });
