@@ -21,6 +21,8 @@ export type TargetType = 'COHORT' | 'INDIVIDUAL';
 const COLLEGES = [
   '全部学院',
   '计算机学院',
+  '工程学院',
+  '商学院',
   '心理学院',
   '生命科学学院',
   '人文与艺术学院',
@@ -29,8 +31,10 @@ const COLLEGES = [
 
 const MAJORS_BY_COLLEGE: Record<string, string[]> = {
   全部学院: ['全部专业'],
-  计算机学院: ['全部专业', '计算机科学与技术', '软件工程', '人工智能', '数据科学'],
-  心理学院: ['全部专业', '应用心理学', '临床心理学', '认知神经科学'],
+  计算机学院: ['全部专业', '计算机科学', '计算机科学与技术', '软件工程', '人工智能', '数据科学'],
+  工程学院: ['全部专业', '机械工程'],
+  商学院: ['全部专业', '工商管理'],
+  心理学院: ['全部专业', '心理学', '应用心理学', '临床心理学', '认知神经科学'],
   生命科学学院: ['全部专业', '生物科学', '生物技术', '生物工程'],
   人文与艺术学院: ['全部专业', '艺术史', '视觉传达', '中国语言文学'],
   医学院: ['全部专业', '临床医学', '精神医学', '预防医学'],
@@ -59,7 +63,7 @@ export function AssessmentAssignmentCreationForm({
   const [selectedClass, setSelectedClass] = React.useState('全部班级');
 
   const [selectedStudentIds, setSelectedStudentIds] = React.useState<string[]>(
-    initialStudent ? [initialStudent.id] : []
+    initialStudent ? [String(initialStudent.id)] : []
   );
   const [studentSearchTerm, setStudentSearchTerm] = React.useState('');
   const studentMenuRef = React.useRef<any>(null);
@@ -97,16 +101,18 @@ export function AssessmentAssignmentCreationForm({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isCloseWarningOpen, setIsCloseWarningOpen] = React.useState(false);
 
+  const fetchStudentsList = async () => {
+    const res = await fetch(`${import.meta.env.BASE_URL}/api/students`.replace('//api', '/api'), {
+      headers: { 'Authorization': `Bearer ${session?.token || ''}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch students');
+    return res.json() as Promise<Student[]>;
+  };
+
   // Fetch Students
   const { data: students = [] } = useQuery<Student[]>({
     queryKey: ['/api/students', session?.token],
-    queryFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}/api/students`.replace('//api', '/api'), {
-        headers: { 'Authorization': `Bearer ${session?.token || ''}` },
-      });
-      if (!res.ok) throw new Error('Failed to fetch students');
-      return res.json();
-    },
+    queryFn: fetchStudentsList,
   });
 
   const isTeacher = session?.role === 'teacher';
@@ -171,16 +177,17 @@ export function AssessmentAssignmentCreationForm({
   // Selected student objects
   const selectedStudents = selectedStudentIds
     .map((id) => {
-      const found = students.find((s) => s.id === id);
+      const normalizedId = String(id);
+      const found = students.find((s) => String(s.id) === normalizedId);
       if (found) return found;
-      if (initialStudent && initialStudent.id === id) return initialStudent;
+      if (initialStudent && String(initialStudent.id) === normalizedId) return initialStudent;
       return null;
     })
     .filter(Boolean) as Student[];
 
   // Available students for individual mode search
   const availableStudentsToSelect = students.filter((s) => {
-    if (selectedStudentIds.includes(s.id)) return false;
+    if (selectedStudentIds.includes(String(s.id))) return false;
     if (!studentSearchTerm) return true;
     const term = studentSearchTerm.toLowerCase();
     return (
@@ -190,9 +197,10 @@ export function AssessmentAssignmentCreationForm({
     );
   });
 
-  const handleSelectStudent = (id: string) => {
-    if (!selectedStudentIds.includes(id)) {
-      setSelectedStudentIds((prev) => [...prev, id]);
+  const handleSelectStudent = (id: string | number) => {
+    const normalizedId = String(id);
+    if (!selectedStudentIds.includes(normalizedId)) {
+      setSelectedStudentIds((prev) => [...prev, normalizedId]);
     }
     setStudentSearchTerm('');
     if (studentMenuRef.current) {
@@ -204,8 +212,9 @@ export function AssessmentAssignmentCreationForm({
     }
   };
 
-  const handleRemoveStudent = (id: string) => {
-    setSelectedStudentIds((prev) => prev.filter((sId) => sId !== id));
+  const handleRemoveStudent = (id: string | number) => {
+    const normalizedId = String(id);
+    setSelectedStudentIds((prev) => prev.filter((sId) => sId !== normalizedId));
   };
 
   // Baseline initial values
@@ -264,6 +273,30 @@ export function AssessmentAssignmentCreationForm({
     };
   }, [setOnCloseInterceptor]);
 
+  const postSingleAssignment = async (studentId: string | number, batteryCode: string) => {
+    const res = await fetch(`${import.meta.env.BASE_URL}/api/assessments/assignments`.replace('//api', '/api'), {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session?.token || ''}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        studentId: Number(studentId) || studentId,
+        batteryCode,
+      }),
+    });
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => null);
+      const errCode = errBody?.error || '';
+      if (res.status === 409 || errCode === 'DUPLICATE_ASSIGNMENT') {
+        const err = new Error('该学生已存在待完成的相同测评指派');
+        (err as Error & { code?: string }).code = 'DUPLICATE_ASSIGNMENT';
+        throw err;
+      }
+      throw new Error(errCode || '指派失败');
+    }
+  };
+
   // Handle Form Submission
   const handleSubmit = async () => {
     if (selectedBatteryCodes.length === 0) {
@@ -279,46 +312,50 @@ export function AssessmentAssignmentCreationForm({
     setIsSubmitting(true);
     try {
       if (targetType === 'INDIVIDUAL') {
-        // Individual students assignment
         for (const studentId of selectedStudentIds) {
           for (const code of selectedBatteryCodes) {
-            const res = await fetch(`${import.meta.env.BASE_URL}/api/assessments/assignments`.replace('//api', '/api'), {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${session?.token || ''}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                studentId: Number(studentId) || studentId,
-                batteryCode: code,
-              }),
-            });
-            if (!res.ok) throw new Error('指派失败');
+            await postSingleAssignment(studentId, code);
           }
         }
       } else {
-        // Cohort assignment: Assign to matching students in system
-        const targetStudents = students.filter((s) => {
-          if (selectedCollege !== '全部学院' && s.major && !availableMajors.includes(s.major)) return false;
+        const latestStudents = students.length > 0
+          ? students
+          : await queryClient.fetchQuery<Student[]>({
+              queryKey: ['/api/students', session?.token],
+              queryFn: fetchStudentsList,
+            });
+        const targetStudents = latestStudents.filter((s) => {
+          if (selectedCollege !== '全部学院') {
+            const matchesSchool = s.demographics?.school === selectedCollege;
+            const matchesCollegeMajors = Boolean(s.major && availableMajors.includes(s.major));
+            if (!matchesSchool && !matchesCollegeMajors) return false;
+          }
           if (selectedMajor !== '全部专业' && s.major !== selectedMajor) return false;
           return true;
         });
 
-        const studentsToAssign = targetStudents.length > 0 ? targetStudents : students.slice(0, 5);
-        for (const student of studentsToAssign) {
+        if (targetStudents.length === 0) {
+          showSnackbar({ message: '当前筛选条件下暂无匹配学生', duration: 3000 });
+          return;
+        }
+
+        let assignedCount = 0;
+        for (const student of targetStudents) {
           for (const code of selectedBatteryCodes) {
-            await fetch(`${import.meta.env.BASE_URL}/api/assessments/assignments`.replace('//api', '/api'), {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${session?.token || ''}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                studentId: Number(student.id) || student.id,
-                batteryCode: code,
-              }),
-            });
+            try {
+              await postSingleAssignment(student.id, code);
+              assignedCount++;
+            } catch (err: unknown) {
+              // Skip students who already have an explicit active assignment for the same scale in batch dispatch.
+              if ((err as { code?: string })?.code !== 'DUPLICATE_ASSIGNMENT') {
+                throw err;
+              }
+            }
           }
+        }
+        if (assignedCount === 0) {
+          showSnackbar({ message: '所选学生均已有待完成的相同测评指派', duration: 3500 });
+          return;
         }
       }
 
@@ -327,14 +364,19 @@ export function AssessmentAssignmentCreationForm({
         duration: 3500,
       });
 
-      // Invalidate relevant queries
+      // Invalidate all assessment, history, dispatch, and student views so details panels update immediately
       queryClient.invalidateQueries({ queryKey: ['/api/assessments'] });
       queryClient.invalidateQueries({ queryKey: ['/api/assessments/assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/assessments/assignments/student'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/assessments/dispatches/summary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/assessments/participation-records'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/students'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
 
       onClose();
-    } catch (err: any) {
-      showSnackbar({ message: err.message || '分发量表失败，请稍后重试', duration: 4000 });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '分发量表失败，请稍后重试';
+      showSnackbar({ message: msg || '分发量表失败，请稍后重试', duration: 4000 });
     } finally {
       setIsSubmitting(false);
     }

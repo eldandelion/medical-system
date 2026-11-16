@@ -38,8 +38,12 @@ class AssessmentAssignmentRepositoryAdapter(
         studentId: Long,
         batteryCode: String
     ): Optional<AssessmentAssignment> {
-        return jpaRepository.findByStudentIdAndBatteryCodeAndStatus(studentId, batteryCode, AssessmentStatus.PENDING)
-            .map { mapper.toModel(it) }
+        // Querying the status list avoids IncorrectResultSizeDataAccessException if legacy duplicate PENDING rows exist.
+        val pending = jpaRepository.findByStudentIdAndStatus(studentId, AssessmentStatus.PENDING)
+            .filter { it.batteryCode == batteryCode }
+            .maxByOrNull { it.assignedAt }
+            ?.let { mapper.toModel(it) }
+        return Optional.ofNullable(pending)
     }
 
     override fun save(assignment: AssessmentAssignment): AssessmentAssignment {

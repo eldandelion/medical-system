@@ -56,7 +56,7 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header, reset
     if (activeFilters['培养层次'] && activeFilters['培养层次'] !== '全部') {
       list = list.filter((s) => {
         const val = s.degreeLevel || s.year || '';
-        const display = DEGREE_LEVEL_LABELS[val] || ACADEMIC_YEAR_LABELS[val] || val;
+        const display = DEGREE_LEVEL_LABELS[val] || ACADEMIC_YEAR_LABELS[val] || val || '本科';
         return display === activeFilters['培养层次'] || val === activeFilters['培养层次'];
       });
     }
@@ -128,7 +128,12 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header, reset
           <FilterChipSet
             className="flex flex-wrap items-center gap-2 relative z-20"
             chips={[
-              { label: '专业', options: ['计算机科学', '心理学', '生物学', '艺术史'] },
+              {
+                label: '专业',
+                options: Array.from(new Set(students.map((s) => s.major).filter(Boolean))).length > 0
+                  ? Array.from(new Set(students.map((s) => s.major).filter(Boolean)))
+                  : ['临床医学', '计算机科学', '心理学', '机械工程', '工商管理']
+              },
               { label: '培养层次', options: ['本科', '硕士', '博士', '其他'] },
               { label: '风险', options: ['高', '中', '低'] },
               { label: '导师', options: ['Dr. Watson', 'Dr. Smith', 'Prof. Miller'] }

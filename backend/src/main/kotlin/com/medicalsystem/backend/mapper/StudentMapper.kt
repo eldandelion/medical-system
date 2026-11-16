@@ -15,19 +15,26 @@ import org.springframework.stereotype.Component
 import java.time.LocalDate
 import java.time.Period
 import com.medicalsystem.backend.repository.StudentHealthProfileRepository
+import com.medicalsystem.backend.repository.UserJpaRepository
+import org.springframework.beans.factory.annotation.Autowired
 
 @Component
-class StudentMapper(
+class StudentMapper @Autowired constructor(
     private val majorMapper: MajorMapper,
     private val degreeLevelRepository: com.medicalsystem.backend.repository.DegreeLevelJpaRepository,
     private val ethnicityRepository: com.medicalsystem.backend.repository.EthnicityJpaRepository,
     private val schoolRepository: com.medicalsystem.backend.repository.SchoolJpaRepository,
     private val healthProfileRepository: StudentHealthProfileRepository,
     private val teacherRepository: com.medicalsystem.backend.repository.TeacherRepository,
-    private val riskEvaluator: com.medicalsystem.backend.service.StudentRiskEvaluator
+    private val riskEvaluator: com.medicalsystem.backend.service.StudentRiskEvaluator,
+    private val userJpaRepository: UserJpaRepository? = null
 ) {
     fun toModel(entity: StudentEntity): Student {
         val profile = healthProfileRepository.findByStudentId(entity.id).orElse(null)
+        val user = userJpaRepository?.findById(entity.id)?.orElse(null)
+        val rawContact = entity.demographics?.contactNumber?.takeIf { it.isNotBlank() } ?: user?.phone
+        val rawEmail = entity.demographics?.email?.takeIf { it.isNotBlank() } ?: user?.email?.value
+        val hasDemographics = entity.demographics != null || rawContact != null || rawEmail != null
         return Student(
             id = entity.id,
             studentNumber = entity.studentNumber,
@@ -36,19 +43,22 @@ class StudentMapper(
             enrollmentDate = entity.enrollmentDate,
             riskStatus = profile?.riskStatus ?: com.medicalsystem.backend.model.RiskStatus.LOW,
             degreeLevel = entity.degreeLevel?.let { d -> DegreeLevel(d.id, d.name) },
-            demographics = entity.demographics?.let {
+            demographics = if (hasDemographics) {
+                val demo = entity.demographics
                 Demographics(
-                    gender = it.gender,
-                    dateOfBirth = it.dateOfBirth,
-                    ethnicity = it.ethnicity?.let { e -> Ethnicity(e.id ?: 0L, e.name) },
-                    idCardNumber = it.idCardNumber?.let { num -> com.medicalsystem.backend.model.IdCardNumber.fromOrNull(num) },
-                    contactNumber = it.contactNumber?.let { num -> runCatching { com.medicalsystem.backend.model.MobileNumber(num) }.getOrNull() },
-                    email = it.email?.let { e -> runCatching { com.medicalsystem.backend.model.EmailAddress(e) }.getOrNull() },
-                    homeAddress = it.homeAddress,
-                    emergencyContactName = it.emergencyContactName,
-                    emergencyContactPhone = it.emergencyContactPhone?.let { p -> runCatching { com.medicalsystem.backend.model.PhoneNumber(p) }.getOrNull() },
-                    school = it.school?.let { s -> School(s.id ?: 0L, s.name) }
+                    gender = demo?.gender,
+                    dateOfBirth = demo?.dateOfBirth,
+                    ethnicity = demo?.ethnicity?.let { e -> Ethnicity(e.id ?: 0L, e.name) },
+                    idCardNumber = demo?.idCardNumber?.let { num -> com.medicalsystem.backend.model.IdCardNumber.fromOrNull(num) },
+                    contactNumber = rawContact?.let { num -> runCatching { com.medicalsystem.backend.model.MobileNumber(num) }.getOrNull() },
+                    email = rawEmail?.let { e -> runCatching { com.medicalsystem.backend.model.EmailAddress(e) }.getOrNull() },
+                    homeAddress = demo?.homeAddress,
+                    emergencyContactName = demo?.emergencyContactName,
+                    emergencyContactPhone = demo?.emergencyContactPhone?.let { p -> runCatching { com.medicalsystem.backend.model.PhoneNumber(p) }.getOrNull() },
+                    school = demo?.school?.let { s -> School(s.id ?: 0L, s.name) }
                 )
+            } else {
+                null
             },
             assignedTeacherId = entity.assignedTeacher?.userId
         )

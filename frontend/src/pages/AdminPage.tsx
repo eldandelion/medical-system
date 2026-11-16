@@ -460,7 +460,7 @@ export function AdminPage() {
                     selectedItem?.role === 'STUDENT' ? (
                       <StudentDetailsView
                         student={{
-                          id: selectedItem.id,
+                          id: String(selectedItem.id),
                           studentNumber: selectedItem.employeeOrStudentId || '',
                           name: selectedItem.name,
                           major: selectedItem.departmentOrCollege || '',

@@ -42,7 +42,10 @@ class ScaleController(
 
         val summaries = batteryCodes.mapNotNull { batteryCode ->
             val scale = catalogLoader.getScaleDetail(batteryCode) ?: return@mapNotNull null
-            val assignment = assignments.firstOrNull { it.batteryCode == batteryCode }
+            val matching = assignments.filter { it.batteryCode == batteryCode }
+            // Prefer an active PENDING assignment (e.g. re-assigned after a prior completion) over older completed rows.
+            val assignment = matching.firstOrNull { it.status == AssessmentStatus.PENDING }
+                ?: matching.maxByOrNull { it.assignedAt }
 
             val (status, answeredCount, percentage) = when {
                 assignment?.status == AssessmentStatus.COMPLETED -> {
@@ -100,7 +103,8 @@ class ScaleController(
     ): ResponseEntity<SubmitScaleResponse> {
         val currentUser = user ?: throw UnauthorizedException("Unauthorized")
         var assignment = assignmentJpaRepository.findByStudentId(currentUser.id)
-            .firstOrNull { it.batteryCode == code && it.status != AssessmentStatus.COMPLETED }
+            .filter { it.batteryCode == code && it.status == AssessmentStatus.PENDING }
+            .maxByOrNull { it.assignedAt }
 
         if (assignment == null) {
             val completed = assignmentJpaRepository.findByStudentId(currentUser.id)

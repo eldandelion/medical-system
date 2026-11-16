@@ -36,23 +36,23 @@ class UserDetailAssembler(
                         titleOrDegree = student.degreeLevel?.name,
                         enrollmentYear = student.enrollmentDate.year
                     )
-                    if (demo != null) {
-                        val calculatedAge = demo.dateOfBirth?.let { Period.between(it, LocalDate.now()).years }
-                        demographics = DemographicsDto(
-                            gender = demo.gender?.name,
-                            age = calculatedAge,
-                            ethnicity = demo.ethnicity?.name,
-                            idCardNumber = demo.idCardNumber,
-                            contactNumber = demo.contactNumber,
-                            email = demo.email ?: user.email.value,
-                            homeAddress = demo.homeAddress,
-                            emergencyContactName = demo.emergencyContactName,
-                            emergencyContactPhone = demo.emergencyContactPhone,
-                            school = demo.school?.name ?: student.major.college.name
-                        )
-                        contactNumber = demo.contactNumber
-                        homeAddress = demo.homeAddress
-                    }
+                    val calculatedAge = demo?.dateOfBirth?.let { Period.between(it, LocalDate.now()).years }
+                    val resolvedPhone = demo?.contactNumber?.takeIf { it.isNotBlank() } ?: user.phone
+                    val resolvedEmail = demo?.email?.takeIf { it.isNotBlank() } ?: user.email.value
+                    demographics = DemographicsDto(
+                        gender = demo?.gender?.name,
+                        age = calculatedAge,
+                        ethnicity = demo?.ethnicity?.name,
+                        idCardNumber = demo?.idCardNumber,
+                        contactNumber = resolvedPhone,
+                        email = resolvedEmail,
+                        homeAddress = demo?.homeAddress,
+                        emergencyContactName = demo?.emergencyContactName,
+                        emergencyContactPhone = demo?.emergencyContactPhone,
+                        school = demo?.school?.name ?: student.major.college.name
+                    )
+                    contactNumber = resolvedPhone
+                    homeAddress = demo?.homeAddress
                 }
             }
             UserRole.TEACHER -> {

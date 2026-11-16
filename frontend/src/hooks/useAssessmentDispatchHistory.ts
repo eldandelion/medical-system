@@ -10,7 +10,7 @@ export const useAssessmentDispatches = () => {
     queryFn: async () => {
       if (!session?.token) throw new Error('No auth token');
       
-      const response = await fetch('/api/assessments/dispatches/summary', {
+      const response = await fetch(`${import.meta.env.BASE_URL}/api/assessments/dispatches/summary`.replace('//api', '/api'), {
         headers: {
           'Authorization': `Bearer ${session.token}`,
           'Content-Type': 'application/json',
@@ -45,7 +45,7 @@ export const useAssessmentDispatchHistory = (filters: { dispatchId: number | 'la
       if (filters.search) params.append('studentName', filters.search); // Search both for simplicity, or add studentNumber param if backend distinguishes
       if (filters.severity !== 'ALL') params.append('severity', filters.severity);
       
-      const response = await fetch(`/api/assessments/participation-records?${params.toString()}`, {
+      const response = await fetch(`${import.meta.env.BASE_URL}/api/assessments/participation-records?${params.toString()}`.replace('//api', '/api'), {
         headers: {
           'Authorization': `Bearer ${session.token}`,
           'Content-Type': 'application/json',
