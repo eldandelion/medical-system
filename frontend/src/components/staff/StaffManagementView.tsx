@@ -1,139 +1,185 @@
 import * as React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { fetchTeachers, TeacherSummaryDto } from '../../api/teachers';
+import { AccountStatus } from '../../types/admin';
+import { useAuth } from '../../contexts/AuthContext';
 import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { StatusBadge } from '../common/StatusBadge';
 import { AvatarBadge } from '../common/AvatarBadge';
-
-interface Counselor {
-  id: string;
-  name: string;
-  employeeId: string;
-  department: string;
-  activeCaseload: number;
-  status: 'Active' | 'Inactive' | 'Suspended';
-}
+import { FilterChipSet } from '../common/FilterChip';
+import { SecondaryButton } from '../common/Buttons';
 
 interface StaffManagementViewProps {
-  onStaffSelect?: (staff: Counselor) => void;
-  selectedStaffId?: string;
+  onStaffSelect?: (staff: TeacherSummaryDto) => void;
+  selectedStaffId?: string | number;
   resetToken?: number;
 }
 
-export function StaffManagementView({ onStaffSelect, selectedStaffId, resetToken }: StaffManagementViewProps) {
+const STATUS_LABELS: Record<AccountStatus, string> = {
+  ACTIVE: '已启用',
+  PENDING_APPROVAL: '待审核',
+  DISABLED: '已禁用',
+  DELETED: '已注销',
+};
+
+const STATUS_DOTS: Record<AccountStatus, string> = {
+  ACTIVE: 'bg-[var(--md-sys-color-primary-container)]',
+  PENDING_APPROVAL: 'bg-[var(--md-sys-color-tertiary-container)]',
+  DISABLED: 'bg-[var(--md-sys-color-surface-container-highest)]',
+  DELETED: 'bg-[var(--md-sys-color-error-container)]',
+};
+
+export function StaffManagementView({
+  onStaffSelect,
+  selectedStaffId,
+  resetToken,
+}: StaffManagementViewProps) {
+  const { session } = useAuth();
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [activeFilters, setActiveFilters] = React.useState<Record<string, string>>({});
+
   React.useEffect(() => {
     if (resetToken) {
-      // Stub for future filters (e.g. setSearchQuery(''))
+      setSearchQuery('');
+      setActiveFilters({});
     }
   }, [resetToken]);
 
-  const counselors: Counselor[] = [
-    {
-      id: 'c1',
-      name: '张伟医生',
-      employeeId: 'EMP-1102',
-      department: '医学院',
-      activeCaseload: 15,
-      status: 'Active'
-    },
-    {
-      id: 'c2',
-      name: '李娜',
-      employeeId: 'EMP-1105',
-      department: '工学院',
-      activeCaseload: 8,
-      status: 'Active'
-    },
-    {
-      id: 'c3',
-      name: '王明',
-      employeeId: 'EMP-1109',
-      department: '经济学院',
-      activeCaseload: 22,
-      status: 'Suspended'
-    },
-    {
-      id: 'c4',
-      name: '陈佳',
-      employeeId: 'EMP-1112',
-      department: '艺术学院',
-      activeCaseload: 3,
-      status: 'Inactive'
-    }
-  ];
+  const {
+    data: teachers = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery<TeacherSummaryDto[]>({
+    queryKey: ['/api/teachers', session?.token],
+    queryFn: () => fetchTeachers(session?.token),
+  });
 
-  const columns: ColumnDefinition<Counselor>[] = [
+  const filteredTeachers = React.useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    const statusFilter = activeFilters['状态'];
+    return teachers.filter((teacher) => {
+      if (statusFilter && STATUS_LABELS[teacher.status] !== statusFilter) {
+        return false;
+      }
+      if (!q) return true;
+      return (
+        teacher.name.toLowerCase().includes(q) ||
+        teacher.employeeNumber.toLowerCase().includes(q) ||
+        teacher.collegeName.toLowerCase().includes(q)
+      );
+    });
+  }, [teachers, searchQuery, activeFilters]);
+
+  const columns: ColumnDefinition<TeacherSummaryDto>[] = [
     {
       key: 'name',
-      label: '咨询师',
-      width: 'w-[35%]',
+      label: '教师姓名',
+      width: 'w-[34%]',
       overflowVisible: true,
       render: (item, isSelected) => (
         <div className="flex items-center gap-3">
           <AvatarBadge name={item.name} isSelected={isSelected} size="sm" className="uppercase" />
-          <div className="flex flex-col">
-            <span className="text-[14px] font-medium">{item.name}</span>
-            <span className="text-[12px] opacity-70">工号: {item.employeeId}</span>
+          <div className="flex flex-col min-w-0">
+            <span className="text-[14px] font-medium truncate">{item.name}</span>
+            <span className="text-[12px] opacity-70 truncate">工号: {item.employeeNumber}</span>
           </div>
         </div>
-      )
+      ),
     },
     {
-      key: 'department',
-      label: '院系',
-      width: 'w-[30%]',
-      render: (item) => (
-        <span className="text-[14px]">{item.department}</span>
-      )
+      key: 'collegeName',
+      label: '所属学院',
+      width: 'w-[28%]',
+      render: (item) => <span className="text-[14px] truncate">{item.collegeName}</span>,
     },
     {
-      key: 'caseload',
-      label: '个案量',
+      key: 'assignedStudentCount',
+      label: '负责学生',
       width: 'flex-1',
       render: (item) => (
-        <div className="flex flex-col">
-          <span className="text-[14px] font-medium">{item.activeCaseload} 个活跃转诊</span>
-          <div className="w-24 h-1.5 bg-[var(--md-sys-color-surface-container-highest)] rounded-full mt-1.5 overflow-hidden">
-             <div
-               className="h-full bg-[var(--md-sys-color-primary)] opacity-60"
-               style={{ width: `${Math.min(100, (item.activeCaseload / 25) * 100)}%` }}
-             ></div>
-          </div>
-        </div>
-      )
+        <span className="text-[14px] font-medium">{item.assignedStudentCount} 名负责学生</span>
+      ),
     },
     {
       key: 'status',
-      label: '状态',
+      label: '账号状态',
       width: 'w-[120px]',
-      render: (item, isSelected) => {
-        const isActive = item.status === 'Active';
-        const dotColor = isActive
-          ? 'bg-[var(--md-sys-color-primary-container)]'
-          : 'bg-[var(--md-sys-color-surface-container-highest)]';
-        const label = item.status === 'Active' ? '活跃' : item.status === 'Inactive' ? '非活跃' : '暂停';
-        return (
-          <StatusBadge
-            dotColorClass={dotColor}
-            label={label}
-            isSelected={isSelected}
-          />
-        );
-      }
-    }
+      render: (item, isSelected) => (
+        <StatusBadge
+          dotColorClass={STATUS_DOTS[item.status] || STATUS_DOTS.DISABLED}
+          label={STATUS_LABELS[item.status] || item.status}
+          isSelected={isSelected}
+        />
+      ),
+    },
   ];
 
   return (
     <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
-      <div className="px-6 mb-2 shrink-0 z-10 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4">
-        <h2 className="text-[22px] font-normal text-[var(--md-sys-color-on-surface)]">咨询师登记表</h2>
-        <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)]">管理人员授权与工作负荷分配</p>
+      <div className="px-6 mb-2 shrink-0 z-10 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4 flex flex-col gap-3">
+        <div>
+          <h2 className="text-[22px] font-normal text-[var(--md-sys-color-on-surface)]">教师与导师名录</h2>
+          <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)]">
+            查看教师详情并分配或调整负责学生
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <FilterChipSet
+            className="flex flex-wrap items-center gap-2 relative z-20"
+            chips={[{ label: '状态', options: ['已启用', '待审核', '已禁用'] }]}
+            initialFilters={activeFilters}
+            onFilterChange={setActiveFilters}
+          />
+          <div className="w-full sm:w-72">
+            {/* @ts-ignore */}
+            <md-outlined-text-field
+              class="w-full"
+              label="搜索教师"
+              placeholder="输入姓名、工号或学院"
+              value={searchQuery}
+              onInput={(e: React.FormEvent<HTMLElement>) => {
+                setSearchQuery((e.target as HTMLInputElement).value ?? '');
+              }}
+            >
+              {/* @ts-ignore */}
+              <md-icon slot="leading-icon">search</md-icon>
+              {/* @ts-ignore */}
+            </md-outlined-text-field>
+          </div>
+        </div>
       </div>
-      <div className="flex-1 overflow-hidden mt-2 flex flex-col min-h-0 relative">
-        <DataTable 
-          columns={columns} 
-          data={counselors} 
-          onRowClick={onStaffSelect} 
-          selectedId={selectedStaffId} 
-        />
+
+      <div className="flex-1 overflow-hidden mt-1 flex flex-col min-h-0 relative">
+        {isLoading && teachers.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
+            {/* @ts-ignore */}
+            <md-circular-progress indeterminate></md-circular-progress>
+          </div>
+        ) : isError && teachers.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-3 p-6 text-center">
+            <span className="material-symbols-outlined text-[40px] text-[var(--md-sys-color-error)]">
+              error_outline
+            </span>
+            <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)]">
+              无法加载教师列表，请检查网络或权限后重试
+            </p>
+            <SecondaryButton label="重试" icon="refresh" noCollapse onClick={() => refetch()} />
+          </div>
+        ) : filteredTeachers.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-2 p-6 text-center text-[var(--md-sys-color-on-surface-variant)]">
+            <span className="material-symbols-outlined text-[40px] opacity-60">engineering</span>
+            <p className="text-[14px]">暂无符合条件的教师记录</p>
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={filteredTeachers}
+            onRowClick={onStaffSelect}
+            selectedId={selectedStaffId}
+          />
+        )}
       </div>
     </div>
   );

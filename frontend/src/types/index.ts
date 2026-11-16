@@ -132,6 +132,8 @@ export interface Student {
   scidDiagnosis?: string;
   riskFlags?: { label: string; value: boolean; severity: 'high' | 'medium' | 'none' }[];
   demographics?: DemographicsDto;
+  assignedTeacherId?: number | null;
+  assignedTeacherName?: string | null;
   psychometrics?: {
     scores: { date: string; value: number }[];
     radarData: { subject: string; A: number; fullMark: number }[];

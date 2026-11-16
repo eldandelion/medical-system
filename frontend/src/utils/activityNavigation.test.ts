@@ -241,5 +241,23 @@ describe('activityNavigation', () => {
 
       expect(resolveActivityNavigation(activity, 'trial-admin').tab).toBe('Staff');
     });
+
+    it('routes STUDENT_ASSIGNED_TEACHER notification to Students tab with studentId', () => {
+      const activity: DashboardActivityDto = {
+        id: 'notif-assign-1',
+        type: 'SYSTEM_NOTIFICATION',
+        timestamp: '2026-11-16T10:00:00Z',
+        referenceId: 601,
+        messageCode: 'STUDENT_ASSIGNED_TEACHER',
+        payload: { studentName: '林小夕', studentNumber: '20250001', assignerName: '王主任' },
+        actionTargetId: 55,
+        actionType: 'VIEW_STUDENT',
+      };
+
+      const result = resolveActivityNavigation(activity, 'teacher');
+      expect(result.tab).toBe('Students');
+      expect(result.entityId).toBe(55);
+      expect(result.viewStudentId).toBe(55);
+    });
   });
 });

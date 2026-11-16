@@ -18,6 +18,7 @@ const getNotificationTitle = (notification: NotificationDto) => {
   if (notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_HC' || notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_TEACHER') return '高危心理测评预警';
   if (notification.messageCode === 'ASSESSMENT_ASSIGNED_STUDENT') return '新测评任务提醒';
   if (notification.messageCode === 'ASSESSMENT_COMPLETED_TEACHER') return '学生已完成测评';
+  if (notification.messageCode === 'STUDENT_ASSIGNED_TEACHER') return '学生分配通知';
   if (notification.messageCode === 'REFERRAL_INITIATED') return '转诊申请已发起';
   if (notification.messageCode === 'REFERRAL_STATUS_CHANGED') return '转诊状态更新';
   if (notification.messageCode === 'APPOINTMENT_SCHEDULED') return '就诊预约已确认';
@@ -44,6 +45,7 @@ const getNotificationIcon = (notification: NotificationDto) => {
   if (notification.actionType === 'CREATE_APPOINTMENT') return 'edit_calendar';
   if (notification.actionType === 'APPROVE_FEEDBACK') return 'fact_check';
   if (notification.messageCode === 'REFERRAL_CREATED_FOR_STUDENT_TEACHER') return 'assignment_ind';
+  if (notification.messageCode === 'STUDENT_ASSIGNED_TEACHER') return 'person_add';
   if (notification.messageCode.includes('SUBMITTED')) return 'send';
   if (notification.messageCode.includes('APPROVED')) return 'check_circle';
   if (notification.messageCode.includes('ASSIGNED')) return 'local_hospital';

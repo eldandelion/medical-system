@@ -262,7 +262,8 @@ class StudentImportService(
         val majorEntity = majorJpaRepository.findByName(row.major)
             ?: error("Major '${row.major}' not found during commit")
 
-        val teacherEntity = row.teacherEmployeeNumber?.let {
+        val teacherNumber = row.teacherEmployeeNumber?.trim()?.takeIf { it.isNotEmpty() }
+        val teacherEntity = teacherNumber?.let {
             teacherRepository.findByEmployeeNumber(it)
         }
 
@@ -283,7 +284,9 @@ class StudentImportService(
         if (degreeLevelEntity != null) {
             existingStudent.degreeLevel = degreeLevelEntity
         }
-        existingStudent.assignedTeacher = teacherEntity
+        if (teacherEntity != null) {
+            existingStudent.assignedTeacher = teacherEntity
+        }
 
         val current = existingStudent.demographics ?: StudentDemographicsEntity()
         existingStudent.demographics = current.copy(

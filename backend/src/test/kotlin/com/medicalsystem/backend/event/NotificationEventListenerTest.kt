@@ -78,4 +78,37 @@ class NotificationEventListenerTest {
         verify(notificationService).saveNotification(mockNotifications[0])
         verify(notificationService).saveNotification(mockNotifications[1])
     }
+
+    @Test
+    fun `handleStudentAssignedToTeacher saves VIEW_STUDENT notification for target teacher`() {
+        val event = StudentAssignedToTeacherEvent(
+            studentId = 101L,
+            studentName = "林小夕",
+            studentNumber = "20250001",
+            teacherId = 201L,
+            previousTeacherId = null,
+            assignerName = "张主任"
+        )
+
+        listener.handleStudentAssignedToTeacher(event)
+
+        val captor = org.mockito.kotlin.argumentCaptor<Notification>()
+        verify(notificationService).saveNotification(captor.capture())
+        val saved = captor.firstValue
+        org.junit.jupiter.api.Assertions.assertEquals(201L, saved.userId)
+        org.junit.jupiter.api.Assertions.assertEquals(
+            com.medicalsystem.backend.model.NotificationMessageCode.STUDENT_ASSIGNED_TEACHER,
+            saved.messageCode
+        )
+        org.junit.jupiter.api.Assertions.assertEquals(
+            com.medicalsystem.backend.model.NotificationActionType.VIEW_STUDENT,
+            saved.actionType
+        )
+        org.junit.jupiter.api.Assertions.assertEquals(101L, saved.actionTargetId)
+        org.junit.jupiter.api.Assertions.assertTrue(saved.isActionAvailable)
+        org.junit.jupiter.api.Assertions.assertEquals("101", saved.payload["studentId"])
+        org.junit.jupiter.api.Assertions.assertEquals("林小夕", saved.payload["studentName"])
+        org.junit.jupiter.api.Assertions.assertEquals("20250001", saved.payload["studentNumber"])
+        org.junit.jupiter.api.Assertions.assertEquals("张主任", saved.payload["assignerName"])
+    }
 }

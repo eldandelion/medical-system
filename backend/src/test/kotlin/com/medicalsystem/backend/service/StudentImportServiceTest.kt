@@ -261,4 +261,97 @@ class StudentImportServiceTest {
             service.commitImport(request, counsellorUser)
         }
     }
+
+    @Test
+    fun `commitImport with overwriteDuplicates preserves existing assignedTeacher when teacherEmployeeNumber is blank`() {
+        val existingStudent = StudentEntity(
+            id = 50L,
+            studentNumber = "S2023050",
+            name = "李明",
+            major = majorEntity,
+            enrollmentDate = LocalDate.of(2023, 9, 1),
+            assignedTeacher = teacherEntity
+        )
+        val duplicateRow = StudentImportRowDto(
+            rowNumber = 2,
+            studentNumber = "S2023050",
+            name = "李明",
+            major = "计算机科学",
+            enrollmentDate = LocalDate.of(2023, 9, 1),
+            idCardNumber = "110101200401011237",
+            gender = "MALE",
+            ethnicity = "汉族",
+            contactNumber = null,
+            email = null,
+            homeAddress = "新地址",
+            emergencyContactName = null,
+            emergencyContactPhone = null,
+            teacherEmployeeNumber = "   ",
+            status = StudentImportStatus.DUPLICATE,
+            errors = emptyList()
+        )
+
+        whenever(validator.validateRows(any(), any(), any(), any(), any(), any()))
+            .thenReturn(listOf(duplicateRow))
+        whenever(studentJpaRepository.findByStudentNumber("S2023050")).thenReturn(existingStudent)
+        whenever(majorJpaRepository.findByName("计算机科学")).thenReturn(majorEntity)
+        whenever(ethnicityJpaRepository.findByName("汉族")).thenReturn(Optional.of(ethnicityEntity))
+        whenever(studentJpaRepository.save(any<StudentEntity>())).thenAnswer { it.arguments[0] as StudentEntity }
+
+        val result = service.commitImport(
+            StudentImportCommitRequestDto(rows = listOf(duplicateRow), overwriteDuplicates = true),
+            adminUser
+        )
+
+        assertEquals(1, result.updatedCount)
+        assertEquals(teacherEntity, existingStudent.assignedTeacher)
+        verify(teacherRepository, never()).findByEmployeeNumber(any())
+    }
+
+    @Test
+    fun `commitImport with overwriteDuplicates updates assignedTeacher when teacherEmployeeNumber is provided`() {
+        val otherTeacher = TeacherEntity(userId = 2L, employeeNumber = "EMP-00002", college = college)
+        val existingStudent = StudentEntity(
+            id = 51L,
+            studentNumber = "S2023051",
+            name = "王芳",
+            major = majorEntity,
+            enrollmentDate = LocalDate.of(2023, 9, 1),
+            assignedTeacher = teacherEntity
+        )
+        val duplicateRow = StudentImportRowDto(
+            rowNumber = 2,
+            studentNumber = "S2023051",
+            name = "王芳",
+            major = "计算机科学",
+            enrollmentDate = LocalDate.of(2023, 9, 1),
+            idCardNumber = "110101200401011238",
+            gender = "FEMALE",
+            ethnicity = "汉族",
+            contactNumber = null,
+            email = null,
+            homeAddress = null,
+            emergencyContactName = null,
+            emergencyContactPhone = null,
+            teacherEmployeeNumber = "EMP-00002",
+            status = StudentImportStatus.DUPLICATE,
+            errors = emptyList()
+        )
+
+        whenever(validator.validateRows(any(), any(), any(), any(), any(), any()))
+            .thenReturn(listOf(duplicateRow))
+        whenever(studentJpaRepository.findByStudentNumber("S2023051")).thenReturn(existingStudent)
+        whenever(majorJpaRepository.findByName("计算机科学")).thenReturn(majorEntity)
+        whenever(ethnicityJpaRepository.findByName("汉族")).thenReturn(Optional.of(ethnicityEntity))
+        whenever(teacherRepository.findByEmployeeNumber("EMP-00002")).thenReturn(otherTeacher)
+        whenever(studentJpaRepository.save(any<StudentEntity>())).thenAnswer { it.arguments[0] as StudentEntity }
+
+        val result = service.commitImport(
+            StudentImportCommitRequestDto(rows = listOf(duplicateRow), overwriteDuplicates = true),
+            adminUser
+        )
+
+        assertEquals(1, result.updatedCount)
+        assertEquals(otherTeacher, existingStudent.assignedTeacher)
+    }
 }

@@ -5,6 +5,7 @@ import { roleTranslations } from '../../utils/roleTranslations';
 import { DetailsSection, ScrollableDetailsLayout } from '../common/DetailsPanel';
 import { GroupedInfoList } from '../common/GroupedInfoList';
 import { UserGovernanceFooter } from './UserGovernanceFooter';
+import { TeacherCaseloadSection } from '../staff/TeacherCaseloadSection';
 import { useAuth } from '../../contexts/AuthContext';
 import { fetchAdminUserDetails } from '../../api/admin';
 
@@ -240,6 +241,14 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
             ]}
           />
         </DetailsSection>
+
+        {user.role === 'TEACHER' && (
+          <TeacherCaseloadSection
+            teacherId={user.id}
+            teacherName={user.name}
+            teacherStatus={user.status}
+          />
+        )}
 
         {user.deletedAt && (
           <div className="bg-[var(--md-sys-color-error-container)]/50 p-4 rounded-2xl border border-[var(--md-sys-color-error)]/30 text-xs text-[var(--md-sys-color-on-error-container)]">

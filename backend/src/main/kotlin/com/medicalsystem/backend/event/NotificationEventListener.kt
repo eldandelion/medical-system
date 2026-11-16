@@ -49,4 +49,23 @@ class NotificationEventListener(
             )
         }
     }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    fun handleStudentAssignedToTeacher(event: StudentAssignedToTeacherEvent) {
+        val notification = com.medicalsystem.backend.model.Notification(
+            userId = event.teacherId,
+            messageCode = NotificationMessageCode.STUDENT_ASSIGNED_TEACHER,
+            payload = mapOf(
+                "studentId" to event.studentId.toString(),
+                "studentName" to event.studentName,
+                "studentNumber" to event.studentNumber,
+                "assignerName" to event.assignerName
+            ),
+            actionType = NotificationActionType.VIEW_STUDENT,
+            actionTargetId = event.studentId,
+            isActionAvailable = true
+        )
+        notificationService.saveNotification(notification)
+    }
 }

@@ -27,7 +27,7 @@ import { useCreationOverlay } from '../contexts/CreationContext';
 import { ReferralCreationForm } from '../components/records/ReferralCreationForm';
 import { TertiaryFab } from '../components/common/Buttons';
 import { queryClient } from '../utils/queryClient';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTeacherProfileSummary } from '../hooks/useProfileSummary';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '../contexts/NavigationContext';
@@ -70,6 +70,7 @@ export function TeacherPage() {
   const { unreadCount } = useNotifications(session?.token);
   const { lastEvent, navigateToTab } = useNavigation();
   const { showSnackbar } = useSnackbar();
+  const activeQueryClient = useQueryClient();
 
   React.useEffect(() => {
     if (!lastEvent) return;
@@ -78,6 +79,9 @@ export function TeacherPage() {
     );
     if (tabMatch) {
       setActivePage(tabMatch as TeacherPageName);
+      if (tabMatch === TeacherTabs.STUDENTS) {
+        activeQueryClient.invalidateQueries({ queryKey: ['/api/students'] });
+      }
       
       if (lastEvent.entityId) {
         let isMounted = true;
@@ -92,7 +96,7 @@ export function TeacherPage() {
             
             if (endpoint) {
               const queryKey = [endpoint, lastEvent.entityId, 'details'];
-              const data = await queryClient.fetchQuery<Record<string, unknown>>({
+              const data = await activeQueryClient.fetchQuery<Record<string, unknown>>({
                 queryKey,
                 queryFn: async ({ signal }) => {
                   const url = `${import.meta.env.BASE_URL}${endpoint.substring(1)}`.replace('//api', '/api');
@@ -129,7 +133,7 @@ export function TeacherPage() {
         setSelectedItem(null);
       }
     }
-  }, [lastEvent, session?.token, showSnackbar]);
+  }, [lastEvent, session?.token, showSnackbar, activeQueryClient]);
 
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardResponseDto<TeacherMetricsDto>>({
     queryKey: ['/api/dashboard/teacher'],

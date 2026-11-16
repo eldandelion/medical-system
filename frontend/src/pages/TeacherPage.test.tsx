@@ -102,4 +102,84 @@ describe('TeacherPage High Risk Roster Removal', () => {
       expect(screen.getAllByText('学生管理').length).toBeGreaterThan(1);
     });
   });
+
+  it('invalidates /api/students and loads student details when navigating via STUDENT_ASSIGNED_TEACHER notification', async () => {
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/api/notifications')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([
+            {
+              id: 5,
+              userId: 2,
+              messageCode: 'STUDENT_ASSIGNED_TEACHER',
+              actionType: 'VIEW_STUDENT',
+              actionTargetId: 55,
+              payload: {
+                studentId: '55',
+                studentName: '林小夕',
+                studentNumber: '20250001',
+                assignerName: '王主任',
+              },
+              isRead: false,
+              createdAt: '2026-11-16T10:00:00Z',
+              isActionAvailable: true,
+            },
+          ]),
+        });
+      }
+      if (url.includes('/api/students/55')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            id: '55',
+            studentNumber: '20250001',
+            name: '林小夕',
+            major: '心理学',
+            status: 'Active',
+            riskLevel: 'LOW',
+          }),
+        });
+      }
+      if (url.includes('/api/students')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([
+            {
+              id: '55',
+              studentNumber: '20250001',
+              name: '林小夕',
+              major: '心理学',
+              status: 'Active',
+              riskLevel: 'LOW',
+            },
+          ]),
+        });
+      }
+      if (url.includes('/api/dashboard')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            metrics: { studentsCount: 1, notificationsCount: 1, referralsCount: 0 },
+            activities: [],
+          }),
+        });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+    });
+
+    renderComponent();
+
+    const notifButtons = await screen.findAllByText('通知中心');
+    fireEvent.click(notifButtons[0]);
+
+    const viewBtn = await screen.findByText('查看学生');
+    fireEvent.click(viewBtn);
+
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['/api/students'] });
+      expect(screen.getAllByText('林小夕').length).toBeGreaterThan(0);
+    });
+  });
 });

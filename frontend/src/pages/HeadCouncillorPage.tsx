@@ -346,12 +346,12 @@ export function HeadCouncillorPage() {
               title={
                 assessmentsPanelProps
                   ? assessmentsPanelProps.title
-                  : selectedItem?.employeeId ? '人员详情' : (selectedItem?.name ? '学生详情' : (selectedItem?.type ? (REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type) : '转诊详情'))
+                  : (selectedItem?.employeeNumber || selectedItem?.employeeId) ? '教师详情' : (selectedItem?.name ? '学生详情' : (selectedItem?.type ? (REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type) : '转诊详情'))
               }
               subtitle={
                 assessmentsPanelProps
                   ? assessmentsPanelProps.subtitle
-                  : selectedItem?.studentNumber || (selectedItem?.studentId ? String(selectedItem.studentId) : '') || (selectedItem?.employeeId ? selectedItem?.department : '') || (selectedItem?.type ? REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type : '') || selectedItem?.major || selectedItem?.department || ''
+                  : selectedItem?.studentNumber || (selectedItem?.studentId ? String(selectedItem.studentId) : '') || selectedItem?.collegeName || (selectedItem?.employeeId ? selectedItem?.department : '') || (selectedItem?.type ? REFERRAL_TYPE_LABELS[selectedItem.type] || selectedItem.type : '') || selectedItem?.major || selectedItem?.department || ''
               }
               headerAvatar={
                 assessmentsPanelProps

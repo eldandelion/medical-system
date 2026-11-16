@@ -21,6 +21,7 @@ export function resolveActivityNavigation(
     actionType === 'VIEW_STUDENT' ||
     Boolean(messageCode?.startsWith('ASSESSMENT_HIGH_RISK_ALERT_')) ||
     messageCode === 'ASSESSMENT_COMPLETED_TEACHER' ||
+    messageCode === 'STUDENT_ASSIGNED_TEACHER' ||
     messageCode === 'STUDENT_PROFILE_UPDATED';
 
   const referralId = payload?.referralId ?? (isReferralAction ? actionTargetId ?? undefined : undefined);

@@ -7,6 +7,11 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 
+interface TeacherStudentCountProjection {
+    fun getTeacherId(): Long
+    fun getStudentCount(): Long
+}
+
 @Repository
 interface StudentJpaRepository : JpaRepository<StudentEntity, Long>, JpaSpecificationExecutor<StudentEntity> {
     fun existsByStudentNumber(studentNumber: String): Boolean
@@ -25,6 +30,19 @@ interface StudentJpaRepository : JpaRepository<StudentEntity, Long>, JpaSpecific
     // raised LazyInitializationException (HTTP 500) for students with ethnicity set.
     @EntityGraph(attributePaths = ["major", "demographics.ethnicity"])
     fun findWithMajorById(id: Long): StudentEntity?
+
+    @EntityGraph(attributePaths = ["major", "demographics.ethnicity", "assignedTeacher"])
+    fun findByAssignedTeacherUserId(teacherId: Long): List<StudentEntity>
+
+    @Query(
+        """
+        SELECT s.assignedTeacher.userId AS teacherId, COUNT(s) AS studentCount
+        FROM StudentEntity s
+        WHERE s.assignedTeacher IS NOT NULL
+        GROUP BY s.assignedTeacher.userId
+        """
+    )
+    fun countAssignedStudentsGroupedByTeacher(): List<TeacherStudentCountProjection>
 
     @Query("SELECT s.studentNumber FROM StudentEntity s")
     fun findAllStudentNumbers(): Set<String>

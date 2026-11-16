@@ -64,7 +64,17 @@ class StudentMapper @Autowired constructor(
         )
     }
 
-    fun toDto(model: Student): StudentDto {
+    fun toDto(model: Student): StudentDto = toDto(model, null)
+
+    fun toDto(model: Student, teacherNameLookup: Map<Long, String>?): StudentDto {
+        val teacherId = model.assignedTeacherId
+        val teacherName = teacherId?.let { id ->
+            if (teacherNameLookup != null) {
+                teacherNameLookup[id]
+            } else {
+                userJpaRepository?.findById(id)?.orElse(null)?.name
+            }
+        }
         return StudentDto(
             id = model.id.toString(),
             studentNumber = model.studentNumber,
@@ -89,7 +99,9 @@ class StudentMapper @Autowired constructor(
                     emergencyContactPhone = it.emergencyContactPhone?.value,
                     school = it.school?.name
                 )
-            }
+            },
+            assignedTeacherId = teacherId,
+            assignedTeacherName = teacherName
         )
     }
 

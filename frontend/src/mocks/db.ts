@@ -4,5 +4,6 @@ export * from './data/dashboard';
 export * from './data/students';
 export * from './data/referrals';
 export * from './data/admin';
+export * from './data/teachers';
 export * from './data/references';
 export { generateTrackerSteps } from './data/referrals';

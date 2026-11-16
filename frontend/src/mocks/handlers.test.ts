@@ -147,3 +147,91 @@ describe('MSW Handlers - Admin Governance', () => {
   });
 });
 
+describe('MSW Handlers - Teachers & Student Assignment', () => {
+  it('should reject unauthorized roles with 403 on /api/teachers', async () => {
+    const res = await fetch('http://localhost:3000/api/teachers', {
+      headers: { Authorization: 'Bearer mock_teacher_token_zhang' }
+    });
+    expect(res.status).toBe(403);
+  });
+
+  it('should list teachers with assignedStudentCount and fetch teacher detail caseload', async () => {
+    // Ensure teacher 2 is ACTIVE (previous admin governance test sets id 2 to DISABLED)
+    await fetch('http://localhost:3000/api/admin/users/2/status', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'ACTIVE' })
+    });
+
+    const listRes = await fetch('http://localhost:3000/api/teachers', {
+      headers: { Authorization: 'Bearer mock_head_councillor_token_wang' }
+    });
+    expect(listRes.status).toBe(200);
+    const teachers = await listRes.json();
+    expect(Array.isArray(teachers)).toBe(true);
+    const teacher2 = teachers.find((t: any) => t.id === 2);
+    expect(teacher2).toBeDefined();
+    expect(teacher2.assignedStudentCount).toBeGreaterThanOrEqual(2);
+
+    const detailRes = await fetch('http://localhost:3000/api/teachers/2', {
+      headers: { Authorization: 'Bearer mock_admin_token' }
+    });
+    expect(detailRes.status).toBe(200);
+    const detail = await detailRes.json();
+    expect(detail.id).toBe(2);
+    expect(Array.isArray(detail.assignedStudents)).toBe(true);
+    expect(detail.assignedStudents.every((s: any) => s.assignedTeacherId === 2)).toBe(true);
+  });
+
+  it('should assign and unassign students and return 409 for inactive teacher or mismatched unassign', async () => {
+    await fetch('http://localhost:3000/api/admin/users/2/status', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'ACTIVE' })
+    });
+
+    // Assign student 3 (unassigned) to teacher 2
+    const assignRes = await fetch('http://localhost:3000/api/teachers/2/students', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer mock_head_councillor_token_wang'
+      },
+      body: JSON.stringify({ studentIds: [3] })
+    });
+    expect(assignRes.status).toBe(200);
+    const assignBody = await assignRes.json();
+    expect(assignBody.assignedCount).toBe(1);
+    expect(assignBody.assignedStudentIds).toEqual([3]);
+
+    // Pending teacher 9 should return 409 Conflict
+    const pendingRes = await fetch('http://localhost:3000/api/teachers/9/students', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer mock_admin_token'
+      },
+      body: JSON.stringify({ studentIds: [3] })
+    });
+    expect(pendingRes.status).toBe(409);
+
+    // Unassign student 3 from teacher 2
+    const unassignRes = await fetch('http://localhost:3000/api/teachers/2/students/3', {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer mock_admin_token' }
+    });
+    expect(unassignRes.status).toBe(200);
+    const unassignBody = await unassignRes.json();
+    expect(unassignBody.success).toBe(true);
+    expect(unassignBody.unassignedStudentId).toBe(3);
+
+    // Unassigning again returns 409 Conflict
+    const mismatchRes = await fetch('http://localhost:3000/api/teachers/2/students/3', {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer mock_admin_token' }
+    });
+    expect(mismatchRes.status).toBe(409);
+  });
+});
+
+

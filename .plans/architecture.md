@@ -1,75 +1,164 @@
-# Architecture Specification: Assessment Scale DetailsPanel Rework
+# Architecture & Domain Design: Assign Students to Teacher Workflow
 
-## 1. Human Intent Lock
-
-1. **Scope across Roles**: Rework the `测评量表` (`Assessments`) tab (`AssessmentCatalogManagementView`), present in `AdminPage`, `HeadCouncillorPage`, and `TeacherPage`, so clicking an assessment row in `量表列表` opens the right-hand `DetailsPanel` (inside `MainContent`) instead of `AssessmentScaleDetailsFullScreen`.
-2. **Panel Structure (2 Tabs)**:
-   - **概览 (`overview`)**: Scale metadata (`batteryCode`, `title`, `subtitle`, `description`, availability status, question count, estimated duration, section count) and a summary of all sections.
-   - **量表题目 (`questions`)**: Collapsible section cards (first section expanded by default, with expand-all / collapse-all toggle) displaying each question's number, text, type badge, and options/range/unit/placeholder preview, optimized for large scales (e.g., 377 questions).
-3. **Footer & Row Actions**:
-   - Keep inline table row quick-actions (`指派测评`, `隐藏量表` / `启用上线`) AND include these actions in the `DetailsPanel` footer (`ActionFooter`) across all three roles (`Admin`, `Head Councillor`, `Teacher`).
-   - Clicking `指派测评` opens `AssessmentAssignmentCreationForm` in `CreationContext` (disabled when scale is hidden).
-   - Clicking `隐藏量表` opens the existing confirmation dialog (`确认隐藏测评量表？` with compliance details); clicking `启用上线` immediately toggles availability.
-   - Toggling availability updates both the catalog query cache and the open `DetailsPanel` state immediately.
-4. **Fullscreen & Cleanup**:
-   - Use `DetailsPanel`'s built-in `open_in_full` -> `FullScreenView` expansion (tabs move to sidebar, `ActionFooter` portals to `#fullscreen-header-actions`).
-   - Remove the obsolete placeholder `AssessmentScaleDetailsFullScreen` and its test file.
+**Status**: Synthesized from Phase 1 System Architecture & DDD Consultation  
+**Source Intent**: [intent-lock.md](file:///Volumes/Files/Programming/medical-system/.plans/intent-lock.md)
 
 ---
 
-## 2. Backend & MSW API Contract Verification
+## 1. Bounded Contexts & Aggregate Design
 
-- **Endpoint**: `GET /api/assessments/catalog` (`AssessmentController.kt` -> `AssessmentService.getCatalog()` -> `AssessmentMapper.toCatalogItemDto()`) and MSW handler (`frontend/src/mocks/handlers.ts` -> `mockAssessmentCatalog` in `frontend/src/mocks/data/assessments.ts`).
-- **Payload (`AssessmentCatalogItemDto`)**: Both the Spring Boot backend and MSW mocks already return full `sections: AssessmentSectionDto[]` and nested `questions: AssessmentQuestionDto[]` on `/api/assessments/catalog`. No backend API additions or extra detail fetches are required.
-- **Availability Toggle**: `PUT /api/assessments/catalog/:batteryCode/availability` (`toggleScaleAvailability` in `frontend/src/api/admin.ts`, consumed by `useAssessmentCatalogManagement.ts`). No backend RBAC changes are required for this frontend rework; `useAssessmentCatalogManagement` surfaces any API error (such as 403) via `useSnackbar()`.
+1. **Identity & Access Management (`User` / `AccountStatus`)**
+   - `UserEntity` is the aggregate root owning identity (`id`, `name`, `email`, `phone`, `role`, `status: AccountStatus`).
+   - Role extensions (`TeacherEntity` with `@Id userId`, `employeeNumber`, `college`) map 1:1 to `UserEntity` via shared primary key (`user_id`).
+   - **Invariant**: `TeacherEntity` does not duplicate account lifecycle status; `ACTIVE` status is enforced by reading `UserEntity.status == AccountStatus.ACTIVE`.
+
+2. **Academic & Student Context (`Student` & `Teacher`)**
+   - **`Student` Aggregate Root**: Owns `assignedTeacherId: Long?` (`StudentEntity.assignedTeacher: TeacherEntity?`).
+   - **`Teacher` Aggregate Boundary**: Remains lightweight (`userId`, `employeeNumber`, `collegeId`) and MUST NOT hold a mutable `students` collection. A teacher's caseload (`assignedStudents`) is strictly a **read-model query projection** (`TeacherDetailDto`), avoiding transactional contention and large-graph rehydration.
+   - **Application Service (`TeacherService`)**: Coordinates multi-student assignment (`assignStudents`) and single-student unassignment (`unassignStudent`) inside `@Transactional` boundaries, enforcing invariants before persisting `StudentEntity` changes and emitting domain events.
+
+3. **Notification Context (`DomainEvent` -> `AFTER_COMMIT`)**
+   - Assignment emits `StudentAssignedToTeacherEvent` via `DomainEventPublisher` (matching `AssessmentEventListener` / `NotificationEventListener`).
+   - Listener (`NotificationEventListener` or `TeacherAssignmentEventListener` with `@Transactional(propagation = Propagation.REQUIRES_NEW)` and `@Async @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)`) persists one `Notification` per newly assigned/reassigned student only after the assignment transaction commits.
+   - **Language-Agnostic Backend**: Backend persists `messageCode = STUDENT_ASSIGNED_TEACHER(35)`, `actionType = VIEW_STUDENT`, `actionTargetId = studentId`, and structured `payload` (`studentId`, `studentName`, `studentNumber`, `assignerName`) — zero presentation strings in DTOs or notifications.
 
 ---
 
-## 3. Component Architecture & Data Flow
+## 2. Backend Technical Design & API Contracts
 
-```mermaid
-flowchart TD
-    Pages["AdminPage / HeadCouncillorPage / TeacherPage"] -->|"renders MainContent"| Main["MainContent (split view + resize + overlay)"]
-    Main -->|"children"| Catalog["AssessmentCatalogManagementView"]
-    Main -->|"sidePanel"| Panel["DetailsPanel (with built-in FullScreenView)"]
+### 2.1 Domain Event & Notification Enums
+- **`StudentAssignedToTeacherEvent`** (`com.medicalsystem.backend.event.StudentAssignedToTeacherEvent`):
+  ```kotlin
+  data class StudentAssignedToTeacherEvent(
+      val studentId: Long,
+      val studentName: String,
+      val studentNumber: String,
+      val teacherId: Long,
+      val previousTeacherId: Long? = null,
+      val assignerName: String,
+      override val occurredOn: LocalDateTime = LocalDateTime.now()
+  ) : DomainEvent
+  ```
+- **`NotificationMessageCode`** (`com.medicalsystem.backend.model.NotificationMessageCode`):
+  - Add `STUDENT_ASSIGNED_TEACHER(35)` after `ASSESSMENT_HIGH_RISK_ALERT_TEACHER(34)`.
+  - `NotificationActionType.VIEW_STUDENT(11)` already exists.
+- **`NotificationEventListener`** (or `TeacherAssignmentEventListener`):
+  - `@Async @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)` handles `StudentAssignedToTeacherEvent`:
+    - Calls `notificationService.saveNotification(Notification(userId = event.teacherId, messageCode = NotificationMessageCode.STUDENT_ASSIGNED_TEACHER, payload = mapOf("studentId" to event.studentId.toString(), "studentName" to event.studentName, "studentNumber" to event.studentNumber, "assignerName" to event.assignerName), actionType = NotificationActionType.VIEW_STUDENT, actionTargetId = event.studentId, isActionAvailable = true))`.
 
-    Catalog -->|"量表列表 row click"| OnScale["onScaleSelect(scale)"]
-    Catalog -->|"指派历史 row click"| OnStudent["onStudentSelect(student)"]
-    Catalog -->|"sub-tab change"| ClearSel["onScaleSelect(null) + onStudentSelect(null)"]
+### 2.2 DTO Contracts (`com.medicalsystem.backend.dto`)
+- **`TeacherSummaryDto`**:
+  - `id: Long`, `name: String`, `employeeNumber: String`, `collegeId: Long`, `collegeName: String`, `status: AccountStatus`, `phone: String?`, `email: String`, `assignedStudentCount: Int`
+- **`TeacherDetailDto`**:
+  - `id: Long`, `name: String`, `employeeNumber: String`, `collegeId: Long`, `collegeName: String`, `status: AccountStatus`, `phone: String?`, `email: String`, `assignedStudentCount: Int`, `assignedStudents: List<StudentDto>`
+- **`AssignTeacherStudentsRequest`**:
+  - `@field:NotEmpty(message = "studentIds must not be empty") val studentIds: List<Long>`
+- **`AssignTeacherStudentsResponse`** (no presentation message string):
+  - `assignedCount: Int`, `reassignedCount: Int`, `unchangedCount: Int`, `assignedStudentIds: List<Long>`
+- **`UnassignStudentResponse`**:
+  - `success: Boolean = true`, `unassignedStudentId: Long`
+- **`StudentDto` Enrichment**:
+  - Add `val assignedTeacherId: Long? = null` and `val assignedTeacherName: String? = null`.
 
-    Panel -->|"selectedItem has batteryCode"| ScaleView["AssessmentScaleDetailsView"]
-    Panel -->|"selectedItem is Student"| StudentView["StudentDetailsView"]
+### 2.3 Controller & Endpoints (`com.medicalsystem.backend.controller.TeacherController`)
+`@RestController @RequestMapping("/api/teachers")`
+- **Authorization Guard**: Every endpoint verifies `@CurrentUser user: User?` is non-null (`403 ForbiddenException` or `401`) and `user.role == UserRole.SYSTEM_ADMIN || user.role == UserRole.HEAD_COUNSELLOR` (else `403 ForbiddenException`).
+- **`GET /api/teachers`** (`?keyword=&status=` optional):
+  - Returns `List<TeacherSummaryDto>`.
+  - Joins/batch-loads `TeacherEntity`, `UserEntity`, `CollegeEntity` + single `GROUP BY` count query in `StudentJpaRepository` (`countAssignedStudentsGroupedByTeacher`) to eliminate $N+1$ queries.
+  - Filters out `AccountStatus.DELETED` by default unless explicitly requested, or supports `?status=` filtering + case-insensitive `keyword` matching (`name`, `employeeNumber`, `college.name`).
+- **`GET /api/teachers/{teacherId}`**:
+  - Returns `TeacherDetailDto` (`404 ResourceNotFoundException` if teacher/user missing).
+  - Fetches assigned students with `@EntityGraph(attributePaths = ["major", "demographics.ethnicity"])` (`findByAssignedTeacherUserId(teacherId)`) and maps to `List<StudentDto>`.
+- **`POST /api/teachers/{teacherId}/students`**:
+  - Request: `@Valid @RequestBody request: AssignTeacherStudentsRequest`.
+  - Guards:
+    1. Teacher & User exist (`404 ResourceNotFoundException`).
+    2. `teacherUser.status == AccountStatus.ACTIVE` (else `409 ConflictException("Target teacher account is not active")`).
+    3. Deduplicate `request.studentIds`; all requested students must exist (`404 ResourceNotFoundException`).
+  - Execution:
+    - If `student.assignedTeacher?.userId == teacherId`: increment `unchangedCount`, do NOT save or emit event.
+    - Otherwise: record `previousTeacherId = student.assignedTeacher?.userId`; if `null` increment `assignedCount`, else increment `reassignedCount`; set `student.assignedTeacher = teacherEntity`; collect `studentId` into `assignedStudentIds` and publish `StudentAssignedToTeacherEvent`.
+  - Returns `200 OK` with `AssignTeacherStudentsResponse`.
+- **`DELETE /api/teachers/{teacherId}/students/{studentId}`**:
+  - Guards:
+    1. Teacher exists (`404 ResourceNotFoundException`).
+    2. Student exists (`404 ResourceNotFoundException`).
+    3. `student.assignedTeacher?.userId == teacherId` (else `409 ConflictException`).
+  - Sets `student.assignedTeacher = null`, saves student, returns `200 OK` with `UnassignStudentResponse(success = true, unassignedStudentId = studentId)`. No notification emitted.
 
-    ScaleView -->|"tab: overview"| OverviewTab["AssessmentScaleOverviewTab"]
-    ScaleView -->|"tab: questions"| QuestionsTab["AssessmentScaleQuestionsTab"]
-    ScaleView -->|"footer"| Footer["ActionFooter (指派测评 / 隐藏量表 / 启用上线)"]
+### 2.4 Persistence & N+1 Avoidance
+- **`StudentJpaRepository`**:
+  - Add `interface TeacherStudentCountProjection { fun getTeacherId(): Long; fun getStudentCount(): Long }` and `@Query("SELECT s.assignedTeacher.userId AS teacherId, COUNT(s) AS studentCount FROM StudentEntity s WHERE s.assignedTeacher IS NOT NULL GROUP BY s.assignedTeacher.userId") fun countAssignedStudentsGroupedByTeacher(): List<TeacherStudentCountProjection>`.
+  - Add `@EntityGraph(attributePaths = ["major", "demographics.ethnicity", "assignedTeacher"]) fun findByAssignedTeacherUserId(teacherId: Long): List<StudentEntity>`.
+- **`StudentMapper` & `StudentService`**:
+  - `StudentMapper` populates `assignedTeacherId = model.assignedTeacherId` and `assignedTeacherName`.
+  - To avoid $N+1$ lookups on `GET /api/students`, add `toDto(model: Student, teacherNameLookup: Map<Long, String>?)` or batch-load teacher names in `StudentService.fetchAllStudents` via `userJpaRepository.findAllById(teacherIds)` while keeping single-item `toDto(model)` backward compatible for callers/tests.
+- **`StudentImportService.updateExistingStudent` Bug Fix**:
+  - Only update `existingStudent.assignedTeacher` when `!row.teacherEmployeeNumber.isNullOrBlank()`. When omitted/blank in CSV, preserve `existingStudent.assignedTeacher`.
 
-    Catalog -->|"shared hook"| LifecycleHook["useScaleLifecycleActions"]
-    ScaleView -->|"shared hook"| LifecycleHook
-    LifecycleHook --> ConfirmDialog["HideScaleConfirmationDialog"]
-```
+---
 
-### Key Architectural Decisions
+## 3. Frontend Architecture & UI Design
 
-1. **Native `MainContent` + `DetailsPanel` Integration**:
-   - Host pages (`AdminPage`, `HeadCouncillorPage`, `TeacherPage`) render `DetailsPanel` in `MainContent`'s `sidePanel` slot, preserving the sibling split-card layout, drag-to-resize handle, `< 1024px` overlay mode, and `open_in_full` expansion.
-   - For the `Assessments` page tab, `selectedItem` can be either an `AssessmentCatalogItemDto` (from `量表列表`) or a `Student` (from `指派历史`), distinguished via a strict type guard `isAssessmentScale(item)` (`Boolean(item && 'batteryCode' in item)`).
-   - Shared helper functions in `frontend/src/components/assessments/assessmentPanelConfig.tsx` compute the `DetailsPanel` props (`title`, `subtitle`, `icon`, `headerAvatar`, `tabs`, `badge`) and render the body (`AssessmentScaleDetailsView` vs `StudentDetailsView`) uniformly across `AdminPage`, `HeadCouncillorPage`, and `TeacherPage` without duplicating conditional JSX.
+### 3.1 Strict Conventions & Caching Rules
+- **MD3 Web Components Only**: Zero native `<input>`, `<textarea>`, or `<select>` elements. Use `<md-outlined-text-field>`, `<md-checkbox>`, `<md-filter-chip>`, `PrimaryButton`, `SecondaryButton`, `GenericDialog`, `FilterChipSet`.
+- **`apiFetch` Body Rule**: Pass plain object `body: { studentIds }` to `apiFetch` (it calls `JSON.stringify` automatically).
+- **Auth & Cache Rules**:
+  - Every `useQuery` includes `session?.token` in `queryKey`.
+  - Detail views use `placeholderData`, NEVER `initialData`.
+  - All interfaces strictly typed with zero `any`.
+  - Mutations (`assignStudentsToTeacher`, `unassignStudentFromTeacher`) invalidate:
+    - `['/api/teachers']`
+    - `['/api/admin/users']`
+    - `['/api/students']`
 
-2. **Live Cache Synchronization**:
-   - `AssessmentScaleDetailsView` reads the live scale entry from `useAssessmentCatalogManagement().catalog.find(s => s.batteryCode === scale.batteryCode) ?? scale`.
-   - When `toggleAvailability` succeeds (whether triggered from a table row icon or the panel footer), React Query invalidates `['assessments', 'catalog']`, immediately updating the status pill (`正常可用` / `已隐藏`), disabling/enabling `指派测评`, and toggling the footer button (`隐藏量表` / `启用上线`).
+### 3.2 API Client (`frontend/src/api/teachers.ts` & `frontend/src/api/students.ts` / `types/index.ts`)
+- Add `assignedTeacherId?: number | null` and `assignedTeacherName?: string | null` to `StudentDto` (`src/api/students.ts`) and `Student` (`src/types/index.ts`).
+- Create `frontend/src/api/teachers.ts` with `TeacherSummaryDto`, `TeacherDetailDto`, `AssignTeacherStudentsResponse`, `UnassignStudentResponse`, and functions `fetchTeachers`, `fetchTeacherDetails`, `assignStudentsToTeacher`, `unassignStudentFromTeacher`.
 
-3. **Shared Lifecycle Hook & Extracted Confirmation Dialog**:
-   - `useScaleLifecycleActions()` encapsulates `handleOpenAssign(scale)`, `requestToggleAvailability(scale)`, `pendingHideScale`, `cancelHideScale`, `confirmHideScale`, and `isToggling`.
-   - `HideScaleConfirmationDialog` extracts the `GenericDialog` (`确认隐藏测评量表？`) and its collapsible compliance consequences from `AssessmentCatalogManagementView` so both table rows and `AssessmentScaleDetailsView` reuse it without code duplication.
+### 3.3 Shared UI Components
+1. **`TeacherCaseloadSection.tsx`** (`frontend/src/components/staff/TeacherCaseloadSection.tsx`)
+   - Props: `teacherId: number`, `teacherName: string`, `teacherStatus?: AccountStatus`, `placeholderSummary?: TeacherSummaryDto`, `onTeacherClickAssignDisabledReason?: string`.
+   - Fetches `fetchTeacherDetails(teacherId, session?.token)` with `queryKey: ['/api/teachers', teacherId, session?.token]`, `placeholderData: ...`.
+   - Header: `"负责学生 (${count})"` + `SecondaryButton`/`PrimaryButton` `"分配学生"` (disabled when `status !== 'ACTIVE'`, with inline status hint `"仅已启用状态的教师可分配学生"`).
+   - Clicking `"分配学生"` invokes `openCreation('分配学生', <AssignStudentsBottomSheet teacher={teacherDetailOrSummary} onSuccess={...} onClose={closeCreation} />)`.
+   - Renders assigned student rows (Avatar, name, studentNumber, major, risk badge) + per-row unassign icon/button (`person_remove`).
+   - Clicking unassign opens `GenericDialog` confirmation -> calls `unassignStudentFromTeacher`, shows snackbar `"已取消学生分配"`, invalidates queries.
+   - Clean loading, error, and empty states.
 
-4. **Performance for Large Scales (377+ Questions)**:
-   - `AssessmentScaleQuestionsTab` initializes `expandedSectionIds` to `new Set(sections[0] ? [sections[0].id] : [])` and resets it when `scale.batteryCode` changes.
-   - Collapsed sections do not mount question DOM nodes (`{isExpanded && (...)}`), keeping initial render lightweight.
-   - `QuestionPreviewCard` is wrapped in `React.memo` and uses pure CSS/Tailwind styling with MD3 CSS variables (`--md-sys-color-*`).
+2. **`AssignStudentsBottomSheet.tsx`** (`frontend/src/components/staff/AssignStudentsBottomSheet.tsx`)
+   - Rendered inside `CreationOverlayProvider` bottom sheet (`STANDARD` bottom sheet, expandable to `FULLSCREEN`).
+   - Fetches students via `useQuery(['/api/students', session?.token], () => fetchStudents(session?.token))`.
+   - Search & Filters:
+     - `<md-outlined-text-field>` with 300ms debounced search matching `name`, `studentNumber`, `major`.
+     - `<md-filter-chip>` toggle: `"仅看未分配"` (selected `true` by default) / `"全部学生"`.
+   - List rows:
+     - `<md-checkbox>` multi-select (students already assigned to *this* `teacher.id` are disabled and badged `"已分配"`).
+     - Shows student name, `studentNumber`, `major`, risk badge, and current teacher badge (`"当前导师: ${s.assignedTeacherName}"` or `"未分配"`).
+   - Loading / empty / error states.
+   - Footer action bar with selected count + `SecondaryButton` `"取消"` + `PrimaryButton` `"确认分配 (${selectedIds.length})"`.
+   - **Reassignment Confirmation**: If any selected student has `assignedTeacherId != null && assignedTeacherId !== teacher.id`, opens a `GenericDialog` listing those students and their current teachers before calling `assignStudentsToTeacher`.
+   - On success: invalidates `['/api/teachers']`, `['/api/admin/users']`, `['/api/students']`, shows snackbar (`"成功分配 N 名学生"`), and closes bottom sheet.
 
-5. **MD3 & Code Quality Rules**:
-   - Strictly zero native `<input>`, `<textarea>`, or `<select>` elements.
-   - Uses `SecondaryTabs`, `ScrollableDetailsLayout`, `DetailsSection`, `GroupedInfoList`, `ActionFooter`, `PrimaryButton`, `OutlinedButton`, `TertiaryButton`, and `GenericDialog`.
-   - Defensive fallbacks (`sections ?? []`, `options ?? []`) throughout.
+### 3.4 Page & View Integrations
+- **`StaffManagementView.tsx`** & **`HeadCouncillorPage.tsx`**:
+  - Replace hardcoded `counselors` array with `useQuery(['/api/teachers', session?.token], () => fetchTeachers(session?.token))`.
+  - Render real columns (`教师姓名/工号`, `所属学院`, `账号状态`, `负责学生数`), search/status filtering, loading/error/empty states.
+- **`StaffDetailsView.tsx`**:
+  - Replace mock tabs (`audit`, `scopes`) and no-op footer buttons (`暂停访问`, `重置登录凭据`) with real teacher profile info (`工号`, `所属学院`, `联系电话`, `电子邮箱`, `账号状态`) + `TeacherCaseloadSection`.
+- **`UserDetailsView.tsx`**:
+  - When `user.role === 'TEACHER'`, render `TeacherCaseloadSection` (`teacherId={user.id}`, `teacherName={user.name}`, `teacherStatus={user.status}`) below the contact/affiliation `DetailsSection`s, keeping `UserGovernanceFooter` solely for account lifecycle actions.
+- **`StudentsView.tsx`**:
+  - Populate `'导师'` filter chip dynamically from `students.map(s => s.assignedTeacherName).filter(Boolean)` and filter `filteredStudents` when `activeFilters['导师']` is selected.
+
+### 3.5 Teacher Notification & Navigation Integration
+- **`frontend/src/utils/notificationText.ts`**: Add `STUDENT_ASSIGNED_TEACHER` message formatter using `studentName`, `studentNumber`, `assignerName`.
+- **`frontend/src/components/notifications/NotificationsView.tsx`**: Map `STUDENT_ASSIGNED_TEACHER` title (`"学生分配通知"`) and icon (`"person_add"`). `actionType === 'VIEW_STUDENT'` renders `"查看学生"` -> calls `onViewStudent(String(actionTargetId))`.
+- **`frontend/src/utils/activityMapper.ts` & `activityNavigation.ts`**: Map `STUDENT_ASSIGNED_TEACHER` / `VIEW_STUDENT` to `{ tab: 'Students', entityId }` so Teacher clicking notification or dashboard activity opens `TeacherTabs.STUDENTS` with that student selected.
+- **`TeacherPage.tsx`**: Ensure `lastEvent` navigation to `TeacherTabs.STUDENTS` invalidates `['/api/students']` or fetches `/api/students/${lastEvent.entityId}` cleanly so newly assigned students appear immediately in the list and details panel.
+
+### 3.6 MSW Mock Parity
+- Create `frontend/src/mocks/data/teachers.ts` backed by `mockUsersDb` / `mockStudentsDb` (consistent IDs with `admin.ts` & `students.ts`).
+- Update `frontend/src/mocks/data/students.ts` with `assignedTeacherId` & `assignedTeacherName`.
+- Add `/api/teachers`, `/api/teachers/:teacherId`, `/api/teachers/:teacherId/students`, `/api/teachers/:teacherId/students/:studentId` handlers in `frontend/src/mocks/handlers.ts` (enforcing `401`/`403` role check and `409` non-`ACTIVE` teacher check without masking `4xx` errors).

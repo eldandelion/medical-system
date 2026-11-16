@@ -267,6 +267,28 @@ describe('notificationText', () => {
         })
       ).toBe('您的学生 沈十八 已完成心理健康测评。');
     });
+
+    it('formats STUDENT_ASSIGNED_TEACHER with assignerName and studentNumber, and handles fallback', () => {
+      expect(
+        getNotificationText({
+          messageCode: 'STUDENT_ASSIGNED_TEACHER',
+          payload: {
+            studentName: '林小夕',
+            studentNumber: '20250001',
+            assignerName: '王主任',
+          },
+        })
+      ).toBe('王主任 已将学生 林小夕（20250001） 分配给您负责，请关注该学生的健康与学业动态。');
+
+      expect(
+        getNotificationText({
+          messageCode: 'STUDENT_ASSIGNED_TEACHER',
+          payload: {
+            studentName: '林小夕',
+          },
+        })
+      ).toBe('学生 林小夕 已分配给您负责，请关注该学生的健康与学业动态。');
+    });
   });
 
   describe('edge cases and fallbacks', () => {

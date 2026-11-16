@@ -15,6 +15,8 @@ import {
   mockHospitalDepartmentsDb,
   mockEthnicitiesDb,
   mockDegreeLevelsDb,
+  getMockTeachersSummary,
+  getMockTeacherDetail,
 } from './db';
 import {
   SchoolDto,
@@ -554,7 +556,7 @@ export const handlers = [
     // For teacher accounts, only return students assigned to the teacher
     if (authHeader.includes('teacher')) {
       filtered = filtered.filter(
-        (s) => ['1', '2'].includes(s.id) || s.major === '计算机科学' || s.major === '心理学'
+        (s) => s.assignedTeacherId === 2 || ['1', '2'].includes(s.id) || s.major === '计算机科学' || s.major === '心理学'
       );
     }
 
@@ -2445,6 +2447,207 @@ export const handlers = [
       students: matchedStudents,
       referrals: matchedReferrals,
       assessments: matchedAssessments,
+    });
+  }),
+
+  // === Teacher Management & Student Assignment Endpoints ===
+
+  http.get(api('/api/teachers'), async ({ request }) => {
+    await delay(MOCK_DELAY_MS);
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not fetch real teachers, falling back to mock", e);
+      }
+    }
+
+    const authHeader = request.headers.get('Authorization') || '';
+    if (
+      authHeader.includes('teacher') ||
+      authHeader.includes('student') ||
+      authHeader.includes('doctor') ||
+      authHeader.includes('trial_admin')
+    ) {
+      return HttpResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const url = new URL(request.url);
+    const keyword = url.searchParams.get('keyword') || undefined;
+    const status = url.searchParams.get('status') || undefined;
+    return HttpResponse.json(getMockTeachersSummary({ keyword, status }));
+  }),
+
+  http.get(api('/api/teachers/:teacherId'), async ({ request, params }) => {
+    await delay(MOCK_DELAY_MS);
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not fetch real teacher details, falling back to mock", e);
+      }
+    }
+
+    const authHeader = request.headers.get('Authorization') || '';
+    if (
+      authHeader.includes('teacher') ||
+      authHeader.includes('student') ||
+      authHeader.includes('doctor') ||
+      authHeader.includes('trial_admin')
+    ) {
+      return HttpResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const teacherId = Number(params.teacherId);
+    const detail = getMockTeacherDetail(teacherId);
+    if (!detail) {
+      return HttpResponse.json({ error: `Teacher with ID ${teacherId} not found` }, { status: 404 });
+    }
+    return HttpResponse.json(detail);
+  }),
+
+  http.post(api('/api/teachers/:teacherId/students'), async ({ request, params }) => {
+    await delay(MOCK_DELAY_MS);
+    const rawCloned = request.clone();
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(rawCloned));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not assign students on real backend, falling back to mock", e);
+      }
+    }
+
+    const authHeader = request.headers.get('Authorization') || '';
+    if (
+      authHeader.includes('teacher') ||
+      authHeader.includes('student') ||
+      authHeader.includes('doctor') ||
+      authHeader.includes('trial_admin')
+    ) {
+      return HttpResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const teacherId = Number(params.teacherId);
+    const teacherUser = mockAdminUsersDb.find((u) => u.id === teacherId && u.role === 'TEACHER');
+    if (!teacherUser) {
+      return HttpResponse.json({ error: `Teacher with ID ${teacherId} not found` }, { status: 404 });
+    }
+    if (teacherUser.status !== 'ACTIVE') {
+      return HttpResponse.json({ error: 'Target teacher account is not active' }, { status: 409 });
+    }
+
+    const body = (await request.json()) as { studentIds?: number[] };
+    const studentIds = Array.from(new Set(body.studentIds || []));
+    if (studentIds.length === 0) {
+      return HttpResponse.json({ error: 'studentIds must not be empty' }, { status: 400 });
+    }
+
+    let assignedCount = 0;
+    let reassignedCount = 0;
+    let unchangedCount = 0;
+    const assignedStudentIds: number[] = [];
+
+    for (const sid of studentIds) {
+      const student = mockStudentsDb.find((s) => Number(s.id) === sid);
+      if (!student) {
+        return HttpResponse.json({ error: `Student with ID ${sid} not found` }, { status: 404 });
+      }
+      if (student.assignedTeacherId === teacherId) {
+        unchangedCount++;
+        continue;
+      }
+      if (student.assignedTeacherId == null) {
+        assignedCount++;
+      } else {
+        reassignedCount++;
+      }
+      student.assignedTeacherId = teacherId;
+      student.assignedTeacherName = teacherUser.name;
+      assignedStudentIds.push(sid);
+    }
+
+    return HttpResponse.json({
+      assignedCount,
+      reassignedCount,
+      unchangedCount,
+      assignedStudentIds,
+    });
+  }),
+
+  http.delete(api('/api/teachers/:teacherId/students/:studentId'), async ({ request, params }) => {
+    await delay(MOCK_DELAY_MS);
+    if (import.meta.env.MODE !== 'test') {
+      try {
+        const { bypass } = await import('msw');
+        const res = await fetch(bypass(request));
+        if (res.ok) {
+          return HttpResponse.json(await res.json());
+        }
+        if (res.status >= 400 && res.status < 500) {
+          const errBody = await res.json().catch(() => ({}));
+          return HttpResponse.json(errBody, { status: res.status });
+        }
+      } catch (e) {
+        console.warn("Could not unassign student on real backend, falling back to mock", e);
+      }
+    }
+
+    const authHeader = request.headers.get('Authorization') || '';
+    if (
+      authHeader.includes('teacher') ||
+      authHeader.includes('student') ||
+      authHeader.includes('doctor') ||
+      authHeader.includes('trial_admin')
+    ) {
+      return HttpResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const teacherId = Number(params.teacherId);
+    const studentId = Number(params.studentId);
+    const teacherUser = mockAdminUsersDb.find((u) => u.id === teacherId && u.role === 'TEACHER');
+    if (!teacherUser) {
+      return HttpResponse.json({ error: `Teacher with ID ${teacherId} not found` }, { status: 404 });
+    }
+    const student = mockStudentsDb.find((s) => Number(s.id) === studentId);
+    if (!student) {
+      return HttpResponse.json({ error: `Student with ID ${studentId} not found` }, { status: 404 });
+    }
+    if (student.assignedTeacherId !== teacherId) {
+      return HttpResponse.json(
+        { error: `Student ${studentId} is not assigned to teacher ${teacherId}` },
+        { status: 409 }
+      );
+    }
+
+    student.assignedTeacherId = null;
+    student.assignedTeacherName = null;
+    return HttpResponse.json({
+      success: true,
+      unassignedStudentId: studentId,
     });
   }),
 ];

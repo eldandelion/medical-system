@@ -4,6 +4,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UserDetailsView } from './UserDetailsView';
 import { AdminUserDetailsDto } from '../../types/admin';
+import { SnackbarProvider } from '../../contexts/SnackbarContext';
+import { CreationOverlayProvider } from '../../contexts/CreationContext';
 
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({
@@ -41,6 +43,51 @@ describe('UserDetailsView Component', () => {
     });
 
     global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/api/teachers/2')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            id: 2,
+            name: '艾米丽·沃森',
+            employeeNumber: 'EMP-00001',
+            collegeId: 1,
+            collegeName: '医学院',
+            status: 'ACTIVE',
+            phone: '13800138002',
+            email: 'emily@univ.edu.cn',
+            assignedStudentCount: 1,
+            assignedStudents: [
+              {
+                id: '1',
+                studentNumber: '2021001',
+                name: '张伟',
+                major: '计算机科学',
+                status: 'Active',
+                riskLevel: 'MEDIUM',
+                assignedTeacherId: 2,
+                assignedTeacherName: '艾米丽·沃森',
+              },
+            ],
+          }),
+        });
+      }
+      if (url.includes('/api/teachers/9')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            id: 9,
+            name: '赵老师',
+            employeeNumber: 'EMP-00099',
+            collegeId: 2,
+            collegeName: '心理学院',
+            status: 'PENDING_APPROVAL',
+            phone: '13800138099',
+            email: 'zhao@univ.edu.cn',
+            assignedStudentCount: 0,
+            assignedStudents: [],
+          }),
+        });
+      }
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve({}),
@@ -55,7 +102,11 @@ describe('UserDetailsView Component', () => {
   const renderComponent = (user: AdminUserDetailsDto, activeTab = 'overview') => {
     return render(
       <QueryClientProvider client={queryClient}>
-        <UserDetailsView user={user} activeTab={activeTab} />
+        <SnackbarProvider>
+          <CreationOverlayProvider>
+            <UserDetailsView user={user} activeTab={activeTab} />
+          </CreationOverlayProvider>
+        </SnackbarProvider>
       </QueryClientProvider>
     );
   };
@@ -175,5 +226,63 @@ describe('UserDetailsView Component', () => {
 
     fireEvent.click(copyButtons[0]);
     expect(navigator.clipboard.writeText).toHaveBeenCalled();
+  });
+
+  it('renders TeacherCaseloadSection for TEACHER role and disables assign when non-ACTIVE', async () => {
+    const activeTeacher: AdminUserDetailsDto = {
+      id: 2,
+      name: '艾米丽·沃森',
+      email: 'emily@univ.edu.cn',
+      role: 'TEACHER',
+      status: 'ACTIVE',
+      employeeOrStudentId: 'EMP-00001',
+      departmentOrCollege: '医学院',
+    };
+
+    renderComponent(activeTeacher);
+
+    await waitFor(() => {
+      expect(screen.getByText('负责学生 (1)')).toBeDefined();
+      expect(screen.getByText('张伟')).toBeDefined();
+      expect(screen.getByText('分配学生')).toBeDefined();
+    });
+
+    cleanup();
+    queryClient.clear();
+
+    const pendingTeacher: AdminUserDetailsDto = {
+      id: 9,
+      name: '赵老师',
+      email: 'zhao@univ.edu.cn',
+      role: 'TEACHER',
+      status: 'PENDING_APPROVAL',
+      employeeOrStudentId: 'EMP-00099',
+      departmentOrCollege: '心理学院',
+    };
+
+    renderComponent(pendingTeacher);
+
+    await waitFor(() => {
+      expect(screen.getByText('仅已启用状态的教师可分配学生')).toBeDefined();
+    });
+    const assignBtn = screen.getByText('分配学生').closest('button, md-filled-button, md-outlined-button');
+    expect(assignBtn?.hasAttribute('disabled')).toBe(true);
+  });
+
+  it('does NOT render TeacherCaseloadSection for DOCTOR or SYSTEM_ADMIN roles', async () => {
+    const doctorUser: AdminUserDetailsDto = {
+      id: 5,
+      name: '李医生',
+      email: 'li@univ.edu.cn',
+      role: 'DOCTOR',
+      status: 'ACTIVE',
+      employeeOrStudentId: 'DOC-00001',
+      departmentOrCollege: '内科',
+      hospital: '中南大学湘雅医院',
+    };
+
+    renderComponent(doctorUser);
+    expect(screen.queryByText(/负责学生/)).toBeNull();
+    expect(screen.queryByText('分配学生')).toBeNull();
   });
 });

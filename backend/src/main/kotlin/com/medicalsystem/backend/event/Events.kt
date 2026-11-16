@@ -66,4 +66,14 @@ data class OtpChallengeIssuedEvent(
     override val occurredOn: LocalDateTime = LocalDateTime.now()
 ) : DomainEvent
 
+data class StudentAssignedToTeacherEvent(
+    val studentId: Long,
+    val studentName: String,
+    val studentNumber: String,
+    val teacherId: Long,
+    val previousTeacherId: Long? = null,
+    val assignerName: String,
+    override val occurredOn: LocalDateTime = LocalDateTime.now()
+) : DomainEvent
+
 

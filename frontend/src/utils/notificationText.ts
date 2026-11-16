@@ -86,6 +86,14 @@ export function getNotificationText(notification?: NotificationTextParams): stri
       return '您收到了一项新的心理健康测评任务，请及时前往完成测评。';
     case 'ASSESSMENT_COMPLETED_TEACHER':
       return `您的学生 ${studentName} 已完成心理健康测评。`;
+    case 'STUDENT_ASSIGNED_TEACHER': {
+      const assignerName = notification.payload?.assignerName;
+      const studentNumber = notification.payload?.studentNumber;
+      const studentInfo = studentNumber ? `${studentName}（${studentNumber}）` : studentName;
+      return assignerName
+        ? `${assignerName} 已将学生 ${studentInfo} 分配给您负责，请关注该学生的健康与学业动态。`
+        : `学生 ${studentInfo} 已分配给您负责，请关注该学生的健康与学业动态。`;
+    }
     default:
       return notification.messageCode.replace(/_/g, ' ');
   }

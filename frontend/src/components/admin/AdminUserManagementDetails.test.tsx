@@ -192,6 +192,34 @@ describe('AdminPage - User Management Dynamic Details View Integration', () => {
           json: () => Promise.resolve(mockTeacherDetails),
         });
       }
+      if (url.includes('/api/teachers/201')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            id: 201,
+            name: '李老师',
+            employeeNumber: 'TEA2001',
+            collegeId: 1,
+            collegeName: '心理咨询中心',
+            status: 'ACTIVE',
+            phone: '13800138201',
+            email: 'liteacher@university.edu.cn',
+            assignedStudentCount: 1,
+            assignedStudents: [
+              {
+                id: '101',
+                studentNumber: 'STU1001',
+                name: '学生张三',
+                major: '软件工程',
+                status: 'Active',
+                riskLevel: 'LOW',
+                assignedTeacherId: 201,
+                assignedTeacherName: '李老师',
+              },
+            ],
+          }),
+        });
+      }
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve({}),
@@ -280,5 +308,11 @@ describe('AdminPage - User Management Dynamic Details View Integration', () => {
     // Verify UserGovernanceFooter buttons are rendered in the footer
     expect(screen.getByText('禁用账号')).toBeDefined();
     expect(screen.getByText('注销账号')).toBeDefined();
+
+    // Verify TeacherCaseloadSection is rendered alongside governance footer
+    await waitFor(() => {
+      expect(screen.getByText('负责学生 (1)')).toBeDefined();
+      expect(screen.getByText('分配学生')).toBeDefined();
+    });
   });
 });

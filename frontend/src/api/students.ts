@@ -9,6 +9,8 @@ export interface StudentDto {
   degreeLevel?: string;
   status: 'Active' | 'Inactive';
   riskLevel?: 'HIGH' | 'MEDIUM' | 'LOW';
+  assignedTeacherId?: number | null;
+  assignedTeacherName?: string | null;
   demographics?: {
     gender?: string;
     age?: number;

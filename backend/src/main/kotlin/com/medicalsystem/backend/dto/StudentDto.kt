@@ -29,5 +29,7 @@ data class StudentDto(
     val status: String = "Active",
     
     @field:Valid
-    val demographics: DemographicsDto? = null
+    val demographics: DemographicsDto? = null,
+    val assignedTeacherId: Long? = null,
+    val assignedTeacherName: String? = null
 )

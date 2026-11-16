@@ -65,6 +65,9 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header, reset
       const target = riskMap[activeFilters['风险']] || activeFilters['风险'];
       list = list.filter((s) => s.riskLevel?.toUpperCase() === target.toUpperCase());
     }
+    if (activeFilters['导师'] && activeFilters['导师'] !== '全部') {
+      list = list.filter((s) => s.assignedTeacherName === activeFilters['导师']);
+    }
     return list;
   }, [students, searchQuery, activeFilters]);
 
@@ -136,7 +139,16 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header, reset
               },
               { label: '培养层次', options: ['本科', '硕士', '博士', '其他'] },
               { label: '风险', options: ['高', '中', '低'] },
-              { label: '导师', options: ['Dr. Watson', 'Dr. Smith', 'Prof. Miller'] }
+              {
+                label: '导师',
+                options: Array.from(
+                  new Set(
+                    students
+                      .map((s) => s.assignedTeacherName)
+                      .filter((name): name is string => Boolean(name))
+                  )
+                )
+              }
             ]}
             initialFilters={activeFilters}
             onFilterChange={setActiveFilters}

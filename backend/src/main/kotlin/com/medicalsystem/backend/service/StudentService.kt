@@ -24,13 +24,24 @@ class StudentService(
     private val healthProfileRepository: StudentHealthProfileRepository,
     private val eventPublisher: com.medicalsystem.backend.event.DomainEventPublisher,
     private val psychometricSummaryMapper: com.medicalsystem.backend.mapper.PsychometricSummaryMapper,
-    private val studentHealthProfileJpaRepository: com.medicalsystem.backend.repository.StudentHealthProfileJpaRepository
+    private val studentHealthProfileJpaRepository: com.medicalsystem.backend.repository.StudentHealthProfileJpaRepository,
+    private val userJpaRepository: com.medicalsystem.backend.repository.UserJpaRepository
 ) {
     private val logger = LoggerFactory.getLogger(StudentService::class.java)
 
     fun fetchAllStudents(user: com.medicalsystem.backend.model.User): List<StudentDto> {
         val students = studentRepository.findVisibleStudentsFor(user)
-        return students.map { studentMapper.toDto(it) }
+        val teacherIds = students.mapNotNull { it.assignedTeacherId }.toSet()
+        if (teacherIds.isEmpty()) {
+            return students.map { studentMapper.toDto(it) }
+        }
+        val teacherNameLookup = resolveTeacherNames(teacherIds)
+        return students.map { studentMapper.toDto(it, teacherNameLookup) }
+    }
+
+    private fun resolveTeacherNames(teacherIds: Set<Long>): Map<Long, String> {
+        if (teacherIds.isEmpty()) return emptyMap()
+        return userJpaRepository.findAllById(teacherIds).associate { it.id to it.name }
     }
 
     fun fetchStudentDetails(id: Long, user: com.medicalsystem.backend.model.User): StudentDto {

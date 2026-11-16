@@ -49,7 +49,9 @@ describe('StudentsView Component', () => {
               major: '计算机科学',
               year: 'FRESHMAN',
               status: 'Active',
-              riskLevel: 'LOW'
+              riskLevel: 'LOW',
+              assignedTeacherId: 2,
+              assignedTeacherName: '艾米丽·沃森'
             },
             {
               id: '2',
@@ -58,7 +60,9 @@ describe('StudentsView Component', () => {
               major: '心理学',
               year: 'SOPHOMORE',
               status: 'Active',
-              riskLevel: 'MEDIUM'
+              riskLevel: 'MEDIUM',
+              assignedTeacherId: 9,
+              assignedTeacherName: '张导师'
             }
           ])
         });
@@ -207,6 +211,30 @@ describe('StudentsView Component', () => {
 
     await waitFor(() => {
       expect((input as HTMLInputElement).value).toBe('');
+    });
+  });
+
+  it('populates 导师 filter chip dynamically from assignedTeacherName and filters students', async () => {
+    mockUseAuth.mockReturnValue({
+      session: { role: 'admin', token: 'mock-admin-token' }
+    });
+
+    renderWithProviders(<StudentsView />);
+
+    await waitFor(() => {
+      expect(screen.getByText('张三')).toBeDefined();
+      expect(screen.getByText('李四')).toBeDefined();
+    });
+
+    expect(screen.queryByText('Dr. Watson')).toBeNull();
+    expect(screen.getByText('艾米丽·沃森')).toBeDefined();
+    expect(screen.getByText('张导师')).toBeDefined();
+
+    fireEvent.click(screen.getByText('艾米丽·沃森'));
+
+    await waitFor(() => {
+      expect(screen.getByText('张三')).toBeDefined();
+      expect(screen.queryByText('李四')).toBeNull();
     });
   });
 });

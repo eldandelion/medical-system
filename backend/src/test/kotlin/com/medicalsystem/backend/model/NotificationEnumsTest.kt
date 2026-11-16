@@ -17,6 +17,16 @@ class NotificationEnumsTest {
     }
 
     @Test
+    fun testNotificationMessageCodeStudentAssignedTeacher() {
+        val code = NotificationMessageCode.STUDENT_ASSIGNED_TEACHER
+        assertEquals(35, code.code)
+        assertEquals(code, NotificationMessageCode.fromCode(35))
+
+        val allCodes = NotificationMessageCode.entries.map { it.code }
+        assertEquals(allCodes.size, allCodes.toSet().size)
+    }
+
+    @Test
     fun testNotificationActionTypeViewStudent() {
         val action = NotificationActionType.VIEW_STUDENT
         assertEquals(11, action.code)

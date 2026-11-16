@@ -85,6 +85,22 @@ const mockNotifications = [
     createdAt: '2026-10-25T09:20:00Z',
     isActionAvailable: true,
   },
+  {
+    id: 5,
+    userId: 103,
+    messageCode: 'STUDENT_ASSIGNED_TEACHER',
+    actionType: 'VIEW_STUDENT',
+    actionTargetId: 55,
+    payload: {
+      studentId: '55',
+      studentName: '林小夕',
+      studentNumber: '20250001',
+      assignerName: '王主任',
+    },
+    isRead: false,
+    createdAt: '2026-10-25T09:25:00Z',
+    isActionAvailable: true,
+  },
 ];
 
 vi.mock('../../hooks/useNotifications', () => ({
@@ -155,5 +171,20 @@ describe('NotificationsView Assessment Notifications', () => {
     // Check that李华 notification only has 查看学生 and not 发起转诊
     const createReferralBtns = screen.queryAllByText('发起转诊');
     expect(createReferralBtns.length).toBe(1); // Only for 陈明
+  });
+
+  it('renders 学生分配通知 title, person_add icon, body, and routes VIEW_STUDENT to onViewStudent', () => {
+    const onViewStudentMock = vi.fn();
+    render(<NotificationsView onViewStudent={onViewStudentMock} />);
+
+    expect(screen.getByText('学生分配通知')).toBeDefined();
+    expect(screen.getByText('person_add')).toBeDefined();
+    expect(
+      screen.getAllByText((_, el) => el?.textContent?.includes('王主任 已将学生 林小夕（20250001） 分配给您负责') ?? false).length
+    ).toBeGreaterThan(0);
+
+    const viewStudentBtns = screen.getAllByText('查看学生');
+    fireEvent.click(viewStudentBtns[viewStudentBtns.length - 1]);
+    expect(onViewStudentMock).toHaveBeenCalledWith('55');
   });
 });
