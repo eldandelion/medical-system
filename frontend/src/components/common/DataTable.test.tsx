@@ -75,4 +75,14 @@ describe('DataTable Component', () => {
     // Data should be absent
     expect(screen.queryByText('John Doe')).toBeNull();
   });
+
+  it('preserves full container width when minWidth is provided', () => {
+    const { container } = render(
+      <DataTable columns={mockColumns} data={mockData} minWidth="560px" />
+    );
+
+    const tableWrapper = container.querySelector('.w-max') as HTMLElement | null;
+    expect(tableWrapper).not.toBeNull();
+    expect(tableWrapper?.style.minWidth).toBe('max(100%, 560px)');
+  });
 });

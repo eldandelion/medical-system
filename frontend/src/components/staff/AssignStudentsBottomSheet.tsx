@@ -5,6 +5,7 @@ import { assignStudentsToTeacher, TeacherSummaryDto } from '../../api/teachers';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 import { AvatarBadge } from '../common/AvatarBadge';
+import { getGroupedItemCornerRadius } from '../common/GroupedInfoList';
 import { PrimaryButton, SecondaryButton } from '../common/Buttons';
 import { GenericDialog } from '../common/GenericDialog';
 import { RISK_LEVEL_LABELS, RISK_LEVEL_STYLES } from '../../config/styleConstants';
@@ -187,33 +188,35 @@ export function AssignStudentsBottomSheet({
             <SecondaryButton label="重试" icon="refresh" noCollapse onClick={() => refetch()} />
           </div>
         ) : filteredStudents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-2 text-center text-[var(--md-sys-color-on-surface-variant)]">
+          <div className="p-8 rounded-[20px] bg-[var(--md-sys-color-surface-container-low)] flex flex-col items-center justify-center gap-2 text-center text-[var(--md-sys-color-on-surface-variant)]">
             <span className="material-symbols-outlined text-[36px] opacity-60">person_search</span>
             <p className="text-[14px]">
               {unassignedOnly ? '暂无未分配学生，可切换至“全部学生”进行重新分配' : '未找到符合条件的学生'}
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-2">
-            {filteredStudents.map((student) => {
+          <div className="flex flex-col gap-[2px] w-full" role="list">
+            {filteredStudents.map((student, index) => {
               const numericId = Number(student.id);
               const isAssignedHere = student.assignedTeacherId === teacher.id;
               const isSelected = selectedIds.includes(numericId);
               const riskKey = student.riskLevel || 'LOW';
+              const cornerRadius = getGroupedItemCornerRadius(index, filteredStudents.length);
 
               return (
                 <div
                   key={student.id}
+                  role="listitem"
                   onClick={() => toggleStudent(student)}
-                  className={`flex items-center justify-between gap-3 p-3 rounded-xl border transition-colors ${
+                  className={`px-4 py-3.5 flex items-center justify-between gap-4 min-h-[56px] transition-colors ${cornerRadius} ${
                     isAssignedHere
-                      ? 'opacity-65 cursor-not-allowed border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)]'
+                      ? 'opacity-65 cursor-not-allowed bg-[var(--md-sys-color-surface-container-low)]'
                       : isSelected
-                        ? 'cursor-pointer border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-secondary-container)]/40'
-                        : 'cursor-pointer border-[var(--md-sys-color-outline-variant)] hover:bg-[var(--md-sys-color-surface-container-high)]'
+                        ? 'cursor-pointer bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                        : 'cursor-pointer bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container)]'
                   }`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
                     {/* @ts-ignore */}
                     <md-checkbox
                       tabIndex={-1}
@@ -223,10 +226,22 @@ export function AssignStudentsBottomSheet({
                     />
                     <AvatarBadge name={student.name} isSelected={isSelected} size="sm" />
                     <div className="flex flex-col min-w-0">
-                      <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)] truncate">
+                      <span
+                        className={`text-sm font-medium leading-snug truncate ${
+                          isSelected
+                            ? 'text-[var(--md-sys-color-on-secondary-container)]'
+                            : 'text-[var(--md-sys-color-on-surface)]'
+                        }`}
+                      >
                         {student.name}
                       </span>
-                      <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)] truncate">
+                      <span
+                        className={`text-xs mt-0.5 truncate font-normal ${
+                          isSelected
+                            ? 'text-[var(--md-sys-color-on-secondary-container)]/80'
+                            : 'text-[var(--md-sys-color-on-surface-variant)]'
+                        }`}
+                      >
                         {student.studentNumber || student.id} · {student.major}
                       </span>
                     </div>

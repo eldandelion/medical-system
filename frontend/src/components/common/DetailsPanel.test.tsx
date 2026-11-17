@@ -103,8 +103,8 @@ describe('DetailsPanel Component', () => {
   });
 
   describe('Scroll and Layout Components', () => {
-    it('renders ScrollableDetailsLayout with header and footer', () => {
-      render(
+    it('renders ScrollableDetailsLayout with header and footer without forcing min-h-[80vh] overflow', () => {
+      const { container } = render(
         <ScrollableDetailsLayout
           header={<div data-testid="layout-header">Header</div>}
           footer={<div data-testid="layout-footer">Footer</div>}
@@ -117,6 +117,7 @@ describe('DetailsPanel Component', () => {
       expect(screen.getByTestId('layout-header')).toBeDefined();
       expect(screen.getByTestId('layout-footer')).toBeDefined();
       expect(screen.getByText('Main Content')).toBeDefined();
+      expect(container.querySelector('.min-h-\\[80vh\\]')).toBeNull();
     });
   });
 

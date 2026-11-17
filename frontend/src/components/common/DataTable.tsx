@@ -29,7 +29,10 @@ export function DataTable<T extends { id?: string | number }>({
     <div className="w-full h-full flex flex-col min-h-0 relative overflow-hidden">
       {/* Scrollable container for table contents (both headers and rows scroll together horizontally) */}
       <div className="w-full flex-1 overflow-x-auto overflow-y-auto custom-scrollbar">
-        <div className="flex flex-col min-w-full w-max" style={minWidth ? { minWidth } : undefined}>
+        <div
+          className="flex flex-col min-w-full w-max"
+          style={minWidth ? { minWidth: `max(100%, ${minWidth})` } : undefined}
+        >
           {/* Table Headers */}
           <div className="flex shrink-0 items-center px-6 py-2.5 text-[14px] font-medium text-[var(--md-sys-color-on-surface-variant)] border-b border-[var(--md-sys-color-outline-variant)] border-opacity-30 bg-[var(--md-sys-color-surface)] z-10 sticky top-0 min-w-full w-full">
             {columns.map((col, idx) => (

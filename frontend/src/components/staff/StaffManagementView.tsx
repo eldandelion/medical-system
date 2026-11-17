@@ -7,6 +7,7 @@ import { DataTable, ColumnDefinition } from '../common/DataTable';
 import { StatusBadge } from '../common/StatusBadge';
 import { AvatarBadge } from '../common/AvatarBadge';
 import { FilterChipSet } from '../common/FilterChip';
+import { ExpandableSearchBar } from '../common/ExpandableSearchBar';
 import { SecondaryButton } from '../common/Buttons';
 
 interface StaffManagementViewProps {
@@ -117,7 +118,7 @@ export function StaffManagementView({
 
   return (
     <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
-      <div className="px-6 mb-2 shrink-0 z-10 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4 flex flex-col gap-3">
+      <div className="px-6 mb-2 shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4 flex flex-col gap-3">
         <div>
           <h2 className="text-[22px] font-normal text-[var(--md-sys-color-on-surface)]">教师与导师名录</h2>
           <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)]">
@@ -125,30 +126,18 @@ export function StaffManagementView({
           </p>
         </div>
 
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <FilterChipSet
-            className="flex flex-wrap items-center gap-2 relative z-20"
-            chips={[{ label: '状态', options: ['已启用', '待审核', '已禁用'] }]}
-            initialFilters={activeFilters}
-            onFilterChange={setActiveFilters}
+        <FilterChipSet
+          className="flex flex-wrap items-center gap-2 relative z-20"
+          chips={[{ label: '状态', options: ['已启用', '待审核', '已禁用'] }]}
+          initialFilters={activeFilters}
+          onFilterChange={setActiveFilters}
+        >
+          <ExpandableSearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="搜索教师姓名、工号或学院..."
           />
-          <div className="w-full sm:w-72">
-            {/* @ts-ignore */}
-            <md-outlined-text-field
-              class="w-full"
-              label="搜索教师"
-              placeholder="输入姓名、工号或学院"
-              value={searchQuery}
-              onInput={(e: React.FormEvent<HTMLElement>) => {
-                setSearchQuery((e.target as HTMLInputElement).value ?? '');
-              }}
-            >
-              {/* @ts-ignore */}
-              <md-icon slot="leading-icon">search</md-icon>
-              {/* @ts-ignore */}
-            </md-outlined-text-field>
-          </div>
-        </div>
+        </FilterChipSet>
       </div>
 
       <div className="flex-1 overflow-hidden mt-1 flex flex-col min-h-0 relative">

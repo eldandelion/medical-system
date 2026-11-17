@@ -119,6 +119,13 @@ describe('AssignStudentsBottomSheet', () => {
       expect(screen.getByText('赵敏')).toBeDefined();
     });
 
+    // GroupedInfoList-style rows
+    const rows = screen.getAllByRole('listitem');
+    expect(rows).toHaveLength(2);
+    expect(rows[0].className).toContain('rounded-t-[20px]');
+    expect(rows[1].className).toContain('rounded-b-[20px]');
+    expect(rows[0].className).toContain('bg-[var(--md-sys-color-surface-container-low)]');
+
     // Assigned students hidden by default when 仅看未分配 is active
     expect(screen.queryByText('张伟')).toBeNull();
     expect(screen.queryByText('孙丽')).toBeNull();

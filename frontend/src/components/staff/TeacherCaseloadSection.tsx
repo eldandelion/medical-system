@@ -12,17 +12,18 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useCreationOverlay } from '../../contexts/CreationContext';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 import { DetailsSection } from '../common/DetailsPanel';
+import { getGroupedItemCornerRadius } from '../common/GroupedInfoList';
 import { AvatarBadge } from '../common/AvatarBadge';
 import { OutlinedButton, PrimaryButton, SecondaryButton } from '../common/Buttons';
 import { GenericDialog } from '../common/GenericDialog';
 import { AssignStudentsBottomSheet } from './AssignStudentsBottomSheet';
-import { RISK_LEVEL_LABELS, RISK_LEVEL_STYLES } from '../../config/styleConstants';
 
 interface TeacherCaseloadSectionProps {
   teacherId: number;
   teacherName: string;
   teacherStatus?: AccountStatus;
   placeholderSummary?: TeacherSummaryDto;
+  hideAssignButton?: boolean;
 }
 
 export function TeacherCaseloadSection({
@@ -30,6 +31,7 @@ export function TeacherCaseloadSection({
   teacherName,
   teacherStatus,
   placeholderSummary,
+  hideAssignButton = false,
 }: TeacherCaseloadSectionProps) {
   const { session } = useAuth();
   const { openCreation, closeCreation } = useCreationOverlay();
@@ -104,13 +106,15 @@ export function TeacherCaseloadSection({
         <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)]">
           负责学生 ({count})
         </h3>
-        <OutlinedButton
-          icon="person_add"
-          label="分配学生"
-          noCollapse
-          disabled={!isTeacherActive}
-          onClick={handleOpenAssignSheet}
-        />
+        {!hideAssignButton && (
+          <OutlinedButton
+            icon="person_add"
+            label="分配学生"
+            noCollapse
+            disabled={!isTeacherActive}
+            onClick={handleOpenAssignSheet}
+          />
+        )}
       </div>
       {!isTeacherActive && (
         <div className="mb-3 px-3 py-2 rounded-xl bg-[var(--md-sys-color-surface-container-high)] text-[12px] text-[var(--md-sys-color-on-surface-variant)]">
@@ -129,40 +133,34 @@ export function TeacherCaseloadSection({
           <SecondaryButton label="重试" icon="refresh" noCollapse onClick={() => refetch()} />
         </div>
       ) : assignedStudents.length === 0 ? (
-        <div className="p-4 rounded-xl border border-dashed border-[var(--md-sys-color-outline-variant)] text-center text-[13px] text-[var(--md-sys-color-on-surface-variant)]">
-          暂无负责学生，点击右上角「分配学生」进行分配
+        <div className="p-8 rounded-[20px] bg-[var(--md-sys-color-surface-container-low)] text-center text-[13px] text-[var(--md-sys-color-on-surface-variant)]">
+          {hideAssignButton
+            ? '暂无负责学生，点击底部「分配学生」进行分配'
+            : '暂无负责学生，点击右上角「分配学生」进行分配'}
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
-          {assignedStudents.map((student) => {
-            const riskKey = student.riskLevel || 'LOW';
+        <div className="flex flex-col gap-[2px] w-full" role="list">
+          {assignedStudents.map((student, index) => {
+            const cornerRadius = getGroupedItemCornerRadius(index, assignedStudents.length);
             return (
               <div
                 key={student.id}
-                className="flex items-center justify-between gap-3 p-3 rounded-xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)]"
+                role="listitem"
+                className={`px-4 py-3.5 bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container)] flex items-center justify-between gap-4 min-h-[56px] transition-colors ${cornerRadius}`}
               >
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-3.5 min-w-0 flex-1">
                   <AvatarBadge name={student.name} size="sm" />
                   <div className="flex flex-col min-w-0">
-                    <span className="text-[14px] font-medium text-[var(--md-sys-color-on-surface)] truncate">
+                    <span className="text-sm font-medium text-[var(--md-sys-color-on-surface)] leading-snug truncate">
                       {student.name}
                     </span>
-                    <span className="text-[12px] text-[var(--md-sys-color-on-surface-variant)] truncate">
+                    <span className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5 truncate font-normal">
                       {student.studentNumber || student.id} · {student.major}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  {student.riskLevel && (
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
-                        RISK_LEVEL_STYLES[riskKey] || RISK_LEVEL_STYLES.LOW
-                      }`}
-                    >
-                      {RISK_LEVEL_LABELS[riskKey] || riskKey}风险
-                    </span>
-                  )}
                   {/* @ts-ignore */}
                   <md-icon-button
                     aria-label={`取消分配 ${student.name}`}

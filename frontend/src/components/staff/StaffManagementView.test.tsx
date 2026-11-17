@@ -84,19 +84,17 @@ describe('StaffManagementView', () => {
     expect(onStaffSelect).toHaveBeenCalledWith(mockTeachers[0]);
   });
 
-  it('filters teachers by keyword and renders error state on failure', async () => {
-    const { container } = renderView();
+  it('filters teachers by keyword via ExpandableSearchBar and renders error state on failure', async () => {
+    renderView();
 
     await waitFor(() => {
       expect(screen.getByText('艾米丽·沃森')).toBeDefined();
       expect(screen.getByText('赵老师')).toBeDefined();
     });
 
-    const searchField = container.querySelector('md-outlined-text-field') as HTMLElement;
-    if (searchField) {
-      (searchField as unknown as { value: string }).value = 'EMP-00099';
-      fireEvent.input(searchField);
-    }
+    fireEvent.click(screen.getByRole('button', { name: '展开搜索' }));
+    const searchInput = screen.getByPlaceholderText('搜索教师姓名、工号或学院...');
+    fireEvent.change(searchInput, { target: { value: 'EMP-00099' } });
 
     await waitFor(() => {
       expect(screen.queryByText('艾米丽·沃森')).toBeNull();
