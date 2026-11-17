@@ -14,6 +14,7 @@ import com.medicalsystem.backend.exception.ResourceNotFoundException
 import com.medicalsystem.backend.mapper.StudentMapper
 import com.medicalsystem.backend.model.AccountStatus
 import com.medicalsystem.backend.model.User
+import com.medicalsystem.backend.model.UserRole
 import com.medicalsystem.backend.repository.StudentJpaRepository
 import com.medicalsystem.backend.repository.TeacherRepository
 import com.medicalsystem.backend.repository.UserJpaRepository
@@ -65,17 +66,28 @@ class TeacherService(
     }
 
     fun getTeacherDetails(teacherId: Long): TeacherDetailDto {
-        val (teacher, user) = loadTeacherAndUser(teacherId)
+        val teacher = teacherRepository.findById(teacherId).orElse(null)
+        val user = userJpaRepository.findById(teacherId).orElseThrow {
+            ResourceNotFoundException("Teacher with ID $teacherId not found")
+        }
+        if (teacher == null && user.role != UserRole.TEACHER) {
+            throw ResourceNotFoundException("Teacher with ID $teacherId not found")
+        }
+
         val teacherNameLookup = mapOf(teacherId to user.name)
-        val assignedStudents = studentJpaRepository.findByAssignedTeacherUserId(teacherId)
-            .map { entity -> studentMapper.toDto(studentMapper.toModel(entity), teacherNameLookup) }
+        val assignedStudents = if (teacher != null) {
+            studentJpaRepository.findByAssignedTeacherUserId(teacherId)
+                .map { entity -> studentMapper.toDto(studentMapper.toModel(entity), teacherNameLookup) }
+        } else {
+            emptyList()
+        }
 
         return TeacherDetailDto(
-            id = teacher.userId,
+            id = user.id,
             name = user.name,
-            employeeNumber = teacher.employeeNumber,
-            collegeId = teacher.college.id ?: 0L,
-            collegeName = teacher.college.name,
+            employeeNumber = teacher?.employeeNumber ?: "",
+            collegeId = teacher?.college?.id ?: 0L,
+            collegeName = teacher?.college?.name ?: "",
             status = user.status,
             phone = user.phone,
             email = user.email.value,

@@ -41,6 +41,7 @@ export function TeacherCaseloadSection({
   const {
     data: detail,
     isLoading,
+    isPlaceholderData,
     isError,
     refetch,
   } = useQuery<TeacherDetailDto>({
@@ -61,6 +62,7 @@ export function TeacherCaseloadSection({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/teachers'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       queryClient.invalidateQueries({ queryKey: ['/api/students'] });
       setConfirmUnassignStudent(null);
       showSnackbar({ message: '已取消学生分配' });
@@ -76,7 +78,10 @@ export function TeacherCaseloadSection({
   const effectiveStatus = detail?.status ?? teacherStatus ?? 'ACTIVE';
   const isTeacherActive = effectiveStatus === 'ACTIVE';
   const assignedStudents = detail?.assignedStudents ?? [];
-  const count = detail ? assignedStudents.length : placeholderSummary?.assignedStudentCount ?? 0;
+  const count =
+    detail && !isPlaceholderData
+      ? assignedStudents.length
+      : (placeholderSummary?.assignedStudentCount ?? assignedStudents.length);
 
   const teacherTarget: Pick<TeacherSummaryDto, 'id' | 'name' | 'employeeNumber' | 'collegeName'> = {
     id: teacherId,
@@ -95,7 +100,7 @@ export function TeacherCaseloadSection({
 
   return (
     <DetailsSection>
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <h3 className="text-[18px] font-medium text-[var(--md-sys-color-on-surface)]">
           负责学生 ({count})
         </h3>
@@ -113,12 +118,12 @@ export function TeacherCaseloadSection({
         </div>
       )}
 
-      {isLoading && !detail ? (
+      {isLoading && (!detail || isPlaceholderData) ? (
         <div className="flex items-center justify-center py-6">
           {/* @ts-ignore */}
           <md-circular-progress indeterminate></md-circular-progress>
         </div>
-      ) : isError && !detail ? (
+      ) : isError && (!detail || isPlaceholderData) ? (
         <div className="flex flex-col items-center justify-center py-6 gap-2 text-center">
           <p className="text-[13px] text-[var(--md-sys-color-error)]">无法加载负责学生列表</p>
           <SecondaryButton label="重试" icon="refresh" noCollapse onClick={() => refetch()} />

@@ -127,7 +127,7 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header, reset
     <>
       {header && header(loading)}
       <div className="w-full h-full flex flex-col pt-4 overflow-hidden relative">
-        <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4 px-6 flex items-center justify-between gap-4 mb-6">
+        <div className="shrink-0 z-30 bg-[var(--md-sys-color-surface)] pb-2 -mt-4 pt-4 px-6 flex items-center justify-between flex-wrap gap-3 mb-4">
           <FilterChipSet
             className="flex flex-wrap items-center gap-2 relative z-20"
             chips={[
@@ -177,7 +177,7 @@ export function StudentsView({ onStudentSelect, selectedStudentId, header, reset
             <md-circular-progress indeterminate></md-circular-progress>
           </div>
         ) : (
-          <DataTable columns={columns} data={filteredStudents} onRowClick={onStudentSelect} selectedId={selectedStudentId} />
+          <DataTable columns={columns} data={filteredStudents} onRowClick={onStudentSelect} selectedId={selectedStudentId} minWidth="560px" />
         )}
       </div>
       </div>

@@ -43,6 +43,7 @@ import '@material/web/textfield/outlined-text-field.js';
 import '@material/web/chips/input-chip.js';
 import '@material/web/chips/suggestion-chip.js';
 import '@material/web/progress/linear-progress.js';
+import '@material/web/progress/circular-progress.js';
 import '@material/web/tabs/tabs.js';
 import '@material/web/tabs/primary-tab.js';
 import '@material/web/tabs/secondary-tab.js';

@@ -95,7 +95,10 @@ export function TeacherPage() {
             }
             
             if (endpoint) {
-              const queryKey = [endpoint, lastEvent.entityId, 'details'];
+              const queryKey = [endpoint, lastEvent.entityId, session?.token, 'details'];
+              if (tabMatch === TeacherTabs.STUDENTS) {
+                activeQueryClient.invalidateQueries({ queryKey: [endpoint] });
+              }
               const data = await activeQueryClient.fetchQuery<Record<string, unknown>>({
                 queryKey,
                 queryFn: async ({ signal }) => {

@@ -117,12 +117,16 @@ export function NotificationsView({ onViewReferral, onViewRecords, onViewStudent
                 ...((notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_HC' || notification.messageCode === 'ASSESSMENT_HIGH_RISK_ALERT_TEACHER') && notification.canCreateReferral !== false ? [{
                   label: '发起转诊',
                   variant: 'filled' as const,
-                  onClick: () => handleInitiateReferral(notification)
+                  onClick: () => {
+                    if (!notification.isRead) markAsRead(notification.id);
+                    handleInitiateReferral(notification);
+                  }
                 }] : []),
                 ...(['VIEW_REFERRAL', 'REVIEW_REFERRAL'].includes(notification.actionType) ? [{
                   label: '查看详情',
                   variant: 'text' as const,
                   onClick: () => {
+                    if (!notification.isRead) markAsRead(notification.id);
                     const targetId = notification.payload?.referralId || notification.actionTargetId;
                     if (onViewReferral && targetId) onViewReferral(String(targetId));
                   }
@@ -131,6 +135,7 @@ export function NotificationsView({ onViewReferral, onViewRecords, onViewStudent
                   label: '立即分诊',
                   variant: 'text' as const,
                   onClick: () => {
+                    if (!notification.isRead) markAsRead(notification.id);
                     const targetId = notification.payload?.referralId || notification.actionTargetId;
                     if (onViewReferral && targetId) onViewReferral(String(targetId));
                   }
@@ -139,6 +144,7 @@ export function NotificationsView({ onViewReferral, onViewRecords, onViewStudent
                   label: '安排就诊',
                   variant: 'text' as const,
                   onClick: () => {
+                    if (!notification.isRead) markAsRead(notification.id);
                     const targetId = notification.payload?.referralId || notification.actionTargetId;
                     if (onViewReferral && targetId) onViewReferral(String(targetId));
                   }
@@ -147,6 +153,7 @@ export function NotificationsView({ onViewReferral, onViewRecords, onViewStudent
                   label: '确认反馈',
                   variant: 'text' as const,
                   onClick: () => {
+                    if (!notification.isRead) markAsRead(notification.id);
                     const targetId = notification.payload?.referralId || notification.actionTargetId;
                     if (onViewReferral && targetId) onViewReferral(String(targetId));
                   }
@@ -155,6 +162,7 @@ export function NotificationsView({ onViewReferral, onViewRecords, onViewStudent
                   label: '查看记录',
                   variant: 'text' as const,
                   onClick: () => {
+                    if (!notification.isRead) markAsRead(notification.id);
                     const studentId = notification.payload?.studentId || notification.actionTargetId;
                     if (onViewStudent && studentId) {
                       onViewStudent(String(studentId));
@@ -167,6 +175,7 @@ export function NotificationsView({ onViewReferral, onViewRecords, onViewStudent
                   label: '查看学生',
                   variant: 'text' as const,
                   onClick: () => {
+                    if (!notification.isRead) markAsRead(notification.id);
                     const studentId = notification.payload?.studentId || notification.actionTargetId;
                     if (onViewStudent && studentId) {
                       onViewStudent(String(studentId));

@@ -5,7 +5,7 @@ export function useNotifications(token?: string) {
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ['notifications'],
+    queryKey: ['notifications', token],
     queryFn: () => fetchNotifications(token!),
     enabled: !!token,
     refetchInterval: 30000, // Poll every 30s

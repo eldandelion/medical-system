@@ -38,6 +38,8 @@ export function useAdminUsers(filter?: UseAdminUsersFilter) {
         duration: 3000
       });
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/teachers'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'admin'] });
     },
     onError: (err: any) => {
@@ -56,6 +58,8 @@ export function useAdminUsers(filter?: UseAdminUsersFilter) {
         duration: 3000
       });
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/teachers'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'admin'] });
     },
     onError: (err: any) => {

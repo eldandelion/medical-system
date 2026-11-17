@@ -29,6 +29,17 @@ export function AssignStudentsBottomSheet({
   const [unassignedOnly, setUnassignedOnly] = React.useState(true);
   const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
   const [pendingReassignStudents, setPendingReassignStudents] = React.useState<StudentDto[]>([]);
+  const unassignedChipRef = React.useRef<HTMLElement | null>(null);
+  const allChipRef = React.useRef<HTMLElement | null>(null);
+
+  React.useEffect(() => {
+    if (unassignedChipRef.current) {
+      (unassignedChipRef.current as unknown as { selected: boolean }).selected = unassignedOnly;
+    }
+    if (allChipRef.current) {
+      (allChipRef.current as unknown as { selected: boolean }).selected = !unassignedOnly;
+    }
+  }, [unassignedOnly]);
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -109,8 +120,8 @@ export function AssignStudentsBottomSheet({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-[420px]">
-      <div className="px-6 pt-4 pb-3 border-b border-[var(--md-sys-color-outline-variant)] flex flex-col gap-3">
+    <div className="flex flex-col flex-1 min-h-0">
+      <div className="px-6 pt-4 pb-3 border-b border-[var(--md-sys-color-outline-variant)] flex flex-col gap-3 shrink-0">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="text-[14px] text-[var(--md-sys-color-on-surface-variant)]">
             目标导师：<span className="font-medium text-[var(--md-sys-color-on-surface)]">{teacher.name}</span>
@@ -120,15 +131,23 @@ export function AssignStudentsBottomSheet({
           <md-chip-set>
             {/* @ts-ignore */}
             <md-filter-chip
+              ref={unassignedChipRef}
               label="仅看未分配"
-              selected={unassignedOnly ? true : undefined}
-              onClick={() => setUnassignedOnly(true)}
+              selected={unassignedOnly}
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                setUnassignedOnly(true);
+              }}
             />
             {/* @ts-ignore */}
             <md-filter-chip
+              ref={allChipRef}
               label="全部学生"
-              selected={!unassignedOnly ? true : undefined}
-              onClick={() => setUnassignedOnly(false)}
+              selected={!unassignedOnly}
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                setUnassignedOnly(false);
+              }}
             />
             {/* @ts-ignore */}
           </md-chip-set>
@@ -150,7 +169,7 @@ export function AssignStudentsBottomSheet({
         </md-outlined-text-field>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-4">
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3 text-[var(--md-sys-color-on-surface-variant)]">
             {/* @ts-ignore */}
@@ -197,6 +216,7 @@ export function AssignStudentsBottomSheet({
                   <div className="flex items-center gap-3 min-w-0">
                     {/* @ts-ignore */}
                     <md-checkbox
+                      tabIndex={-1}
                       checked={isAssignedHere || isSelected ? true : undefined}
                       disabled={isAssignedHere ? true : undefined}
                       style={{ pointerEvents: 'none' }}
@@ -212,7 +232,7 @@ export function AssignStudentsBottomSheet({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
                     {student.riskLevel && (
                       <span
                         className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
@@ -243,7 +263,7 @@ export function AssignStudentsBottomSheet({
         )}
       </div>
 
-      <div className="px-6 py-4 border-t border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] flex items-center justify-between gap-3">
+      <div className="px-6 py-4 border-t border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] flex items-center justify-between flex-wrap gap-3 shrink-0">
         <span className="text-[13px] text-[var(--md-sys-color-on-surface-variant)]">
           已选择 {selectedIds.length} 名学生
         </span>
@@ -261,7 +281,9 @@ export function AssignStudentsBottomSheet({
 
       <GenericDialog
         open={pendingReassignStudents.length > 0}
-        onClose={() => setPendingReassignStudents([])}
+        onClose={() => {
+          if (!assignMutation.isPending) setPendingReassignStudents([]);
+        }}
         title="重新分配确认"
         isLoading={assignMutation.isPending}
         actions={
@@ -269,14 +291,18 @@ export function AssignStudentsBottomSheet({
             <SecondaryButton
               label="返回修改"
               noCollapse
-              onClick={() => setPendingReassignStudents([])}
+              onClick={() => {
+                if (!assignMutation.isPending) setPendingReassignStudents([]);
+              }}
               disabled={assignMutation.isPending}
             />
             <PrimaryButton
               label="确认重新分配"
               noCollapse
               disabled={assignMutation.isPending}
-              onClick={() => assignMutation.mutate(selectedIds)}
+              onClick={() => {
+                if (!assignMutation.isPending) assignMutation.mutate(selectedIds);
+              }}
             />
           </>
         }

@@ -178,6 +178,7 @@ export function StaffManagementView({
             data={filteredTeachers}
             onRowClick={onStaffSelect}
             selectedId={selectedStaffId}
+            minWidth="560px"
           />
         )}
       </div>

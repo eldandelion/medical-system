@@ -127,6 +127,26 @@ class TeacherServiceTest {
     }
 
     @Test
+    fun `getTeacherDetails falls back to empty caseload when teacher profile row is absent for pending TEACHER user`() {
+        val uPending = UserEntity(
+            id = 203L,
+            name = "赵老师",
+            role = UserRole.TEACHER,
+            email = EmailAddress("zhao_pending@univ.edu.cn"),
+            status = AccountStatus.PENDING_APPROVAL
+        )
+        whenever(teacherRepository.findById(203L)).thenReturn(Optional.empty())
+        whenever(userJpaRepository.findById(203L)).thenReturn(Optional.of(uPending))
+
+        val detail = teacherService.getTeacherDetails(203L)
+        assertEquals(203L, detail.id)
+        assertEquals("赵老师", detail.name)
+        assertEquals(AccountStatus.PENDING_APPROVAL, detail.status)
+        assertEquals(0, detail.assignedStudentCount)
+        assertTrue(detail.assignedStudents.isEmpty())
+    }
+
+    @Test
     fun `assignStudents throws ConflictException when target teacher is not ACTIVE`() {
         val tPending = TeacherEntity(userId = 202L, employeeNumber = "EMP-202", college = college)
         val uPending = UserEntity(id = 202L, name = "赵老师", role = UserRole.TEACHER, email = EmailAddress("t202@univ.edu.cn"), status = AccountStatus.PENDING_APPROVAL)
