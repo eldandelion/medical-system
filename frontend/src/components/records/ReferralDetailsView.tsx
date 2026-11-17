@@ -11,7 +11,7 @@ import { ReferralFeedbackTab } from './ReferralFeedbackTab';
 
 import { useDetails } from '../../contexts/DetailsContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { enrichReferralStatus } from '../../utils/referralUtils';
 import { useReferralActions } from '../../hooks/useReferralActions';
 import { ReferralActionFooter } from './ReferralActionFooter';
@@ -161,7 +161,6 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
 
   const { session } = useAuth();
   const { data: userProfile } = useUserProfile(session?.token);
-  const queryClient = useQueryClient();
   
   const { data: doctors = [] } = useQuery({
     queryKey: ['/api/doctors'],
@@ -291,10 +290,7 @@ function ReferralDetailsPresenter({ referral, referralDetails, userRole, hideHea
                 id: referral.studentId || referralDetails.baseInfo?.studentId,
                 name: referral.studentName,
                 studentNumber: referral.studentNumber,
-                scidDiagnosis: referralDetails.triageInfo?.scidDiagnosis
               }}
-              canEditDiagnosis={['doctor', 'head-councillor', 'admin'].includes(session?.role ?? '')}
-              onDiagnosisUpdated={() => queryClient.invalidateQueries({ queryKey: ['/api/referrals', String(referral.id)] })}
             />
           </motion.div>
         )}
