@@ -1,5 +1,6 @@
 package com.medicalsystem.backend.exception
 
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -10,6 +11,12 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException::class)
     fun handleResourceNotFound(e: ResourceNotFoundException): ResponseEntity<Map<String, String>> {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(mapOf("error" to (e.message ?: "Resource not found")))
+    }
+
+    @ExceptionHandler(NotFoundException::class)
+    fun handleNotFound(e: NotFoundException): ResponseEntity<Map<String, String>> {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(mapOf("error" to (e.message ?: "Resource not found")))
     }
@@ -52,6 +59,16 @@ class GlobalExceptionHandler {
     fun handleUnauthorized(e: UnauthorizedException): ResponseEntity<Map<String, String>> {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(mapOf("error" to (e.message ?: "Unauthorized")))
+    }
+
+    @ExceptionHandler(TooManyRequestsException::class)
+    fun handleTooManyRequests(e: TooManyRequestsException): ResponseEntity<Map<String, String>> {
+        val builder = ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+        val retryAfter = e.retryAfterSeconds
+        if (retryAfter != null && retryAfter > 0) {
+            builder.header(HttpHeaders.RETRY_AFTER, retryAfter.toString())
+        }
+        return builder.body(mapOf("error" to (e.message ?: "请求过于频繁，请稍后再试")))
     }
 
     @ExceptionHandler(ValidationException::class)

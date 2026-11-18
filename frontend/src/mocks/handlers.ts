@@ -63,6 +63,62 @@ const mockComputeAvailableActions = (referral: Referral, authHeader: string): Re
 
 const api = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`;
 
+const MOCK_ROLE_TOKEN_MAP: Record<string, string> = {
+  STUDENT: 'mock_student_token',
+  TEACHER: 'mock_teacher_token_zhang',
+  HEAD_COUNSELLOR: 'mock_head_councillor_token_wang',
+  TRIAL_ADMIN: 'mock_trial_admin_token',
+  DOCTOR: 'mock_doctor_token',
+  SYSTEM_ADMIN: 'mock_admin_token',
+};
+
+const forwardAuthBypassResponse = async (request: Request, warnLabel: string) => {
+  if (import.meta.env.MODE === 'test') return null;
+  try {
+    const { bypass } = await import('msw');
+    const res = await fetch(bypass(request));
+    if (res.ok) {
+      return HttpResponse.json(await res.json());
+    }
+    if (res.status >= 400) {
+      console.warn(`${warnLabel} returned ${res.status}; forwarding backend error`);
+      const errBody = await res.json().catch(() => ({}));
+      return HttpResponse.json(errBody, { status: res.status });
+    }
+  } catch (e) {
+    console.warn(`${warnLabel} unreachable, falling back to mock`, e);
+  }
+  return null;
+};
+
+const findMockAuthAccountByPhone = (phone: string) => {
+  const adminUser = mockAdminUsersDb.find((u) => u.contactNumber === phone && u.status !== 'DELETED');
+  if (adminUser) {
+    return {
+      userId: adminUser.id,
+      name: adminUser.name,
+      email: adminUser.email,
+      role: adminUser.role,
+      status: adminUser.status,
+      studentNumber: adminUser.role === 'STUDENT' ? adminUser.employeeOrStudentId : null,
+      phone,
+    };
+  }
+  const student = mockStudentsDb.find((s) => s.demographics?.contactNumber === phone);
+  if (student) {
+    return {
+      userId: Number(student.id) || 100,
+      name: student.name,
+      email: student.demographics?.email || `${student.studentNumber}@univ.edu.cn`,
+      role: 'STUDENT' as const,
+      status: 'ACTIVE' as const,
+      studentNumber: student.studentNumber,
+      phone,
+    };
+  }
+  return null;
+};
+
 export const handlers = [
   http.get(api('/api/dictionaries/ethnicities'), async ({ request }) => {
     if (import.meta.env.MODE !== 'test') {
@@ -267,6 +323,85 @@ export const handlers = [
 
     return HttpResponse.json({
       cooldownSeconds: 60,
+    });
+  }),
+
+  http.post(api('/api/auth/send-code'), async ({ request }) => {
+    const bypassed = await forwardAuthBypassResponse(request, 'POST /api/auth/send-code');
+    if (bypassed) return bypassed;
+
+    const body = (await request.json().catch(() => ({}))) as { phone?: string; purpose?: string };
+    const phone = (body.phone || '').trim();
+    if (!/^1[3-9]\d{9}$/.test(phone)) {
+      return HttpResponse.json({ error: 'Invalid Chinese mobile phone number format' }, { status: 400 });
+    }
+
+    const purpose = (body.purpose || 'REGISTRATION').toUpperCase();
+    const account = findMockAuthAccountByPhone(phone);
+
+    if (purpose === 'LOGIN') {
+      if (!account) {
+        return HttpResponse.json({ error: '该手机号码尚未登记，请先创建账号' }, { status: 404 });
+      }
+      if (account.status !== 'ACTIVE') {
+        return HttpResponse.json({ error: '账号尚未激活或已被禁用' }, { status: 401 });
+      }
+    } else if (purpose === 'REGISTRATION' && account) {
+      return HttpResponse.json({ error: `该手机号码已被注册: ${phone}` }, { status: 409 });
+    }
+
+    return HttpResponse.json({
+      phone,
+      devCode: '123456',
+      expiresInSeconds: 300,
+    });
+  }),
+
+  http.post(api('/api/auth/verify-code'), async ({ request }) => {
+    const bypassed = await forwardAuthBypassResponse(request, 'POST /api/auth/verify-code');
+    if (bypassed) return bypassed;
+
+    const body = (await request.json().catch(() => ({}))) as { phone?: string; code?: string };
+    if (!body.code || body.code.trim() !== '123456') {
+      return HttpResponse.json({ error: '验证码错误，还剩 4 次尝试机会' }, { status: 400 });
+    }
+    return HttpResponse.json({ valid: true });
+  }),
+
+  http.post(api('/api/auth/login-sms'), async ({ request }) => {
+    const bypassed = await forwardAuthBypassResponse(request, 'POST /api/auth/login-sms');
+    if (bypassed) return bypassed;
+
+    const body = (await request.json().catch(() => ({}))) as { phone?: string; code?: string };
+    const phone = (body.phone || '').trim();
+    if (!/^1[3-9]\d{9}$/.test(phone)) {
+      return HttpResponse.json({ error: 'Invalid Chinese mobile phone number format' }, { status: 400 });
+    }
+    if (!body.code || body.code.trim() !== '123456') {
+      return HttpResponse.json({ error: '验证码错误，还剩 4 次尝试机会' }, { status: 400 });
+    }
+
+    const account = findMockAuthAccountByPhone(phone);
+    if (!account) {
+      return HttpResponse.json({ error: '该手机号码尚未登记，请先创建账号' }, { status: 404 });
+    }
+    if (account.status !== 'ACTIVE') {
+      return HttpResponse.json({ error: '账号尚未激活或已被禁用' }, { status: 401 });
+    }
+
+    return HttpResponse.json({
+      token: MOCK_ROLE_TOKEN_MAP[account.role] || 'mock_student_token',
+      userId: account.userId,
+      role: account.role,
+      email: account.email,
+      name: account.name,
+      student: account.role === 'STUDENT'
+        ? {
+            studentNumber: account.studentNumber || phone,
+            fullName: account.name,
+            phone,
+          }
+        : null,
     });
   }),
 

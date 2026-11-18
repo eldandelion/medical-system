@@ -196,30 +196,7 @@ class AuthService(
 
         val studentRecord = student ?: studentJpaRepository.findById(user.id).orElse(null)
         val resolvedStudentNum = studentRecord?.studentNumber ?: user.phone ?: cleanIdentifier
-
-        val token = jwtService.generateToken(
-            userId = user.id,
-            studentNumber = resolvedStudentNum,
-            role = user.role.name
-        )
-
-        val studentDto = if (user.role == UserRole.STUDENT) {
-            StudentAuthDto(
-                studentNumber = resolvedStudentNum,
-                fullName = user.name,
-                phone = user.phone ?: "",
-                createdAt = LocalDateTime.now()
-            )
-        } else null
-
-        return AuthResponse(
-            token = token,
-            student = studentDto,
-            userId = user.id,
-            role = user.role,
-            email = user.email.value,
-            name = user.name
-        )
+        return buildAuthResponse(user, resolvedStudentNum)
     }
 
     fun sendVerificationCode(request: SendCodeRequest): SendCodeResponse {
@@ -228,8 +205,10 @@ class AuthService(
         val purpose = OtpPurpose.fromString(request.purpose)
 
         if (purpose == OtpPurpose.LOGIN) {
-            if (!userJpaRepository.existsByPhone(phone)) {
-                throw NotFoundException("该手机号码尚未登记，请先创建账号")
+            val user = userJpaRepository.findByPhone(phone)
+                ?: throw NotFoundException("该手机号码尚未登记，请先创建账号")
+            if (user.status != AccountStatus.ACTIVE) {
+                throw UnauthorizedException("账号尚未激活或已被禁用")
             }
         } else if (purpose == OtpPurpose.REGISTRATION) {
             val rawStudentNum = request.studentNumber?.trim()
@@ -264,24 +243,34 @@ class AuthService(
 
         val user = userJpaRepository.findByPhone(phone)
             ?: throw NotFoundException("该手机号码尚未登记，请先创建账号")
+        if (user.status != AccountStatus.ACTIVE) {
+            throw UnauthorizedException("账号尚未激活或已被禁用")
+        }
 
         val student = studentJpaRepository.findById(user.id).orElse(null)
         val studentNum = student?.studentNumber ?: phone
+        return buildAuthResponse(user, studentNum)
+    }
 
+    private fun buildAuthResponse(user: UserEntity, resolvedStudentNum: String): AuthResponse {
         val token = jwtService.generateToken(
             userId = user.id,
-            studentNumber = studentNum,
+            studentNumber = resolvedStudentNum,
             role = user.role.name
         )
 
-        return AuthResponse(
-            token = token,
-            student = StudentAuthDto(
-                studentNumber = studentNum,
+        val studentDto = if (user.role == UserRole.STUDENT) {
+            StudentAuthDto(
+                studentNumber = resolvedStudentNum,
                 fullName = user.name,
                 phone = user.phone ?: "",
                 createdAt = LocalDateTime.now()
-            ),
+            )
+        } else null
+
+        return AuthResponse(
+            token = token,
+            student = studentDto,
             userId = user.id,
             role = user.role,
             email = user.email.value,

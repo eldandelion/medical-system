@@ -8,6 +8,8 @@ import com.medicalsystem.backend.service.AuthService
 import com.medicalsystem.backend.service.EmailOtpService
 import com.medicalsystem.backend.service.StaffRegistrationService
 import com.medicalsystem.backend.service.UserVerificationService
+import com.medicalsystem.backend.service.sms.SmsRateLimitService
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -18,7 +20,8 @@ class AuthController(
     private val userVerificationService: UserVerificationService,
     private val emailOtpService: EmailOtpService,
     private val staffRegistrationService: StaffRegistrationService,
-    private val authService: AuthService
+    private val authService: AuthService,
+    private val smsRateLimitService: SmsRateLimitService
 ) {
 
     @PostMapping("/verify-identifier")
@@ -80,11 +83,16 @@ class AuthController(
 
     @PostMapping("/send-code")
     fun sendCode(
-        @Valid @RequestBody request: SendCodeRequest
+        @Valid @RequestBody request: SendCodeRequest,
+        httpRequest: HttpServletRequest
     ): ResponseEntity<SendCodeResponse> {
+        smsRateLimitService.checkAndRecord(clientIp(httpRequest))
         val response = authService.sendVerificationCode(request)
         return ResponseEntity.ok(response)
     }
+
+    private fun clientIp(request: HttpServletRequest): String =
+        request.remoteAddr?.takeIf { it.isNotBlank() } ?: "unknown"
 
     @PostMapping("/verify-code")
     fun verifyCode(

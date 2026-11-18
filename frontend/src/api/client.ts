@@ -28,6 +28,16 @@ export function apiUrl(
   return url;
 }
 
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 export interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
   token?: string;
   params?: Record<string, string | number | boolean | null | undefined>;
@@ -62,7 +72,7 @@ export async function apiFetch<T = unknown>(endpoint: string, options: ApiFetchO
     } catch {
       // Fallback if response body is HTML or empty
     }
-    throw new Error(errorMessage);
+    throw new ApiError(errorMessage, response.status || 500);
   }
 
   // Handle 204 No Content or empty responses

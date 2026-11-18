@@ -3,6 +3,7 @@ import { useSidebar } from '../../contexts/SidebarContext';
 
 interface ButtonProps {
   id?: string;
+  'data-testid'?: string;
   icon?: string;
   label: string;
   className?: string;
@@ -14,7 +15,7 @@ interface ButtonProps {
   disabled?: boolean;
 }
 
-export function PrimaryButton({ id, icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
+export function PrimaryButton({ id, 'data-testid': testId, icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   const setRef = React.useCallback((el: HTMLElement | null) => {
@@ -33,6 +34,7 @@ export function PrimaryButton({ id, icon, label, className = "h-10", onClick, st
     <md-filled-button
       ref={setRef}
       id={id}
+      data-testid={testId}
       onClick={onClick}
       className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       disabled={disabled}
@@ -50,7 +52,7 @@ export function PrimaryButton({ id, icon, label, className = "h-10", onClick, st
   );
 }
 
-export function SecondaryButton({ id, icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
+export function SecondaryButton({ id, 'data-testid': testId, icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   const setRef = React.useCallback((el: HTMLElement | null) => {
@@ -69,6 +71,7 @@ export function SecondaryButton({ id, icon, label, className = "h-10", onClick, 
     <md-filled-tonal-button
       ref={setRef}
       id={id}
+      data-testid={testId}
       onClick={onClick}
       className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
       disabled={disabled}
@@ -86,7 +89,7 @@ export function SecondaryButton({ id, icon, label, className = "h-10", onClick, 
 
 export const FilledTonalButton = SecondaryButton;
 
-export function OutlinedButton({ id, icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
+export function OutlinedButton({ id, 'data-testid': testId, icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   const setRef = React.useCallback((el: HTMLElement | null) => {
@@ -105,6 +108,7 @@ export function OutlinedButton({ id, icon, label, className = "h-10", onClick, s
     <md-outlined-button
       ref={setRef}
       id={id}
+      data-testid={testId}
       type="button"
       onClick={onClick}
       className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}
@@ -121,7 +125,7 @@ export function OutlinedButton({ id, icon, label, className = "h-10", onClick, s
   );
 }
 
-export function TertiaryButton({ id, icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
+export function TertiaryButton({ id, 'data-testid': testId, icon, label, className = "h-10", onClick, style, noCollapse, trailingIcon, iconSize, disabled }: ButtonProps) {
   const { isCollapsed } = useSidebar();
   const effectiveCollapsed = noCollapse ? false : isCollapsed;
   const setRef = React.useCallback((el: HTMLElement | null) => {
@@ -140,6 +144,7 @@ export function TertiaryButton({ id, icon, label, className = "h-10", onClick, s
     <md-text-button
       ref={setRef}
       id={id}
+      data-testid={testId}
       type="button"
       onClick={onClick}
       className={`${className} shrink-0 whitespace-nowrap transition-all duration-75 ${effectiveCollapsed ? 'w-10 min-w-0 !p-0 overflow-hidden' : ''}`}

@@ -4,6 +4,7 @@ import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LoginOverlay } from './LoginOverlay';
 import { AccountMenu } from '../layout/AccountMenu';
+import { AuthProvider, useAuth } from '../../contexts/AuthContext';
 
 let originalFetch: typeof global.fetch;
 
@@ -891,5 +892,124 @@ describe('LoginOverlay Component', () => {
     const card = document.querySelector('.max-w-\\[1040px\\]');
     expect(card).toBeDefined();
     expect(screen.getByText('输入您的出生日期和民族')).toBeDefined();
+  });
+
+  it('switches to the SMS login form and back to password login', () => {
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+
+    fireEvent.click(screen.getByTestId('switch-to-sms-login'));
+
+    // SMS form is shown instead of the password step 1 form
+    expect(screen.getByText('短信登录')).toBeDefined();
+    expect(screen.getByText('使用手机验证码登录')).toBeDefined();
+    expect(document.querySelector('md-outlined-text-field[label="手机号"]')).toBeDefined();
+    expect(document.querySelector('md-outlined-text-field[label="验证码"]')).toBeDefined();
+    expect(screen.queryByText('电子邮件或学工号')).toBeNull();
+
+    fireEvent.click(screen.getByTestId('sms-back-to-password'));
+
+    expect(document.querySelector('md-outlined-text-field[label="电子邮件或学工号"]')).toBeDefined();
+    expect(screen.queryByTestId('sms-send-code-button')).toBeNull();
+  });
+
+  it('SMS login form is not rendered in password login view', () => {
+    renderWithProviders(<LoginOverlay isOpen={true} onClose={() => {}} initialIdentifier="" />);
+
+    expect(screen.queryByText('短信登录')).toBeNull();
+    expect(screen.queryByTestId('sms-send-code-button')).toBeNull();
+    expect(screen.getByTestId('switch-to-sms-login')).toBeDefined();
+  });
+
+  it('completes SMS login end-to-end into AuthContext for staff roles and student fallback', async () => {
+    const fetchCalls: string[] = [];
+    global.fetch = vi.fn().mockImplementation(async (url: string) => {
+      fetchCalls.push(url);
+      if (url.includes('/api/auth/login-sms')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            token: 'sms-doc-jwt',
+            role: 'DOCTOR',
+            name: '李医生',
+          }),
+        };
+      }
+      return { ok: true, status: 200, json: async () => ({}) };
+    });
+
+    const SessionProbe = () => {
+      const { session } = useAuth();
+      return <div data-testid="auth-session-probe">{`${session.role}:${session.token}`}</div>;
+    };
+
+    const onSuccess = vi.fn();
+    const onClose = vi.fn();
+    const queryClient = createTestQueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <SessionProbe />
+          <LoginOverlay isOpen={true} onClose={onClose} onSuccess={onSuccess} initialIdentifier="" />
+        </AuthProvider>
+      </QueryClientProvider>
+    );
+
+    fireEvent.click(screen.getByTestId('switch-to-sms-login'));
+
+    const phoneField = document.querySelector('md-outlined-text-field[label="手机号"]') as HTMLInputElement;
+    phoneField.value = '13800138005';
+    fireEvent(phoneField, new Event('input', { bubbles: true, cancelable: true }));
+
+    const codeField = document.querySelector('md-outlined-text-field[label="验证码"]') as HTMLInputElement;
+    codeField.value = '123456';
+    fireEvent(codeField, new Event('input', { bubbles: true, cancelable: true }));
+
+    fireEvent.click(screen.getByText('登录'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('auth-session-probe').textContent).toBe('doctor:sms-doc-jwt');
+    });
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(fetchCalls.some((u) => u.includes('/api/auth/verify-code'))).toBe(false);
+
+    // Also verify student fallback when backend omits role but includes student payload
+    cleanup();
+    global.fetch = vi.fn().mockImplementation(async (url: string) => {
+      if (url.includes('/api/auth/login-sms')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            token: 'sms-stu-jwt',
+            student: { studentNumber: 'S2023001', fullName: '李明', phone: '13800138000' },
+          }),
+        };
+      }
+      return { ok: true, status: 200, json: async () => ({}) };
+    });
+
+    render(
+      <QueryClientProvider client={createTestQueryClient()}>
+        <AuthProvider>
+          <SessionProbe />
+          <LoginOverlay isOpen={true} onClose={vi.fn()} onSuccess={vi.fn()} initialIdentifier="" />
+        </AuthProvider>
+      </QueryClientProvider>
+    );
+
+    fireEvent.click(screen.getByTestId('switch-to-sms-login'));
+    const p2 = document.querySelector('md-outlined-text-field[label="手机号"]') as HTMLInputElement;
+    p2.value = '13800138000';
+    fireEvent(p2, new Event('input', { bubbles: true, cancelable: true }));
+    const c2 = document.querySelector('md-outlined-text-field[label="验证码"]') as HTMLInputElement;
+    c2.value = '123456';
+    fireEvent(c2, new Event('input', { bubbles: true, cancelable: true }));
+    fireEvent.click(screen.getByText('登录'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('auth-session-probe').textContent).toBe('student:sms-stu-jwt');
+    });
   });
 });

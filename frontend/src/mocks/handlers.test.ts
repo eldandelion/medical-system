@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
 import { setupServer } from 'msw/node';
 import { handlers } from './handlers';
 import { mockReferralsDb } from './db';
@@ -231,6 +231,144 @@ describe('MSW Handlers - Teachers & Student Assignment', () => {
       headers: { Authorization: 'Bearer mock_admin_token' }
     });
     expect(mismatchRes.status).toBe(409);
+  });
+});
+
+describe('MSW Handlers - SMS Auth', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  it('send-code LOGIN enforces phone lookup, active account status, and REGISTRATION duplicate checks', async () => {
+    // Active student
+    const studentRes = await fetch('http://localhost:3000/api/auth/send-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: '13800138000', purpose: 'LOGIN' }),
+    });
+    expect(studentRes.status).toBe(200);
+    expect(await studentRes.json()).toEqual({
+      phone: '13800138000',
+      devCode: '123456',
+      expiresInSeconds: 300,
+    });
+
+    // Unregistered phone -> 404
+    const missingRes = await fetch('http://localhost:3000/api/auth/send-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: '13999999999', purpose: 'LOGIN' }),
+    });
+    expect(missingRes.status).toBe(404);
+
+    // Disabled and pending accounts -> 401
+    for (const phone of ['13800138055', '13800138099']) {
+      const inactiveRes = await fetch('http://localhost:3000/api/auth/send-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, purpose: 'LOGIN' }),
+      });
+      expect(inactiveRes.status).toBe(401);
+    }
+
+    // Registration with existing phone -> 409; unregistered -> 200
+    const conflictRes = await fetch('http://localhost:3000/api/auth/send-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: '13800138000', purpose: 'REGISTRATION' }),
+    });
+    expect(conflictRes.status).toBe(409);
+
+    const newRegRes = await fetch('http://localhost:3000/api/auth/send-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: '13999999999', purpose: 'REGISTRATION' }),
+    });
+    expect(newRegRes.status).toBe(200);
+  });
+
+  it('login-sms returns full AuthResponse matching role and rejects unregistered/inactive accounts', async () => {
+    // Active student (李明)
+    const stuRes = await fetch('http://localhost:3000/api/auth/login-sms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: '13800138000', code: '123456' }),
+    });
+    expect(stuRes.status).toBe(200);
+    const stuBody = await stuRes.json();
+    expect(stuBody.role).toBe('STUDENT');
+    expect(stuBody.userId).toBe(7);
+    expect(stuBody.email).toBe('liming@univ.edu.cn');
+    expect(stuBody.name).toBe('李明');
+    expect(stuBody.student?.studentNumber).toBe('S2023001');
+
+    // Active teacher (艾米丽·沃森) -> student must be null
+    const teacherRes = await fetch('http://localhost:3000/api/auth/login-sms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: '13800138002', code: '123456' }),
+    });
+    expect(teacherRes.status).toBe(200);
+    const teacherBody = await teacherRes.json();
+    expect(teacherBody.role).toBe('TEACHER');
+    expect(teacherBody.name).toBe('艾米丽·沃森');
+    expect(teacherBody.student).toBeNull();
+
+    // Unregistered -> 404
+    const notFoundRes = await fetch('http://localhost:3000/api/auth/login-sms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: '13999999999', code: '123456' }),
+    });
+    expect(notFoundRes.status).toBe(404);
+
+    // Disabled -> 401
+    const disabledRes = await fetch('http://localhost:3000/api/auth/login-sms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: '13800138055', code: '123456' }),
+    });
+    expect(disabledRes.status).toBe(401);
+  });
+
+  it('forwards live backend 404 responses instead of masking them with mock data', async () => {
+    vi.stubEnv('MODE', 'development');
+    server.close();
+    const fetchSpy = vi.fn().mockImplementation(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ error: '该手机号码尚未登记，请先创建账号' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      )
+    );
+    const prevFetch = globalThis.fetch;
+    globalThis.fetch = fetchSpy as unknown as typeof fetch;
+    server.listen({ onUnhandledRequest: 'error' });
+
+    try {
+      for (const [url, payload] of [
+        ['http://localhost:3000/api/auth/send-code', { phone: '13800138000', purpose: 'LOGIN' }],
+        ['http://localhost:3000/api/auth/verify-code', { phone: '13800138000', code: '123456', purpose: 'LOGIN' }],
+        ['http://localhost:3000/api/auth/login-sms', { phone: '13800138000', code: '123456' }],
+      ] as const) {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        expect(res.status).toBe(404);
+        const body = await res.json();
+        expect(body.error).toBe('该手机号码尚未登记，请先创建账号');
+      }
+
+      expect(fetchSpy).toHaveBeenCalledTimes(3);
+    } finally {
+      server.close();
+      globalThis.fetch = prevFetch;
+      server.listen({ onUnhandledRequest: 'error' });
+    }
   });
 });
 
