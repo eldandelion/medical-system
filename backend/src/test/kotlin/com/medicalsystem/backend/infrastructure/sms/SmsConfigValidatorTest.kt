@@ -133,7 +133,7 @@ class SmsConfigValidatorTest {
     }
 
     @Test
-    fun `dypns enabled without schemeName or schemeCode fails fast even if signName and templateCode set`() {
+    fun `dypns enabled with signName and templateCode passes without schemeName or schemeCode`() {
         val validator = SmsConfigValidator(
             properties(
                 enabled = true,
@@ -141,7 +141,21 @@ class SmsConfigValidatorTest {
                 accessKeyId = "ak",
                 accessKeySecret = "sk",
                 signName = "签名",
-                templateCode = "SMS_123"
+                templateCode = "100001"
+            )
+        )
+        assertDoesNotThrow { validator.validate() }
+    }
+
+    @Test
+    fun `dypns enabled without scheme and without complete signName plus templateCode fails fast`() {
+        val validator = SmsConfigValidator(
+            properties(
+                enabled = true,
+                provider = SmsProviderType.DYPNS,
+                accessKeyId = "ak",
+                accessKeySecret = "sk",
+                signName = "签名"
             )
         )
         val ex = assertThrows<IllegalStateException> { validator.validate() }

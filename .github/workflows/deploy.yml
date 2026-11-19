@@ -113,7 +113,17 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -eu
             cd ~/medical-system
-            docker compose pull
+            for attempt in 1 2 3; do
+              if docker compose pull backend frontend mobile; then
+                break
+              fi
+              if [ "$attempt" -eq 3 ]; then
+                echo "docker compose pull failed after 3 attempts" >&2
+                exit 1
+              fi
+              sleep 5
+            done
             docker compose up -d --remove-orphans
             docker image prune -f

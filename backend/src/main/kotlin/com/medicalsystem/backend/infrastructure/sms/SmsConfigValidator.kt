@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component
  * - `aliyun.sms.enabled` true + `provider=dysms` -> `access-key-id`, `access-key-secret`,
  *   `sign-name`, and `template-code` must all be non-blank.
  * - `aliyun.sms.enabled` true + `provider=dypns` -> `access-key-id`, `access-key-secret`,
- *   and `scheme-name` (or `scheme-code`) must all be non-blank.
+ *   and either `scheme-name`/`scheme-code` OR both `sign-name` and `template-code` must be non-blank.
  */
 @Component
 class SmsConfigValidator(
@@ -37,8 +37,10 @@ class SmsConfigValidator(
                     if (properties.templateCode.isBlank()) add("aliyun.sms.template-code")
                 }
                 SmsProviderType.DYPNS -> {
-                    if (properties.effectiveSchemeName().isBlank()) {
-                        add("aliyun.sms.scheme-name (or aliyun.sms.scheme-code)")
+                    val hasScheme = properties.effectiveSchemeName().isNotBlank()
+                    val hasSignAndTemplate = properties.signName.isNotBlank() && properties.templateCode.isNotBlank()
+                    if (!hasScheme && !hasSignAndTemplate) {
+                        add("aliyun.sms.scheme-name (or both aliyun.sms.sign-name and aliyun.sms.template-code)")
                     }
                 }
             }
