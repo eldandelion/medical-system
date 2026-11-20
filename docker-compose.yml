@@ -1,6 +1,6 @@
 services:
   frontend:
-    image: ghcr.io/eldandelion/medical-system-frontend:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY:-crpi-94whiojrmibrfhj8-vpc.cn-shanghai.personal.cr.aliyuncs.com/medical-system}/medical-system-frontend:${IMAGE_TAG:-latest}
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -20,7 +20,7 @@ services:
       - app-network
 
   mobile:
-    image: ghcr.io/eldandelion/medical-system-mobile:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY:-crpi-94whiojrmibrfhj8-vpc.cn-shanghai.personal.cr.aliyuncs.com/medical-system}/medical-system-mobile:${IMAGE_TAG:-latest}
     build:
       context: ./mobile
       dockerfile: Dockerfile
@@ -40,7 +40,7 @@ services:
       - app-network
 
   backend:
-    image: ghcr.io/eldandelion/medical-system-backend:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY:-crpi-94whiojrmibrfhj8-vpc.cn-shanghai.personal.cr.aliyuncs.com/medical-system}/medical-system-backend:${IMAGE_TAG:-latest}
     build:
       context: ./backend
       dockerfile: Dockerfile

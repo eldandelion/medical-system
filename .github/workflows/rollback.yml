@@ -30,15 +30,18 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         env:
           IMAGE_TAG: ${{ inputs.image_tag }}
+          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           command_timeout: 15m
-          envs: IMAGE_TAG
+          envs: IMAGE_TAG,ACR_PASSWORD
           script: |
             set -eu
             cd ~/medical-system
+            printf '%s\n' "$ACR_PASSWORD" | docker login --username nick6333349371 --password-stdin crpi-94whiojrmibrfhj8-vpc.cn-shanghai.personal.cr.aliyuncs.com
+            printf '%s\n' "$ACR_PASSWORD" | docker login --username nick6333349371 --password-stdin crpi-94whiojrmibrfhj8.cn-shanghai.personal.cr.aliyuncs.com
             for attempt in 1 2 3; do
               if IMAGE_TAG="$IMAGE_TAG" docker compose pull backend frontend mobile; then
                 break
