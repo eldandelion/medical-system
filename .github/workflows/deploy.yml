@@ -176,7 +176,7 @@ jobs:
           target: "~/medical-system"
 
       - name: Deploy Containers on Server
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         env:
           IMAGE_TAG: ${{ github.sha }}
           ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}

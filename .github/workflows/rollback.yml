@@ -27,7 +27,7 @@ jobs:
           fi
 
       - name: Rollback Containers on Server
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         env:
           IMAGE_TAG: ${{ inputs.image_tag }}
           ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
