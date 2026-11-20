@@ -146,6 +146,8 @@ jobs:
         with:
           context: ./${{ matrix.service }}
           push: true
+          provenance: false
+          sbom: false
           tags: |
             crpi-94whiojrmibrfhj8.cn-shanghai.personal.cr.aliyuncs.com/medical-system/medical-system-${{ matrix.service }}:latest
             crpi-94whiojrmibrfhj8.cn-shanghai.personal.cr.aliyuncs.com/medical-system/medical-system-${{ matrix.service }}:${{ github.sha }}
