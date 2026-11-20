@@ -1,12 +1,30 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TeacherPage } from './TeacherPage';
 import * as NavigationContext from '../contexts/NavigationContext';
 
+vi.mock('../contexts/AuthContext', () => ({
+  useAuth: () => ({ session: { token: 'mock-token', role: 'teacher' } }),
+  AuthProvider: ({ children }: any) => <>{children}</>,
+}));
+vi.mock('../contexts/ThemeContext', () => ({
+  useTheme: () => ({ theme: 'light', setTheme: vi.fn() }),
+  ThemeProvider: ({ children }: any) => <>{children}</>,
+}));
+vi.mock('../contexts/SnackbarContext', () => ({
+  useSnackbar: () => ({ showSnackbar: vi.fn() }),
+  SnackbarProvider: ({ children }: any) => <>{children}</>,
+}));
+vi.mock('../contexts/CreationContext', () => ({
+  useCreationOverlay: () => ({ openCreation: vi.fn(), closeCreation: vi.fn(), expandToFullscreen: vi.fn() }),
+  CreationOverlayProvider: ({ children }: any) => <>{children}</>,
+}));
+
 describe('GlobalSearch Auto-Selection Navigation', () => {
   let queryClient: QueryClient;
+  const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -45,6 +63,9 @@ describe('GlobalSearch Auto-Selection Navigation', () => {
   });
 
   afterEach(() => {
+    cleanup();
+    queryClient.clear();
+    globalThis.fetch = originalFetch;
     vi.restoreAllMocks();
   });
 
@@ -54,26 +75,6 @@ describe('GlobalSearch Auto-Selection Navigation', () => {
       lastEvent: { tab: 'Students', entityId: 123, timestamp: Date.now() },
       navigateToTab: vi.fn(),
     });
-
-    // We only need basic providers since we mock the complex ones or they have defaults
-    // But TeacherPage uses useAuth, useTheme, useSnackbar, useCreationOverlay
-    // Let's mock them to keep the test focused and simple
-    vi.mock('../contexts/AuthContext', () => ({
-      useAuth: () => ({ session: { token: 'mock-token', role: 'teacher' } }),
-      AuthProvider: ({ children }: any) => <>{children}</>
-    }));
-    vi.mock('../contexts/ThemeContext', () => ({
-      useTheme: () => ({ theme: 'light', setTheme: vi.fn() }),
-      ThemeProvider: ({ children }: any) => <>{children}</>
-    }));
-    vi.mock('../contexts/SnackbarContext', () => ({
-      useSnackbar: () => ({ showSnackbar: vi.fn() }),
-      SnackbarProvider: ({ children }: any) => <>{children}</>
-    }));
-    vi.mock('../contexts/CreationContext', () => ({
-      useCreationOverlay: () => ({ openCreation: vi.fn(), closeCreation: vi.fn(), expandToFullscreen: vi.fn() }),
-      CreationOverlayProvider: ({ children }: any) => <>{children}</>
-    }));
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -100,23 +101,6 @@ describe('GlobalSearch Auto-Selection Navigation', () => {
       lastEvent: { tab: 'Referral Management', entityId: 456, timestamp: Date.now() },
       navigateToTab: vi.fn(),
     });
-
-    vi.mock('../contexts/AuthContext', () => ({
-      useAuth: () => ({ session: { token: 'mock-token', role: 'teacher' } }),
-      AuthProvider: ({ children }: any) => <>{children}</>
-    }));
-    vi.mock('../contexts/ThemeContext', () => ({
-      useTheme: () => ({ theme: 'light', setTheme: vi.fn() }),
-      ThemeProvider: ({ children }: any) => <>{children}</>
-    }));
-    vi.mock('../contexts/SnackbarContext', () => ({
-      useSnackbar: () => ({ showSnackbar: vi.fn() }),
-      SnackbarProvider: ({ children }: any) => <>{children}</>
-    }));
-    vi.mock('../contexts/CreationContext', () => ({
-      useCreationOverlay: () => ({ openCreation: vi.fn(), closeCreation: vi.fn(), expandToFullscreen: vi.fn() }),
-      CreationOverlayProvider: ({ children }: any) => <>{children}</>
-    }));
     
     // Add referral mock response
     global.fetch = vi.fn().mockImplementation((url: string) => {
