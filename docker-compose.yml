@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   frontend:
-    image: ghcr.io/eldandelion/medical-system-frontend:latest
+    image: ghcr.io/eldandelion/medical-system-frontend:${IMAGE_TAG:-latest}
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -12,11 +10,17 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks:
       - app-network
 
   mobile:
-    image: ghcr.io/eldandelion/medical-system-mobile:latest
+    image: ghcr.io/eldandelion/medical-system-mobile:${IMAGE_TAG:-latest}
     build:
       context: ./mobile
       dockerfile: Dockerfile
@@ -26,11 +30,17 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks:
       - app-network
 
   backend:
-    image: ghcr.io/eldandelion/medical-system-backend:latest
+    image: ghcr.io/eldandelion/medical-system-backend:${IMAGE_TAG:-latest}
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -41,6 +51,12 @@ services:
     depends_on:
       - db
       - minio
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/api/auth/me | grep -qE '^(200|401|403)$'"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/medical_db?useSSL=false&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=root
@@ -62,6 +78,11 @@ services:
       - ALIYUN_SMS_TEMPLATE_CODE=${ALIYUN_SMS_TEMPLATE_CODE:-${ALIBABA_SMS_TEMPLATE_CODE:-}}
       - ALIYUN_SMS_SCHEME_NAME=${ALIYUN_SMS_SCHEME_NAME:-${ALIBABA_SMS_SCHEME_NAME:-}}
       - ALIYUN_SMS_SCHEME_CODE=${ALIYUN_SMS_SCHEME_CODE:-${ALIBABA_SMS_SCHEME_CODE:-}}
+      - SMS_RATE_LIMIT_ENABLED=${SMS_RATE_LIMIT_ENABLED:-true}
+      - SMS_RATE_LIMIT_HOURLY_LIMIT=${SMS_RATE_LIMIT_HOURLY_LIMIT:-5}
+      - SMS_RATE_LIMIT_DAILY_LIMIT=${SMS_RATE_LIMIT_DAILY_LIMIT:-20}
+      - SMS_RATE_LIMIT_TIMEZONE=${SMS_RATE_LIMIT_TIMEZONE:-Asia/Shanghai}
+      - TRUSTED_PROXY_IPS=${TRUSTED_PROXY_IPS:-127.0.0.0/8, 172.16.0.0/12, ::1/128}
     networks:
       - app-network
 

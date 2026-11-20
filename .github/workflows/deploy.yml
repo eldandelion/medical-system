@@ -4,15 +4,25 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  test:
-    name: Automated Verification Gates
+  test-frontend:
+    name: Frontend Quality Gate
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -22,23 +32,66 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: |
-            frontend/package-lock.json
-            mobile/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Frontend Quality Gate
-        run: |
-          cd frontend
-          npm ci
-          npm run lint
-          npm test -- --run
+      - name: Install Dependencies
+        run: npm ci
 
-      - name: Mobile Intake Quality Gate
-        run: |
-          cd mobile
-          npm ci
-          npm run lint
-          npm test -- --run
+      - name: Type Check
+        run: npm run lint
+
+      - name: Run Unit Tests
+        run: npm test -- --run
+
+      - name: Verify Production Build
+        run: npm run build
+
+      - name: Advisory Security Audit
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  test-mobile:
+    name: Mobile Intake Quality Gate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js & Cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Type Check
+        run: npm run lint
+
+      - name: Run Unit Tests
+        run: npm test -- --run
+
+      - name: Verify Production Build
+        run: npm run build
+
+      - name: Advisory Security Audit
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  test-backend:
+    name: Backend Quality Gate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
       - name: Setup JDK 17
         uses: actions/setup-java@v4
@@ -47,15 +100,26 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Backend Quality Gate
-        run: |
-          cd backend
-          ./mvnw test
+      - name: Run Unit & Integration Tests
+        run: ./mvnw test
 
-  build-and-deploy:
-    name: Build & Deploy Container Stack
-    needs: test
+      - name: Upload Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jacoco-report
+          path: backend/target/site/jacoco
+          if-no-files-found: ignore
+
+  build-images:
+    name: Build & Push (${{ matrix.service }})
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test-frontend, test-mobile, test-backend]
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [backend, frontend, mobile]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -70,32 +134,28 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build & Push Backend Image
+      - name: Build & Push Image
         uses: docker/build-push-action@v5
         with:
-          context: ./backend
+          context: ./${{ matrix.service }}
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/medical-system-backend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/medical-system-${{ matrix.service }}:latest
+            ghcr.io/${{ github.repository_owner }}/medical-system-${{ matrix.service }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
-      - name: Build & Push Frontend Image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/medical-system-frontend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build & Push Mobile Intake Image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./mobile
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/medical-system-mobile:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+  deploy:
+    name: Deploy Stack to Production
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build-images]
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
       - name: Copy Compose to Server
         uses: appleboy/scp-action@v0.1.7
@@ -108,22 +168,38 @@ jobs:
 
       - name: Deploy Containers on Server
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          IMAGE_TAG: ${{ github.sha }}
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 20m
+          envs: IMAGE_TAG
           script: |
             set -eu
             cd ~/medical-system
             for attempt in 1 2 3; do
-              if docker compose pull backend frontend mobile; then
+              if IMAGE_TAG="$IMAGE_TAG" docker compose pull backend frontend mobile; then
                 break
               fi
               if [ "$attempt" -eq 3 ]; then
-                echo "docker compose pull failed after 3 attempts" >&2
+                echo "docker compose pull failed after 3 attempts for tag $IMAGE_TAG" >&2
                 exit 1
               fi
               sleep 5
             done
-            docker compose up -d --remove-orphans
-            docker image prune -f
+            IMAGE_TAG="$IMAGE_TAG" docker compose up -d --remove-orphans
+            IMAGE_TAG="$IMAGE_TAG" docker compose up -d --no-deps --wait --wait-timeout 120 backend frontend mobile
+            if [ -f .env ]; then
+              tmp_env=$(mktemp)
+              grep -v '^IMAGE_TAG=' .env > "$tmp_env" || true
+              printf 'IMAGE_TAG=%s\n' "$IMAGE_TAG" >> "$tmp_env"
+              mv "$tmp_env" .env
+            fi
+            test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000)" = "200"
+            test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3005)" = "200"
+            api_code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/api/auth/me)
+            echo "Post-deploy check: api_http=$api_code tag=$IMAGE_TAG"
+            echo "$api_code" | grep -qE '^(200|401|403)$'
+            docker image prune -f --filter "until=24h"

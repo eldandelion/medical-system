@@ -1,0 +1,64 @@
+name: Rollback Production Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Commit SHA or image tag to rollback to (e.g. b03c642...)"
+        required: true
+        type: string
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    name: Rollback Server Containers
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Target Image Tag
+        env:
+          INPUT_TAG: ${{ inputs.image_tag }}
+        run: |
+          if ! echo "$INPUT_TAG" | grep -qE '^[a-zA-Z0-9._-]+$'; then
+            echo "Invalid image_tag: $INPUT_TAG" >&2
+            exit 1
+          fi
+
+      - name: Rollback Containers on Server
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 15m
+          envs: IMAGE_TAG
+          script: |
+            set -eu
+            cd ~/medical-system
+            for attempt in 1 2 3; do
+              if IMAGE_TAG="$IMAGE_TAG" docker compose pull backend frontend mobile; then
+                break
+              fi
+              if [ "$attempt" -eq 3 ]; then
+                echo "docker compose pull failed for tag $IMAGE_TAG" >&2
+                exit 1
+              fi
+              sleep 5
+            done
+            IMAGE_TAG="$IMAGE_TAG" docker compose up -d --remove-orphans
+            IMAGE_TAG="$IMAGE_TAG" docker compose up -d --no-deps --wait --wait-timeout 120 backend frontend mobile
+            if [ -f .env ]; then
+              tmp_env=$(mktemp)
+              grep -v '^IMAGE_TAG=' .env > "$tmp_env" || true
+              printf 'IMAGE_TAG=%s\n' "$IMAGE_TAG" >> "$tmp_env"
+              mv "$tmp_env" .env
+            fi
+            test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000)" = "200"
+            test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3005)" = "200"
+            api_code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/api/auth/me)
+            echo "Rollback healthcheck api_http=$api_code tag=$IMAGE_TAG"
+            echo "$api_code" | grep -qE '^(200|401|403)$'
