@@ -9,7 +9,7 @@ COPY src ./src
 RUN mvn package -Dmaven.test.skip=true
 
 # Stage 2: Run the backend
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:25-jre
 WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
