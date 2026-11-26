@@ -28,4 +28,9 @@ interface ReferralJpaRepository : JpaRepository<ReferralEntity, Long>, JpaSpecif
         @org.springframework.data.repository.query.Param("studentIds") studentIds: Collection<Long>,
         @org.springframework.data.repository.query.Param("terminalStatuses") terminalStatuses: Collection<com.medicalsystem.backend.model.ReferralStatus>
     ): Set<Long>
+
+    fun existsByStudentIdAndStatusNotIn(
+        studentId: Long,
+        statuses: Collection<com.medicalsystem.backend.model.ReferralStatus>
+    ): Boolean
 }

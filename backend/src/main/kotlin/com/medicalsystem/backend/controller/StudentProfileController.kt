@@ -27,8 +27,7 @@ class StudentProfileController(
     private val userJpaRepository: UserJpaRepository,
     private val assignmentJpaRepository: AssessmentAssignmentJpaRepository,
     private val studentHealthProfileJpaRepository: StudentHealthProfileJpaRepository,
-    private val studentRepository: com.medicalsystem.backend.repository.StudentRepository,
-    private val eventPublisher: com.medicalsystem.backend.event.DomainEventPublisher
+    private val studentRepository: com.medicalsystem.backend.repository.StudentRepository
 ) {
 
     data class UpdateHealthProfileDto(
@@ -55,24 +54,10 @@ class StudentProfileController(
         val profile = studentHealthProfileJpaRepository.findByStudentId(id).orElseGet {
             com.medicalsystem.backend.entity.StudentHealthProfileEntity(studentId = id, riskStatus = RiskStatus.LOW)
         }
-        val previousRisk = profile.riskStatus
         dto.scidDiagnosis?.let { profile.scidDiagnosis = it }
         dto.riskStatus?.let { profile.riskStatus = it }
         studentHealthProfileJpaRepository.save(profile)
 
-        if (dto.riskStatus != null && dto.riskStatus != previousRisk) {
-            try {
-                eventPublisher.publish(
-                    com.medicalsystem.backend.event.StudentRiskStatusChangedEvent(
-                        studentId = id,
-                        oldStatus = previousRisk,
-                        newStatus = dto.riskStatus
-                    )
-                )
-            } catch (e: Exception) {
-                // Log and keep endpoint resilient
-            }
-        }
         return ResponseEntity.ok(mapOf("status" to "updated"))
     }
 

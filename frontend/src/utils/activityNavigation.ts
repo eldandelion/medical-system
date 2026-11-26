@@ -45,7 +45,8 @@ export function resolveActivityNavigation(
     };
   }
   if (type === 'HIGH_RISK_ASSESSMENT_SUBMITTED') {
-    const targetStudentId = studentId ?? actionTargetId ?? referenceId;
+    // referenceId is the notification id, not a student id — never use it as deep-link target.
+    const targetStudentId = studentId ?? actionTargetId;
     if (['teacher', 'head-councillor', 'admin'].includes(role)) {
       return {
         tab: 'Students',

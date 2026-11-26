@@ -277,7 +277,8 @@ class AssessmentCatalogLoader(
                 )
             }
         } catch (e: Exception) {
-            logger.warn("Could not load standalone survey $fileName: ${e.message}")
+            // Log exception type only: Jackson message embeds the parsed source content
+            logger.warn("Could not load standalone survey $fileName: {}", e.javaClass.simpleName)
         }
     }
 
