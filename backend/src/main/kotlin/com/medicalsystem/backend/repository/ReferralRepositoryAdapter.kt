@@ -88,4 +88,11 @@ class ReferralRepositoryAdapter(
             com.medicalsystem.backend.model.ReferralStatus.TERMINAL_STATUSES
         )
     }
+
+    override fun hasOpenReferralForStudent(studentId: Long): Boolean {
+        return jpaRepository.existsByStudentIdAndStatusNotIn(
+            studentId,
+            com.medicalsystem.backend.model.ReferralStatus.TERMINAL_STATUSES
+        )
+    }
 }

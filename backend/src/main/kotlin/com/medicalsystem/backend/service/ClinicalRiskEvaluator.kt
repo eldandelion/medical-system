@@ -29,8 +29,7 @@ class ClinicalRiskEvaluator(
     private val studentHealthProfileJpaRepository: StudentHealthProfileJpaRepository,
     private val studentJpaRepository: StudentJpaRepository,
     private val userJpaRepository: UserJpaRepository,
-    private val notificationService: NotificationService,
-    private val eventPublisher: com.medicalsystem.backend.event.DomainEventPublisher
+    private val notificationService: NotificationService
 ) {
     private val logger = LoggerFactory.getLogger(ClinicalRiskEvaluator::class.java)
     private val threeTierScreeningEvaluator = ThreeTierScreeningEvaluator()
@@ -88,7 +87,6 @@ class ClinicalRiskEvaluator(
         }
 
         val profileOpt = studentHealthProfileJpaRepository.findByStudentId(studentId)
-        val oldStatus = profileOpt.orElse(null)?.riskStatus ?: RiskStatus.LOW
         if (profileOpt.isPresent) {
             val profile = profileOpt.get()
             val currentLevel = riskPriority(profile.riskStatus)
@@ -143,7 +141,8 @@ class ClinicalRiskEvaluator(
                     )
                     notifiedCount++
                 } catch (e: Exception) {
-                    logger.error("Failed to notify Head Councillor ${hc.id}: ${e.message}")
+                    // Log exception type only: message can embed notification payload (student PII)
+                    logger.error("Failed to notify Head Councillor {}: {}", hc.id, e.javaClass.simpleName)
                 }
             }
 
@@ -160,27 +159,13 @@ class ClinicalRiskEvaluator(
                     )
                     notifiedCount++
                 } catch (e: Exception) {
-                    logger.error("Failed to notify Teacher $teacherUserId: ${e.message}")
+                    // Log exception type only: message can embed notification payload (student PII)
+                    logger.error("Failed to notify Teacher {}: {}", teacherUserId, e.javaClass.simpleName)
                 }
             }
 
             if (notifiedCount == 0) {
                 logger.error("No recipient notified for high-risk alert for student $studentId")
-            }
-
-            // Publish StudentRiskStatusChangedEvent for downstream listeners
-            try {
-                eventPublisher.publish(
-                    com.medicalsystem.backend.event.StudentRiskStatusChangedEvent(
-                        studentId = studentId,
-                        oldStatus = oldStatus,
-                        newStatus = evaluatedRisk,
-                        riskFlags = riskFlagNames,
-                        scaleCode = scaleCode.ifEmpty { null }
-                    )
-                )
-            } catch (e: Exception) {
-                logger.error("Failed to publish StudentRiskStatusChangedEvent for student $studentId: ${e.message}")
             }
         }
 

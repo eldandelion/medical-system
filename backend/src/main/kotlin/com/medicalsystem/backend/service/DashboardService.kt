@@ -42,7 +42,8 @@ class DashboardService(
             val typeRef = object : TypeReference<Map<String, Any>>() {}
             objectMapper.readValue(json, typeRef)
         } catch (e: Exception) {
-            logger.warn("Failed to deserialize notification payload: {}", e.message)
+            // Log exception type only: Jackson message embeds the full payload (student PII)
+            logger.warn("Failed to deserialize notification payload: {}", e.javaClass.simpleName)
             null
         }
     }

@@ -12,6 +12,7 @@ import com.medicalsystem.backend.model.User
 import com.medicalsystem.backend.model.UserRole
 import com.medicalsystem.backend.repository.CollegeJpaRepository
 import com.medicalsystem.backend.repository.MajorJpaRepository
+import com.medicalsystem.backend.repository.ReferralJpaRepository
 import com.medicalsystem.backend.repository.StudentJpaRepository
 import com.medicalsystem.backend.repository.TeacherJpaRepository
 import com.medicalsystem.backend.repository.UserJpaRepository
@@ -63,6 +64,9 @@ class ReferralCreationVisibilityIntegrationTest {
 
     @Autowired
     private lateinit var studentJpaRepository: StudentJpaRepository
+
+    @Autowired
+    private lateinit var referralJpaRepository: ReferralJpaRepository
 
     private lateinit var mockMvc: MockMvc
 
@@ -170,6 +174,29 @@ class ReferralCreationVisibilityIntegrationTest {
                 .header("Authorization", "mock-token-$headCounsellorUserId")
                 .content(referralBody())
         ).andExpect(status().isCreated())
+    }
+
+    @Test
+    fun `duplicate referral initiation returns 409 and creates only one referral row`() {
+        // Concurrent-style double submit: first initiate succeeds, the second must be refused
+        // with a typed conflict instead of persisting a duplicate referral for the student.
+        mockMvc.perform(
+            post("/api/referrals")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "mock-token-$owningTeacherUserId")
+                .content(referralBody())
+        ).andExpect(status().isCreated())
+
+        mockMvc.perform(
+            post("/api/referrals")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "mock-token-$owningTeacherUserId")
+                .content(referralBody())
+        )
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.error").value("REFERRAL_ALREADY_OPEN"))
+
+        assertEquals(1, referralJpaRepository.findAll().count { it.studentId == studentId })
     }
 
     /** Resolves @CurrentUser from an Authorization header of the form `mock-token-{userId}`. */

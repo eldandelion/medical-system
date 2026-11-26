@@ -9,6 +9,7 @@ import com.medicalsystem.backend.mapper.ReferralMapper
 import com.medicalsystem.backend.repository.ReferralRepository
 import com.medicalsystem.backend.repository.StudentRepository
 import com.medicalsystem.backend.exception.ResourceNotFoundException
+import com.medicalsystem.backend.exception.ConflictException
 import com.medicalsystem.backend.model.ReferralType
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -117,7 +118,13 @@ class ReferralService(
             .orElseThrow {
                 com.medicalsystem.backend.exception.ForbiddenException("referral_target_not_visible")
             }
-            
+
+        // Duplicate-referral race guard: a non-terminal referral for the same student already
+        // exists (e.g. double-submit). Refuse with a typed 409 instead of creating a second row.
+        if (referralRepository.hasOpenReferralForStudent(dto.studentId)) {
+            throw ConflictException("REFERRAL_ALREADY_OPEN")
+        }
+
         val attachmentModels = dto.attachments.map { att ->
             com.medicalsystem.backend.model.ReferralAttachment(
                 file = com.medicalsystem.backend.model.FileReference(

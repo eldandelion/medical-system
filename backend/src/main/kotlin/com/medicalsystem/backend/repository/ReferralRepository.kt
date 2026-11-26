@@ -13,4 +13,5 @@ interface ReferralRepository {
     fun deleteAll()
     fun countActionableReferralsFor(user: User): Long
     fun findStudentIdsWithOpenReferral(studentIds: Collection<Long>): Set<Long>
+    fun hasOpenReferralForStudent(studentId: Long): Boolean
 }
